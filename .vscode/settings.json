@@ -1,3 +1,16 @@
 {
-  "svelte.enable-ts-plugin": true
+  "svelte.enable-ts-plugin": true,
+  "editor.formatOnSave": true,
+  "[typescript][javascript][json][jsonc][svelte]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "always"
+    },
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "cSpell.words": ["APPLOCALDATA", "iconify", "rfind", "tauri", "usecases"]
 }
