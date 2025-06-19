@@ -14,5 +14,5 @@ export type SentenceCard = {
   readonly status: SentenceCardStatus;
   readonly createdAt: string; // ISO 8601 format date string
   // 関連する単語/イディオム
-  readonly vocabularies: readonly Vocabulary[];
+  readonly vocabulary: Vocabulary;
 };

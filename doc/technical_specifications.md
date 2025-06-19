@@ -89,6 +89,7 @@ erDiagram
     SENTENCE_CARDS {
         INTEGER id PK
         INTEGER dialogue_id FK
+        INTEGER vocabulary_id FK
         TEXT target_expression
         TEXT sentence
         TEXT definition
@@ -99,18 +100,12 @@ erDiagram
         INTEGER id PK
         TEXT expression
     }
-    VOCABULARY_INSTANCES {
-        INTEGER id PK
-        INTEGER vocabulary_id FK
-        INTEGER sentence_card_id FK
-    }
 
     EPISODE_GROUPS ||--o{ EPISODE_GROUPS : "parent"
     EPISODE_GROUPS ||--o{ EPISODES : "has"
     EPISODES ||--o{ DIALOGUES : "has"
     DIALOGUES ||--o{ SENTENCE_CARDS : "has"
-    SENTENCE_CARDS ||--o{ VOCABULARY_INSTANCES : "has"
-    VOCABULARY ||--o{ VOCABULARY_INSTANCES : "has"
+    SENTENCE_CARDS }o--|| VOCABULARY : "refers"
 ```
 
 ### 2.1. `episode_groups` テーブル
@@ -160,6 +155,7 @@ Sentence Miningによって作成されたカードを管理する。
 |-----------------|-------------|------------------------------------|
 | `id`            | INTEGER     | PRIMARY KEY, AUTOINCREMENT         |
 | `dialogue_id`   | INTEGER     | `dialogues.id`への外部キー         |
+| `vocabulary_id` | INTEGER     | `vocabulary.id`への外部キー        |
 | `target_expression` | TEXT    | 抽出対象の単語/イディオム          |
 | `sentence`      | TEXT        | 抽出対象を含むセンテンス全体       |
 | `definition`    | TEXT        | LLMによって生成された意味・説明    |
@@ -179,15 +175,6 @@ Sentence Miningによって作成されたカードを管理する。
 |----------------|---------|-------------------------------------------------|
 | `id`           | INTEGER | PRIMARY KEY, AUTOINCREMENT                      |
 | `expression`   | TEXT    | 単語/イディオムの綴り (e.g., "take off")        |
-
-### 2.6. `vocabulary_instances` テーブル
-`vocabulary`と`sentence_cards`を関連付ける中間テーブル。どの単語がどの例文で学習されたかを記録する。
-
-| カラム名            | 型      | 説明                               |
-|---------------------|---------|------------------------------------|
-| `id`                | INTEGER | PRIMARY KEY, AUTOINCREMENT         |
-| `vocabulary_id`     | INTEGER | `vocabulary.id`への外部キー        |
-| `sentence_card_id`  | INTEGER | `sentence_cards.id`への外部キー    |
 
 ---
 
