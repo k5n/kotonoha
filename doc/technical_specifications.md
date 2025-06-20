@@ -120,6 +120,7 @@ erDiagram
         TEXT name
         INTEGER display_order
         INTEGER parent_group_id FK
+        TEXT group_type
     }
     EPISODES {
         INTEGER id PK
@@ -171,9 +172,11 @@ erDiagram
 | `name`           | TEXT    | グループ名                   |
 | `display_order`  | INTEGER | グループの表示順序           |
 | `parent_group_id`| INTEGER | 親グループID（NULLでルート） |
+| `group_type`     | TEXT    | グループ種別: "album"（エピソード格納可）または "folder"（サブグループのみ格納可） |
 
 - `parent_group_id`は自己参照外部キー。NULLの場合はルートグループ。
-- 初期状態では`name`が"Default"かつ`parent_group_id`がNULLのグループが1つだけ存在する。
+- `group_type` でグループの種別を区別する。`album` はエピソードを格納でき、`folder` はサブグループのみ格納できる。
+- 初期状態では`name`が"Default"かつ`parent_group_id`がNULLのグループが1つだけ存在し、`group_type`は`album`とする。
 
 ### 2.2. `episodes` テーブル
 エピソード（音声コンテンツとスクリプトのセット）を管理する。
