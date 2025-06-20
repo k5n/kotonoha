@@ -1,11 +1,20 @@
 import type { Episode } from '$lib/domain/entities/episode';
+import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 
-export async function fetchEpisodes(groupId: number): Promise<Episode[]> {
+export async function fetchEpisodes(groupId: number): Promise<[EpisodeGroup, Episode[]]> {
   // TODO: Implement actual data fetching logic here
   console.log(`Fetching episodes for group ${groupId}...`);
   await new Promise((resolve) => setTimeout(resolve, 800)); // Simulate network delay
 
   // スタブデータ
+  const stubEpisodeGroup: EpisodeGroup = {
+    id: 1,
+    name: 'Default',
+    displayOrder: 1,
+    parentId: null,
+    children: [],
+    groupType: 'album',
+  };
   const now = new Date();
   const stubEpisodes: Episode[] = [
     {
@@ -54,5 +63,5 @@ export async function fetchEpisodes(groupId: number): Promise<Episode[]> {
     },
   ];
 
-  return stubEpisodes;
+  return [stubEpisodeGroup, stubEpisodes];
 }

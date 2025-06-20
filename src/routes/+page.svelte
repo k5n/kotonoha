@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { initializeApp } from '$lib/application/usecases/initializeApp';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
@@ -23,7 +24,11 @@
 
   // --- Event Handlers ---
   const handleGroupClick = (selectedGroup: EpisodeGroup) => {
-    path = [...path, selectedGroup];
+    if (selectedGroup.groupType == 'album') {
+      goto(`/episode-list/${selectedGroup.id}`);
+    } else {
+      path = [...path, selectedGroup];
+    }
   };
 
   const handleBreadcrumbClick = (targetIndex: number | null) => {
@@ -45,7 +50,7 @@
 
 <div class="p-4 md:p-6">
   <div class="mb-4 flex items-center justify-between">
-    <Heading tag="h1" class="text-2xl font-bold">エピソード一覧</Heading>
+    <Heading tag="h1" class="text-2xl font-bold">グループ一覧</Heading>
     <Button onclick={handleAddNewEpisode}>
       <PlusOutline class="me-2 h-5 w-5" />
       新規追加
