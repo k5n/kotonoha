@@ -12,5 +12,8 @@
   "[rust]": {
     "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
-  "cSpell.words": ["APPLOCALDATA", "iconify", "rfind", "tauri", "usecases"]
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "cSpell.words": ["APPLOCALDATA", "flowbite", "rfind", "tauri", "usecases"]
 }
