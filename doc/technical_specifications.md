@@ -51,6 +51,56 @@ Tauriの標準構成とフロントエンドのレイヤードアーキテクチ
 └── ...
 ```
 
+```mermaid
+graph TD
+    classDef cssTypes fill:#352;
+    classDef cssComponents fill:#325;
+    classDef cssPure fill:#535;
+    classDef cssExternal fill:#333;
+    
+    User([User]):::cssExternal
+
+    subgraph Presentation
+        components[components]:::cssComponents
+        routes[routes]:::cssComponents
+    end
+
+    subgraph Application
+        usecases[usecases]
+        stores[stores]
+    end
+
+    subgraph Domain
+        entities[entities]:::cssTypes
+        services[services]:::cssPure
+    end
+
+    subgraph Infrastructure
+        contracts[contracts]:::cssTypes
+        repositories[repositories]:::cssPure
+    end
+
+    ExternalSystems([External Systems]):::cssExternal
+
+    User ---> components
+    routes --> components
+    routes ---> usecases
+    routes ---> stores
+    usecases --> entities
+    usecases --> stores
+    usecases ---> services
+    usecases ---> repositories
+    stores ---> entities
+    services ---> entities
+    repositories ---> entities
+    repositories --> contracts
+    repositories ---> ExternalSystems
+
+    Components:::cssComponents
+    PureTypeScript[Pure TypeScript Code]:::cssPure
+    Types:::cssTypes
+```
+
 ---
 
 ## 2. データベース設計 (Database Schema)
