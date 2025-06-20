@@ -15,5 +15,5 @@
   "files.associations": {
     "*.css": "tailwindcss"
   },
-  "cSpell.words": ["APPLOCALDATA", "flowbite", "rfind", "tauri", "usecases"]
+  "cSpell.words": ["APPLOCALDATA", "flowbite", "kotonoha", "rfind", "tauri", "usecases"]
 }
