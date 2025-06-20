@@ -8,7 +8,7 @@ export type Episode = {
   readonly title: string;
   readonly audioPath: string;
   readonly scriptPath: string;
-  readonly durationSeconds: number;
-  readonly createdAt: string; // ISO 8601 format date string
-  readonly updatedAt: string; // ISO 8601 format date string
+  readonly durationSeconds: number | null; // 音声の長さ（秒単位）。nullの場合は不明
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 };

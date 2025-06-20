@@ -12,7 +12,7 @@ export type SentenceCard = {
   readonly sentence: string; // 抽出対象を含むセンテンス全体
   readonly definition: string; // LLMによって生成された意味・説明
   readonly status: SentenceCardStatus;
-  readonly createdAt: string; // ISO 8601 format date string
+  readonly createdAt: Date;
   // 関連する単語/イディオム
   readonly vocabulary: Vocabulary;
 };
