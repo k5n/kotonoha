@@ -2,26 +2,22 @@
 	import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 	import { Breadcrumb, BreadcrumbItem } from 'flowbite-svelte';
 	import { HomeOutline } from 'flowbite-svelte-icons';
-	import { createEventDispatcher } from 'svelte';
 
-	// --- Props (Inputs) ---
 	interface Props {
 		path: readonly EpisodeGroup[];
+		onNavigate: (index: number | null) => void;
 	}
-	let { path }: Props = $props();
-
-	// --- Events (Outputs) ---
-	const dispatch = createEventDispatcher();
+	let { path, onNavigate }: Props = $props();
 </script>
 
 <Breadcrumb aria-label="File explorer breadcrumb">
-	<BreadcrumbItem onclick={() => dispatch('navigate', null)}>
+	<BreadcrumbItem onclick={() => onNavigate(null)}>
 		<HomeOutline class="w-4 h-4 me-2" />
 		ホーム
 	</BreadcrumbItem>
 
 	{#each path as group, i (group.id)}
-		<BreadcrumbItem onclick={() => dispatch('navigate', i)}>
+		<BreadcrumbItem onclick={() => onNavigate(i)}>
 			{group.name}
 		</BreadcrumbItem>
 	{/each}

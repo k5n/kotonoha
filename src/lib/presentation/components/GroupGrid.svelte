@@ -1,16 +1,12 @@
 <script lang="ts">
 	import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 	import { FolderOutline } from 'flowbite-svelte-icons';
-	import { createEventDispatcher } from 'svelte';
 
-	// --- Props (Inputs) ---
 	interface Props {
 		groups: readonly EpisodeGroup[];
+		onGroupClick: (group: EpisodeGroup) => void;
 	}
-	let { groups }: Props = $props();
-
-	// --- Events (Outputs) ---
-	const dispatch = createEventDispatcher();
+	let { groups, onGroupClick }: Props = $props();
 </script>
 
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -19,7 +15,7 @@
 			<button
 				type="button"
 				class="border rounded-lg p-4 text-center hover:bg-gray-100 hover:border-gray-300 dark:border-gray-700 dark:hover:bg-gray-800 dark:hover:border-gray-600 transition-all"
-				onclick={() => dispatch('groupclick', group)}
+				onclick={() => onGroupClick(group)}
 			>
 				<FolderOutline class="w-10 h-10 mb-2 mx-auto text-gray-500 dark:text-gray-400" />
 				<span class="font-semibold text-gray-800 dark:text-gray-200">{group.name}</span>

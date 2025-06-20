@@ -8,51 +8,39 @@
 	import { onMount } from 'svelte';
 
 	// --- State Management ---
-	let allGroups: readonly EpisodeGroup[] = $state([]); // 全てのグループデータ
-	
-	// 現在の階層を示すパンくずリスト用のパス
+	let allGroups: readonly EpisodeGroup[] = $state([]);
 	let path: readonly EpisodeGroup[] = $state([]);
 
 	// --- Computed State ---
-	// 現在表示すべきグループ一覧
 	let displayedGroups: readonly EpisodeGroup[] = $derived.by(() => {
 		if (path.length === 0) {
-			// ルート階層の場合、親がいないグループを表示
 			return allGroups.filter((g) => g.parentId === null);
 		} else {
-			// 子階層の場合、現在地の子供たちを表示
 			const currentGroup = path[path.length - 1];
 			return currentGroup.children;
 		}
 	});
 
 	// --- Event Handlers ---
-	const handleGroupClick = (event: CustomEvent<EpisodeGroup>) => {
-		const selectedGroup = event.detail;
-		// クリックされたグループをパスに追加して階層を深くする
+	const handleGroupClick = (selectedGroup: EpisodeGroup) => {
 		path = [...path, selectedGroup];
 	};
 
-	const handleBreadcrumbClick = (event: CustomEvent<number | null>) => {
-		const targetIndex = event.detail;
+	const handleBreadcrumbClick = (targetIndex: number | null) => {
 		if (targetIndex === null) {
-			// 'ホーム'がクリックされたらパスを空にする
 			path = [];
 		} else {
-			// 指定された階層までパスを短くする
 			path = path.slice(0, targetIndex + 1);
 		}
 	};
-	
+
 	const handleAddNewEpisode = () => {
 		// TODO: 新規追加処理
 	};
 
 	onMount(async () => {
-		// initializeAppはダミーです。実際にはバックエンドと通信します。
 		allGroups = await initializeApp();
 	});
-
 </script>
 
 <div class="p-4 md:p-6">
@@ -65,9 +53,8 @@
 	</div>
 
 	<div class="mb-6">
-		<Breadcrumbs {path} on:navigate={handleBreadcrumbClick} />
+		<Breadcrumbs {path} onNavigate={handleBreadcrumbClick} />
 	</div>
 
-	<GroupGrid groups={displayedGroups} on:groupclick={handleGroupClick} />
-
+	<GroupGrid groups={displayedGroups} onGroupClick={handleGroupClick} />
 </div>
