@@ -25,6 +25,7 @@ Tauriの標準構成とフロントエンドのレイヤードアーキテクチ
 │   ├── lib/
 │   │   ├── presentation/   # UI層: SvelteコンポーネントとUIロジック
 │   │   │   ├── components/   # 再利用可能なUIコンポーネント
+│   │   │   ├── types/        # UI表示用データ型
 │   │   │   └── ...
 │   │   ├── application/    # アプリケーション層: ユースケースと状態管理
 │   │   │   ├── usecases/     # ユーザー操作を起点とする処理フロー
@@ -63,6 +64,7 @@ graph TD
     subgraph Presentation
         components[components]:::cssComponents
         routes[routes]:::cssComponents
+        types[types]:::cssTypes
     end
 
     subgraph Application
@@ -86,6 +88,8 @@ graph TD
     routes --> components
     routes ---> usecases
     routes ---> stores
+    routes --> types
+    components --> types
     usecases --> entities
     usecases --> stores
     usecases ---> services
@@ -98,7 +102,7 @@ graph TD
 
     Components:::cssComponents
     PureTypeScript[Pure TypeScript Code]:::cssPure
-    Types:::cssTypes
+    TypeDefinitions[Type Definitions]:::cssTypes
 ```
 
 ---
