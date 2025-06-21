@@ -60,17 +60,18 @@
       {data.error}
     </Alert>
   {:else if data.episodeGroup}
-    <div class="mb-4 flex items-start justify-between">
+    <div class="mb-4 flex items-center justify-between">
       <div>
-        <div class="mb-2">
-          <Breadcrumbs path={groupPathStore.path} onNavigate={handleBreadcrumbClick} />
-        </div>
         <Heading tag="h1" class="text-3xl font-bold">{data.episodeGroup.name}</Heading>
       </div>
       <Button onclick={addNewEpisode}>
         <PlusOutline class="me-2 h-5 w-5" />
         エピソードを追加
       </Button>
+    </div>
+
+    <div class="mb-6">
+      <Breadcrumbs path={groupPathStore.path} onNavigate={handleBreadcrumbClick} />
     </div>
 
     {#if data.episodes.length === 0}

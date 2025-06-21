@@ -51,7 +51,7 @@
 
 <div class="p-4 md:p-6">
   <div class="mb-4 flex items-center justify-between">
-    <Heading tag="h1" class="text-2xl font-bold">グループ一覧</Heading>
+    <Heading tag="h1" class="text-3xl font-bold">グループ一覧</Heading>
     <Button onclick={handleAddNewEpisode}>
       <PlusOutline class="me-2 h-5 w-5" />
       新規追加
