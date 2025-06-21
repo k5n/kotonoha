@@ -2,7 +2,7 @@ import { fetchEpisodes } from '$lib/application/usecases/fetchEpisodes';
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ params }: { params: { groupId: string } }) => {
+export const load: PageLoad = async ({ params }) => {
   const mockPath: EpisodeGroup[] = [
     { id: 1, name: 'Default', displayOrder: 0, parentId: null, groupType: 'album', children: [] },
   ];
