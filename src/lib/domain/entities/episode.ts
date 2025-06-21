@@ -1,3 +1,5 @@
+import type { Dialogue } from './dialogue';
+
 /**
  * 音声ファイルとスクリプトのペアを表すエンティティ。
  */
@@ -7,7 +9,7 @@ export type Episode = {
   readonly displayOrder: number;
   readonly title: string;
   readonly audioPath: string;
-  readonly scriptPath: string;
+  readonly dialogues: Dialogue[]; // 音声に対応するセリフのリスト
   readonly durationSeconds: number | null; // 音声の長さ（秒単位）。nullの場合は不明
   readonly createdAt: Date;
   readonly updatedAt: Date;

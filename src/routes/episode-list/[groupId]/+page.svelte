@@ -27,7 +27,7 @@
 
   // エピソード詳細ページへ遷移
   function openEpisode(episodeId: number) {
-    // goto(`/episode/${episodeId}`);
+    goto(`/episode/${episodeId}`);
   }
 
   // 新規エピソード追加ダイアログを開く（ダミー）
