@@ -1,16 +1,20 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { debug } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
+  import type { Dialogue } from '$lib/domain/entities/dialogue';
   import AudioPlayer from '$lib/presentation/components/AudioPlayer.svelte';
   import SentenceCardList from '$lib/presentation/components/SentenceCardList.svelte';
+  import SentenceMiningModal from '$lib/presentation/components/SentenceMiningModal.svelte';
   import TranscriptViewer from '$lib/presentation/components/TranscriptViewer.svelte';
 
   let { data }: PageProps = $props();
-  // オーディオプレイヤーと共有する状態
   let currentTime = $state(0); // 現在の再生時間（秒）
+  let isModalOpen = $state(false); // モーダルの開閉状態
+  let miningTarget: Dialogue | null = $state(null);
 
   function goBack() {
     history.length > 1 ? history.back() : goto('/');
@@ -21,6 +25,12 @@
     // ここではAudioPlayerコンポーネントが持つであろうseek関数を呼び出すことを想定
     const player = document.getElementById('audio-player') as HTMLAudioElement | null;
     if (player) player.currentTime = time;
+  }
+
+  function openMiningModal(dialogue: Dialogue) {
+    debug(`Open mining modal for dialogue: ${dialogue.id}`);
+    miningTarget = dialogue;
+    isModalOpen = true;
   }
 </script>
 
@@ -54,6 +64,7 @@
             dialogues={data.episode.dialogues}
             {currentTime}
             onSeek={(e) => handleSeek(e)}
+            onMine={openMiningModal}
           />
         </div>
       </div>
@@ -69,3 +80,11 @@
     </div>
   {/if}
 </div>
+
+<SentenceMiningModal
+  bind:openModal={isModalOpen}
+  dialogue={miningTarget}
+  onCreate={(e) => {
+    debug(`Create cards: ${e}`); // TODO: カード作成処理
+  }}
+/>

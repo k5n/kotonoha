@@ -1,13 +1,16 @@
 <script lang="ts">
   import type { Dialogue } from '$lib/domain/entities/dialogue';
+  import { Button } from 'flowbite-svelte';
+  import { SunOutline } from 'flowbite-svelte-icons';
 
   // --- Props ---
   interface Props {
     dialogues: readonly Dialogue[];
     currentTime: number; // 秒単位
     onSeek: (time: number) => void;
+    onMine: (dialogue: Dialogue) => void;
   }
-  let { dialogues, currentTime, onSeek }: Props = $props();
+  let { dialogues, currentTime, onSeek, onMine }: Props = $props();
 
   // --- State ---
   let activeIndex = $derived(
@@ -45,20 +48,30 @@
     <div class="h-[calc(50%-1.25rem)]"></div>
     {#each dialogues as dialogue, index (dialogue.id)}
       <div
-        bind:this={itemEls[index]}
-        role="button"
-        tabindex="0"
-        class="cursor-pointer rounded-lg p-3 transition-colors"
+        class="relative rounded-lg p-3 transition-all"
         class:bg-primary-100={index === activeIndex}
         class:dark:bg-primary-900={index === activeIndex}
-        class:text-primary-800={index === activeIndex}
-        class:dark:text-primary-200={index === activeIndex}
-        class:hover:bg-gray-200={index !== activeIndex}
-        class:dark:hover:bg-gray-700={index !== activeIndex}
-        onclick={() => onSeek(dialogue.startTimeMs / 1000)}
-        onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs / 1000)}
       >
-        {dialogue.correctedText || dialogue.originalText}
+        <div
+          role="button"
+          tabindex="0"
+          class="cursor-pointer"
+          class:text-primary-800={index === activeIndex}
+          class:dark:text-primary-200={index === activeIndex}
+          onclick={() => onSeek(dialogue.startTimeMs / 1000)}
+          onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs / 1000)}
+        >
+          {dialogue.correctedText || dialogue.originalText}
+        </div>
+
+        {#if index === activeIndex}
+          <div class="absolute top-1/2 right-2 -translate-y-1/2">
+            <Button size="xs" onclick={() => onMine(dialogue)}>
+              <SunOutline class="me-1 h-4 w-4" />
+              Mine
+            </Button>
+          </div>
+        {/if}
       </div>
     {/each}
     <div class="h-[calc(50%-1.25rem)]"></div>

@@ -25,14 +25,12 @@
     <Accordion>
       {#each sentenceCards as card (card.id)}
         <AccordionItem>
-          <div class="w-full text-left font-semibold">
+          {#snippet header()}{card.targetExpression}{/snippet}
+          <div class="mb-4 w-full text-left font-semibold">
             {card.sentence}
           </div>
           <div class="space-y-2">
             <p>
-              <span class="text-primary-600 dark:text-primary-400 font-bold"
-                >{card.targetExpression}</span
-              >:
               {card.definition}
             </p>
             <p class="text-xs text-gray-400">作成日: {formatDate(card.createdAt)}</p>
