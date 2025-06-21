@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
+  import { groupPathStore } from '$lib/presentation/stores/groupPathStore.svelte';
+  import { debug } from '@tauri-apps/plugin-log';
   import {
     Alert,
     Button,
@@ -33,7 +36,10 @@
   }
 
   const handleBreadcrumbClick = (targetIndex: number | null) => {
-    // TODO: 現在の選択グループをストア管理にする。選択されたグループを設定して、ホーム画面に遷移
+    debug(`Breadcrumb clicked: targetIndex=${targetIndex}`);
+    if (groupPathStore.popTo(targetIndex)) {
+      goto('/');
+    }
   };
 
   function formatDate(date: Date) {
@@ -57,7 +63,7 @@
     <div class="mb-4 flex items-start justify-between">
       <div>
         <div class="mb-2">
-          <Breadcrumbs path={data.path} onNavigate={handleBreadcrumbClick} />
+          <Breadcrumbs path={groupPathStore.path} onNavigate={handleBreadcrumbClick} />
         </div>
         <Heading tag="h1" class="text-3xl font-bold">{data.episodeGroup.name}</Heading>
       </div>

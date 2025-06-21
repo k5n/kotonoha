@@ -24,8 +24,13 @@ export const groupPathStore = {
   },
 
   // パンくずで指定indexまで戻る
-  popTo(index: number | null) {
+  // 戻り値は変化したかどうか。変化がなかった場合はfalseを返す。
+  popTo(index: number | null): boolean {
+    if (index !== null && index === path.length - 1) {
+      return false;
+    }
     path = index === null ? [] : path.slice(0, index + 1);
+    return true;
   },
 
   // パスをリセット

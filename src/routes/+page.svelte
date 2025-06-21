@@ -5,7 +5,7 @@
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
   import { groupPathStore } from '$lib/presentation/stores/groupPathStore.svelte';
-  import { Button, Heading } from 'flowbite-svelte';
+  import { Button, Heading, Spinner } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
   import { onMount } from 'svelte';
 
@@ -19,13 +19,13 @@
       ? allGroups.filter((g) => g.parentId === null)
       : groupPathStore.current.children
   );
+  let currentGroupType = $derived(groupPathStore.current?.groupType ?? 'folder');
 
   // --- Event Handlers ---
   const handleGroupClick = (selectedGroup: EpisodeGroup) => {
+    groupPathStore.pushGroup(selectedGroup);
     if (selectedGroup.groupType == 'album') {
       goto(`/episode-list/${selectedGroup.id}`);
-    } else {
-      groupPathStore.pushGroup(selectedGroup);
     }
   };
 
@@ -39,7 +39,6 @@
 
   onMount(async () => {
     allGroups = await initializeApp();
-    groupPathStore.reset();
   });
 </script>
 
@@ -56,5 +55,12 @@
     <Breadcrumbs {path} onNavigate={handleBreadcrumbClick} />
   </div>
 
-  <GroupGrid groups={displayedGroups} onGroupClick={handleGroupClick} />
+  {#if currentGroupType === 'album'}
+    <div class="flex justify-center py-12">
+      <!-- Show spinner until page navigation -->
+      <Spinner size="16" />
+    </div>
+  {:else}
+    <GroupGrid groups={displayedGroups} onGroupClick={handleGroupClick} />
+  {/if}
 </div>
