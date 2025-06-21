@@ -4,39 +4,33 @@
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
+  import { groupPathStore } from '$lib/presentation/stores/groupPathStore.svelte';
   import { Button, Heading } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
   import { onMount } from 'svelte';
 
   // --- State Management ---
   let allGroups: readonly EpisodeGroup[] = $state([]);
-  let path: readonly EpisodeGroup[] = $state([]);
 
   // --- Computed State ---
-  let displayedGroups: readonly EpisodeGroup[] = $derived.by(() => {
-    if (path.length === 0) {
-      return allGroups.filter((g) => g.parentId === null);
-    } else {
-      const currentGroup = path[path.length - 1];
-      return currentGroup.children;
-    }
-  });
+  let path = $derived(groupPathStore.path);
+  let displayedGroups = $derived(
+    groupPathStore.current === null
+      ? allGroups.filter((g) => g.parentId === null)
+      : groupPathStore.current.children
+  );
 
   // --- Event Handlers ---
   const handleGroupClick = (selectedGroup: EpisodeGroup) => {
     if (selectedGroup.groupType == 'album') {
       goto(`/episode-list/${selectedGroup.id}`);
     } else {
-      path = [...path, selectedGroup];
+      groupPathStore.pushGroup(selectedGroup);
     }
   };
 
   const handleBreadcrumbClick = (targetIndex: number | null) => {
-    if (targetIndex === null) {
-      path = [];
-    } else {
-      path = path.slice(0, targetIndex + 1);
-    }
+    groupPathStore.popTo(targetIndex);
   };
 
   const handleAddNewEpisode = () => {
@@ -45,6 +39,7 @@
 
   onMount(async () => {
     allGroups = await initializeApp();
+    groupPathStore.reset();
   });
 </script>
 
