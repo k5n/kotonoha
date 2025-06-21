@@ -3,4 +3,6 @@
   import '../app.css';
 </script>
 
-{@render children()}
+<div class="container mx-auto px-4">
+  {@render children()}
+</div>
