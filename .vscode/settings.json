@@ -15,6 +15,16 @@
   "files.associations": {
     "*.css": "tailwindcss"
   },
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": "./doc/coding_rules.md"
+    }
+  ],
+  "github.copilot.chat.testGeneration.instructions": [
+    {
+      "file": "./doc/testing_rules.md"
+    }
+  ],
   "cSpell.words": [
     "APPLOCALDATA",
     "flowbite",
