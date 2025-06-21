@@ -44,12 +44,11 @@ export const load: PageLoad = async ({ params }) => {
 
 - ストアは **Svelte 5 の Runes を利用し、状態そのものは外部に直接公開せず、操作用の関数や getter をまとめたオブジェクトとして公開**してください。
 - ストアの利用は `counterStore.reset()` や `counterStore.value` のように、**ストアオブジェクト経由でアクセス**してください。
+- ファイル名の拡張子は `*.svelte.ts` としてください。
 
 ### コード例
 
 ```typescript
-import { $state } from 'svelte';
-
 let store = $state(0);
 
 export const counterStore = {
