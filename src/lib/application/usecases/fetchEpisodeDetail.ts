@@ -28,7 +28,7 @@ const stubEpisode: Episode = {
   episodeGroupId: 1,
   displayOrder: 1,
   title: 'サンプルエピソード',
-  audioPath: '/audio/sample.mp3',
+  audioPath: '/tmp/sample.mp3',
   dialogues: stubDialogues,
   durationSeconds: 120,
   createdAt: new Date('2025-06-21T10:00:00Z'),
