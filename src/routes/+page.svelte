@@ -5,12 +5,14 @@
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
   import { groupPathStore } from '$lib/presentation/stores/groupPathStore.svelte';
-  import { Button, Heading, Spinner } from 'flowbite-svelte';
+  import { error } from '@tauri-apps/plugin-log';
+  import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
   import { onMount } from 'svelte';
 
   // --- State Management ---
   let allGroups: readonly EpisodeGroup[] = $state([]);
+  let errorMessage = $state('');
 
   // --- Computed State ---
   let path = $derived(groupPathStore.path);
@@ -38,7 +40,12 @@
   };
 
   onMount(async () => {
-    allGroups = await initializeApp();
+    try {
+      allGroups = await initializeApp();
+    } catch (err) {
+      errorMessage = err instanceof Error ? err.message : String(err);
+      error(`Failed to initialize app: ${err}`);
+    }
   });
 </script>
 
@@ -60,6 +67,11 @@
       <!-- Show spinner until page navigation -->
       <Spinner size="16" />
     </div>
+  {:else if errorMessage}
+    <Alert color="red">
+      <span class="font-medium">エラー:</span>
+      {errorMessage}
+    </Alert>
   {:else}
     <GroupGrid groups={displayedGroups} onGroupClick={handleGroupClick} />
   {/if}
