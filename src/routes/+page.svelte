@@ -3,9 +3,11 @@
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addEpisodeGroup } from '$lib/application/usecases/addEpisodeGroup';
   import { initializeApp } from '$lib/application/usecases/initializeApp';
+  import { updateEpisodeGroupName } from '$lib/application/usecases/updateEpisodeGroupName';
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import GroupAddModal from '$lib/presentation/components/GroupAddModal.svelte';
+  import GroupEditModal from '$lib/presentation/components/GroupEditModal.svelte';
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
   import { error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
@@ -16,7 +18,9 @@
   let allGroups: readonly EpisodeGroup[] = $state([]);
   let errorMessage = $state('');
   let isAddModalOpen = $state(false);
+  let isEditModalOpen = $state(false);
   let isSubmitting = $state(false);
+  let editingGroup: EpisodeGroup | null = $state(null);
 
   // --- Computed State ---
   let path = $derived(groupPathStore.path);
@@ -61,6 +65,28 @@
     }
   };
 
+  const handleChangeGroupName = (group: EpisodeGroup) => {
+    editingGroup = group;
+    isEditModalOpen = true;
+  };
+
+  const handleEditGroupSubmit = async (newName: string) => {
+    if (!editingGroup) return;
+    isSubmitting = true;
+    try {
+      allGroups = await updateEpisodeGroupName({
+        groupId: editingGroup.id,
+        newName,
+      });
+      isEditModalOpen = false;
+      editingGroup = null;
+    } catch (err) {
+      error(`Failed to update group: ${err}`);
+    } finally {
+      isSubmitting = false;
+    }
+  };
+
   onMount(async () => {
     try {
       allGroups = await initializeApp();
@@ -95,7 +121,11 @@
       {errorMessage}
     </Alert>
   {:else}
-    <GroupGrid groups={displayedGroups} onGroupClick={handleGroupClick} />
+    <GroupGrid
+      groups={displayedGroups}
+      onGroupClick={handleGroupClick}
+      onChangeName={handleChangeGroupName}
+    />
   {/if}
 
   <GroupAddModal
@@ -103,5 +133,16 @@
     {isSubmitting}
     onClose={() => (isAddModalOpen = false)}
     onSubmit={handleAddGroupSubmit}
+  />
+
+  <GroupEditModal
+    show={isEditModalOpen}
+    {isSubmitting}
+    initialName={editingGroup ? editingGroup.name : ''}
+    onClose={() => {
+      isEditModalOpen = false;
+      editingGroup = null;
+    }}
+    onSubmit={handleEditGroupSubmit}
   />
 </div>

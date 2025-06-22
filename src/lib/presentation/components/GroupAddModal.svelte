@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
-  import { Button, Heading, Input, Label, Modal, Radio } from 'flowbite-svelte';
+  import { Alert, Button, Heading, Input, Label, Modal, Radio } from 'flowbite-svelte';
 
   type Props = {
     show: boolean;
@@ -47,6 +47,11 @@
         <Label for="type-album">アルバム</Label>
       </div>
     </div>
+    {#if errorMessage}
+      <Alert color="red" class="mb-4">
+        {errorMessage}
+      </Alert>
+    {/if}
     <div class="flex justify-end gap-2">
       <Button color="gray" onclick={onClose} disabled={isSubmitting}>キャンセル</Button>
       <Button onclick={handleSubmit} disabled={isSubmitting}

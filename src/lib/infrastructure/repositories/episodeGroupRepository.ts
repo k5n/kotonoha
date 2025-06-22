@@ -59,6 +59,16 @@ export const episodeGroupRepository = {
     };
   },
 
+  /**
+   * グループ名を更新する
+   * @param groupId 対象グループID
+   * @param newName 新しいグループ名
+   */
+  async updateGroup(groupId: number, newName: string): Promise<void> {
+    const db = new Database(DB_NAME);
+    await db.execute(`UPDATE episode_groups SET name = ? WHERE id = ?`, [newName, groupId]);
+  },
+
   // /**
   //  * 指定したparentIdの子グループを取得する
   //  * @param parentId 親グループID（nullの場合はルート）
