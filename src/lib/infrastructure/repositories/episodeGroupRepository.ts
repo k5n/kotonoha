@@ -1,6 +1,8 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 import Database from '@tauri-apps/plugin-sql';
 
+const DB_NAME = 'sqlite:app.db';
+
 // DBのsnake_caseカラム名をcamelCaseに変換し、EpisodeGroup型にマッピング
 function mapRowToEpisodeGroup(row: any): EpisodeGroup {
   return {
@@ -21,7 +23,7 @@ export const episodeGroupRepository = {
    * ツリー構造への組み立ては取得後に行う必要がある。
    */
   async getAllGroups(): Promise<EpisodeGroup[]> {
-    const db = new Database('sqlite:app.db');
+    const db = new Database(DB_NAME);
     const rows = await db.select('SELECT * FROM episode_groups');
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
     return rows.map(mapRowToEpisodeGroup);
@@ -38,7 +40,7 @@ export const episodeGroupRepository = {
     groupType: 'album' | 'folder';
     displayOrder: number;
   }): Promise<EpisodeGroup> {
-    const db = new Database('sqlite:app.db');
+    const db = new Database(DB_NAME);
     await db.execute(
       `INSERT INTO episode_groups (name, parent_group_id, group_type, display_order)
       VALUES (?, ?, ?, ?)`,
@@ -56,4 +58,21 @@ export const episodeGroupRepository = {
       children: [],
     };
   },
+
+  // /**
+  //  * 指定したparentIdの子グループを取得する
+  //  * @param parentId 親グループID（nullの場合はルート）
+  //  * @returns 子グループの配列
+  //  */
+  // async getGroups(parentId: number | null): Promise<EpisodeGroup[]> {
+  //   const db = new Database(DB_NAME);
+  //   let rows;
+  //   if (parentId === null) {
+  //     rows = await db.select('SELECT * FROM episode_groups WHERE parent_group_id IS NULL');
+  //   } else {
+  //     rows = await db.select('SELECT * FROM episode_groups WHERE parent_group_id = ?', [parentId]);
+  //   }
+  //   if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
+  //   return rows.map(mapRowToEpisodeGroup);
+  // },
 };
