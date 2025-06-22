@@ -1,3 +1,5 @@
+export type EpisodeGroupType = 'album' | 'folder';
+
 /**
  * エピソードを分類するためのグループエンティティ。
  * グループは入れ子構造を持つことができます。
@@ -8,7 +10,7 @@ export type EpisodeGroup = {
   readonly name: string;
   readonly displayOrder: number;
   readonly parentId: number | null;
-  readonly groupType: 'album' | 'folder';
+  readonly groupType: EpisodeGroupType;
   // フロントエンドでツリー構造を扱いやすくするためのプロパティ
   readonly children: readonly EpisodeGroup[];
 };

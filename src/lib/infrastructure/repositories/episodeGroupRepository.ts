@@ -26,4 +26,34 @@ export const episodeGroupRepository = {
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
     return rows.map(mapRowToEpisodeGroup);
   },
+
+  /**
+   * 新しいエピソードグループを追加する
+   * @param params グループ名・親ID・種別・表示順
+   * @returns 追加されたEpisodeGroup
+   */
+  async addGroup(params: {
+    name: string;
+    parentId: number | null;
+    groupType: 'album' | 'folder';
+    displayOrder: number;
+  }): Promise<EpisodeGroup> {
+    const db = new Database('sqlite:app.db');
+    await db.execute(
+      `INSERT INTO episode_groups (name, parent_group_id, group_type, display_order)
+      VALUES (?, ?, ?, ?)`,
+      [params.name, params.parentId, params.groupType, params.displayOrder]
+    );
+    // SQLiteのlastInsertId取得
+    const rows = await db.select(`SELECT last_insert_rowid() as id`);
+    const [{ id }] = rows as any[];
+    return {
+      id,
+      name: params.name,
+      displayOrder: params.displayOrder,
+      parentId: params.parentId,
+      groupType: params.groupType,
+      children: [],
+    };
+  },
 };

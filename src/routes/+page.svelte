@@ -1,9 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
+  import { addEpisodeGroup } from '$lib/application/usecases/addEpisodeGroup';
   import { initializeApp } from '$lib/application/usecases/initializeApp';
-  import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
+  import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
+  import GroupAddModal from '$lib/presentation/components/GroupAddModal.svelte';
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
   import { error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
@@ -13,6 +15,8 @@
   // --- State Management ---
   let allGroups: readonly EpisodeGroup[] = $state([]);
   let errorMessage = $state('');
+  let isAddModalOpen = $state(false);
+  let isSubmitting = $state(false);
 
   // --- Computed State ---
   let path = $derived(groupPathStore.path);
@@ -36,7 +40,35 @@
   };
 
   const handleAddNewEpisode = () => {
-    // TODO: 新規追加処理
+    isAddModalOpen = true;
+  };
+
+  const handleAddGroupSubmit = async (name: string, groupType: EpisodeGroupType) => {
+    isSubmitting = true;
+    try {
+      const parentId = groupPathStore.current?.id ?? null;
+      const siblings = allGroups.filter((g) => g.parentId === parentId);
+      const maxOrder = siblings.length > 0 ? Math.max(...siblings.map((g) => g.displayOrder)) : 0;
+      const displayOrder = maxOrder + 1;
+      const added = await addEpisodeGroup({
+        name,
+        parentId,
+        groupType,
+        displayOrder,
+      });
+      if (parentId) {
+        allGroups = allGroups.map((g) =>
+          g.id === parentId ? { ...g, children: [...g.children, added] } : g
+        );
+      } else {
+        allGroups = [...allGroups, added];
+      }
+      isAddModalOpen = false;
+    } catch (err) {
+      error(`Failed to add group: ${err}`);
+    } finally {
+      isSubmitting = false;
+    }
   };
 
   onMount(async () => {
@@ -52,7 +84,7 @@
 <div class="p-4 md:p-6">
   <div class="mb-4 flex items-center justify-between">
     <Heading tag="h1" class="text-3xl font-bold">グループ一覧</Heading>
-    <Button onclick={handleAddNewEpisode}>
+    <Button onclick={handleAddNewEpisode} disabled={currentGroupType === 'album'}>
       <PlusOutline class="me-2 h-5 w-5" />
       新規追加
     </Button>
@@ -75,4 +107,11 @@
   {:else}
     <GroupGrid groups={displayedGroups} onGroupClick={handleGroupClick} />
   {/if}
+
+  <GroupAddModal
+    show={isAddModalOpen}
+    {isSubmitting}
+    onClose={() => (isAddModalOpen = false)}
+    onSubmit={handleAddGroupSubmit}
+  />
 </div>
