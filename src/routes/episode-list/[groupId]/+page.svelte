@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
-  import { groupPathStore } from '$lib/presentation/stores/groupPathStore.svelte';
   import { debug } from '@tauri-apps/plugin-log';
   import {
     Alert,

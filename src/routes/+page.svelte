@@ -1,10 +1,10 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { initializeApp } from '$lib/application/usecases/initializeApp';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
-  import { groupPathStore } from '$lib/presentation/stores/groupPathStore.svelte';
   import { error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
