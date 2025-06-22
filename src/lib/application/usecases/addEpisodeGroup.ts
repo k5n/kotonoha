@@ -1,5 +1,4 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
-import { buildEpisodeGroupTree } from '$lib/domain/services/buildEpisodeGroupTree';
 import { episodeGroupRepository } from '$lib/infrastructure/repositories/episodeGroupRepository';
 
 /**
@@ -35,7 +34,7 @@ export async function addEpisodeGroup(params: {
     displayOrder,
   });
 
-  // 追加後のグループ一覧を取得してツリー構造に変換
-  const flatGroups = await episodeGroupRepository.getAllGroups();
-  return buildEpisodeGroupTree(flatGroups);
+  // 追加後のグループ一覧を取得（現在表示中のグループの子供一覧）
+  const children = await episodeGroupRepository.getGroups(parentId);
+  return children;
 }

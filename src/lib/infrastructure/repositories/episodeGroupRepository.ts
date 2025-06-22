@@ -69,20 +69,20 @@ export const episodeGroupRepository = {
     await db.execute(`UPDATE episode_groups SET name = ? WHERE id = ?`, [newName, groupId]);
   },
 
-  // /**
-  //  * 指定したparentIdの子グループを取得する
-  //  * @param parentId 親グループID（nullの場合はルート）
-  //  * @returns 子グループの配列
-  //  */
-  // async getGroups(parentId: number | null): Promise<EpisodeGroup[]> {
-  //   const db = new Database(DB_NAME);
-  //   let rows;
-  //   if (parentId === null) {
-  //     rows = await db.select('SELECT * FROM episode_groups WHERE parent_group_id IS NULL');
-  //   } else {
-  //     rows = await db.select('SELECT * FROM episode_groups WHERE parent_group_id = ?', [parentId]);
-  //   }
-  //   if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
-  //   return rows.map(mapRowToEpisodeGroup);
-  // },
+  /**
+   * 指定したparentIdの子グループを取得する
+   * @param parentId 親グループID（nullの場合はルート）
+   * @returns 子グループの配列
+   */
+  async getGroups(parentId: number | null): Promise<EpisodeGroup[]> {
+    const db = new Database(DB_NAME);
+    let rows;
+    if (parentId === null) {
+      rows = await db.select('SELECT * FROM episode_groups WHERE parent_group_id IS NULL');
+    } else {
+      rows = await db.select('SELECT * FROM episode_groups WHERE parent_group_id = ?', [parentId]);
+    }
+    if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
+    return rows.map(mapRowToEpisodeGroup);
+  },
 };

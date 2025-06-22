@@ -2,7 +2,6 @@
   import { goto } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addEpisodeGroup } from '$lib/application/usecases/addEpisodeGroup';
-  import { initializeApp } from '$lib/application/usecases/initializeApp';
   import { updateEpisodeGroupName } from '$lib/application/usecases/updateEpisodeGroupName';
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
@@ -12,10 +11,13 @@
   import { error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
-  import { onMount } from 'svelte';
+  import type { PageProps } from './$types';
+
+  // --- ページデータ受け取り ---
+  let { data }: PageProps = $props();
+  let displayedGroups: readonly EpisodeGroup[] = $derived(data.groups);
 
   // --- State Management ---
-  let allGroups: readonly EpisodeGroup[] = $state([]);
   let errorMessage = $state('');
   let isAddModalOpen = $state(false);
   let isEditModalOpen = $state(false);
@@ -24,23 +26,27 @@
 
   // --- Computed State ---
   let path = $derived(groupPathStore.path);
-  let displayedGroups = $derived(
-    groupPathStore.current === null
-      ? allGroups.filter((g) => g.parentId === null)
-      : groupPathStore.current.children
-  );
   let currentGroupType = $derived(groupPathStore.current?.groupType ?? 'folder');
+
+  // --- Functions ---
+  function transition() {
+    const pathStr = groupPathStore.path.map((g) => g.id).join('/');
+    goto(`/${pathStr}`);
+  }
 
   // --- Event Handlers ---
   const handleGroupClick = (selectedGroup: EpisodeGroup) => {
     groupPathStore.pushGroup(selectedGroup);
     if (selectedGroup.groupType == 'album') {
       goto(`/episode-list/${selectedGroup.id}`);
+    } else {
+      transition();
     }
   };
 
   const handleBreadcrumbClick = (targetIndex: number | null) => {
     groupPathStore.popTo(targetIndex);
+    transition();
   };
 
   const handleAddNewEpisode = () => {
@@ -51,7 +57,7 @@
     isSubmitting = true;
     try {
       const parentId = groupPathStore.current?.id ?? null;
-      allGroups = await addEpisodeGroup({
+      displayedGroups = await addEpisodeGroup({
         name,
         parentId,
         groupType,
@@ -74,8 +80,8 @@
     if (!editingGroup) return;
     isSubmitting = true;
     try {
-      allGroups = await updateEpisodeGroupName({
-        groupId: editingGroup.id,
+      displayedGroups = await updateEpisodeGroupName({
+        group: editingGroup,
         newName,
       });
       isEditModalOpen = false;
@@ -86,15 +92,6 @@
       isSubmitting = false;
     }
   };
-
-  onMount(async () => {
-    try {
-      allGroups = await initializeApp();
-    } catch (err) {
-      errorMessage = err instanceof Error ? err.message : String(err);
-      error(`Failed to initialize app: ${err}`);
-    }
-  });
 </script>
 
 <div class="p-4 md:p-6">

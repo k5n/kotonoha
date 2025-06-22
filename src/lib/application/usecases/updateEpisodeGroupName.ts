@@ -1,5 +1,4 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
-import { buildEpisodeGroupTree } from '$lib/domain/services/buildEpisodeGroupTree';
 import { episodeGroupRepository } from '$lib/infrastructure/repositories/episodeGroupRepository';
 
 /**
@@ -9,15 +8,15 @@ import { episodeGroupRepository } from '$lib/infrastructure/repositories/episode
  * @returns 更新後の全EpisodeGroup配列
  */
 export async function updateEpisodeGroupName({
-  groupId,
+  group,
   newName,
 }: {
-  groupId: number;
+  group: EpisodeGroup;
   newName: string;
 }): Promise<readonly EpisodeGroup[]> {
-  await episodeGroupRepository.updateGroup(groupId, newName);
+  await episodeGroupRepository.updateGroup(group.id, newName);
 
-  // DB更新後、全グループを再取得
-  const flatGroups = await episodeGroupRepository.getAllGroups();
-  return buildEpisodeGroupTree(flatGroups);
+  // DB更新後、グループ一覧を取得（現在表示中のグループの子供一覧）
+  const children = await episodeGroupRepository.getGroups(group.parentId);
+  return children;
 }
