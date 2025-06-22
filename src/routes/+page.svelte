@@ -47,22 +47,12 @@
     isSubmitting = true;
     try {
       const parentId = groupPathStore.current?.id ?? null;
-      const siblings = allGroups.filter((g) => g.parentId === parentId);
-      const maxOrder = siblings.length > 0 ? Math.max(...siblings.map((g) => g.displayOrder)) : 0;
-      const displayOrder = maxOrder + 1;
-      const added = await addEpisodeGroup({
+      allGroups = await addEpisodeGroup({
         name,
         parentId,
         groupType,
-        displayOrder,
+        siblings: displayedGroups,
       });
-      if (parentId) {
-        allGroups = allGroups.map((g) =>
-          g.id === parentId ? { ...g, children: [...g.children, added] } : g
-        );
-      } else {
-        allGroups = [...allGroups, added];
-      }
       isAddModalOpen = false;
     } catch (err) {
       error(`Failed to add group: ${err}`);

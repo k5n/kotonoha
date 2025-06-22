@@ -1,33 +1,41 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
+import { buildEpisodeGroupTree } from '$lib/domain/services/buildEpisodeGroupTree';
 import { episodeGroupRepository } from '$lib/infrastructure/repositories/episodeGroupRepository';
 
 /**
  * 新しいエピソードグループを追加するユースケース
- * @param params グループ名・親ID・種別・表示順
- * @returns 追加されたEpisodeGroup
+ * @param params グループ名・親ID・種別・兄弟グループ一覧
+ * @returns 更新されたエピソードグループツリー
  */
 export async function addEpisodeGroup(params: {
   name: string;
   parentId: number | null;
   groupType: 'album' | 'folder';
-  displayOrder: number;
-}): Promise<EpisodeGroup> {
-  const { name, parentId, groupType, displayOrder } = params;
+  siblings: readonly EpisodeGroup[];
+}): Promise<EpisodeGroup[]> {
+  const { name, parentId, groupType, siblings } = params;
 
-  // バリデーション。画面側で保証すべきだが、念のためチェック。
+  // バリデーション
   if (!name.trim()) {
     throw new Error('グループ名を入力してください');
   }
   if (groupType !== 'album' && groupType !== 'folder') {
     throw new Error('グループ種別が不正です');
   }
-  // 親グループがalbum型の場合は追加不可だが、バリデーションは省略。画面側で保証する。
+
+  // siblings から表示順を決定
+  const maxOrder = siblings.length > 0 ? Math.max(...siblings.map((g) => g.displayOrder)) : 0;
+  const displayOrder = maxOrder + 1;
 
   // 追加
-  return await episodeGroupRepository.addGroup({
+  await episodeGroupRepository.addGroup({
     name,
     parentId,
     groupType,
     displayOrder,
   });
+
+  // 追加後のグループ一覧を取得してツリー構造に変換
+  const flatGroups = await episodeGroupRepository.getAllGroups();
+  return buildEpisodeGroupTree(flatGroups);
 }
