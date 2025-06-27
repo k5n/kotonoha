@@ -1,29 +1,41 @@
 import eslint from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import svelte from 'eslint-plugin-svelte';
-import tseslint from 'typescript-eslint';
+import globals from 'globals';
+import svelteParser from 'svelte-eslint-parser';
+import tsEslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default tsEslint.config(
   // .eslintignore の代替
   {
     ignores: ['src-tauri/', 'doc/', '.vscode/', '.svelte-kit/'],
   },
   eslint.configs.recommended,
-  // TypeScript用の設定を .svelte.ts にも適用する
-  {
-    files: ['**/*.ts', '**/*.svelte.ts'],
-    extends: [tseslint.configs.recommended],
-  },
-  // Svelteコンポーネント(.svelte)用の設定
-  // v9以降のeslint-plugin-svelteでは 'flat/recommended' を利用。
   svelte.configs['flat/recommended'],
-  // .svelte.ts ファイル専用の追加設定
+  tsEslint.configs.recommended,
+  // Other config for non-Svelte files
   {
-    files: ['**/*.svelte.ts'],
     languageOptions: {
-      // Svelte 5のグローバル変数($stateなど)をESLintに認識させる
+      parser: tsEslint.parser,
+      parserOptions: {
+        extraFileExtensions: ['.svelte'],
+      },
+    },
+  },
+  // Svelte config
+  {
+    files: [
+      '**/*.svelte',
+      '**/*.svelte.ts', // Svelte files with TypeScript
+    ],
+    languageOptions: {
+      parser: svelteParser,
+      // Parse the `<script>` in `.svelte` as TypeScript by adding the following configuration.
+      parserOptions: {
+        parser: tsEslint.parser,
+      },
       globals: {
-        ...svelte.environments.svelte5.globals,
+        ...globals.browser,
       },
     },
   },

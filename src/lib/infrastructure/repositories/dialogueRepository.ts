@@ -2,7 +2,16 @@ import type { Dialogue } from '$lib/domain/entities/dialogue';
 import Database from '@tauri-apps/plugin-sql';
 import { DB_NAME } from '../config';
 
-function mapRowToDialogue(row: any): Dialogue {
+type DialogueRow = {
+  id: number;
+  episode_id: number;
+  start_time_ms: number;
+  end_time_ms: number;
+  original_text: string;
+  corrected_text: string | null;
+};
+
+function mapRowToDialogue(row: DialogueRow): Dialogue {
   return {
     id: row.id,
     episodeId: row.episode_id,

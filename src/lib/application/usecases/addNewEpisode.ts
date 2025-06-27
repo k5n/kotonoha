@@ -1,6 +1,7 @@
 // import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 // import type { Episode } from '$lib/domain/entities/Episode';
 // import { episodeStore } from '$lib/application/stores/episodeStore';
+import { info } from '@tauri-apps/plugin-log';
 
 /**
  * 新しいエピソードを追加するためのパラメータ
@@ -20,6 +21,7 @@ interface AddNewEpisodeParams {
  * @throws エピソードの追加に失敗した場合にエラーをスローする
  */
 export const addNewEpisode = async (params: AddNewEpisodeParams): Promise<void> => {
+  info(`Adding new episode with params: ${JSON.stringify(params)}`);
   // try {
   //   const newEpisode = await episodeRepository.addEpisode({
   //     title: params.title,

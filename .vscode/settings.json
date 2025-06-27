@@ -1,5 +1,6 @@
 {
   "svelte.enable-ts-plugin": true,
+  "eslint.validate": ["svelte"],
   "editor.formatOnSave": true,
   "[typescript][javascript][json][jsonc][svelte]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",

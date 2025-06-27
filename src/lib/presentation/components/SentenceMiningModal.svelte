@@ -81,7 +81,7 @@
       {:else}
         <p class="mb-2 text-sm text-gray-500">カードにしたい単語・表現を選択してください。</p>
         <div class="space-y-3">
-          {#each minedResults as item}
+          {#each minedResults as item (item.id)}
             <label
               class="flex w-full items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
             >

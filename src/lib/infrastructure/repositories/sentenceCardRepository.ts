@@ -2,7 +2,19 @@ import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
 import Database from '@tauri-apps/plugin-sql';
 import { DB_NAME } from '../config';
 
-function mapRowToSentenceCard(row: any): SentenceCard {
+type SentenceCardRow = {
+  id: number;
+  dialogue_id: number;
+  target_expression: string;
+  sentence: string;
+  definition: string;
+  status: 'active' | 'suspended';
+  created_at: string;
+  vocabulary_id: number;
+  expression: string;
+};
+
+function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
   return {
     id: row.id,
     dialogueId: row.dialogue_id,
@@ -49,7 +61,19 @@ export const sentenceCardRepository = {
     const rows = await db.select<{ id: number }[]>(`SELECT last_insert_rowid() as id`);
     const [{ id }] = rows;
 
-    const newCard = await db.select<any[]>(
+    const newCard = await db.select<
+      {
+        id: number;
+        dialogue_id: number;
+        target_expression: string;
+        sentence: string;
+        definition: string;
+        status: 'active' | 'suspended';
+        created_at: string;
+        vocabulary_id: number;
+        expression: string;
+      }[]
+    >(
       'SELECT sc.*, v.expression FROM sentence_cards sc INNER JOIN vocabulary v ON sc.vocabulary_id = v.id WHERE sc.id = ?',
       [id]
     );
@@ -61,7 +85,19 @@ export const sentenceCardRepository = {
    */
   async getSentenceCardsByEpisodeId(episodeId: number): Promise<SentenceCard[]> {
     const db = new Database(DB_NAME);
-    const rows = await db.select<any[]>(
+    const rows = await db.select<
+      {
+        id: number;
+        dialogue_id: number;
+        target_expression: string;
+        sentence: string;
+        definition: string;
+        status: 'active' | 'suspended';
+        created_at: string;
+        vocabulary_id: number;
+        expression: string;
+      }[]
+    >(
       `
       SELECT
         sc.*,

@@ -17,7 +17,11 @@
   let miningTarget: Dialogue | null = $state(null);
 
   function goBack() {
-    history.length > 1 ? history.back() : goto('/');
+    if (history.length > 1) {
+      history.back();
+    } else {
+      goto('/');
+    }
   }
 
   function handleSeek(time: number) {

@@ -94,7 +94,7 @@
             <TableHeadCell><span class="sr-only">開く</span></TableHeadCell>
           </TableHead>
           <TableBody>
-            {#each data.episodes as episode}
+            {#each data.episodes as episode (episode.id)}
               <TableBodyRow class="cursor-pointer" onclick={() => openEpisode(episode.id)}>
                 <TableBodyCell class="font-semibold">{episode.title}</TableBodyCell>
                 <TableBodyCell>{formatDate(episode.createdAt)}</TableBodyCell>

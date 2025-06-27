@@ -3,7 +3,7 @@
 ## Commands
 
 - **Build**: `npm run build`
-- **Lint**: `npm run check`
+- **Lint**: `npm run lint`
 - **Format**: `npm run format`
 - **Test all**: `npx vitest run`
 - **Test single file**: `npx vitest <path_to_test_file> run`（例: `npx vitest src/lib/domain/services/buildEpisodeGroupTree.test.ts run`）
@@ -11,7 +11,7 @@
 ## 作業共通ルール
 
 - ファイルを作成・編集した後は `npm run format` を実行してコードを整形すること。
-- 一連の作業が終わったら `npx vitest run` を実行して全てのテストが通ることを確認すること。
+- ファイルを作成・編集した後は `npm run lint` を実行してリンターエラーがないか確認すること。
 
 ## Architecture Overview
 

@@ -2,8 +2,16 @@ import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 import Database from '@tauri-apps/plugin-sql';
 import { DB_NAME } from '../config';
 
+type EpisodeGroupRow = {
+  id: number;
+  name: string;
+  display_order: number;
+  parent_group_id: number | null;
+  group_type: 'album' | 'folder';
+};
+
 // DBのsnake_caseカラム名をcamelCaseに変換し、EpisodeGroup型にマッピング
-function mapRowToEpisodeGroup(row: any): EpisodeGroup {
+function mapRowToEpisodeGroup(row: EpisodeGroupRow): EpisodeGroup {
   return {
     id: row.id,
     name: row.name,
@@ -47,7 +55,7 @@ export const episodeGroupRepository = {
     );
     // SQLiteのlastInsertId取得
     const rows = await db.select(`SELECT last_insert_rowid() as id`);
-    const [{ id }] = rows as any[];
+    const [{ id }] = rows as { id: number }[];
     return {
       id,
       name: params.name,

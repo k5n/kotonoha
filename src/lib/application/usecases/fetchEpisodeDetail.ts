@@ -1,6 +1,7 @@
 import type { Dialogue } from '$lib/domain/entities/dialogue';
 import type { Episode } from '$lib/domain/entities/episode';
 import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
+import { info } from '@tauri-apps/plugin-log';
 
 // スタブ用ダイアログ
 const stubDialogues: Dialogue[] = [
@@ -55,6 +56,7 @@ const stubSentenceCards: SentenceCard[] = [
 export async function fetchEpisodeDetail(
   episodeId: number
 ): Promise<{ episode: Episode; sentenceCards: SentenceCard[] } | null> {
+  info(`Fetching episode detail for ID: ${episodeId}`);
   // 引数に応じて分岐も可能だが、ここでは常に同じデータを返す
   return Promise.resolve({ episode: stubEpisode, sentenceCards: stubSentenceCards });
 }

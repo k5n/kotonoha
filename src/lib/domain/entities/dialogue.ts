@@ -7,5 +7,5 @@ export type Dialogue = {
   readonly startTimeMs: number;
   readonly endTimeMs: number;
   readonly originalText: string;
-  readonly correctedText: string;
+  readonly correctedText: string | null;
 };

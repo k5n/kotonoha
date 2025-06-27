@@ -2,7 +2,18 @@ import type { Episode } from '$lib/domain/entities/episode';
 import Database from '@tauri-apps/plugin-sql';
 import { DB_NAME } from '../config';
 
-function mapRowToEpisode(row: any): Episode {
+type EpisodeRow = {
+  id: number;
+  episode_group_id: number;
+  display_order: number;
+  title: string;
+  audio_path: string;
+  duration_seconds: number;
+  created_at: string;
+  updated_at: string;
+};
+
+function mapRowToEpisode(row: EpisodeRow): Episode {
   return {
     id: row.id,
     episodeGroupId: row.episode_group_id,
@@ -53,10 +64,23 @@ export const episodeRepository = {
     );
 
     const rows = await db.select(`SELECT last_insert_rowid() as id`);
-    const [{ id }] = rows as any[];
+    const [{ id }] = rows as { id: number }[];
 
     const newEpisode = await db.select('SELECT * FROM episodes WHERE id = ?', [id]);
-    return mapRowToEpisode((newEpisode as any[])[0]);
+    return mapRowToEpisode(
+      (
+        newEpisode as {
+          id: number;
+          episode_group_id: number;
+          display_order: number;
+          title: string;
+          audio_path: string;
+          duration_seconds: number;
+          created_at: string;
+          updated_at: string;
+        }[]
+      )[0]
+    );
   },
 
   async updateEpisode(
@@ -69,7 +93,7 @@ export const episodeRepository = {
   ): Promise<void> {
     const db = new Database(DB_NAME);
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: (string | number)[] = [];
 
     if (params.title !== undefined) {
       updates.push('title = ?');
