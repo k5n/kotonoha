@@ -1,7 +1,6 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 import Database from '@tauri-apps/plugin-sql';
-
-const DB_NAME = 'sqlite:app.db';
+import { DB_NAME } from '../config';
 
 // DBのsnake_caseカラム名をcamelCaseに変換し、EpisodeGroup型にマッピング
 function mapRowToEpisodeGroup(row: any): EpisodeGroup {
