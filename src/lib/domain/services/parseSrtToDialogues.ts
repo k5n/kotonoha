@@ -1,5 +1,5 @@
-import { warn } from '@tauri-apps/plugin-log';
-import type { Dialogue } from '../entities/dialogue';
+import type { Dialogue } from '$lib/domain/entities/dialogue';
+import type { Logger } from '$lib/domain/utils/logger';
 
 /**
  * Parses SRT content and converts it into an array of Dialogue objects.
@@ -8,39 +8,39 @@ import type { Dialogue } from '../entities/dialogue';
  * @param episodeId The ID of the episode to which these dialogues belong.
  * @returns An array of Dialogue objects.
  */
-export function parseSrtToDialogues(srtContent: string, episodeId: number): Dialogue[] {
+export function parseSrtToDialogues(
+  srtContent: string,
+  episodeId: number,
+  logger: Logger
+): Dialogue[] {
   const dialogues: Dialogue[] = [];
   const normalizedContent = srtContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const blocks = normalizedContent
-    .split(/\n\n/)
+    .split(/\n{2,}/) // 2つ以上の連続した改行で分割
     .map((block) => block.trim())
     .filter((block) => block.length > 0);
 
   for (const block of blocks) {
     const lines = block.split(/\n/).map((line) => line.trim());
 
-    let timecodeLineIndex = -1;
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes(' --> ')) {
-        timecodeLineIndex = i;
-        break;
-      }
-    }
+    const timecodeLineIndex = lines.findIndex((line) =>
+      /^\d{2}:\d{2}:\d{2},\d{3}\s-->\s\d{2}:\d{2}:\d{2},\d{3}$/.test(line)
+    );
 
     if (timecodeLineIndex === -1 || timecodeLineIndex + 1 > lines.length) {
-      warn(
+      logger.warn(
         `Skipping malformed SRT block: Timecode line not found or no text following it. ${block}`
       );
       continue;
     }
 
     const timecodeLine = lines[timecodeLineIndex];
-    const textLines = lines.slice(timecodeLineIndex + 1);
+    const textLines = lines.slice(timecodeLineIndex + 1).filter((line) => line.length > 0);
 
     const timeMatch = timecodeLine.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/);
 
     if (!timeMatch) {
-      warn(`Skipping SRT block due to invalid timecode format: ${block}`);
+      logger.warn(`Skipping SRT block due to invalid timecode format: ${block}`);
       continue;
     }
 
