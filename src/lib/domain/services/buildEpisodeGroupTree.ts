@@ -1,5 +1,6 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 
+// FIXME: この関数は利用されなくなった。将来的にツリー表示の可能性を考えて取っておくが、利用しないなら削除。
 export function buildEpisodeGroupTree(flatGroups: EpisodeGroup[]): EpisodeGroup[] {
   // 孤立ノード（親が存在しないノード）もルート扱いにする（存在したらデータ不整合だが・・・）
   const allIds = new Set(flatGroups.map((g) => g.id));
