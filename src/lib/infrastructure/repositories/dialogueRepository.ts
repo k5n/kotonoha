@@ -1,6 +1,6 @@
 import type { Dialogue } from '$lib/domain/entities/dialogue';
 import Database from '@tauri-apps/plugin-sql';
-import { DB_NAME } from '../config';
+import { getDatabaseName } from '../config';
 
 type DialogueRow = {
   id: number;
@@ -24,7 +24,7 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
 
 export const dialogueRepository = {
   async getDialoguesByEpisodeId(episodeId: number): Promise<Dialogue[]> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     const rows = await db.select(
       'SELECT * FROM dialogues WHERE episode_id = ? ORDER BY start_time_ms ASC',
       [episodeId]
@@ -37,7 +37,7 @@ export const dialogueRepository = {
     episodeId: number,
     dialogues: Omit<Dialogue, 'id' | 'episodeId'>[]
   ): Promise<void> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     const values = dialogues
       .map(
         (d) =>

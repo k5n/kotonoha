@@ -1,6 +1,6 @@
 import type { Vocabulary } from '$lib/domain/entities/vocabulary';
 import Database from '@tauri-apps/plugin-sql';
-import { DB_NAME } from '../config';
+import { getDatabaseName } from '../config';
 
 export const vocabularyRepository = {
   /**
@@ -9,7 +9,7 @@ export const vocabularyRepository = {
    * @returns 該当するVocabularyオブジェクト
    */
   async findOrAddVocabulary(expression: string): Promise<Vocabulary> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
 
     // 既存の表現を検索
     const existing = await db.select<Vocabulary[]>(

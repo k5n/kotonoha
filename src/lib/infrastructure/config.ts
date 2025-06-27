@@ -1,1 +1,5 @@
-export const DB_NAME = 'sqlite:app.db';
+const DB_NAME = 'sqlite:app.db';
+
+export function getDatabaseName(): string {
+  return DB_NAME;
+}

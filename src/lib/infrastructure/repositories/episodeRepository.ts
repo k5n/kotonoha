@@ -1,6 +1,6 @@
 import type { Episode } from '$lib/domain/entities/episode';
 import Database from '@tauri-apps/plugin-sql';
-import { DB_NAME } from '../config';
+import { getDatabaseName } from '../config';
 
 type EpisodeRow = {
   id: number;
@@ -29,7 +29,7 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
 
 export const episodeRepository = {
   async getEpisodesByGroupId(groupId: number): Promise<Episode[]> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     const rows = await db.select(
       'SELECT * FROM episodes WHERE episode_group_id = ? ORDER BY display_order ASC',
       [groupId]
@@ -46,7 +46,7 @@ export const episodeRepository = {
     scriptPath: string;
     durationSeconds: number | null;
   }): Promise<Episode> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     const now = new Date().toISOString();
     await db.execute(
       `INSERT INTO episodes (episode_group_id, display_order, title, audio_path, script_path, duration_seconds, created_at, updated_at)
@@ -91,7 +91,7 @@ export const episodeRepository = {
       episodeGroupId?: number;
     }
   ): Promise<void> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     const updates: string[] = [];
     const values: (string | number)[] = [];
 
@@ -119,7 +119,7 @@ export const episodeRepository = {
   },
 
   async deleteEpisode(episodeId: number): Promise<void> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     await db.execute('DELETE FROM episodes WHERE id = ?', [episodeId]);
   },
 };

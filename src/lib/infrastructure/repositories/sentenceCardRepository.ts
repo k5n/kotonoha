@@ -1,6 +1,6 @@
 import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
 import Database from '@tauri-apps/plugin-sql';
-import { DB_NAME } from '../config';
+import { getDatabaseName } from '../config';
 
 type SentenceCardRow = {
   id: number;
@@ -42,7 +42,7 @@ export const sentenceCardRepository = {
     definition: string;
     status: 'active' | 'suspended';
   }): Promise<SentenceCard> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     const now = new Date().toISOString();
     await db.execute(
       `INSERT INTO sentence_cards (dialogue_id, vocabulary_id, target_expression, sentence, definition, status, created_at)
@@ -84,7 +84,7 @@ export const sentenceCardRepository = {
    * 指定したエピソードIDに紐づく全てのSentence Cardを取得する
    */
   async getSentenceCardsByEpisodeId(episodeId: number): Promise<SentenceCard[]> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     const rows = await db.select<
       {
         id: number;
@@ -117,7 +117,7 @@ export const sentenceCardRepository = {
    * Sentence Cardのステータスを更新する
    */
   async updateSentenceCardStatus(cardId: number, status: 'active' | 'suspended'): Promise<void> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     await db.execute('UPDATE sentence_cards SET status = ? WHERE id = ?', [status, cardId]);
   },
 
@@ -125,7 +125,7 @@ export const sentenceCardRepository = {
    * Sentence Cardを削除する
    */
   async deleteSentenceCard(cardId: number): Promise<void> {
-    const db = new Database(DB_NAME);
+    const db = new Database(getDatabaseName());
     await db.execute('DELETE FROM sentence_cards WHERE id = ?', [cardId]);
   },
 };
