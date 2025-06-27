@@ -63,9 +63,22 @@ export const episodeGroupRepository = {
    * @param groupId 対象グループID
    * @param newName 新しいグループ名
    */
-  async updateGroup(groupId: number, newName: string): Promise<void> {
+  async updateGroupName(groupId: number, newName: string): Promise<void> {
     const db = new Database(DB_NAME);
     await db.execute(`UPDATE episode_groups SET name = ? WHERE id = ?`, [newName, groupId]);
+  },
+
+  /**
+   * グループの親を更新する
+   * @param groupId 対象グループID
+   * @param newParentId 新しい親グループID (nullの場合はルート)
+   */
+  async updateGroupParent(groupId: number, newParentId: number | null): Promise<void> {
+    const db = new Database(DB_NAME);
+    await db.execute('UPDATE episode_groups SET parent_group_id = ? WHERE id = ?', [
+      newParentId,
+      groupId,
+    ]);
   },
 
   /**

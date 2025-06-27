@@ -7,12 +7,18 @@
     groups: readonly EpisodeGroup[];
     onGroupClick: (group: EpisodeGroup) => void;
     onChangeName: (group: EpisodeGroup) => void;
+    onMoveGroup: (group: EpisodeGroup) => void;
   }
-  let { groups, onGroupClick, onChangeName }: Props = $props();
+  let { groups, onGroupClick, onChangeName, onMoveGroup }: Props = $props();
 
   function handleChangeName(e: Event, group: EpisodeGroup) {
     e.stopPropagation(); // 下のボタンへの伝播を停止
     onChangeName(group);
+  }
+
+  function handleMoveGroup(e: Event, group: EpisodeGroup) {
+    e.stopPropagation(); // 下のボタンへの伝播を停止
+    onMoveGroup(group);
   }
 </script>
 
@@ -58,6 +64,7 @@
             <DropdownItem onclick={(e: Event) => handleChangeName(e, group)}
               >名前を変更</DropdownItem
             >
+            <DropdownItem onclick={(e: Event) => handleMoveGroup(e, group)}>移動</DropdownItem>
           </Dropdown>
         </div>
       </div>

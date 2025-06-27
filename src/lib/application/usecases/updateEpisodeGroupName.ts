@@ -14,7 +14,7 @@ export async function updateEpisodeGroupName({
   group: EpisodeGroup;
   newName: string;
 }): Promise<readonly EpisodeGroup[]> {
-  await episodeGroupRepository.updateGroup(group.id, newName);
+  await episodeGroupRepository.updateGroupName(group.id, newName);
 
   // DB更新後、グループ一覧を取得（現在表示中のグループの子供一覧）
   const children = await episodeGroupRepository.getGroups(group.parentId);

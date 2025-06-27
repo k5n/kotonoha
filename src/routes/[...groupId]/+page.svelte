@@ -2,12 +2,15 @@
   import { goto } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addEpisodeGroup } from '$lib/application/usecases/addEpisodeGroup';
+  import { fetchAvailableParentGroups } from '$lib/application/usecases/fetchAvailableParentGroups';
+  import { moveEpisodeGroup } from '$lib/application/usecases/moveEpisodeGroup';
   import { updateEpisodeGroupName } from '$lib/application/usecases/updateEpisodeGroupName';
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import GroupAddModal from '$lib/presentation/components/GroupAddModal.svelte';
-  import GroupEditModal from '$lib/presentation/components/GroupEditModal.svelte';
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
+  import GroupMoveModal from '$lib/presentation/components/GroupMoveModal.svelte';
+  import GroupNameEditModal from '$lib/presentation/components/GroupNameEditModal.svelte';
   import { error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
@@ -21,8 +24,10 @@
   let errorMessage = $state('');
   let isAddModalOpen = $state(false);
   let isEditModalOpen = $state(false);
+  let isMoveModalOpen = $state(false);
   let isSubmitting = $state(false);
   let editingGroup: EpisodeGroup | null = $state(null);
+  let availableParentGroupsTree: readonly EpisodeGroup[] = $state([]);
 
   // --- Computed State ---
   let path = $derived(groupPathStore.path);
@@ -76,7 +81,7 @@
     isEditModalOpen = true;
   };
 
-  const handleEditGroupSubmit = async (newName: string) => {
+  const handleEditGroupNameSubmit = async (newName: string) => {
     if (!editingGroup) return;
     isSubmitting = true;
     try {
@@ -88,6 +93,37 @@
       editingGroup = null;
     } catch (err) {
       error(`Failed to update group: ${err}`);
+      errorMessage = err instanceof Error ? err.message : 'グループ名の更新に失敗しました。';
+    } finally {
+      isSubmitting = false;
+    }
+  };
+
+  const handleMoveGroup = async (group: EpisodeGroup) => {
+    editingGroup = group;
+    try {
+      availableParentGroupsTree = await fetchAvailableParentGroups(group);
+      isMoveModalOpen = true;
+    } catch (err) {
+      error(`Failed to fetch available parent groups: ${err}`);
+      errorMessage = err instanceof Error ? err.message : '移動先グループの取得に失敗しました。';
+    }
+  };
+
+  const handleMoveGroupSubmit = async (newParentId: number | null) => {
+    if (!editingGroup) return;
+    isSubmitting = true;
+    errorMessage = ''; // Clear previous errors
+    try {
+      displayedGroups = await moveEpisodeGroup({
+        group: editingGroup,
+        newParentId,
+      });
+      isMoveModalOpen = false;
+      editingGroup = null;
+    } catch (err) {
+      error(`Failed to move group: ${err}`);
+      errorMessage = err instanceof Error ? err.message : 'グループの移動に失敗しました。';
     } finally {
       isSubmitting = false;
     }
@@ -122,6 +158,7 @@
       groups={displayedGroups}
       onGroupClick={handleGroupClick}
       onChangeName={handleChangeGroupName}
+      onMoveGroup={handleMoveGroup}
     />
   {/if}
 
@@ -132,7 +169,7 @@
     onSubmit={handleAddGroupSubmit}
   />
 
-  <GroupEditModal
+  <GroupNameEditModal
     show={isEditModalOpen}
     {isSubmitting}
     initialName={editingGroup ? editingGroup.name : ''}
@@ -140,6 +177,18 @@
       isEditModalOpen = false;
       editingGroup = null;
     }}
-    onSubmit={handleEditGroupSubmit}
+    onSubmit={handleEditGroupNameSubmit}
+  />
+
+  <GroupMoveModal
+    show={isMoveModalOpen}
+    {isSubmitting}
+    currentGroup={editingGroup}
+    availableParentGroups={availableParentGroupsTree}
+    onClose={() => {
+      isMoveModalOpen = false;
+      editingGroup = null;
+    }}
+    onSubmit={handleMoveGroupSubmit}
   />
 </div>
