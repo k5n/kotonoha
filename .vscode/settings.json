@@ -17,7 +17,7 @@
   },
   "github.copilot.chat.codeGeneration.instructions": [
     {
-      "file": "./doc/coding_rules.md"
+      "file": "./doc/svelte_coding_rules.md"
     }
   ],
   "github.copilot.chat.testGeneration.instructions": [
@@ -32,6 +32,7 @@
     "kotonoha",
     "rfind",
     "tauri",
-    "usecases"
+    "usecases",
+    "Vitest"
   ]
 }
