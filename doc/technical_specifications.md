@@ -305,13 +305,14 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 ### 5.1. ファイル保存場所 (Storage Location)
 
 * ファイルはTauriのFile System API (`@tauri-apps/api/fs`) を利用し、`BaseDirectory.AppData` を基準ディレクトリとして保存する。
-* ユーザーデータの一元管理を容易にするため、`media/episodes/` というサブディレクトリを作成し、その中に全ての関連ファイルを格納する。
+* ユーザーデータの一元管理を容易にするため、`media/audios/` と `media/scripts` というサブディレクトリを作成し、その中に全ての関連ファイルを格納する。
+* `media/audios/` には音声ファイル（例: MP3形式）、`media/scripts/` にはスクリプトファイル（例: SRT形式）を保存する。
 
 ### 5.2. ファイル命名規則 (Naming Convention)
 
 * ファイル名の衝突を完全に回避し、OSのファイルシステムで問題となりうる特殊文字を排除するため、**UUID (Universally Unique Identifier) v4** をファイル名のベースとして採用する。
 * 音声ファイルとスクリプトファイルは、このUUIDを共有し、拡張子のみが異なる同一のファイル名で保存される。
-    * **相対パスの例:** `media/episodes/<UUID>.mp3`
+    * **相対パスの例:** `media/audios/<UUID>.mp3`
 * この`BaseDirectory.AppData`からの**相対パス**を、データベースの `episodes` テーブルにある `audio_path` と `script_path` カラムにそれぞれ保存する。これにより、データベースレコードと実ファイルが一意に紐づけられる。
 * 既に同じUUIDのファイルが存在する場合は、新しいUUIDを生成して保存する。
 
