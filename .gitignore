@@ -1,12 +1,15 @@
 .tool-versions
+/doc/plans
+/doc/reviews
 
 .DS_Store
 node_modules
 /build
 /.svelte-kit
 /package
-.env
-.env.*
+#.env
+#.env.*
+.env.local*
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
