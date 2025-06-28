@@ -273,17 +273,9 @@ Sentence Miningによって作成されたカードを管理する。
 Rustで実装し、フロントエンドの`Infrastructure`レイヤーから呼び出される関数群。
 Tauriのプラグインを利用するなどしてフロントエンド側で実装可能と判断したものは、必ずしも Rust 側で実装しなくても良い。
 
-- `add_episode(title: String, audio_path: String, script_path: String) -> Result<EpisodeContract, String>`
-- `delete_episode(episode_id: i32) -> Result<(), String>`
-- `create_sentence_card(card_data: NewCardContract) -> Result<SentenceCardContract, String>`
 - `get_definition_from_llm(context_sentence: String, target_expression: String) -> Result<String, String>`
 - `save_api_key(api_key: String) -> Result<(), String>`
 - `get_api_key() -> Result<Option<String>, String>`
-- `move_episode(episode_id: i32, new_group_id: i32) -> Result<(), String>`
-- `create_group(name: String, parent_group_id: Option<i32>, display_order: Option<i32>) -> Result<GroupContract, String>`
-- `update_group(group_id: i32, name: Option<String>, parent_group_id: Option<i32>, display_order: Option<i32>) -> Result<(), String>`
-- `delete_group(group_id: i32) -> Result<(), String>`
-- `get_all_groups() -> Result<Vec<GroupContract>, String>`
 
 ### 4.3. データフェッチ・状態管理戦略
 
@@ -302,3 +294,28 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
   `src/lib/application/stores` の責務は、永続化されない「クライアントサイドの状態」の管理に限定する。具体的には、以下のようなデータが対象となる。
     - 複数のコンポーネントにまたがるUIの状態（例: フォームの入力値、選択中のアイテムID、UIの表示/非表示フラグなど）
     - APIから一時的に取得した、永続化を前提としないデータ
+
+---
+
+## 5. ファイル管理仕様 (File Management Specification)
+
+本アプリケーションでは、ユーザーがアップロードした音声ファイルおよびスクリプト（SRTファイル）をアプリケーションの管理下にある特定のディレクトリに保存する。
+データベースとファイルの整合性を保ち、管理を容易にするため、以下の仕様を定める。
+
+### 5.1. ファイル保存場所 (Storage Location)
+
+* ファイルはTauriのFile System API (`@tauri-apps/api/fs`) を利用し、`BaseDirectory.AppData` を基準ディレクトリとして保存する。
+* ユーザーデータの一元管理を容易にするため、`media/episodes/` というサブディレクトリを作成し、その中に全ての関連ファイルを格納する。
+
+### 5.2. ファイル命名規則 (Naming Convention)
+
+* ファイル名の衝突を完全に回避し、OSのファイルシステムで問題となりうる特殊文字を排除するため、**UUID (Universally Unique Identifier) v4** をファイル名のベースとして採用する。
+* 音声ファイルとスクリプトファイルは、このUUIDを共有し、拡張子のみが異なる同一のファイル名で保存される。
+    * **相対パスの例:** `media/episodes/<UUID>.mp3`
+* この`BaseDirectory.AppData`からの**相対パス**を、データベースの `episodes` テーブルにある `audio_path` と `script_path` カラムにそれぞれ保存する。これにより、データベースレコードと実ファイルが一意に紐づけられる。
+* 既に同じUUIDのファイルが存在する場合は、新しいUUIDを生成して保存する。
+
+### 5.3. エピソード削除時の処理
+
+* `deleteEpisode` ユースケースは、まずデータベース上のレコードを削除する。
+* データベースの削除が成功したら、続けてTypeScript側で `audio_path` と `script_path` に記録されている相対パスのファイルを `BaseDirectory.AppData` から物理的に削除する。これにより、不要なファイルがストレージに残ることを防ぐ。
