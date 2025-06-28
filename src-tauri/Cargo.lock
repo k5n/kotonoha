@@ -2130,6 +2130,7 @@ dependencies = [
 name = "kotonoha"
 version = "0.1.0"
 dependencies = [
+ "dotenvy",
  "serde",
  "serde_json",
  "tauri",
