@@ -26,8 +26,8 @@ export function generateEpisodeFilenames(
   const audioExt = getExtension(audioFilename);
   const scriptExt = getExtension(scriptFilename);
   return {
-    audio: uuid + audioExt,
-    script: uuid + scriptExt,
+    audio: 'full' + audioExt,
+    script: 'script' + scriptExt,
     uuid,
   };
 }

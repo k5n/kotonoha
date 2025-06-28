@@ -304,19 +304,20 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 ### 5.1. ファイル保存場所 (Storage Location)
 
-* ファイルはTauriのFile System API (`@tauri-apps/api/fs`) を利用し、`BaseDirectory.AppData` を基準ディレクトリとして保存する。
-* ユーザーデータの一元管理を容易にするため、`media/audios/` と `media/scripts` というサブディレクトリを作成し、その中に全ての関連ファイルを格納する。
-* `media/audios/` には音声ファイル（例: MP3形式）、`media/scripts/` にはスクリプトファイル（例: SRT形式）を保存する。
+- 各エピソードに関連するファイル群は、TauriのFile System プラグイン (`@tauri-apps/plugin-fs`) を利用し、`BaseDirectory.AppLocalData` を基準として、エピソード固有のUUIDを持つディレクトリ内にまとめて格納する。
+- **基準パス**: `media/{UUID}/`
+- **音声ファイル**: `media/{UUID}/audios/` ディレクトリ内に格納する。これは将来的にダイアログごとの音声ファイルなどを追加で格納するため。
+- **スクリプトファイル**: `media/{UUID}/` ディレクトリ直下に格納する。
 
 ### 5.2. ファイル命名規則 (Naming Convention)
 
-* ファイル名の衝突を完全に回避し、OSのファイルシステムで問題となりうる特殊文字を排除するため、**UUID (Universally Unique Identifier) v4** をファイル名のベースとして採用する。
-* 音声ファイルとスクリプトファイルは、このUUIDを共有し、拡張子のみが異なる同一のファイル名で保存される。
-    * **相対パスの例:** `media/audios/<UUID>.mp3`
-* この`BaseDirectory.AppData`からの**相対パス**を、データベースの `episodes` テーブルにある `audio_path` と `script_path` カラムにそれぞれ保存する。これにより、データベースレコードと実ファイルが一意に紐づけられる。
-* 既に同じUUIDのファイルが存在する場合は、新しいUUIDを生成して保存する。
+- ファイル名は固定とする。
+  - **音声ファイルのパス例**: `media/{UUID}/audios/full.mp3`
+  - **スクリプトファイルのパス例**: `media/{UUID}/script.srt`
+- この`BaseDirectory.AppLocalData`からの**相対パス**を、データベースの `episodes` テーブルにある `audio_path` と `script_path` カラムにそれぞれ保存する。これにより、データベースレコードと実ファイルが一意に紐づけられる。
+- UUIDの重複チェックは、新しいエピソードを追加する際に `media/{UUID}` ディレクトリが存在するかどうかで確認する。存在する場合は、新しいUUIDを再生成する。
 
 ### 5.3. エピソード削除時の処理
 
-* `deleteEpisode` ユースケースは、まずデータベース上のレコードを削除する。
-* データベースの削除が成功したら、続けてTypeScript側で `audio_path` と `script_path` に記録されている相対パスのファイルを `BaseDirectory.AppData` から物理的に削除する。これにより、不要なファイルがストレージに残ることを防ぐ。
+- `deleteEpisode` ユースケースは、まずデータベース上のレコードを削除する。
+- データベースの削除が成功したら、続けて `media/{UUID}` ディレクトリを**再帰的に**物理削除する。これにより、関連する音声ファイルやスクリプトファイルが一括でクリーンアップされる。
