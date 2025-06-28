@@ -35,7 +35,7 @@ export const dialogueRepository = {
 
   async bulkInsertDialogues(
     episodeId: number,
-    dialogues: Omit<Dialogue, 'id' | 'episodeId'>[]
+    dialogues: readonly Omit<Dialogue, 'id' | 'episodeId'>[]
   ): Promise<void> {
     const db = new Database(getDatabasePath());
     const values = dialogues

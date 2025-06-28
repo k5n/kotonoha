@@ -23,7 +23,6 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
     durationSeconds: row.duration_seconds,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
-    dialogues: [], // dialoguesは別途取得するため、ここでは空配列をセット
   };
 }
 
