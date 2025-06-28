@@ -12,7 +12,7 @@ export function parseSrtToDialogues(
   srtContent: string,
   episodeId: number,
   logger: Logger
-): Dialogue[] {
+): readonly Dialogue[] {
   const dialogues: Dialogue[] = [];
   const normalizedContent = srtContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const blocks = normalizedContent

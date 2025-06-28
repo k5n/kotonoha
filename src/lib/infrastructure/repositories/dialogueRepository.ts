@@ -23,7 +23,7 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
 }
 
 export const dialogueRepository = {
-  async getDialoguesByEpisodeId(episodeId: number): Promise<Dialogue[]> {
+  async getDialoguesByEpisodeId(episodeId: number): Promise<readonly Dialogue[]> {
     const db = new Database(getDatabasePath());
     const rows = await db.select(
       'SELECT * FROM dialogues WHERE episode_id = ? ORDER BY start_time_ms ASC',

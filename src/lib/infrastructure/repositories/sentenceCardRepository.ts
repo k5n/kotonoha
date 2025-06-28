@@ -83,7 +83,7 @@ export const sentenceCardRepository = {
   /**
    * 指定したエピソードIDに紐づく全てのSentence Cardを取得する
    */
-  async getSentenceCardsByEpisodeId(episodeId: number): Promise<SentenceCard[]> {
+  async getSentenceCardsByEpisodeId(episodeId: number): Promise<readonly SentenceCard[]> {
     const db = new Database(getDatabasePath());
     const rows = await db.select<
       {

@@ -28,7 +28,7 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
 }
 
 export const episodeRepository = {
-  async getEpisodesByGroupId(groupId: number): Promise<Episode[]> {
+  async getEpisodesByGroupId(groupId: number): Promise<readonly Episode[]> {
     const db = new Database(getDatabasePath());
     const rows = await db.select(
       'SELECT * FROM episodes WHERE episode_group_id = ? ORDER BY display_order ASC',

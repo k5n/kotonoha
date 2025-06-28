@@ -29,7 +29,7 @@ export const episodeGroupRepository = {
    * 全てのEpisodeGroupのchildrenは空の配列であることに注意。
    * ツリー構造への組み立ては取得後に行う必要がある。
    */
-  async getAllGroups(): Promise<EpisodeGroup[]> {
+  async getAllGroups(): Promise<readonly EpisodeGroup[]> {
     const db = new Database(getDatabasePath());
     const rows = await db.select('SELECT * FROM episode_groups');
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
@@ -106,7 +106,7 @@ export const episodeGroupRepository = {
    * @param parentId 親グループID（nullの場合はルート）
    * @returns 子グループの配列
    */
-  async getGroups(parentId: number | null): Promise<EpisodeGroup[]> {
+  async getGroups(parentId: number | null): Promise<readonly EpisodeGroup[]> {
     const db = new Database(getDatabasePath());
     let rows;
     if (parentId === null) {
