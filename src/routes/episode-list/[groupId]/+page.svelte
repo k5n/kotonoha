@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
+  import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
   import { debug } from '@tauri-apps/plugin-log';
   import {
     Alert,
@@ -24,15 +25,22 @@
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
+  let showAddEpisodeModal = $state(false);
 
   // エピソード詳細ページへ遷移
   function openEpisode(episodeId: number) {
     goto(`/episode/${episodeId}`);
   }
 
-  // 新規エピソード追加ダイアログを開く（ダミー）
-  function addNewEpisode() {
-    alert('新規エピソード追加ダイアログを開きます。');
+  // 新規エピソード追加ダイアログを開く
+  function openAddEpisodeModal() {
+    showAddEpisodeModal = true;
+  }
+
+  function handleAddEpisodeSubmit(title: string, audioFile: File, srtFile: File) {
+    // TODO: Implement episode creation logic
+    debug(`title: ${title}, audio: ${audioFile.name}, script: ${srtFile.name}`);
+    showAddEpisodeModal = false;
   }
 
   const handleBreadcrumbClick = (targetIndex: number | null) => {
@@ -64,7 +72,7 @@
       <div>
         <Heading tag="h1" class="text-3xl font-bold">{data.episodeGroup.name}</Heading>
       </div>
-      <Button onclick={addNewEpisode}>
+      <Button onclick={openAddEpisodeModal}>
         <PlusOutline class="me-2 h-5 w-5" />
         エピソードを追加
       </Button>
@@ -79,7 +87,7 @@
         <FileOutline class="mx-auto mb-4 h-12 w-12 text-gray-400" />
         <Heading tag="h3" class="mb-2 text-xl font-semibold">エピソードがありません</Heading>
         <p class="mb-4 text-gray-500">このコレクションに最初のエピソードを追加しましょう。</p>
-        <Button color="alternative" onclick={addNewEpisode}>
+        <Button color="alternative" onclick={openAddEpisodeModal}>
           <PlusOutline class="me-2 h-5 w-5" />
           最初のエピソードを追加
         </Button>
@@ -116,3 +124,9 @@
     </div>
   {/if}
 </div>
+
+<EpisodeAddModal
+  show={showAddEpisodeModal}
+  onClose={() => (showAddEpisodeModal = false)}
+  onSubmit={handleAddEpisodeSubmit}
+/>
