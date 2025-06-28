@@ -1,19 +1,18 @@
 import type { Dialogue } from '$lib/domain/entities/dialogue';
-import type { Logger } from '$lib/domain/utils/logger';
 
 /**
  * Parses SRT content and converts it into an array of Dialogue objects.
  *
  * @param srtContent The content of the SRT file as a string.
  * @param episodeId The ID of the episode to which these dialogues belong.
- * @returns An array of Dialogue objects.
+ * @returns An object containing the parsed dialogues and any warnings.
  */
 export function parseSrtToDialogues(
   srtContent: string,
-  episodeId: number,
-  logger: Logger
-): readonly Dialogue[] {
+  episodeId: number
+): { dialogues: readonly Dialogue[]; warnings: readonly string[] } {
   const dialogues: Dialogue[] = [];
+  const warnings: string[] = [];
   const normalizedContent = srtContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const blocks = normalizedContent
     .split(/\n{2,}/) // 2つ以上の連続した改行で分割
@@ -28,7 +27,7 @@ export function parseSrtToDialogues(
     );
 
     if (timecodeLineIndex === -1 || timecodeLineIndex + 1 > lines.length) {
-      logger.warn(
+      warnings.push(
         `Skipping malformed SRT block: Timecode line not found or no text following it. ${block}`
       );
       continue;
@@ -40,7 +39,7 @@ export function parseSrtToDialogues(
     const timeMatch = timecodeLine.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/);
 
     if (!timeMatch) {
-      logger.warn(`Skipping SRT block due to invalid timecode format: ${block}`);
+      warnings.push(`Skipping SRT block due to invalid timecode format: ${block}`);
       continue;
     }
 
@@ -67,5 +66,5 @@ export function parseSrtToDialogues(
     });
   }
 
-  return dialogues;
+  return { dialogues, warnings };
 }

@@ -1,8 +1,5 @@
-import { ConsoleLogger } from '$lib/domain/utils/logger';
 import { describe, expect, it } from 'vitest';
 import { parseSrtToDialogues } from './parseSrtToDialogues';
-
-const logger = new ConsoleLogger();
 
 describe('parseSrtToDialogues', () => {
   it('should correctly parse a simple SRT content', () => {
@@ -15,7 +12,7 @@ Hello, world.
 This is a test.
 `;
     const episodeId = 1;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(2);
     expect(dialogues[0]).toEqual({
       id: 0,
@@ -33,6 +30,7 @@ This is a test.
       originalText: 'This is a test.',
       correctedText: null,
     });
+    expect(warnings.length).toBe(0);
   });
 
   it('should handle multi-line dialogue', () => {
@@ -48,27 +46,30 @@ Line B
 Line C
 `;
     const episodeId = 2;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(2);
     expect(dialogues[0].originalText).toBe('Line 1\nLine 2');
     expect(dialogues[1].originalText).toBe('Line A\nLine B\nLine C');
+    expect(warnings.length).toBe(0);
   });
 
   it('should handle empty SRT content', () => {
     const srtContent = '';
     const episodeId = 3;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(0);
+    expect(warnings.length).toBe(0);
   });
 
   it('should handle SRT content with only whitespace', () => {
     const srtContent = '   \n \n  ';
     const episodeId = 4;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(0);
+    expect(warnings.length).toBe(0);
   });
 
-  it('should skip malformed blocks', () => {
+  it('should skip malformed blocks and return warnings', () => {
     const srtContent = `1
 00:00:01,000 --> 00:00:03,000
 Valid block
@@ -80,10 +81,12 @@ Valid block
 Another valid block
 `;
     const episodeId = 5;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(2);
     expect(dialogues[0].originalText).toBe('Valid block');
     expect(dialogues[1].originalText).toBe('Another valid block');
+    expect(warnings.length).toBe(1);
+    expect(warnings[0]).toContain('Skipping malformed SRT block');
   });
 
   it('should handle timecodes with different milliseconds', () => {
@@ -92,10 +95,11 @@ Another valid block
 Hello.
 `;
     const episodeId = 6;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(1);
     expect(dialogues[0].startTimeMs).toBe(123);
     expect(dialogues[0].endTimeMs).toBe(1456);
+    expect(warnings.length).toBe(0);
   });
 
   it('should handle leading/trailing whitespace in blocks and lines', () => {
@@ -108,27 +112,47 @@ Hello.
     This is a test.  
 `;
     const episodeId = 7;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(2);
     expect(dialogues[0].originalText).toBe('Hello, world.');
     expect(dialogues[1].originalText).toBe('This is a test.');
+    expect(warnings.length).toBe(0);
   });
 
   it('should handle SRT content with \r\n newlines (Windows style)', () => {
     const srtContent = `1\r\n00:00:01,000 --> 00:00:03,000\r\nHello, world.\r\n\r\n2\r\n00:00:04,000 --> 00:00:06,000\r\nThis is a test.\r\n`;
     const episodeId = 8;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(2);
     expect(dialogues[0].originalText).toBe('Hello, world.');
     expect(dialogues[1].originalText).toBe('This is a test.');
+    expect(warnings.length).toBe(0);
   });
 
   it('should handle SRT content with \r newlines (old Mac style)', () => {
     const srtContent = `1\r00:00:01,000 --> 00:00:03,000\rHello, world.\r\r2\r00:00:04,000 --> 00:00:06,000\rThis is a test.\r`;
     const episodeId = 9;
-    const dialogues = parseSrtToDialogues(srtContent, episodeId, logger);
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(2);
     expect(dialogues[0].originalText).toBe('Hello, world.');
     expect(dialogues[1].originalText).toBe('This is a test.');
+    expect(warnings.length).toBe(0);
+  });
+
+  it('should return warning for invalid timecode format', () => {
+    const srtContent = `1
+00:00:01,000 --> 00:00:03,000
+Valid block
+
+2
+invalid timecode
+Another block
+`;
+    const episodeId = 10;
+    const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
+    expect(dialogues.length).toBe(1);
+    expect(dialogues[0].originalText).toBe('Valid block');
+    expect(warnings.length).toBe(1);
+    expect(warnings[0]).toContain('Skipping malformed SRT block');
   });
 });
