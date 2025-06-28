@@ -13,8 +13,9 @@ Kotonoha is a desktop application designed for language learning, with a focus o
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: [Svelte](https://svelte.dev/)
+- **Frontend**: [Svelte + SvelteKit](https://svelte.dev/)
 - **Desktop App Framework**: [Tauri](https://tauri.app/)
+- **Component Library**: [Flowbite Svelte](https://flowbite-svelte.com/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Testing**: [Vitest](https://vitest.dev/)

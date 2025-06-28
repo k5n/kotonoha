@@ -1,4 +1,4 @@
-# コーディングルール
+# Svelte/SvelteKit コーディングルール
 
 ## Svelte 5 全般のスタイル
 
