@@ -27,6 +27,7 @@ pub fn run() {
     println!("Using database URL: {}", db_url);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(&db_url, get_migrations())
