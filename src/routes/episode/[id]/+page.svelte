@@ -25,10 +25,7 @@
   }
 
   function handleSeek(time: number) {
-    // Transcriptから来たシーク要求をAudioPlayerに伝える
-    // ここではAudioPlayerコンポーネントが持つであろうseek関数を呼び出すことを想定
-    const player = document.getElementById('audio-player') as HTMLAudioElement | null;
-    if (player) player.currentTime = time;
+    currentTime = time;
   }
 
   function openMiningModal(dialogue: Dialogue) {
@@ -60,7 +57,7 @@
           )}秒
         </p>
 
-        <AudioPlayer src={data.episode.audioPath} bind:currentTime />
+        <AudioPlayer src={data.audioBlobUrl} bind:currentTime />
 
         <div class="mt-6">
           <Heading tag="h2" class="mb-3 text-xl font-semibold">スクリプト</Heading>
