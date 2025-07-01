@@ -12,6 +12,7 @@ export const load: PageLoad = async ({ params }) => {
   }
   return {
     episode: result.episode,
+    dialogues: result.dialogues,
     sentenceCards: result.sentenceCards,
   };
 };

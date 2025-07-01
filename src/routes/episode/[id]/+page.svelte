@@ -65,7 +65,7 @@
         <div class="mt-6">
           <Heading tag="h2" class="mb-3 text-xl font-semibold">スクリプト</Heading>
           <TranscriptViewer
-            dialogues={data.episode.dialogues}
+            dialogues={data.dialogues}
             {currentTime}
             onSeek={(e) => handleSeek(e)}
             onMine={openMiningModal}

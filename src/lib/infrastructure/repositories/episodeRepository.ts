@@ -37,6 +37,15 @@ export const episodeRepository = {
     return rows.map(mapRowToEpisode);
   },
 
+  async getEpisodeById(id: number): Promise<Episode | null> {
+    const db = new Database(getDatabasePath());
+    const rows = await db.select('SELECT * FROM episodes WHERE id = ?', [id]);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return null;
+    }
+    return mapRowToEpisode(rows[0] as EpisodeRow);
+  },
+
   async addEpisode(params: {
     episodeGroupId: number;
     displayOrder: number;
