@@ -6,7 +6,7 @@ import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
  * @param parentId 親となるグループID
  * @returns 子孫グループのIDの配列
  */
-export function findDescendantIds(allGroups: EpisodeGroup[], parentId: number): number[] {
+export function findDescendantIds(allGroups: readonly EpisodeGroup[], parentId: number): number[] {
   const children = allGroups.filter((g) => g.parentId === parentId);
   let descendantIds: number[] = children.map((c) => c.id);
   for (const child of children) {

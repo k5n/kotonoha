@@ -55,7 +55,7 @@ const stubSentenceCards: SentenceCard[] = [
 // エピソード詳細取得ユースケース（スタブ）
 export async function fetchEpisodeDetail(
   episodeId: number
-): Promise<{ episode: Episode; sentenceCards: SentenceCard[] } | null> {
+): Promise<{ episode: Episode; sentenceCards: readonly SentenceCard[] } | null> {
   info(`Fetching episode detail for ID: ${episodeId}`);
   // 引数に応じて分岐も可能だが、ここでは常に同じデータを返す
   return Promise.resolve({ episode: stubEpisode, sentenceCards: stubSentenceCards });

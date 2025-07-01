@@ -1,6 +1,6 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 
-let path = $state<EpisodeGroup[]>([]);
+let path = $state<readonly EpisodeGroup[]>([]);
 
 export const groupPathStore = {
   // パンくずリストのパス全体
@@ -14,7 +14,7 @@ export const groupPathStore = {
   },
 
   // パスを一括セット
-  setPath(newPath: EpisodeGroup[]) {
+  setPath(newPath: readonly EpisodeGroup[]) {
     path = newPath;
   },
 

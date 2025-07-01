@@ -5,7 +5,9 @@ import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
  * @param flatGroups 平坦なグループのリスト
  * @returns 階層構造のグループツリー
  */
-export function buildEpisodeGroupTree(flatGroups: EpisodeGroup[]): EpisodeGroup[] {
+export function buildEpisodeGroupTree(
+  flatGroups: readonly EpisodeGroup[]
+): readonly EpisodeGroup[] {
   // 孤立ノード（親が存在しないノード）もルート扱いにする（存在したらデータ不整合だが・・・）
   const allIds = new Set(flatGroups.map((g) => g.id));
   const isRoot = (g: EpisodeGroup) => g.parentId === null || !allIds.has(g.parentId!);

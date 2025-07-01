@@ -11,7 +11,7 @@ export async function addEpisodeGroup(params: {
   parentId: number | null;
   groupType: 'album' | 'folder';
   siblings: readonly EpisodeGroup[];
-}): Promise<EpisodeGroup[]> {
+}): Promise<readonly EpisodeGroup[]> {
   const { name, parentId, groupType, siblings } = params;
 
   // バリデーション
