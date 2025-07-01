@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
+  import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
   import { debug } from '@tauri-apps/plugin-log';
@@ -26,6 +27,7 @@
 
   let { data }: PageProps = $props();
   let showAddEpisodeModal = $state(false);
+  let episodes = $derived(data.episodes);
 
   // エピソード詳細ページへ遷移
   function openEpisode(episodeId: number) {
@@ -37,9 +39,21 @@
     showAddEpisodeModal = true;
   }
 
-  function handleAddEpisodeSubmit(title: string, audioFile: File, srtFile: File) {
-    // TODO: Implement episode creation logic
+  async function handleAddEpisodeSubmit(title: string, audioFile: File, srtFile: File) {
     debug(`title: ${title}, audio: ${audioFile.name}, script: ${srtFile.name}`);
+    const groupId = data.episodeGroup?.id;
+    if (!groupId) {
+      debug('No group ID found, cannot add episode');
+      return;
+    }
+    const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
+    episodes = await addNewEpisode({
+      episodeGroupId: groupId,
+      displayOrder: maxDisplayOrder + 1,
+      title,
+      audioFile,
+      scriptFile: srtFile,
+    });
     showAddEpisodeModal = false;
   }
 
@@ -82,7 +96,7 @@
       <Breadcrumbs path={groupPathStore.path} onNavigate={handleBreadcrumbClick} />
     </div>
 
-    {#if data.episodes.length === 0}
+    {#if episodes.length === 0}
       <div class="mt-8 rounded-lg border-2 border-dashed px-6 py-16 text-center">
         <FileOutline class="mx-auto mb-4 h-12 w-12 text-gray-400" />
         <Heading tag="h3" class="mb-2 text-xl font-semibold">エピソードがありません</Heading>
@@ -102,7 +116,7 @@
             <TableHeadCell><span class="sr-only">開く</span></TableHeadCell>
           </TableHead>
           <TableBody>
-            {#each data.episodes as episode (episode.id)}
+            {#each episodes as episode (episode.id)}
               <TableBodyRow class="cursor-pointer" onclick={() => openEpisode(episode.id)}>
                 <TableBodyCell class="font-semibold">{episode.title}</TableBodyCell>
                 <TableBodyCell>{formatDate(episode.createdAt)}</TableBodyCell>
