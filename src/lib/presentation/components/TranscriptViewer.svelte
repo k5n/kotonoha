@@ -45,7 +45,7 @@
     {#each dialogues as dialogue, index (dialogue.id)}
       <div
         bind:this={itemEls[index]}
-        class="relative rounded-lg p-3 transition-all"
+        class="flex items-center justify-between rounded-lg p-3 transition-all"
         class:bg-primary-100={index === activeIndex}
         class:dark:bg-primary-900={index === activeIndex}
         class:bg-gray-200={index === previousActiveIndex && index !== activeIndex}
@@ -54,7 +54,7 @@
         <div
           role="button"
           tabindex="0"
-          class="cursor-pointer"
+          class="flex-1 cursor-pointer"
           class:text-primary-800={index === activeIndex}
           class:dark:text-primary-200={index === activeIndex}
           onclick={() => onSeek(dialogue.startTimeMs / 1000)}
@@ -63,14 +63,14 @@
           {dialogue.correctedText || dialogue.originalText}
         </div>
 
-        {#if index === activeIndex}
-          <div class="absolute top-1/2 right-2 -translate-y-1/2">
+        <div class="w-24 text-right">
+          {#if index === activeIndex}
             <Button size="xs" onclick={() => onMine(dialogue)}>
               <SunOutline class="me-1 h-4 w-4" />
               Mine
             </Button>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
     {/each}
     <div class="h-[calc(50%-1.25rem)]"></div>
