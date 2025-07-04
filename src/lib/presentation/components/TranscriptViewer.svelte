@@ -13,29 +13,25 @@
   let { dialogues, currentTime, onSeek, onMine }: Props = $props();
 
   // --- State ---
-  let activeIndex = $derived(
-    dialogues.findIndex(
-      (d) => currentTime * 1000 >= d.startTimeMs && currentTime * 1000 < d.endTimeMs
-    )
-  );
+  let activeIndex = $state(-1);
+  let previousActiveIndex = $state(-1);
 
   let containerEl: HTMLElement | undefined = $state();
   let itemEls: (HTMLElement | null)[] = [];
 
-  // activeIndexが変更されたら、該当要素までスクロールする$effect
+  // currentTimeが変更されたら、activeIndexとpreviousActiveIndexを更新し、該当要素までスクロールする$effect
   $effect(() => {
-    if (activeIndex !== -1 && containerEl && itemEls[activeIndex]) {
-      const containerHeight = containerEl.clientHeight;
-      const targetEl = itemEls[activeIndex] as HTMLElement;
-      const targetOffsetTop = targetEl.offsetTop;
-      const targetHeight = targetEl.clientHeight;
+    const newActiveIndex = dialogues.findIndex(
+      (d) => currentTime * 1000 >= d.startTimeMs && currentTime * 1000 < d.endTimeMs
+    );
 
-      // 要素がコンテナの中央に来るようにスクロール位置を計算
-      const newScrollTop = targetOffsetTop - containerHeight / 2 + targetHeight / 2;
+    if (newActiveIndex !== activeIndex) {
+      previousActiveIndex = activeIndex;
+      activeIndex = newActiveIndex;
+    }
 
-      // tweenedストアを使わず、直接scrollTopを設定する。
-      // scroll-smoothクラスが指定されているため、ブラウザが滑らかにスクロールさせる。
-      containerEl.scrollTop = newScrollTop;
+    if (activeIndex !== -1 && itemEls[activeIndex]) {
+      itemEls[activeIndex]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
   });
 </script>
@@ -48,9 +44,12 @@
     <div class="h-[calc(50%-1.25rem)]"></div>
     {#each dialogues as dialogue, index (dialogue.id)}
       <div
+        bind:this={itemEls[index]}
         class="relative rounded-lg p-3 transition-all"
         class:bg-primary-100={index === activeIndex}
         class:dark:bg-primary-900={index === activeIndex}
+        class:bg-gray-200={index === previousActiveIndex && index !== activeIndex}
+        class:dark:bg-gray-700={index === previousActiveIndex && index !== activeIndex}
       >
         <div
           role="button"
