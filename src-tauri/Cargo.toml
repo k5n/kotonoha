@@ -7,6 +7,8 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# cSpell:words staticlib cdylib rlib
+
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
@@ -26,3 +28,6 @@ tauri-plugin-log = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 dotenvy = "0.15.7"
 tauri-plugin-fs = "2"
+tauri-plugin-stronghold = "2"
+rust-argon2 = "2.1"
+machineid-rs = "1.2"

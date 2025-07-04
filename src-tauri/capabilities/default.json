@@ -12,31 +12,60 @@
     "fs:default",
     {
       "identifier": "fs:allow-exists",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-mkdir",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-write-text-file",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-write-file",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-read-text-file",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-read-file",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-read-dir",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
-    }
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/**"
+        }
+      ]
+    },
+    "stronghold:default"
   ]
 }
