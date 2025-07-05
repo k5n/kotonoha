@@ -31,3 +31,4 @@ tauri-plugin-fs = "2"
 tauri-plugin-stronghold = "2"
 rust-argon2 = "2.1"
 machineid-rs = "1.2"
+google-ai-rs = { version = "0.1.1", features = ["serde"] } 
