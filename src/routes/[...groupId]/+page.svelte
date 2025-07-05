@@ -13,7 +13,7 @@
   import GroupNameEditModal from '$lib/presentation/components/GroupNameEditModal.svelte';
   import { error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
-  import { PlusOutline } from 'flowbite-svelte-icons';
+  import { CogOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
   // --- ページデータ受け取り ---
@@ -133,10 +133,17 @@
 <div class="p-4 md:p-6">
   <div class="mb-4 flex items-center justify-between">
     <Heading tag="h1" class="text-3xl font-bold">グループ一覧</Heading>
-    <Button onclick={handleAddNewEpisode} disabled={currentGroupType === 'album'}>
-      <PlusOutline class="me-2 h-5 w-5" />
-      新規追加
-    </Button>
+    <div class="flex items-center space-x-2">
+      <Button onclick={handleAddNewEpisode} disabled={currentGroupType === 'album'}>
+        <PlusOutline class="me-2 h-5 w-5" />
+        新規追加
+      </Button>
+      <a href="/settings" class="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+        <CogOutline
+          class="h-6 w-6 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+        />
+      </a>
+    </div>
   </div>
 
   <div class="mb-6">
