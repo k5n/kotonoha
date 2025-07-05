@@ -7,8 +7,8 @@
   let { data }: PageProps = $props();
 
   let apiKeyInput = $state('');
-  let isApiKeySet = $state(data.isApiKeySet);
-  let errorMessage = $state(data.error ?? '');
+  let settings = $derived(data.settings);
+  let errorMessage = $derived(data.error ?? '');
   let successMessage = $state('');
 
   function goBack() {
@@ -21,6 +21,10 @@
   }
 
   async function handleSave() {
+    if (!settings) {
+      errorMessage = '設定が読み込まれていません。';
+      return;
+    }
     errorMessage = '';
     successMessage = '';
     if (!apiKeyInput) {
@@ -28,8 +32,8 @@
       return;
     }
     try {
-      await saveSettings({ geminiApiKey: apiKeyInput });
-      isApiKeySet = true;
+      await saveSettings(settings, apiKeyInput);
+      settings = { ...settings, isApiKeySet: true }; // Update settings to reflect the new API key
       apiKeyInput = '';
       successMessage = 'APIキーを保存しました。';
     } catch (e) {
@@ -47,28 +51,30 @@
 
   <h1 class="text-xl font-bold">設定</h1>
 
-  <div class="mt-4">
-    {#if isApiKeySet}
-      <Alert color="green" class="mb-4">
-        <span class="font-medium">APIキーは設定済みです。</span>
-        新しいキーを保存すると上書きされます。
-      </Alert>
-    {:else}
-      <Alert color="yellow" class="mb-4">
-        <span class="font-medium">APIキーは設定されていません。</span>
-        機能を利用するにはAPIキーの登録が必要です。
-      </Alert>
-    {/if}
-  </div>
+  {#if settings}
+    <div class="mt-4">
+      {#if settings.isApiKeySet}
+        <Alert color="green" class="mb-4">
+          <span class="font-medium">APIキーは設定済みです。</span>
+          新しいキーを保存すると上書きされます。
+        </Alert>
+      {:else}
+        <Alert color="yellow" class="mb-4">
+          <span class="font-medium">APIキーは設定されていません。</span>
+          機能を利用するにはAPIキーの登録が必要です。
+        </Alert>
+      {/if}
+    </div>
 
-  <div class="mt-6">
-    <Label for="api-key" class="mb-2">Gemini API Key</Label>
-    <Input type="password" id="api-key" bind:value={apiKeyInput} placeholder="APIキーを入力" />
-  </div>
+    <div class="mt-6">
+      <Label for="api-key" class="mb-2">Gemini API Key</Label>
+      <Input type="password" id="api-key" bind:value={apiKeyInput} placeholder="APIキーを入力" />
+    </div>
 
-  <div class="mt-6">
-    <Button onclick={handleSave}>保存</Button>
-  </div>
+    <div class="mt-6">
+      <Button onclick={handleSave}>保存</Button>
+    </div>
+  {/if}
 
   {#if errorMessage}
     <Alert color="red" class="mt-4">

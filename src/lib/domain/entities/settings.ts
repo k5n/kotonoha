@@ -1,3 +1,3 @@
 export interface Settings {
-  geminiApiKey: string | null;
+  isApiKeySet: boolean;
 }

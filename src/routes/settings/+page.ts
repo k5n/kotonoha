@@ -6,13 +6,14 @@ export const load: PageLoad = async () => {
   try {
     const settings = await fetchSettings();
     return {
-      isApiKeySet: !!settings.geminiApiKey,
+      settings,
+      error: null,
     };
   } catch (e) {
     error(`Failed to load API Key: ${e}`);
     return {
-      isApiKeySet: false,
-      error: 'APIキーの読み込みに失敗しました。',
+      settings: null,
+      error: '設定の読み込みに失敗しました。',
     };
   }
 };
