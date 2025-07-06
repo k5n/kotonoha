@@ -1,6 +1,6 @@
-import type { SentenceMiningResult } from '$lib/domain/entities/sentenceMiningResult';
+import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
 
 export type AnalyzeSentenceWithLlmResponse = {
-  result: SentenceMiningResult;
+  result: SentenceAnalysisResult;
   error?: string;
 };

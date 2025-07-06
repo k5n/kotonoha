@@ -35,6 +35,7 @@ struct AnalyzeSentenceWithLlmResponse {
 fn build_prompt(
     learning_language: &str,
     explanation_language: &str,
+    part_of_speech_options: &str,
     context: &str,
     target_sentence: &str,
 ) -> String {
@@ -63,6 +64,7 @@ For each identified item, you must:
 # Input
 - **LEARNING_LANGUAGE**:  {learning_language}
 - **EXPLANATION_LANGUAGE**: {explanation_language}
+- **PART_OF_SPEECH_OPTIONS**: [{part_of_speech_options}]
 - **CONTEXT**:
 ```
 {context}
@@ -80,12 +82,19 @@ async fn analyze_sentence_with_llm(
     api_key: String,
     learning_language: String,
     explanation_language: String,
+    part_of_speech_options: Vec<String>,
     context: String,
     target_sentence: String,
 ) -> AnalyzeSentenceWithLlmResponse {
+    let part_of_speech_options = part_of_speech_options
+        .into_iter()
+        .map(|s| format!("\"{}\"", s.trim()))
+        .collect::<Vec<_>>()
+        .join(", ");
     let prompt = build_prompt(
         &learning_language,
         &explanation_language,
+        &part_of_speech_options,
         &context,
         &target_sentence,
     );

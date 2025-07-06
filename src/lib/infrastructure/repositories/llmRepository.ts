@@ -1,19 +1,21 @@
-import type { SentenceMiningResult } from '$lib/domain/entities/sentenceMiningResult';
+import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
 import type { AnalyzeSentenceWithLlmResponse } from '$lib/infrastructure/contracts/llm';
 import { invoke } from '@tauri-apps/api/core';
 
-export class LlmRepository {
+export const llmRepository = {
   async analyzeSentence(
     apiKey: string,
     learningLanguage: string,
     explanationLanguage: string,
+    partOfSpeechOptions: readonly string[],
     context: string,
     targetSentence: string
-  ): Promise<SentenceMiningResult> {
+  ): Promise<SentenceAnalysisResult> {
     const response = await invoke<AnalyzeSentenceWithLlmResponse>('analyze_sentence_with_llm', {
       apiKey,
       learningLanguage,
       explanationLanguage,
+      partOfSpeechOptions,
       context,
       targetSentence,
     });
@@ -23,5 +25,5 @@ export class LlmRepository {
     }
 
     return response.result;
-  }
-}
+  },
+};

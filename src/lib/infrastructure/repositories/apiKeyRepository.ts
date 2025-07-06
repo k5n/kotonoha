@@ -27,18 +27,20 @@ async function initStronghold(): Promise<{
   }
 }
 
-export async function saveApiKey(apiKey: string): Promise<void> {
-  const { stronghold, client } = await initStronghold();
-  const data = Array.from(new TextEncoder().encode(apiKey));
-  const store = client.getStore();
-  await store.insert(STRONGHOLD_KEY_GEMINI_API_KEY, data);
-  await stronghold.save();
-}
+export const apiKeyRepository = {
+  async saveApiKey(apiKey: string): Promise<void> {
+    const { stronghold, client } = await initStronghold();
+    const data = Array.from(new TextEncoder().encode(apiKey));
+    const store = client.getStore();
+    await store.insert(STRONGHOLD_KEY_GEMINI_API_KEY, data);
+    await stronghold.save();
+  },
 
-export async function getApiKey(): Promise<string | null> {
-  const { client } = await initStronghold();
-  const store = client.getStore();
-  const data = await store.get(STRONGHOLD_KEY_GEMINI_API_KEY);
-  if (data == null) return null;
-  return new TextDecoder().decode(new Uint8Array(data));
-}
+  async getApiKey(): Promise<string | null> {
+    const { client } = await initStronghold();
+    const store = client.getStore();
+    const data = await store.get(STRONGHOLD_KEY_GEMINI_API_KEY);
+    if (data == null) return null;
+    return new TextDecoder().decode(new Uint8Array(data));
+  },
+};
