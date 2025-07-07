@@ -37,6 +37,8 @@
   async function openMiningModal(dialogue: Dialogue, context: readonly Dialogue[]) {
     debug(`Open mining modal for dialogue: ${dialogue.id}, context size: ${context.length}`);
     miningTarget = dialogue;
+    isModalOpen = true;
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     sentenceAnalysisItems = [
       {
         expression: 'take off',
@@ -57,7 +59,6 @@
         exampleSentence: 'The project is <b>on track</b> to finish by the deadline.',
       },
     ];
-    isModalOpen = true;
   }
 
   async function createMiningCards(selectedResults: readonly SentenceAnalysisItem[]) {
@@ -70,7 +71,13 @@
     debug(`Creating mining cards for dialogue: ${miningTarget.id}`);
     // TODO: Implement the logic to create mining cards based on selectedResults
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    resetMiningModalState();
+  }
+
+  function resetMiningModalState() {
     isModalOpen = false;
+    miningTarget = null;
+    sentenceAnalysisItems = [];
     isProcessingMining = false;
   }
 </script>
@@ -130,4 +137,5 @@
   {sentenceAnalysisItems}
   onCreate={createMiningCards}
   isProcessing={isProcessingMining}
+  onClose={resetMiningModalState}
 />
