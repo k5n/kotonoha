@@ -1,6 +1,6 @@
 <script lang="ts">
   import { saveSettings } from '$lib/application/usecases/saveSettings';
-  import { Alert, Button, Input, Label } from 'flowbite-svelte';
+  import { Alert, Button, Input, Label, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
@@ -10,6 +10,7 @@
   let settings = $derived(data.settings);
   let errorMessage = $derived(data.error ?? '');
   let successMessage = $state('');
+  let isSaving = $state(false);
 
   function goBack() {
     if (history.length > 1) {
@@ -31,6 +32,7 @@
       errorMessage = 'APIキーを入力してください。';
       return;
     }
+    isSaving = true;
     try {
       await saveSettings(settings, apiKeyInput);
       settings = { ...settings, isApiKeySet: true }; // Update settings to reflect the new API key
@@ -39,6 +41,8 @@
     } catch (e) {
       errorMessage = 'APIキーの保存に失敗しました。';
       console.error(e);
+    } finally {
+      isSaving = false;
     }
   }
 </script>
@@ -72,7 +76,13 @@
     </div>
 
     <div class="mt-6">
-      <Button onclick={handleSave}>保存</Button>
+      <Button onclick={handleSave} disabled={isSaving}>
+        {#if isSaving}
+          <Spinner size="6" color="blue" class="me-2" />保存中...
+        {:else}
+          保存
+        {/if}
+      </Button>
     </div>
   {/if}
 
