@@ -44,18 +44,19 @@ export async function analyzeDialogueForMining(
   dialogue: Dialogue,
   context: readonly Dialogue[]
 ): Promise<SentenceAnalysisResult> {
-  if (!dialogue.correctedText) {
+  const targetSentence = dialogue.correctedText || dialogue.originalText;
+  if (!targetSentence) {
     throw new Error('Dialogue text is empty');
   }
   const apiKey = await ensureApiKey();
-  const contextSentences = context.map((d) => d.correctedText).join('\n');
+  const contextSentences = context.map((d) => d.correctedText || d.originalText).join('\n');
   const result = await llmRepository.analyzeSentence(
     apiKey,
     'English',
     'Japanese',
     PART_OF_SPEECH_OPTIONS,
     contextSentences,
-    dialogue.correctedText
+    targetSentence
   );
   return result;
 }

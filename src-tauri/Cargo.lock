@@ -2795,6 +2795,7 @@ version = "0.1.0"
 dependencies = [
  "dotenvy",
  "google-ai-rs",
+ "log",
  "machineid-rs",
  "rust-argon2 2.1.0",
  "serde",

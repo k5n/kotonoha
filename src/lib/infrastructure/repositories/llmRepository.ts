@@ -1,6 +1,6 @@
 import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
-import type { AnalyzeSentenceWithLlmResponse } from '$lib/infrastructure/contracts/llm';
 import { invoke } from '@tauri-apps/api/core';
+import { debug, info } from '@tauri-apps/plugin-log';
 
 export const llmRepository = {
   async analyzeSentence(
@@ -11,7 +11,11 @@ export const llmRepository = {
     context: string,
     targetSentence: string
   ): Promise<SentenceAnalysisResult> {
-    const response = await invoke<AnalyzeSentenceWithLlmResponse>('analyze_sentence_with_llm', {
+    info(
+      `Analyzing sentence: ${targetSentence}, ${learningLanguage} => ${explanationLanguage}, partOfSpeech: [${partOfSpeechOptions.join(', ')}], context: ${context}`
+    );
+
+    const response = await invoke<SentenceAnalysisResult>('analyze_sentence_with_llm', {
       apiKey,
       learningLanguage,
       explanationLanguage,
@@ -19,11 +23,8 @@ export const llmRepository = {
       context,
       targetSentence,
     });
+    debug(`LLM analysis result: ${JSON.stringify(response)}`);
 
-    if (response.error) {
-      throw new Error(response.error);
-    }
-
-    return response.result;
+    return response;
   },
 };

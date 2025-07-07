@@ -4,32 +4,49 @@ mod migrations;
 
 use dotenvy::from_filename;
 use google_ai_rs::{AsSchema, Client, TypedModel};
+use log;
 use machineid_rs::{Encryption, HWIDComponent, IdBuilder};
 use migrations::get_migrations;
 use serde::{Deserialize, Serialize};
 use std::env;
 
 #[derive(AsSchema, Deserialize, Serialize)]
-#[schema(rename_all = "camelCase")]
+#[schema(
+    rename_all = "camelCase",
+    description = "Represents an item of vocabulary or expression identified in a sentence."
+)]
 struct SentenceMiningItem {
+    #[schema(description = "The expression or phrase identified in the target sentence.")]
     expression: String,
+
+    #[schema(
+        description = "The part of speech or type of the expression (e.g., 'Phrasal verb', 'Idiom', 'Noun')."
+    )]
+    #[serde(rename = "partOfSpeech")]
     part_of_speech: String,
+
+    #[schema(
+        description = "A simple definition of the expression in the learner's native language, explaining its meaning as used in the target sentence."
+    )]
     definition: String,
+
+    #[schema(
+        description = "The original target sentence with the identified expression highlighted using <b> tags."
+    )]
+    #[serde(rename = "exampleSentence")]
     example_sentence: String,
 }
 
 #[derive(AsSchema, Deserialize, Serialize)]
-#[schema(rename_all = "camelCase")]
+#[schema(
+    rename_all = "camelCase",
+    description = "Result of sentence mining analysis."
+)]
 struct SentenceMiningResult {
+    #[schema(
+        description = "A list of identified vocabulary and expressions from the target sentence."
+    )]
     items: Vec<SentenceMiningItem>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct AnalyzeSentenceWithLlmResponse {
-    result: SentenceMiningResult,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    error: Option<String>,
 }
 
 fn build_prompt(
@@ -39,6 +56,7 @@ fn build_prompt(
     context: &str,
     target_sentence: &str,
 ) -> String {
+    // cSpell:words CEFR
     format!(
         r#"
 # Role
@@ -85,7 +103,7 @@ async fn analyze_sentence_with_llm(
     part_of_speech_options: Vec<String>,
     context: String,
     target_sentence: String,
-) -> AnalyzeSentenceWithLlmResponse {
+) -> Result<SentenceMiningResult, String> {
     let part_of_speech_options = part_of_speech_options
         .into_iter()
         .map(|s| format!("\"{}\"", s.trim()))
@@ -98,20 +116,19 @@ async fn analyze_sentence_with_llm(
         &context,
         &target_sentence,
     );
+    log::debug!("Generated prompt: {}", prompt);
 
-    let client = Client::new(api_key.into())
-        .await
-        .expect("Failed to create Google AI client"); // FIXME: エラーハンドリングを追加
+    let client = Client::new(api_key.into()).await.map_err(|e| {
+        log::error!("Failed to create Google AI client: {}", e);
+        "Failed to create Google AI client".to_string()
+    })?;
     let model = TypedModel::<SentenceMiningResult>::new(&client, "gemini-2.5-flash");
-    let result = model
-        .generate_content(prompt)
-        .await
-        .expect("Failed to generate content"); // FIXME: エラーハンドリングを追加
+    let result = model.generate_content(prompt).await.map_err(|e| {
+        log::error!("Failed to generate content: {}", e);
+        "Failed to generate content".to_string()
+    })?;
 
-    AnalyzeSentenceWithLlmResponse {
-        result: result.into(),
-        error: None,
-    }
+    Ok(result)
 }
 
 fn get_db_name() -> String {

@@ -1,4 +1,5 @@
 import { fetchEpisodeDetail } from '$lib/application/usecases/fetchEpisodeDetail';
+import { fetchSettings } from '$lib/application/usecases/fetchSettings';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
@@ -10,10 +11,12 @@ export const load: PageLoad = async ({ params }) => {
   if (!result) {
     return { error: 'エピソードが見つかりません。' };
   }
+  const settings = await fetchSettings();
   return {
     episode: result.episode,
     dialogues: result.dialogues,
     sentenceCards: result.sentenceCards,
     audioBlobUrl: result.audioBlobUrl,
+    settings: settings,
   };
 };

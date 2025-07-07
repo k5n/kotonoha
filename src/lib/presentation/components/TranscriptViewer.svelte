@@ -7,14 +7,16 @@
   interface Props {
     dialogues: readonly Dialogue[];
     currentTime: number; // 秒単位
-    onSeek: (time: number) => void;
-    onMine: (dialogue: Dialogue, context: readonly Dialogue[]) => void;
+    canMine: boolean; // マイニング可能かどうか
+    onSeek: (_time: number) => void;
+    onMine: (_dialogue: Dialogue, _context: readonly Dialogue[]) => void;
     contextBefore?: number; // 前の件数
     contextAfter?: number; // 後ろの件数
   }
   let {
     dialogues,
     currentTime,
+    canMine,
     onSeek,
     onMine,
     contextBefore = 2,
@@ -79,7 +81,7 @@
         </div>
 
         <div class="w-24 text-right">
-          {#if index === activeIndex}
+          {#if canMine && index === activeIndex}
             <Button size="xs" onclick={() => onMine(dialogue, getContext(index))}>
               <SunOutline class="me-1 h-4 w-4" />
               Mine

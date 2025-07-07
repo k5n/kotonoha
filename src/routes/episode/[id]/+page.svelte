@@ -1,10 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { debug } from '@tauri-apps/plugin-log';
+  import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
+  import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import type { SentenceAnalysisItem } from '$lib/domain/entities/sentenceAnalysisResult';
   import AudioPlayer from '$lib/presentation/components/AudioPlayer.svelte';
@@ -21,6 +22,7 @@
   let miningTarget: Dialogue | null = $state(null);
   let sentenceAnalysisItems: readonly SentenceAnalysisItem[] = $state([]); // セリフの分析結果
   let isProcessingMining = $state(false); // マイニング処理中かどうかのフラグ
+  let canMine = $derived(data.settings?.isApiKeySet || false); // マイニング可能かどうか
 
   function goBack() {
     if (history.length > 1) {
@@ -38,27 +40,14 @@
     debug(`Open mining modal for dialogue: ${dialogue.id}, context size: ${context.length}`);
     miningTarget = dialogue;
     isModalOpen = true;
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    sentenceAnalysisItems = [
-      {
-        expression: 'take off',
-        definition: '（飛行機が）離陸する；（衣服などを）脱ぐ；（事業などが）軌道に乗る',
-        partOfSpeech: 'Phrasal verb',
-        exampleSentence: 'The plane will <b>take off</b> in 10 minutes.',
-      },
-      {
-        expression: 'immediately',
-        definition: 'すぐに、即座に',
-        partOfSpeech: 'Adjective',
-        exampleSentence: 'Please respond <b>immediately</b> to the emergency.',
-      },
-      {
-        expression: 'on track',
-        definition: '順調に進んで、予定通りで',
-        partOfSpeech: 'Idiom',
-        exampleSentence: 'The project is <b>on track</b> to finish by the deadline.',
-      },
-    ];
+    try {
+      const analysisResult = await analyzeDialogueForMining(dialogue, context);
+      sentenceAnalysisItems = analysisResult.items;
+    } catch (err) {
+      error(`Error analyzing dialogue for mining: ${err}`);
+      resetMiningModalState();
+      // TODO: Show error message to user
+    }
   }
 
   async function createMiningCards(selectedResults: readonly SentenceAnalysisItem[]) {
@@ -111,6 +100,7 @@
           <TranscriptViewer
             dialogues={data.dialogues}
             {currentTime}
+            {canMine}
             {contextBefore}
             {contextAfter}
             onSeek={(e) => handleSeek(e)}
