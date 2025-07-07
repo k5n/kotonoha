@@ -1,3 +1,4 @@
+import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import type { Dialogue } from '$lib/domain/entities/dialogue';
 import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
 import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
@@ -20,6 +21,19 @@ const PART_OF_SPEECH_OPTIONS: readonly string[] = [
   'Expression',
 ];
 
+async function ensureApiKey(): Promise<string> {
+  const apiKey = apiKeyStore.value;
+  if (apiKey !== null) {
+    return apiKey;
+  }
+  const storedApiKey = await apiKeyRepository.getApiKey();
+  if (storedApiKey !== null) {
+    apiKeyStore.set(storedApiKey);
+    return storedApiKey;
+  }
+  throw new Error('API key is not set');
+}
+
 /**
  * 指定したダイアログを LLM で解析し、マイニング用の情報を返すユースケース
  * @param dialogue 解析対象のダイアログ
@@ -33,10 +47,7 @@ export async function analyzeDialogueForMining(
   if (!dialogue.correctedText) {
     throw new Error('Dialogue text is empty');
   }
-  const apiKey = await apiKeyRepository.getApiKey();
-  if (!apiKey) {
-    throw new Error('API key is not set');
-  }
+  const apiKey = await ensureApiKey();
   const contextSentences = context.map((d) => d.correctedText).join('\n');
   const result = await llmRepository.analyzeSentence(
     apiKey,
