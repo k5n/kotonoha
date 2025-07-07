@@ -15,6 +15,7 @@
     sentenceAnalysisItems: readonly SentenceAnalysisItem[];
     onCreate: (_selectedResults: readonly SentenceAnalysisItem[]) => void;
     isProcessing: boolean; // 処理中かどうかのフラグ
+    onClose?: () => void; // キャンセル・クローズ時のコールバック
   }
   let {
     openModal = $bindable(),
@@ -22,6 +23,7 @@
     dialogue,
     onCreate,
     isProcessing,
+    onClose = () => {},
   }: Props = $props();
 
   // --- State ---
@@ -48,9 +50,14 @@
     const selectedObjects = analysisResults.filter((result) => selectedItemIds.includes(result.id));
     onCreate(selectedObjects.map(({ id: _id, ...rest }) => rest));
   }
+
+  function handleCancel() {
+    openModal = false;
+    onClose();
+  }
 </script>
 
-<Modal title="Sentence Mining" bind:open={openModal} size="lg">
+<Modal title="Sentence Mining" bind:open={openModal} onclose={handleCancel} size="lg">
   <div class="space-y-4">
     <p class="text-sm text-gray-500">以下の文から学習カードを作成します。</p>
     <blockquote
@@ -98,7 +105,7 @@
   </div>
 
   <div class="flex justify-end space-x-2">
-    <Button color="alternative" onclick={() => (openModal = false)} disabled={isProcessing}>
+    <Button color="alternative" onclick={handleCancel} disabled={isProcessing}>
       <CloseOutline class="me-2 h-5 w-5" />
       キャンセル
     </Button>
