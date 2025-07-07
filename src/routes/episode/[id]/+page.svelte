@@ -6,15 +6,21 @@
   import type { PageProps } from './$types';
 
   import type { Dialogue } from '$lib/domain/entities/dialogue';
+  import type { SentenceAnalysisItem } from '$lib/domain/entities/sentenceAnalysisResult';
   import AudioPlayer from '$lib/presentation/components/AudioPlayer.svelte';
   import SentenceCardList from '$lib/presentation/components/SentenceCardList.svelte';
   import SentenceMiningModal from '$lib/presentation/components/SentenceMiningModal.svelte';
   import TranscriptViewer from '$lib/presentation/components/TranscriptViewer.svelte';
 
+  const contextBefore = 5; // コンテキストに含める注目セリフの前のセリフ件数
+  const contextAfter = 3; // コンテキストに含める注目セリフの後のセリフ件数
+
   let { data }: PageProps = $props();
   let currentTime = $state(0); // 現在の再生時間（秒）
   let isModalOpen = $state(false); // モーダルの開閉状態
   let miningTarget: Dialogue | null = $state(null);
+  let sentenceAnalysisItems: readonly SentenceAnalysisItem[] = $state([]); // セリフの分析結果
+  let isProcessingMining = $state(false); // マイニング処理中かどうかのフラグ
 
   function goBack() {
     if (history.length > 1) {
@@ -28,10 +34,44 @@
     currentTime = time;
   }
 
-  function openMiningModal(dialogue: Dialogue) {
-    debug(`Open mining modal for dialogue: ${dialogue.id}`);
+  async function openMiningModal(dialogue: Dialogue, context: readonly Dialogue[]) {
+    debug(`Open mining modal for dialogue: ${dialogue.id}, context size: ${context.length}`);
     miningTarget = dialogue;
+    sentenceAnalysisItems = [
+      {
+        expression: 'take off',
+        definition: '（飛行機が）離陸する；（衣服などを）脱ぐ；（事業などが）軌道に乗る',
+        partOfSpeech: 'Phrasal verb',
+        exampleSentence: 'The plane will <b>take off</b> in 10 minutes.',
+      },
+      {
+        expression: 'immediately',
+        definition: 'すぐに、即座に',
+        partOfSpeech: 'Adjective',
+        exampleSentence: 'Please respond <b>immediately</b> to the emergency.',
+      },
+      {
+        expression: 'on track',
+        definition: '順調に進んで、予定通りで',
+        partOfSpeech: 'Idiom',
+        exampleSentence: 'The project is <b>on track</b> to finish by the deadline.',
+      },
+    ];
     isModalOpen = true;
+  }
+
+  async function createMiningCards(selectedResults: readonly SentenceAnalysisItem[]) {
+    if (!miningTarget || sentenceAnalysisItems.length === 0) {
+      debug('No mining target or analysis items available.');
+      isModalOpen = false;
+      return;
+    }
+    isProcessingMining = true;
+    debug(`Creating mining cards for dialogue: ${miningTarget.id}`);
+    // TODO: Implement the logic to create mining cards based on selectedResults
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    isModalOpen = false;
+    isProcessingMining = false;
   }
 </script>
 
@@ -64,6 +104,8 @@
           <TranscriptViewer
             dialogues={data.dialogues}
             {currentTime}
+            {contextBefore}
+            {contextAfter}
             onSeek={(e) => handleSeek(e)}
             onMine={openMiningModal}
           />
@@ -85,7 +127,7 @@
 <SentenceMiningModal
   bind:openModal={isModalOpen}
   dialogue={miningTarget}
-  onCreate={(e) => {
-    debug(`Create cards: ${e}`); // TODO: カード作成処理
-  }}
+  {sentenceAnalysisItems}
+  onCreate={createMiningCards}
+  isProcessing={isProcessingMining}
 />

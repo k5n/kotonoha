@@ -8,9 +8,18 @@
     dialogues: readonly Dialogue[];
     currentTime: number; // 秒単位
     onSeek: (time: number) => void;
-    onMine: (dialogue: Dialogue) => void;
+    onMine: (dialogue: Dialogue, context: readonly Dialogue[]) => void;
+    contextBefore?: number; // 前の件数
+    contextAfter?: number; // 後ろの件数
   }
-  let { dialogues, currentTime, onSeek, onMine }: Props = $props();
+  let {
+    dialogues,
+    currentTime,
+    onSeek,
+    onMine,
+    contextBefore = 2,
+    contextAfter = 2,
+  }: Props = $props();
 
   // --- State ---
   let activeIndex = $state(-1);
@@ -34,6 +43,12 @@
       itemEls[activeIndex]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
   });
+
+  function getContext(index: number): readonly Dialogue[] {
+    const start = Math.max(0, index - contextBefore);
+    const end = Math.min(dialogues.length, index + contextAfter + 1);
+    return dialogues.slice(start, end);
+  }
 </script>
 
 <div
@@ -65,7 +80,7 @@
 
         <div class="w-24 text-right">
           {#if index === activeIndex}
-            <Button size="xs" onclick={() => onMine(dialogue)}>
+            <Button size="xs" onclick={() => onMine(dialogue, getContext(index))}>
               <SunOutline class="me-1 h-4 w-4" />
               Mine
             </Button>

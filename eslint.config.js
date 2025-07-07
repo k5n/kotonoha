@@ -6,13 +6,22 @@ import svelteParser from 'svelte-eslint-parser';
 import tsEslint from 'typescript-eslint';
 
 export default tsEslint.config(
-  // .eslintignore の代替
   {
+    // .eslintignore の代替
     ignores: ['src-tauri/', 'doc/', '.vscode/', '.svelte-kit/'],
   },
   eslint.configs.recommended,
   svelte.configs['flat/recommended'],
   tsEslint.configs.recommended,
+  {
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
+  },
   // Other config for non-Svelte files
   {
     languageOptions: {

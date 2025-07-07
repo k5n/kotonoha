@@ -1,62 +1,53 @@
 <script lang="ts">
   import type { Dialogue } from '$lib/domain/entities/dialogue';
+  import type { SentenceAnalysisItem } from '$lib/domain/entities/sentenceAnalysisResult';
   import { Badge, Button, Checkbox, Modal, Spinner } from 'flowbite-svelte';
   import { CheckOutline, CloseOutline } from 'flowbite-svelte-icons';
-  import { onMount } from 'svelte';
 
-  type MinedResult = {
+  type AnalysisResult = {
     id: number; // ★ 識別子としてidを追加
-    expression: string;
-    definition: string;
-    type: '単語' | 'イディオム';
-  };
+  } & SentenceAnalysisItem;
 
   // --- Props ---
   interface Props {
     openModal: boolean;
     dialogue: Dialogue | null;
-    onCreate: (selectedResults: MinedResult[]) => void;
+    sentenceAnalysisItems: readonly SentenceAnalysisItem[];
+    onCreate: (_selectedResults: readonly SentenceAnalysisItem[]) => void;
+    isProcessing: boolean; // 処理中かどうかのフラグ
   }
-  let { openModal = $bindable(), dialogue, onCreate }: Props = $props();
+  let {
+    openModal = $bindable(),
+    sentenceAnalysisItems,
+    dialogue,
+    onCreate,
+    isProcessing,
+  }: Props = $props();
 
   // --- State ---
-  let isLoading = $state(true);
-  let minedResults: MinedResult[] = $state([]);
+  let isLoading = $derived(sentenceAnalysisItems.length === 0);
+  let analysisResults: AnalysisResult[] = $derived(
+    sentenceAnalysisItems.map((item, index) => ({
+      id: index + 1, // ★ IDを生成
+      ...item,
+    }))
+  );
   let selectedItemIds: number[] = $state([]);
+
+  function handleCheckboxChange(item: AnalysisResult) {
+    // チェックボックスの選択状態を更新
+    if (selectedItemIds.includes(item.id)) {
+      selectedItemIds = selectedItemIds.filter((id) => id !== item.id);
+    } else {
+      selectedItemIds = [...selectedItemIds, item.id];
+    }
+  }
 
   function handleCreate() {
     // 選択されたIDに基づいて、元のオブジェクトの配列を生成する
-    const selectedObjects = minedResults.filter((result) => selectedItemIds.includes(result.id));
-    onCreate(selectedObjects);
+    const selectedObjects = analysisResults.filter((result) => selectedItemIds.includes(result.id));
+    onCreate(selectedObjects.map(({ id: _id, ...rest }) => rest));
   }
-
-  // --- Lifecycle ---
-  onMount(() => {
-    // LLMによる解析処理をシミュレート
-    setTimeout(() => {
-      minedResults = [
-        {
-          id: 1,
-          expression: 'take off',
-          definition: '（飛行機が）離陸する；（衣服などを）脱ぐ；（事業などが）軌道に乗る',
-          type: 'イディオム',
-        },
-        {
-          id: 2,
-          expression: 'immediately',
-          definition: 'すぐに、即座に',
-          type: '単語',
-        },
-        {
-          id: 3,
-          expression: 'on track',
-          definition: '順調に進んで、予定通りで',
-          type: 'イディオム',
-        },
-      ];
-      isLoading = false;
-    }, 1500); // 1.5秒の遅延
-  });
 </script>
 
 <Modal title="Sentence Mining" bind:open={openModal} size="lg">
@@ -81,17 +72,21 @@
       {:else}
         <p class="mb-2 text-sm text-gray-500">カードにしたい単語・表現を選択してください。</p>
         <div class="space-y-3">
-          {#each minedResults as item (item.id)}
+          {#each analysisResults as item (item.id)}
             <label
               class="flex w-full items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
             >
-              <Checkbox bind:group={selectedItemIds} value={item} />
+              <Checkbox
+                value={item}
+                checked={selectedItemIds.includes(item.id)}
+                onchange={() => handleCheckboxChange(item)}
+              />
               <div class="flex-1">
                 <div class="flex items-center">
                   <span class="text-primary-700 dark:text-primary-400 text-lg font-bold"
                     >{item.expression}</span
                   >
-                  <Badge color="gray" class="ms-2">{item.type}</Badge>
+                  <Badge color="gray" class="ms-2">{item.partOfSpeech}</Badge>
                 </div>
                 <p class="text-gray-600 dark:text-gray-300">{item.definition}</p>
               </div>
@@ -103,13 +98,18 @@
   </div>
 
   <div class="flex justify-end space-x-2">
-    <Button color="alternative" onclick={() => (openModal = false)}>
+    <Button color="alternative" onclick={() => (openModal = false)} disabled={isProcessing}>
       <CloseOutline class="me-2 h-5 w-5" />
       キャンセル
     </Button>
-    <Button disabled={selectedItemIds.length === 0} onclick={handleCreate}>
-      <CheckOutline class="me-2 h-5 w-5" />
-      選択した {selectedItemIds.length} 件をカードに追加
+    <Button disabled={selectedItemIds.length === 0 || isProcessing} onclick={handleCreate}>
+      {#if isProcessing}
+        <Spinner size="5" class="me-2" />
+        追加中...
+      {:else}
+        <CheckOutline class="me-2 h-5 w-5" />
+        選択した {selectedItemIds.length} 件をカードに追加
+      {/if}
     </Button>
   </div>
 </Modal>
