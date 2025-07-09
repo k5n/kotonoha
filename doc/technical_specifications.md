@@ -145,22 +145,17 @@ erDiagram
         INTEGER id PK
         INTEGER dialogue_id FK
         INTEGER vocabulary_id FK
-        TEXT target_expression
+        TEXT expression
         TEXT sentence
         TEXT definition
         TEXT status
         TEXT created_at
-    }
-    VOCABULARY {
-        INTEGER id PK
-        TEXT expression
     }
 
     EPISODE_GROUPS ||--o{ EPISODE_GROUPS : "parent"
     EPISODE_GROUPS ||--o{ EPISODES : "has"
     EPISODES ||--o{ DIALOGUES : "has"
     DIALOGUES ||--o{ SENTENCE_CARDS : "has"
-    SENTENCE_CARDS }o--|| VOCABULARY : "refers"
 ```
 
 ### 2.1. `episode_groups` テーブル
@@ -208,30 +203,21 @@ erDiagram
 ### 2.4. `sentence_cards` テーブル
 Sentence Miningによって作成されたカードを管理する。
 
+- 初期バージョンでは、同じ単語/連語かどうかは `expression` カラムが一致するかどうかだけで管理する。
+- `expression` カラムには FTS5 仮想テーブルを利用し、全文検索インデックスを構築する。
+    - これにより、複数単語による柔軟な検索や部分一致検索が可能となる。
+    - 例: `CREATE VIRTUAL TABLE sentence_cards USING fts5(expression);`
+- 単語の順序や部分列一致など、より高度な検索条件（例: "pick up [-]" のようなパターン）は、アプリケーション側でトークン化・フィルタリング処理を行う。
+
 | カラム名        | 型          | 説明                               |
 |-----------------|-------------|------------------------------------|
 | `id`            | INTEGER     | PRIMARY KEY, AUTOINCREMENT         |
 | `dialogue_id`   | INTEGER     | `dialogues.id`への外部キー         |
-| `vocabulary_id` | INTEGER     | `vocabulary.id`への外部キー        |
-| `target_expression` | TEXT    | 抽出対象の単語/イディオム          |
-| `sentence`      | TEXT        | 抽出対象を含むセンテンス全体       |
+| `expression`    | TEXT        | 抽出対象の単語/イディオム          |
+| `sentence`      | TEXT        | 抽出対象を含むセンテンス全体（該当箇所を強調）       |
 | `definition`    | TEXT        | LLMによって生成された意味・説明    |
 | `status`        | TEXT        | `active`, `suspended` (保留) などの状態 |
 | `created_at`    | TEXT        | 作成日時 (ISO 8601)                |
-
-### 2.5. `vocabulary` テーブル
-これまでにSentence Miningされた単語/イディオムのマスターリスト。
-
-- `expression` カラムには FTS5 仮想テーブルを利用し、全文検索インデックスを構築する。
-    - これにより、複数単語による柔軟な検索や部分一致検索が可能となる。
-    - 例: `CREATE VIRTUAL TABLE vocabulary USING fts5(expression);`
-- 単語の順序や部分列一致など、より高度な検索条件（例: "pick up [-]" のようなパターン）は、アプリケーション側でトークン化・フィルタリング処理を行う。
-- words テーブルや多対多テーブルは設けず、vocabulary テーブルのみで管理する。
-
-| カラム名       | 型      | 説明                                            |
-|----------------|---------|-------------------------------------------------|
-| `id`           | INTEGER | PRIMARY KEY, AUTOINCREMENT                      |
-| `expression`   | TEXT    | 単語/イディオムの綴り (e.g., "take off")        |
 
 ---
 
