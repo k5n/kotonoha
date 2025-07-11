@@ -1,4 +1,3 @@
-import type { Episode } from '$lib/domain/entities/episode';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
 import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
@@ -53,7 +52,7 @@ async function generateUniqueEpisodeFilenames(
  * @param params - 新しいエピソードの情報
  * @throws エピソードの追加に失敗した場合にエラーをスローする
  */
-export async function addNewEpisode(params: AddNewEpisodeParams): Promise<readonly Episode[]> {
+export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> {
   info(`Adding new episode with params: ${JSON.stringify(params)}`);
   const { episodeGroupId, displayOrder, title, audioFile, scriptFile } = params;
   const { audioFilename, scriptFilename, uuid } = await generateUniqueEpisodeFilenames(
@@ -79,7 +78,6 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<readon
       }
       // NOTE: 本当はトランザクションでepisodeと一緒に入れるべきだけど・・・。実装の楽さを優先した。
       await dialogueRepository.bulkInsertDialogues(episode.id, dialogues);
-      return episodeRepository.getEpisodesByGroupId(episodeGroupId);
     } catch (err) {
       await episodeRepository.deleteEpisode(episode.id);
       throw err;

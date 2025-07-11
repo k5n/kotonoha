@@ -14,7 +14,7 @@ export async function moveEpisodeGroup({
 }: {
   group: EpisodeGroup;
   newParentId: number | null;
-}): Promise<readonly EpisodeGroup[]> {
+}): Promise<void> {
   // 移動先が自分自身の場合、エラー
   if (group.id === newParentId) {
     throw new Error('A group cannot be moved into itself.');
@@ -31,8 +31,4 @@ export async function moveEpisodeGroup({
 
   // リポジトリを呼び出して親IDを更新
   await episodeGroupRepository.updateGroupParent(group.id, newParentId);
-
-  // DB更新後、グループ一覧を取得（現在表示中のグループの子供一覧）
-  const children = await episodeGroupRepository.getGroups(group.parentId);
-  return children;
 }

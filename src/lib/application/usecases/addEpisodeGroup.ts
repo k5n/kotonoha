@@ -4,14 +4,13 @@ import { episodeGroupRepository } from '$lib/infrastructure/repositories/episode
 /**
  * 新しいエピソードグループを追加するユースケース
  * @param params グループ名・親ID・種別・兄弟グループ一覧
- * @returns 更新されたエピソードグループツリー
  */
 export async function addEpisodeGroup(params: {
   name: string;
   parentId: number | null;
   groupType: 'album' | 'folder';
   siblings: readonly EpisodeGroup[];
-}): Promise<readonly EpisodeGroup[]> {
+}): Promise<void> {
   const { name, parentId, groupType, siblings } = params;
 
   // バリデーション
@@ -33,8 +32,4 @@ export async function addEpisodeGroup(params: {
     groupType,
     displayOrder,
   });
-
-  // 追加後のグループ一覧を取得（現在表示中のグループの子供一覧）
-  const children = await episodeGroupRepository.getGroups(parentId);
-  return children;
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
@@ -47,13 +47,14 @@
       return;
     }
     const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
-    episodes = await addNewEpisode({
+    await addNewEpisode({
       episodeGroupId: groupId,
       displayOrder: maxDisplayOrder + 1,
       title,
       audioFile,
       scriptFile: srtFile,
     });
+    await invalidateAll();
     showAddEpisodeModal = false;
   }
 

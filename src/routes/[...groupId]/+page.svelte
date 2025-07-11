@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addEpisodeGroup } from '$lib/application/usecases/addEpisodeGroup';
   import { fetchAvailableParentGroups } from '$lib/application/usecases/fetchAvailableParentGroups';
@@ -62,12 +62,13 @@
     isSubmitting = true;
     try {
       const parentId = groupPathStore.current?.id ?? null;
-      displayedGroups = await addEpisodeGroup({
+      await addEpisodeGroup({
         name,
         parentId,
         groupType,
         siblings: displayedGroups,
       });
+      await invalidateAll();
       isAddModalOpen = false;
     } catch (err) {
       error(`Failed to add group: ${err}`);
@@ -85,10 +86,11 @@
     if (!editingGroup) return;
     isSubmitting = true;
     try {
-      displayedGroups = await updateEpisodeGroupName({
+      await updateEpisodeGroupName({
         group: editingGroup,
         newName,
       });
+      await invalidateAll();
       isEditModalOpen = false;
       editingGroup = null;
     } catch (err) {
@@ -115,12 +117,13 @@
     isSubmitting = true;
     errorMessage = ''; // Clear previous errors
     try {
-      displayedGroups = await moveEpisodeGroup({
+      await moveEpisodeGroup({
         group: editingGroup,
         newParentId,
       });
       isMoveModalOpen = false;
       editingGroup = null;
+      await invalidateAll();
     } catch (err) {
       error(`Failed to move group: ${err}`);
       errorMessage = err instanceof Error ? err.message : 'グループの移動に失敗しました。';
