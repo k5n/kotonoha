@@ -42,3 +42,9 @@
     display: none;
   }
 }
+
+/* Sentence Card List Styles */
+.sentence-content b {
+  @apply text-primary-600; /* 例: flowbite の primary 色 */
+  font-weight: inherit; /* 太字を解除したい場合は追加 */
+}

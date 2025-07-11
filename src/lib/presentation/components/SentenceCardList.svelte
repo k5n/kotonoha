@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
+  import DOMPurify from 'dompurify';
   import { Accordion, AccordionItem } from 'flowbite-svelte';
 
   interface Props {
@@ -14,6 +15,10 @@
       return String(date);
     }
   }
+
+  function sanitizeSentence(html: string): string {
+    return DOMPurify.sanitize(html, { ALLOWED_TAGS: ['b'], ALLOWED_ATTR: [] });
+  }
 </script>
 
 <div class="space-y-2">
@@ -26,8 +31,10 @@
       {#each sentenceCards as card (card.id)}
         <AccordionItem>
           {#snippet header()}{card.expression}{/snippet}
-          <div class="mb-4 w-full text-left font-semibold">
-            {card.sentence}
+          <div class="sentence-content mb-4 w-full text-left font-semibold">
+            <!-- サニタイズして表示しているので警告を抑制 -->
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html sanitizeSentence(card.sentence)}
           </div>
           <div class="space-y-2">
             <p>

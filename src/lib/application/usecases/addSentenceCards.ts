@@ -9,12 +9,11 @@ export async function addSentenceCards(
 ): Promise<void> {
   debug(`Creating mining cards for dialogue: ${dialogue.id}`);
   try {
-    const sentence = dialogue.correctedText || dialogue.originalText;
     for (const result of selectedResults) {
       await sentenceCardRepository.addSentenceCard({
         dialogueId: dialogue.id,
         expression: result.expression,
-        sentence: sentence,
+        sentence: result.exampleSentence,
         definition: result.definition,
         status: 'active',
       });
