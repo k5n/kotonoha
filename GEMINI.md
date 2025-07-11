@@ -29,6 +29,7 @@
 ## Coding Rules
 
 - `src/routes` 以下のファイル、`src/lib/presentation/components/*.svelte` ファイル、`src/lib/application/stores/*.svelte.ts` ファイルに対しては [Svelte/SvelteKitコーディングルール](doc/svelte_coding_rules.md) の規約に従うこと。
+- TypeScript ファイルに対しては [TypeScriptコーディングルール](doc/typescript_coding_style.md) の規約に従うこと。
 - ログ出力は Tauri の `log` プラグインを使用すること。
   - TypeScript 側では `import { info, warn, error } from '@tauri-apps/plugin-log';` を使用する。
   - ただし `src/lib/domain/services/*.ts` ファイルでは Vitest による単体テストを行うため、ログ出力は行わない。

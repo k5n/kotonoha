@@ -1,4 +1,4 @@
-# TypeScript コーディングスタイルガイド
+# TypeScript コーディングスタイル
 
 ## 関数定義
 
@@ -26,7 +26,7 @@
     ```
   - コールバックや短い関数、thisの扱いが不要な場面で使用します。
 
-- **クラスのメソッドやオブジェクトのプロパティには、function宣言や通常のメソッド記法を使う。**
+- **クラスのメソッドやオブジェクトのプロパティには、通常のメソッド記法を使う。**
   - 例:  
     ```typescript
     class User {
@@ -36,9 +36,27 @@
     }
     ```
 
+- **複数の関連関数を1つのオブジェクトとしてまとめて公開する場合は、オブジェクトリテラルでグループ化し、各関数は通常のメソッド記法で定義する。**
+  - 例:  
+    ```typescript
+    function mapRowToEpisodeGroup(row: EpisodeGroupRow): EpisodeGroup {
+      // ...
+    }
+
+    export const episodeGroupRepository = {
+      async getAllGroups(): Promise<readonly EpisodeGroup[]> {
+        // ...
+      },
+      async addGroup(params: { ... }): Promise<EpisodeGroup> {
+        // ...
+      },
+      // 他のメソッド...
+    };
+    ```
+  - 補助的な関数（private関数）は、オブジェクト外でfunction宣言として定義する。
+  - このパターンは、リポジトリ・サービス・ストアなどの「機能単位のまとまり」に推奨されます。
+
 - **関数名はキャメルケース（小文字始まり）で命名する。**
   - 例: `getUserInfo`, `handleSubmit`。
 
 - **必要に応じて型注釈を明示する。**
-
-このルールに従い、プロジェクト全体で一貫性のある関数定義を徹底してください。
