@@ -215,7 +215,8 @@ Sentence Miningによって作成されたカードを管理する。
 | `dialogue_id`   | INTEGER     | `dialogues.id`への外部キー         |
 | `expression`    | TEXT        | 抽出対象の単語/イディオム          |
 | `sentence`      | TEXT        | 抽出対象を含むセンテンス全体（該当箇所を強調）       |
-| `definition`    | TEXT        | LLMによって生成された意味・説明    |
+| `contextual_definition`    | TEXT        | LLMによって生成された文脈上の意味    |
+| `core_meaning`    | TEXT        | LLMによって生成された核となる意味    |
 | `status`        | TEXT        | `active`, `suspended` (保留) などの状態 |
 | `created_at`    | TEXT        | 作成日時 (ISO 8601)                |
 

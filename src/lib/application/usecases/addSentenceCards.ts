@@ -14,7 +14,8 @@ export async function addSentenceCards(
         dialogueId: dialogue.id,
         expression: result.expression,
         sentence: result.exampleSentence,
-        definition: result.definition,
+        contextualDefinition: result.contextualDefinition,
+        coreMeaning: result.coreMeaning,
         status: 'active',
       });
     }

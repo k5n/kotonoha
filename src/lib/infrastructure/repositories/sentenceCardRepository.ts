@@ -7,7 +7,8 @@ type SentenceCardRow = {
   dialogue_id: number;
   expression: string;
   sentence: string;
-  definition: string;
+  contextual_definition: string;
+  core_meaning: string;
   status: 'active' | 'suspended';
   created_at: string;
 };
@@ -18,7 +19,8 @@ function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
     dialogueId: row.dialogue_id,
     expression: row.expression,
     sentence: row.sentence,
-    definition: row.definition,
+    contextualDefinition: row.contextual_definition,
+    coreMeaning: row.core_meaning,
     status: row.status,
     createdAt: new Date(row.created_at),
   };
@@ -32,15 +34,24 @@ export const sentenceCardRepository = {
     dialogueId: number;
     expression: string;
     sentence: string;
-    definition: string;
+    contextualDefinition: string;
+    coreMeaning: string;
     status: 'active' | 'suspended';
   }): Promise<SentenceCard> {
     const db = new Database(getDatabasePath());
     const now = new Date().toISOString();
     const result = await db.execute(
-      `INSERT INTO sentence_cards (dialogue_id, expression, sentence, definition, status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)`,
-      [params.dialogueId, params.expression, params.sentence, params.definition, params.status, now]
+      `INSERT INTO sentence_cards (dialogue_id, expression, sentence, contextual_definition, core_meaning, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        params.dialogueId,
+        params.expression,
+        params.sentence,
+        params.contextualDefinition,
+        params.coreMeaning,
+        params.status,
+        now,
+      ]
     );
 
     const newCard = await db.select<SentenceCardRow[]>(

@@ -1,7 +1,8 @@
 export type SentenceAnalysisItem = {
   expression: string;
   partOfSpeech: string;
-  definition: string;
+  contextualDefinition: string;
+  coreMeaning: string;
   exampleSentence: string;
 };
 

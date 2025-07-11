@@ -37,9 +37,20 @@
             {@html sanitizeSentence(card.sentence)}
           </div>
           <div class="space-y-2">
-            <p>
-              {card.definition}
-            </p>
+            <div class="space-y-1">
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                <span
+                  class="text-xs font-semibold me-1 inline-block px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                  >文脈</span
+                >{card.contextualDefinition}
+              </p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                <span
+                  class="text-xs font-semibold me-1 inline-block px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+                  >コア</span
+                >{card.coreMeaning}
+              </p>
+            </div>
             <p class="text-xs text-gray-400">作成日: {formatDate(card.createdAt)}</p>
           </div>
         </AccordionItem>

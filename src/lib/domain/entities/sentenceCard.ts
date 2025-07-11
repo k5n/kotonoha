@@ -8,7 +8,8 @@ export type SentenceCard = {
   readonly dialogueId: number;
   readonly expression: string;
   readonly sentence: string; // 抽出対象を含むセンテンス全体
-  readonly definition: string; // LLMによって生成された意味・説明
+  readonly contextualDefinition: string; // LLMによって生成された文脈上の意味
+  readonly coreMeaning: string; // LLMによって生成された核となる意味
   readonly status: SentenceCardStatus;
   readonly createdAt: Date;
 };

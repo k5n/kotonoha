@@ -95,7 +95,20 @@
                   >
                   <Badge color="gray" class="ms-2">{item.partOfSpeech}</Badge>
                 </div>
-                <p class="text-gray-600 dark:text-gray-300">{item.definition}</p>
+                <div class="mt-1 space-y-1">
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <span
+                      class="text-xs font-semibold me-1 inline-block px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                      >文脈</span
+                    >{item.contextualDefinition}
+                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <span
+                      class="text-xs font-semibold me-1 inline-block px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+                      >コア</span
+                    >{item.coreMeaning}
+                  </p>
+                </div>
               </div>
             </label>
           {/each}

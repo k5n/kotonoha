@@ -40,7 +40,8 @@ pub fn get_migrations() -> Vec<Migration> {
                 dialogue_id INTEGER NOT NULL,
                 expression TEXT NOT NULL,
                 sentence TEXT NOT NULL,
-                definition TEXT NOT NULL,
+                contextual_definition TEXT NOT NULL,
+                core_meaning TEXT NOT NULL,
                 status TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY(dialogue_id) REFERENCES dialogues(id)
