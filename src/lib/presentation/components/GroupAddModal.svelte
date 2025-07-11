@@ -6,7 +6,7 @@
     show: boolean;
     isSubmitting?: boolean;
     onClose: () => void;
-    onSubmit: (name: string, groupType: EpisodeGroupType) => void;
+    onSubmit: (_name: string, _groupType: EpisodeGroupType) => void;
   };
   let { show, isSubmitting = false, onClose, onSubmit }: Props = $props();
 

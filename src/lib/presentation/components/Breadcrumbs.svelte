@@ -5,7 +5,7 @@
 
   interface Props {
     path: readonly EpisodeGroup[];
-    onNavigate: (index: number | null) => void;
+    onNavigate: (_index: number | null) => void;
   }
   let { path, onNavigate }: Props = $props();
 </script>

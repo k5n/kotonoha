@@ -6,7 +6,7 @@
     isSubmitting?: boolean;
     initialName?: string;
     onClose: () => void;
-    onSubmit: (name: string) => void;
+    onSubmit: (_name: string) => void;
   };
   let { show, isSubmitting = false, initialName = '', onClose, onSubmit }: Props = $props();
 

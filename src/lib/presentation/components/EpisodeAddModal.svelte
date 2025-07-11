@@ -5,7 +5,7 @@
     show: boolean;
     isSubmitting?: boolean;
     onClose: () => void;
-    onSubmit: (title: string, audioFile: File, srtFile: File) => void;
+    onSubmit: (_title: string, _audioFile: File, _srtFile: File) => void;
   };
   let { show, isSubmitting = false, onClose, onSubmit }: Props = $props();
 

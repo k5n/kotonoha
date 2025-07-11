@@ -5,9 +5,9 @@
 
   interface Props {
     groups: readonly EpisodeGroup[];
-    onGroupClick: (group: EpisodeGroup) => void;
-    onChangeName: (group: EpisodeGroup) => void;
-    onMoveGroup: (group: EpisodeGroup) => void;
+    onGroupClick: (_group: EpisodeGroup) => void;
+    onChangeName: (_group: EpisodeGroup) => void;
+    onMoveGroup: (_group: EpisodeGroup) => void;
   }
   let { groups, onGroupClick, onChangeName, onMoveGroup }: Props = $props();
 

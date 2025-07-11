@@ -8,7 +8,7 @@
     currentGroup: EpisodeGroup | null; // The group being moved
     availableParentGroups: readonly EpisodeGroup[]; // Hierarchical list of available parents
     onClose: () => void;
-    onSubmit: (newParentId: number | null) => void;
+    onSubmit: (_newParentId: number | null) => void;
   };
   let {
     show,
