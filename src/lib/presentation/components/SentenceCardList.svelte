@@ -25,7 +25,7 @@
     <Accordion>
       {#each sentenceCards as card (card.id)}
         <AccordionItem>
-          {#snippet header()}{card.targetExpression}{/snippet}
+          {#snippet header()}{card.expression}{/snippet}
           <div class="mb-4 w-full text-left font-semibold">
             {card.sentence}
           </div>

@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
+  import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
   import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import type { SentenceAnalysisItem } from '$lib/domain/entities/sentenceAnalysisResult';
@@ -51,16 +52,22 @@
   }
 
   async function createMiningCards(selectedResults: readonly SentenceAnalysisItem[]) {
-    if (!miningTarget || sentenceAnalysisItems.length === 0) {
-      debug('No mining target or analysis items available.');
+    if (!miningTarget) {
+      debug('No mining target available.');
       isModalOpen = false;
       return;
     }
     isProcessingMining = true;
-    debug(`Creating mining cards for dialogue: ${miningTarget.id}`);
-    // TODO: Implement the logic to create mining cards based on selectedResults
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    resetMiningModalState();
+
+    try {
+      await addSentenceCards(miningTarget, selectedResults);
+    } catch (err) {
+      error(`Error in createMiningCards: ${err}`);
+      // TODO: Show error message to user
+    } finally {
+      resetMiningModalState();
+      invalidateAll();
+    }
   }
 
   function resetMiningModalState() {

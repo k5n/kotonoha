@@ -5,28 +5,22 @@ import { getDatabasePath } from '../config';
 type SentenceCardRow = {
   id: number;
   dialogue_id: number;
-  target_expression: string;
+  expression: string;
   sentence: string;
   definition: string;
   status: 'active' | 'suspended';
   created_at: string;
-  vocabulary_id: number;
-  expression: string;
 };
 
 function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
   return {
     id: row.id,
     dialogueId: row.dialogue_id,
-    targetExpression: row.target_expression,
+    expression: row.expression,
     sentence: row.sentence,
     definition: row.definition,
     status: row.status,
     createdAt: new Date(row.created_at),
-    vocabulary: {
-      id: row.vocabulary_id,
-      expression: row.expression,
-    },
   };
 }
 
@@ -36,46 +30,22 @@ export const sentenceCardRepository = {
    */
   async addSentenceCard(params: {
     dialogueId: number;
-    vocabularyId: number;
-    targetExpression: string;
+    expression: string;
     sentence: string;
     definition: string;
     status: 'active' | 'suspended';
   }): Promise<SentenceCard> {
     const db = new Database(getDatabasePath());
     const now = new Date().toISOString();
-    await db.execute(
-      `INSERT INTO sentence_cards (dialogue_id, vocabulary_id, target_expression, sentence, definition, status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        params.dialogueId,
-        params.vocabularyId,
-        params.targetExpression,
-        params.sentence,
-        params.definition,
-        params.status,
-        now,
-      ]
+    const result = await db.execute(
+      `INSERT INTO sentence_cards (dialogue_id, expression, sentence, definition, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)`,
+      [params.dialogueId, params.expression, params.sentence, params.definition, params.status, now]
     );
 
-    const rows = await db.select<{ id: number }[]>(`SELECT last_insert_rowid() as id`);
-    const [{ id }] = rows;
-
-    const newCard = await db.select<
-      {
-        id: number;
-        dialogue_id: number;
-        target_expression: string;
-        sentence: string;
-        definition: string;
-        status: 'active' | 'suspended';
-        created_at: string;
-        vocabulary_id: number;
-        expression: string;
-      }[]
-    >(
-      'SELECT sc.*, v.expression FROM sentence_cards sc INNER JOIN vocabulary v ON sc.vocabulary_id = v.id WHERE sc.id = ?',
-      [id]
+    const newCard = await db.select<SentenceCardRow[]>(
+      'SELECT * FROM sentence_cards WHERE id = ?',
+      [result.lastInsertId]
     );
     return mapRowToSentenceCard(newCard[0]);
   },
@@ -85,26 +55,12 @@ export const sentenceCardRepository = {
    */
   async getSentenceCardsByEpisodeId(episodeId: number): Promise<readonly SentenceCard[]> {
     const db = new Database(getDatabasePath());
-    const rows = await db.select<
-      {
-        id: number;
-        dialogue_id: number;
-        target_expression: string;
-        sentence: string;
-        definition: string;
-        status: 'active' | 'suspended';
-        created_at: string;
-        vocabulary_id: number;
-        expression: string;
-      }[]
-    >(
+    const rows = await db.select<SentenceCardRow[]>(
       `
       SELECT
-        sc.*,
-        v.expression
+        sc.*
       FROM sentence_cards sc
       INNER JOIN dialogues d ON sc.dialogue_id = d.id
-      INNER JOIN vocabulary v ON sc.vocabulary_id = v.id
       WHERE d.episode_id = ?
       ORDER BY d.start_time_ms ASC, sc.created_at ASC
     `,
