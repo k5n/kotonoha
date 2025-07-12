@@ -4,6 +4,7 @@
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
+  import { formatDate } from '$lib/presentation/utils/dateFormatter';
   import { debug } from '@tauri-apps/plugin-log';
   import {
     Alert,
@@ -70,15 +71,6 @@
       goto('/');
     }
   };
-
-  function formatDate(date: Date) {
-    try {
-      // TODO: 日付フォーマットをカスタマイズ
-      return date.toLocaleDateString();
-    } catch {
-      return '----/--/--';
-    }
-  }
 </script>
 
 <div class="p-4 md:p-6">
@@ -119,7 +111,7 @@
           <TableHead>
             <TableHeadCell>タイトル</TableHeadCell>
             <TableHeadCell>追加日</TableHeadCell>
-            <TableHeadCell class="text-center">Sentence Mining数</TableHeadCell>
+            <TableHeadCell class="text-center">Cards</TableHeadCell>
             <TableHeadCell><span class="sr-only">開く</span></TableHeadCell>
           </TableHead>
           <TableBody>

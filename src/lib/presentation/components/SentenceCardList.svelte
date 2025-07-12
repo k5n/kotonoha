@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
+  import { formatDate } from '$lib/presentation/utils/dateFormatter';
   import DOMPurify from 'dompurify';
   import { Accordion, AccordionItem } from 'flowbite-svelte';
 
@@ -7,14 +8,6 @@
     sentenceCards: readonly SentenceCard[];
   }
   let { sentenceCards }: Props = $props();
-
-  function formatDate(date: Date) {
-    try {
-      return date.toLocaleDateString();
-    } catch {
-      return String(date);
-    }
-  }
 
   function sanitizeSentence(html: string): string {
     return DOMPurify.sanitize(html, { ALLOWED_TAGS: ['b'], ALLOWED_ATTR: [] });
