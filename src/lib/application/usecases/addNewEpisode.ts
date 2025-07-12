@@ -14,6 +14,7 @@ interface AddNewEpisodeParams {
   title: string;
   audioFile: File;
   scriptFile: File;
+  durationSeconds: number;
 }
 
 /**
@@ -54,7 +55,7 @@ async function generateUniqueEpisodeFilenames(
  */
 export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> {
   info(`Adding new episode with params: ${JSON.stringify(params)}`);
-  const { episodeGroupId, displayOrder, title, audioFile, scriptFile } = params;
+  const { episodeGroupId, displayOrder, title, audioFile, scriptFile, durationSeconds } = params;
   const { audioFilename, scriptFilename, uuid } = await generateUniqueEpisodeFilenames(
     audioFile,
     scriptFile
@@ -68,7 +69,7 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
       title,
       audioPath,
       scriptPath,
-      durationSeconds: null,
+      durationSeconds,
     });
     try {
       const script = await scriptFile.text();

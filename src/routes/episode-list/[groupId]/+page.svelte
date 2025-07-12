@@ -39,7 +39,12 @@
     showAddEpisodeModal = true;
   }
 
-  async function handleAddEpisodeSubmit(title: string, audioFile: File, srtFile: File) {
+  async function handleAddEpisodeSubmit(
+    title: string,
+    audioFile: File,
+    srtFile: File,
+    duration: number
+  ) {
     debug(`title: ${title}, audio: ${audioFile.name}, script: ${srtFile.name}`);
     const groupId = data.episodeGroup?.id;
     if (!groupId) {
@@ -53,6 +58,7 @@
       title,
       audioFile,
       scriptFile: srtFile,
+      durationSeconds: duration,
     });
     await invalidateAll();
     showAddEpisodeModal = false;

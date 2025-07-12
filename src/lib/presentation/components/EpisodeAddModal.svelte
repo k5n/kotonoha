@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { getAudioDuration } from '$lib/presentation/utils/getAudioDuration';
   import { Alert, Button, Fileupload, Heading, Input, Label, Modal } from 'flowbite-svelte';
 
   type Props = {
     show: boolean;
     isSubmitting?: boolean;
     onClose: () => void;
-    onSubmit: (_title: string, _audioFile: File, _srtFile: File) => void;
+    onSubmit: (_title: string, _audioFile: File, _srtFile: File, _duration: number) => void;
   };
   let { show, isSubmitting = false, onClose, onSubmit }: Props = $props();
 
@@ -15,21 +16,37 @@
   // NOTE: 「作成」ボタンが押せないので表示されることはないはずだが・・・。
   let errorMessage = $state('');
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!title.trim()) {
       errorMessage = 'タイトルを入力してください';
       return;
     }
-    if (!audioFiles || audioFiles.length === 0) {
+    const audioFile = audioFiles?.[0];
+    if (!audioFile) {
       errorMessage = '音声ファイルを選択してください';
       return;
     }
-    if (!srtFiles || srtFiles.length === 0) {
+    const srtFile = srtFiles?.[0];
+    if (!srtFile) {
       errorMessage = '字幕ファイルを選択してください';
       return;
     }
-    onSubmit(title, audioFiles[0], srtFiles[0]);
-    title = '';
+
+    try {
+      const duration = await getAudioDuration(audioFile);
+      onSubmit(title, audioFile, srtFile, duration);
+      resetForm();
+    } catch (error) {
+      errorMessage = '音声ファイルの読み込みに失敗しました。';
+      console.error(error);
+    }
+
+    function resetForm() {
+      title = '';
+      audioFiles = null;
+      srtFiles = null;
+      errorMessage = '';
+    }
   }
 </script>
 
