@@ -10,4 +10,5 @@ export type Episode = {
   readonly durationSeconds: number | null; // 音声の長さ（秒単位）。nullの場合は不明
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly sentenceCardCount: number;
 };

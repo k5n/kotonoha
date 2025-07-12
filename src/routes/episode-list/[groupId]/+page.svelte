@@ -119,7 +119,7 @@
           <TableHead>
             <TableHeadCell>タイトル</TableHeadCell>
             <TableHeadCell>追加日</TableHeadCell>
-            <TableHeadCell class="text-center">Sentence Cards</TableHeadCell>
+            <TableHeadCell class="text-center">Sentence Mining数</TableHeadCell>
             <TableHeadCell><span class="sr-only">開く</span></TableHeadCell>
           </TableHead>
           <TableBody>
@@ -127,8 +127,7 @@
               <TableBodyRow class="cursor-pointer" onclick={() => openEpisode(episode.id)}>
                 <TableBodyCell class="font-semibold">{episode.title}</TableBodyCell>
                 <TableBodyCell>{formatDate(episode.createdAt)}</TableBodyCell>
-                <!-- TODO: Sentence Mining 数の表示 -->
-                <TableBodyCell class="text-center">0</TableBodyCell>
+                <TableBodyCell class="text-center">{episode.sentenceCardCount}</TableBodyCell>
                 <TableBodyCell>
                   <ChevronRightOutline class="h-5 w-5 text-gray-500" />
                 </TableBodyCell>

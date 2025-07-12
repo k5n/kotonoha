@@ -11,6 +11,7 @@ type EpisodeRow = {
   duration_seconds: number;
   created_at: string;
   updated_at: string;
+  sentence_card_count?: number;
 };
 
 function mapRowToEpisode(row: EpisodeRow): Episode {
@@ -23,6 +24,7 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
     durationSeconds: row.duration_seconds,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
+    sentenceCardCount: row.sentence_card_count || 0,
   };
 }
 
@@ -30,7 +32,17 @@ export const episodeRepository = {
   async getEpisodesByGroupId(groupId: number): Promise<readonly Episode[]> {
     const db = new Database(getDatabasePath());
     const rows = await db.select(
-      'SELECT * FROM episodes WHERE episode_group_id = ? ORDER BY display_order ASC',
+      `
+      SELECT
+        e.*,
+        COUNT(sc.id) AS sentence_card_count
+      FROM episodes e
+      LEFT JOIN dialogues d ON e.id = d.episode_id
+      LEFT JOIN sentence_cards sc ON d.id = sc.dialogue_id AND sc.status = 'active'
+      WHERE e.episode_group_id = ?
+      GROUP BY e.id
+      ORDER BY e.display_order ASC
+      `,
       [groupId]
     );
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
