@@ -53,6 +53,7 @@
 
   function handleCancel() {
     openModal = false;
+    selectedItemIds = [];
     onClose();
   }
 </script>
