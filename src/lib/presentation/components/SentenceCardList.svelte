@@ -23,12 +23,16 @@
     <Accordion>
       {#each sentenceCards as card (card.id)}
         <AccordionItem>
-          {#snippet header()}{card.expression}{/snippet}
-          <div class="sentence-content mb-4 w-full text-left font-semibold">
-            <!-- サニタイズして表示しているので警告を抑制 -->
-            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-            {@html sanitizeSentence(card.sentence)}
-          </div>
+          {#snippet header()}
+            <div>
+              <div class="text-xl font-bold">{card.expression}</div>
+              <div class="sentence-content text-gray-600 dark:text-gray-400">
+                <!-- サニタイズして表示しているので警告を抑制 -->
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html sanitizeSentence(card.sentence)}
+              </div>
+            </div>
+          {/snippet}
           <div class="space-y-2">
             <div class="space-y-1">
               <p class="text-sm text-gray-500 dark:text-gray-400">
