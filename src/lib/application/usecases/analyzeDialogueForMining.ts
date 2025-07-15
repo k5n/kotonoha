@@ -60,6 +60,7 @@ export async function analyzeDialogueForMining(
           contextualDefinition: card.contextualDefinition,
           coreMeaning: card.coreMeaning,
           exampleSentence: card.sentence,
+          status: card.status,
         })),
       };
     }
@@ -102,6 +103,7 @@ export async function analyzeDialogueForMining(
       contextualDefinition: card.contextualDefinition,
       coreMeaning: card.coreMeaning,
       exampleSentence: card.sentence,
+      status: card.status,
     })),
   };
 }

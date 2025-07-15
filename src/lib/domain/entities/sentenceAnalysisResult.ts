@@ -1,3 +1,5 @@
+import type { SentenceCardStatus } from '$lib/domain/entities/sentenceCard';
+
 export type SentenceAnalysisItem = {
   id: number; // sentence_cards.id
   expression: string;
@@ -5,6 +7,7 @@ export type SentenceAnalysisItem = {
   contextualDefinition: string;
   coreMeaning: string;
   exampleSentence: string;
+  status: SentenceCardStatus;
 };
 
 export type SentenceAnalysisResult = {

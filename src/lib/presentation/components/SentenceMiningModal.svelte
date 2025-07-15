@@ -102,12 +102,16 @@
         <p class="mb-2 text-sm text-gray-500">カードにしたい単語・表現を選択してください。</p>
         <div class="space-y-3">
           {#each analysisResult.items as item (item.id)}
+            {@const isDisabled = item.status === 'active' || item.status === 'suspended'}
             <label
+              class:cursor-not-allowed={isDisabled}
+              class:opacity-50={isDisabled}
               class="flex w-full items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
             >
               <Checkbox
-                checked={selectedItemIds.includes(item.id)}
+                checked={isDisabled || selectedItemIds.includes(item.id)}
                 onchange={() => handleCheckboxChange(item.id)}
+                disabled={isDisabled}
               />
               <div class="flex-1">
                 <div class="flex items-center">
