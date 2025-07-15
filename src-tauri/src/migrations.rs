@@ -40,6 +40,7 @@ pub fn get_migrations() -> Vec<Migration> {
             CREATE TABLE sentence_cards (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 dialogue_id INTEGER NOT NULL,
+                part_of_speech TEXT NOT NULL,
                 expression TEXT NOT NULL,
                 sentence TEXT NOT NULL,
                 contextual_definition TEXT NOT NULL,

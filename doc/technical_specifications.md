@@ -215,11 +215,12 @@ Sentence Miningによって作成されたカードを管理する。
 |-----------------|-------------|------------------------------------|
 | `id`            | INTEGER     | PRIMARY KEY, AUTOINCREMENT         |
 | `dialogue_id`   | INTEGER     | `dialogues.id`への外部キー         |
+| `part_of_speech`| TEXT        | 品詞                         |
 | `expression`    | TEXT        | 抽出対象の単語/イディオム          |
 | `sentence`      | TEXT        | 抽出対象を含むセンテンス全体（該当箇所を強調）       |
 | `contextual_definition`    | TEXT        | LLMによって生成された文脈上の意味    |
 | `core_meaning`    | TEXT        | LLMによって生成された核となる意味    |
-| `status`        | TEXT        | `active`, `suspended` (保留) などの状態 |
+| `status`        | TEXT        | `active` (学習中), `suspended` (保留), `cache` (LLM解析結果のキャッシュ) などの状態 |
 | `created_at`    | TEXT        | 作成日時 (ISO 8601)                |
 
 ---

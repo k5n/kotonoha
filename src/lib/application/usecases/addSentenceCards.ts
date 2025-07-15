@@ -1,27 +1,17 @@
-import type { Dialogue } from '$lib/domain/entities/dialogue';
-import type { SentenceAnalysisItem } from '$lib/domain/entities/sentenceAnalysisResult';
 import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenceCardRepository';
 import { debug, error } from '@tauri-apps/plugin-log';
 
-export async function addSentenceCards(
-  dialogue: Dialogue,
-  selectedResults: readonly SentenceAnalysisItem[]
-): Promise<void> {
-  debug(`Creating mining cards for dialogue: ${dialogue.id}`);
+/**
+ * 選択されたキャッシュ済みのカードをアクティブにするユースケース
+ * @param selectedCardIds アクティブにするカードのID配列
+ */
+export async function addSentenceCards(selectedCardIds: readonly number[]): Promise<void> {
+  debug(`Activating mining cards: ${selectedCardIds.join(', ')}`);
   try {
-    for (const result of selectedResults) {
-      await sentenceCardRepository.addSentenceCard({
-        dialogueId: dialogue.id,
-        expression: result.expression,
-        sentence: result.exampleSentence,
-        contextualDefinition: result.contextualDefinition,
-        coreMeaning: result.coreMeaning,
-        status: 'active',
-      });
-    }
+    await sentenceCardRepository.activateCachedCards(selectedCardIds);
   } catch (err) {
-    error(`Error creating mining cards: ${err}`);
+    error(`Error activating mining cards: ${err}`);
     // ユースケースからエラーをスローして、UI側でキャッチできるようにする
-    throw new Error('Failed to create sentence cards.');
+    throw new Error('Failed to activate sentence cards.');
   }
 }

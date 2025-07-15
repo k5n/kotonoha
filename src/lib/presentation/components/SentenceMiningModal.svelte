@@ -15,10 +15,6 @@
   } from 'flowbite-svelte';
   import { CheckOutline, CloseOutline } from 'flowbite-svelte-icons';
 
-  type AnalysisResultDisplayItem = {
-    id: number; // ★ 識別子としてidを追加
-  } & SentenceAnalysisItem;
-
   // --- Props ---
   interface Props {
     openModal: boolean;
@@ -39,29 +35,24 @@
 
   // --- State ---
   let isLoading = $derived(analysisResult === null);
-  let analysisResultDisplayItems: AnalysisResultDisplayItem[] = $derived(
-    analysisResult?.items.map((item, index) => ({
-      id: index + 1, // ★ IDを生成
-      ...item,
-    })) ?? []
-  );
   let selectedItemIds: number[] = $state([]);
 
-  function handleCheckboxChange(item: AnalysisResultDisplayItem) {
+  function handleCheckboxChange(itemId: number) {
     // チェックボックスの選択状態を更新
-    if (selectedItemIds.includes(item.id)) {
-      selectedItemIds = selectedItemIds.filter((id) => id !== item.id);
+    if (selectedItemIds.includes(itemId)) {
+      selectedItemIds = selectedItemIds.filter((id) => id !== itemId);
     } else {
-      selectedItemIds = [...selectedItemIds, item.id];
+      selectedItemIds = [...selectedItemIds, itemId];
     }
   }
 
   function handleCreate() {
+    if (!analysisResult) return;
     // 選択されたIDに基づいて、元のオブジェクトの配列を生成する
-    const selectedObjects = analysisResultDisplayItems.filter((result) =>
-      selectedItemIds.includes(result.id)
+    const selectedObjects = analysisResult.items.filter((item) =>
+      selectedItemIds.includes(item.id)
     );
-    onCreate(selectedObjects.map(({ id: _id, ...rest }) => rest));
+    onCreate(selectedObjects);
   }
 
   function handleCancel() {
@@ -107,16 +98,16 @@
           <Spinner size="8" />
           <p class="mt-4 text-gray-500">AIが重要表現を抽出しています...</p>
         </div>
-      {:else}
+      {:else if analysisResult}
         <p class="mb-2 text-sm text-gray-500">カードにしたい単語・表現を選択してください。</p>
         <div class="space-y-3">
-          {#each analysisResultDisplayItems as item (item.id)}
+          {#each analysisResult.items as item (item.id)}
             <label
               class="flex w-full items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
             >
               <Checkbox
                 checked={selectedItemIds.includes(item.id)}
-                onchange={() => handleCheckboxChange(item)}
+                onchange={() => handleCheckboxChange(item.id)}
               />
               <div class="flex-1">
                 <div class="flex items-center">

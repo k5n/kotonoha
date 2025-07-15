@@ -53,7 +53,7 @@
     }
   }
 
-  async function createMiningCards(selectedResults: readonly SentenceAnalysisItem[]) {
+  async function createMiningCards(selectedItems: readonly SentenceAnalysisItem[]) {
     if (!miningTarget) {
       debug('No mining target available.');
       isModalOpen = false;
@@ -62,7 +62,8 @@
     isProcessingMining = true;
 
     try {
-      await addSentenceCards(miningTarget, selectedResults);
+      const selectedCardIds = selectedItems.map((item) => item.id);
+      await addSentenceCards(selectedCardIds);
     } catch (err) {
       error(`Error in createMiningCards: ${err}`);
       // TODO: Show error message to user

@@ -1,4 +1,5 @@
 export type SentenceAnalysisItem = {
+  id: number; // sentence_cards.id
   expression: string;
   partOfSpeech: string;
   contextualDefinition: string;
