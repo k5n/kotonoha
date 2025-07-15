@@ -9,6 +9,7 @@ import {
   writeTextFile,
 } from '@tauri-apps/plugin-fs';
 import { trace, warn } from '@tauri-apps/plugin-log';
+import { getMediaDir } from '../config';
 
 /**
  * 指定されたディレクトリが存在しなければ再帰的に作成
@@ -44,13 +45,14 @@ export const fileRepository = {
    * @param uuid 確認するUUID
    * @returns ディレクトリが存在すればtrue、しなければfalse
    */
+
   async uuidFileExists(uuid: string): Promise<boolean> {
-    const dirPath = `media/${uuid}`;
+    const dirPath = `${getMediaDir()}/${uuid}`;
     return await exists(dirPath, { baseDir: BaseDirectory.AppLocalData });
   },
 
   async saveAudioFile(file: File, uuid: string, filename: string): Promise<string> {
-    const dir = `media/${uuid}/audios`;
+    const dir = `${getMediaDir()}/${uuid}/audios`;
     await ensureDirExists(dir, BaseDirectory.AppLocalData);
     const buffer = new Uint8Array(await file.arrayBuffer());
     const path = `${dir}/${filename}`;
@@ -59,7 +61,7 @@ export const fileRepository = {
   },
 
   async saveScriptFile(file: File, uuid: string, filename: string): Promise<string> {
-    const dir = `media/${uuid}`;
+    const dir = `${getMediaDir()}/${uuid}`;
     await ensureDirExists(dir, BaseDirectory.AppLocalData);
     const text = await file.text();
     const path = `${dir}/${filename}`;
@@ -87,7 +89,7 @@ export const fileRepository = {
    * @param uuid 削除するエピソードのUUID
    */
   async deleteEpisodeData(uuid: string): Promise<void> {
-    const dirPath = `media/${uuid}`;
+    const dirPath = `${getMediaDir()}/${uuid}`;
     if (await this.uuidFileExists(uuid)) {
       await remove(dirPath, { baseDir: BaseDirectory.AppLocalData, recursive: true });
     }
