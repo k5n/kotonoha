@@ -2,6 +2,7 @@ import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import type { Dialogue } from '$lib/domain/entities/dialogue';
 import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
 import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
+import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { llmRepository } from '$lib/infrastructure/repositories/llmRepository';
 
 // とりあえず英語のみサポートするので定数
@@ -58,5 +59,12 @@ export async function analyzeDialogueForMining(
     contextSentences,
     targetSentence
   );
+
+  await dialogueRepository.updateDialogueAnalysis(
+    dialogue.id,
+    result.translation,
+    result.explanation
+  );
+
   return result;
 }

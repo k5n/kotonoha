@@ -7,5 +7,7 @@ export type SentenceAnalysisItem = {
 };
 
 export type SentenceAnalysisResult = {
+  translation: string;
+  explanation: string;
   items: SentenceAnalysisItem[];
 };

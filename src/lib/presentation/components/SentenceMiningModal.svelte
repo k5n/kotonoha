@@ -1,10 +1,21 @@
 <script lang="ts">
   import type { Dialogue } from '$lib/domain/entities/dialogue';
-  import type { SentenceAnalysisItem } from '$lib/domain/entities/sentenceAnalysisResult';
-  import { Badge, Button, Checkbox, Modal, Spinner } from 'flowbite-svelte';
+  import type {
+    SentenceAnalysisItem,
+    SentenceAnalysisResult,
+  } from '$lib/domain/entities/sentenceAnalysisResult';
+  import {
+    Accordion,
+    AccordionItem,
+    Badge,
+    Button,
+    Checkbox,
+    Modal,
+    Spinner,
+  } from 'flowbite-svelte';
   import { CheckOutline, CloseOutline } from 'flowbite-svelte-icons';
 
-  type AnalysisResult = {
+  type AnalysisResultDisplayItem = {
     id: number; // ★ 識別子としてidを追加
   } & SentenceAnalysisItem;
 
@@ -12,14 +23,14 @@
   interface Props {
     openModal: boolean;
     dialogue: Dialogue | null;
-    sentenceAnalysisItems: readonly SentenceAnalysisItem[];
+    analysisResult: SentenceAnalysisResult | null;
     onCreate: (_selectedResults: readonly SentenceAnalysisItem[]) => void;
     isProcessing: boolean; // 処理中かどうかのフラグ
     onClose?: () => void; // キャンセル・クローズ時のコールバック
   }
   let {
     openModal = $bindable(),
-    sentenceAnalysisItems,
+    analysisResult,
     dialogue,
     onCreate,
     isProcessing,
@@ -27,16 +38,16 @@
   }: Props = $props();
 
   // --- State ---
-  let isLoading = $derived(sentenceAnalysisItems.length === 0);
-  let analysisResults: AnalysisResult[] = $derived(
-    sentenceAnalysisItems.map((item, index) => ({
+  let isLoading = $derived(analysisResult === null);
+  let analysisResultDisplayItems: AnalysisResultDisplayItem[] = $derived(
+    analysisResult?.items.map((item, index) => ({
       id: index + 1, // ★ IDを生成
       ...item,
-    }))
+    })) ?? []
   );
   let selectedItemIds: number[] = $state([]);
 
-  function handleCheckboxChange(item: AnalysisResult) {
+  function handleCheckboxChange(item: AnalysisResultDisplayItem) {
     // チェックボックスの選択状態を更新
     if (selectedItemIds.includes(item.id)) {
       selectedItemIds = selectedItemIds.filter((id) => id !== item.id);
@@ -47,7 +58,9 @@
 
   function handleCreate() {
     // 選択されたIDに基づいて、元のオブジェクトの配列を生成する
-    const selectedObjects = analysisResults.filter((result) => selectedItemIds.includes(result.id));
+    const selectedObjects = analysisResultDisplayItems.filter((result) =>
+      selectedItemIds.includes(result.id)
+    );
     onCreate(selectedObjects.map(({ id: _id, ...rest }) => rest));
   }
 
@@ -66,10 +79,27 @@
     >
       <p class="text-base leading-relaxed font-medium text-gray-900 dark:text-white">
         {#if dialogue}
-          {dialogue.correctedText || dialogue.originalText}
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+          {@html dialogue.correctedText || dialogue.originalText}
         {/if}
       </p>
     </blockquote>
+
+    {#if analysisResult}
+      <Accordion>
+        <AccordionItem>
+          {#snippet header()}
+            <span>翻訳と解説を表示</span>
+          {/snippet}
+          <div class="space-y-2">
+            <p class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              {analysisResult.translation}
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{analysisResult.explanation}</p>
+          </div>
+        </AccordionItem>
+      </Accordion>
+    {/if}
 
     <div>
       {#if isLoading}
@@ -80,12 +110,11 @@
       {:else}
         <p class="mb-2 text-sm text-gray-500">カードにしたい単語・表現を選択してください。</p>
         <div class="space-y-3">
-          {#each analysisResults as item (item.id)}
+          {#each analysisResultDisplayItems as item (item.id)}
             <label
               class="flex w-full items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
             >
               <Checkbox
-                value={item}
                 checked={selectedItemIds.includes(item.id)}
                 onchange={() => handleCheckboxChange(item)}
               />

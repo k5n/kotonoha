@@ -8,7 +8,10 @@
   import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
   import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
-  import type { SentenceAnalysisItem } from '$lib/domain/entities/sentenceAnalysisResult';
+  import type {
+    SentenceAnalysisItem,
+    SentenceAnalysisResult,
+  } from '$lib/domain/entities/sentenceAnalysisResult';
   import AudioPlayer from '$lib/presentation/components/AudioPlayer.svelte';
   import SentenceCardList from '$lib/presentation/components/SentenceCardList.svelte';
   import SentenceMiningModal from '$lib/presentation/components/SentenceMiningModal.svelte';
@@ -21,7 +24,7 @@
   let currentTime = $state(0); // 現在の再生時間（秒）
   let isModalOpen = $state(false); // モーダルの開閉状態
   let miningTarget: Dialogue | null = $state(null);
-  let sentenceAnalysisItems: readonly SentenceAnalysisItem[] = $state([]); // セリフの分析結果
+  let analysisResult: SentenceAnalysisResult | null = $state(null); // セリフの分析結果
   let isProcessingMining = $state(false); // マイニング処理中かどうかのフラグ
   let canMine = $derived(data.settings?.isApiKeySet || false); // マイニング可能かどうか
 
@@ -42,8 +45,7 @@
     miningTarget = dialogue;
     isModalOpen = true;
     try {
-      const analysisResult = await analyzeDialogueForMining(dialogue, context);
-      sentenceAnalysisItems = analysisResult.items;
+      analysisResult = await analyzeDialogueForMining(dialogue, context);
     } catch (err) {
       error(`Error analyzing dialogue for mining: ${err}`);
       resetMiningModalState();
@@ -73,7 +75,7 @@
   function resetMiningModalState() {
     isModalOpen = false;
     miningTarget = null;
-    sentenceAnalysisItems = [];
+    analysisResult = null;
     isProcessingMining = false;
   }
 </script>
@@ -131,7 +133,7 @@
 <SentenceMiningModal
   bind:openModal={isModalOpen}
   dialogue={miningTarget}
-  {sentenceAnalysisItems}
+  {analysisResult}
   onCreate={createMiningCards}
   isProcessing={isProcessingMining}
   onClose={resetMiningModalState}

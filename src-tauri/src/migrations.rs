@@ -33,6 +33,8 @@ pub fn get_migrations() -> Vec<Migration> {
                 end_time_ms INTEGER NOT NULL,
                 original_text TEXT NOT NULL,
                 corrected_text TEXT,
+                translation TEXT,
+                explanation TEXT,
                 FOREIGN KEY(episode_id) REFERENCES episodes(id)
             );
             CREATE TABLE sentence_cards (

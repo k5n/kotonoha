@@ -8,4 +8,6 @@ export type Dialogue = {
   readonly endTimeMs: number;
   readonly originalText: string;
   readonly correctedText: string | null;
+  readonly translation: string | null;
+  readonly explanation: string | null;
 };

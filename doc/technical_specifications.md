@@ -199,6 +199,8 @@ erDiagram
 | `end_time_ms`     | INTEGER     | セリフの終了時間（ミリ秒）         |
 | `original_text`   | TEXT        | スクリプトから取り込んだ元のテキスト |
 | `corrected_text`  | TEXT        | ユーザーが修正した後のテキスト     |
+| `translation`     | TEXT        | LLMが生成した翻訳                  |
+| `explanation`     | TEXT        | LLMが生成した翻訳の解説            |
 
 ### 2.4. `sentence_cards` テーブル
 Sentence Miningによって作成されたカードを管理する。
@@ -260,9 +262,7 @@ Sentence Miningによって作成されたカードを管理する。
 Rustで実装し、フロントエンドの`Infrastructure`レイヤーから呼び出される関数群。
 Tauriのプラグインを利用するなどしてフロントエンド側で実装可能と判断したものは、必ずしも Rust 側で実装しなくても良い。
 
-- `get_definition_from_llm(context_sentence: String, target_expression: String) -> Result<String, String>`
-- `save_api_key(api_key: String) -> Result<(), String>`
-- `get_api_key() -> Result<Option<String>, String>`
+- `analyze_sentence_with_llm(learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
 
 ### 4.3. データフェッチ・状態管理戦略
 
