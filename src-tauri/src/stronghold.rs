@@ -7,8 +7,6 @@ pub fn get_hwid() -> String {
     const HWID_KEY: &str = "3f8b0c3b519340974b0fa3aad09939402d969f52f1d84a4abac56f17e32623ba";
     IdBuilder::new(Encryption::SHA256)
         .add_component(HWIDComponent::SystemID)
-        .add_component(HWIDComponent::OSName)
-        .add_component(HWIDComponent::MachineName)
         .add_component(HWIDComponent::Username)
         .build(HWID_KEY)
         .unwrap_or_else(|_| HWID_KEY.to_string())
