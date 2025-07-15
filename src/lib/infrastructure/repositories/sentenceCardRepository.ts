@@ -77,7 +77,7 @@ export const sentenceCardRepository = {
         sc.*
       FROM sentence_cards sc
       INNER JOIN dialogues d ON sc.dialogue_id = d.id
-      WHERE d.episode_id = ?
+      WHERE d.episode_id = ? AND sc.status = 'active'
       ORDER BY d.start_time_ms ASC, sc.created_at ASC
     `,
       [episodeId]
