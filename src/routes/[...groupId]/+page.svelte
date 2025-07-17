@@ -121,14 +121,14 @@
         group: editingGroup,
         newParentId,
       });
-      isMoveModalOpen = false;
-      editingGroup = null;
       await invalidateAll();
     } catch (err) {
       error(`Failed to move group: ${err}`);
       errorMessage = err instanceof Error ? err.message : 'グループの移動に失敗しました。';
     } finally {
+      isMoveModalOpen = false;
       isSubmitting = false;
+      editingGroup = null;
     }
   };
 </script>

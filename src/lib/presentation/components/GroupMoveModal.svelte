@@ -19,19 +19,26 @@
     onSubmit,
   }: Props = $props();
 
-  let selectedParentId = $state<number | null>(currentGroup?.parentId ?? null); // Default to current parent or root
+  let selectedParentId = $state<number | null>(null);
   let errorMessage = $state('');
 
-  $effect(() => {
-    if (show) {
-      selectedParentId = currentGroup?.parentId ?? null;
-      errorMessage = '';
-    }
-  });
-
   function handleSubmit() {
-    // Basic validation if needed, though the use case handles most of it
+    if (selectedParentId === null) {
+      errorMessage = '移動先を選択してください。';
+      return;
+    }
     onSubmit(selectedParentId);
+    resetInternalState();
+  }
+
+  function handleClose() {
+    onClose();
+    resetInternalState();
+  }
+
+  function resetInternalState() {
+    selectedParentId = null;
+    errorMessage = '';
   }
 
   // Helper to render hierarchical options with indentation
@@ -55,7 +62,7 @@
   });
 </script>
 
-<Modal open={show} onclose={onClose}>
+<Modal open={show} onclose={handleClose}>
   <div class="p-4">
     <Heading tag="h2" class="mb-4 text-xl font-bold">グループの移動</Heading>
     <p class="mb-4">「{currentGroup?.name}」をどこに移動しますか？</p>

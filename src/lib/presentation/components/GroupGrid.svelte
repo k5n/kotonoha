@@ -50,10 +50,10 @@
             type="button"
             id={`card-menu-button-${group.id}`}
             class="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-            onclick={(e) => {
+            onclick={(e: MouseEvent) => {
               e.stopPropagation(); // イベント伝播を停止
             }}
-            onkeydown={(e) => {
+            onkeydown={(e: KeyboardEvent) => {
               e.stopPropagation(); // キーボードイベントの伝播も停止
             }}
           >
@@ -61,10 +61,10 @@
           </button>
 
           <Dropdown simple triggeredBy={`#card-menu-button-${group.id}`}>
-            <DropdownItem onclick={(e: Event) => handleChangeName(e, group)}
+            <DropdownItem onclick={(e: MouseEvent) => handleChangeName(e, group)}
               >名前を変更</DropdownItem
             >
-            <DropdownItem onclick={(e: Event) => handleMoveGroup(e, group)}>移動</DropdownItem>
+            <DropdownItem onclick={(e: MouseEvent) => handleMoveGroup(e, group)}>移動</DropdownItem>
           </Dropdown>
         </div>
       </div>

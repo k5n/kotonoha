@@ -99,8 +99,8 @@
     } catch (e) {
       error(`Failed to move episode: ${e}`);
     } finally {
-      isSubmitting = false;
       showMoveEpisodeModal = false;
+      isSubmitting = false;
       targetEpisode = null;
     }
   }
