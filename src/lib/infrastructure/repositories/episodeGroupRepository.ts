@@ -117,4 +117,16 @@ export const episodeGroupRepository = {
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
     return rows.map(mapRowToEpisodeGroup);
   },
+
+  /**
+   * 種別が 'album' のグループをすべて取得する
+   * @returns フラットなEpisodeGroupの配列
+   */
+  async findAlbumGroups(): Promise<readonly EpisodeGroup[]> {
+    const db = new Database(getDatabasePath());
+    const rows = await db.select<EpisodeGroupRow[]>(
+      "SELECT * FROM episode_groups WHERE group_type = 'album'"
+    );
+    return rows.map(mapRowToEpisodeGroup);
+  },
 };

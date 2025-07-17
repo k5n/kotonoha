@@ -2,13 +2,20 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
+  import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
+  import { moveEpisode } from '$lib/application/usecases/moveEpisode';
+  import type { Episode } from '$lib/domain/entities/episode';
+  import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
+  import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
   import { formatDate } from '$lib/presentation/utils/dateFormatter';
-  import { debug } from '@tauri-apps/plugin-log';
+  import { debug, error } from '@tauri-apps/plugin-log';
   import {
     Alert,
     Button,
+    Dropdown,
+    DropdownItem,
     Heading,
     Spinner,
     Table,
@@ -19,7 +26,7 @@
     TableHeadCell,
   } from 'flowbite-svelte';
   import {
-    ChevronRightOutline,
+    DotsHorizontalOutline,
     ExclamationCircleOutline,
     FileOutline,
     PlusOutline,
@@ -28,6 +35,11 @@
 
   let { data }: PageProps = $props();
   let showAddEpisodeModal = $state(false);
+  let showMoveEpisodeModal = $state(false);
+  let targetEpisode = $state<Episode | null>(null);
+  let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
+  let isSubmitting = $state(false);
+
   let episodes = $derived(data.episodes);
 
   // エピソード詳細ページへ遷移
@@ -38,6 +50,19 @@
   // 新規エピソード追加ダイアログを開く
   function openAddEpisodeModal() {
     showAddEpisodeModal = true;
+  }
+
+  // エピソード移動モーダルを開く
+  async function handleMoveClick(event: MouseEvent, episode: Episode) {
+    event.stopPropagation();
+    try {
+      const allAlbumGroups = await fetchAlbumGroups();
+      availableTargetGroups = allAlbumGroups.filter((g) => g.id !== episode.episodeGroupId);
+      targetEpisode = episode;
+      showMoveEpisodeModal = true;
+    } catch (e) {
+      error(`Failed to fetch album groups: ${e}`);
+    }
   }
 
   async function handleAddEpisodeSubmit(
@@ -63,6 +88,21 @@
     });
     await invalidateAll();
     showAddEpisodeModal = false;
+  }
+
+  async function handleMoveEpisodeSubmit(targetGroupId: number) {
+    if (!targetEpisode) return;
+    isSubmitting = true;
+    try {
+      await moveEpisode(targetEpisode.id, targetGroupId);
+      await invalidateAll();
+    } catch (e) {
+      error(`Failed to move episode: ${e}`);
+    } finally {
+      isSubmitting = false;
+      showMoveEpisodeModal = false;
+      targetEpisode = null;
+    }
   }
 
   const handleBreadcrumbClick = (targetIndex: number | null) => {
@@ -112,7 +152,7 @@
             <TableHeadCell>タイトル</TableHeadCell>
             <TableHeadCell>追加日</TableHeadCell>
             <TableHeadCell class="text-center">Cards</TableHeadCell>
-            <TableHeadCell><span class="sr-only">開く</span></TableHeadCell>
+            <TableHeadCell><span class="sr-only">Actions</span></TableHeadCell>
           </TableHead>
           <TableBody>
             {#each episodes as episode (episode.id)}
@@ -121,7 +161,26 @@
                 <TableBodyCell>{formatDate(episode.createdAt)}</TableBodyCell>
                 <TableBodyCell class="text-center">{episode.sentenceCardCount}</TableBodyCell>
                 <TableBodyCell>
-                  <ChevronRightOutline class="h-5 w-5 text-gray-500" />
+                  <div class="flex justify-center">
+                    <Button
+                      size="xs"
+                      pill
+                      color="alternative"
+                      onclick={(e: MouseEvent) => {
+                        e.stopPropagation(); // イベント伝播を停止
+                      }}
+                      onkeydown={(e: KeyboardEvent) => {
+                        e.stopPropagation(); // キーボードイベントの伝播も停止
+                      }}
+                    >
+                      <DotsHorizontalOutline class="h-4 w-4" />
+                    </Button>
+                    <Dropdown simple>
+                      <DropdownItem onclick={(e: MouseEvent) => handleMoveClick(e, episode)}>
+                        移動
+                      </DropdownItem>
+                    </Dropdown>
+                  </div>
                 </TableBodyCell>
               </TableBodyRow>
             {/each}
@@ -141,4 +200,16 @@
   show={showAddEpisodeModal}
   onClose={() => (showAddEpisodeModal = false)}
   onSubmit={handleAddEpisodeSubmit}
+/>
+
+<EpisodeMoveModal
+  show={showMoveEpisodeModal}
+  {isSubmitting}
+  episode={targetEpisode}
+  {availableTargetGroups}
+  onClose={() => {
+    showMoveEpisodeModal = false;
+    targetEpisode = null;
+  }}
+  onSubmit={handleMoveEpisodeSubmit}
 />

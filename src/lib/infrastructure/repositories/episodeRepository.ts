@@ -142,4 +142,12 @@ export const episodeRepository = {
     const db = new Database(getDatabasePath());
     await db.execute('DELETE FROM episodes WHERE id = ?', [episodeId]);
   },
+
+  async updateGroupId(episodeId: number, targetGroupId: number): Promise<void> {
+    const db = new Database(getDatabasePath());
+    await db.execute('UPDATE episodes SET episode_group_id = ? WHERE id = ?', [
+      targetGroupId,
+      episodeId,
+    ]);
+  },
 };
