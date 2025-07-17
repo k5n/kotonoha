@@ -8,29 +8,11 @@
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
+  import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
-  import { formatDate } from '$lib/presentation/utils/dateFormatter';
   import { debug, error } from '@tauri-apps/plugin-log';
-  import {
-    Alert,
-    Button,
-    Dropdown,
-    DropdownItem,
-    Heading,
-    Spinner,
-    Table,
-    TableBody,
-    TableBodyCell,
-    TableBodyRow,
-    TableHead,
-    TableHeadCell,
-  } from 'flowbite-svelte';
-  import {
-    DotsHorizontalOutline,
-    ExclamationCircleOutline,
-    FileOutline,
-    PlusOutline,
-  } from 'flowbite-svelte-icons';
+  import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
+  import { ExclamationCircleOutline, FileOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
@@ -53,8 +35,7 @@
   }
 
   // エピソード移動モーダルを開く
-  async function handleMoveClick(event: MouseEvent, episode: Episode) {
-    event.stopPropagation();
+  async function handleMoveEpisodeClick(episode: Episode) {
     try {
       const allAlbumGroups = await fetchAlbumGroups();
       availableTargetGroups = allAlbumGroups.filter((g) => g.id !== episode.episodeGroupId);
@@ -105,12 +86,12 @@
     }
   }
 
-  const handleBreadcrumbClick = (targetIndex: number | null) => {
+  function handleBreadcrumbClick(targetIndex: number | null) {
     debug(`Breadcrumb clicked: targetIndex=${targetIndex}`);
     if (groupPathStore.popTo(targetIndex)) {
       goto('/');
     }
-  };
+  }
 </script>
 
 <div class="p-4 md:p-6">
@@ -146,47 +127,11 @@
         </Button>
       </div>
     {:else}
-      <div class="mt-6 overflow-hidden rounded-lg border">
-        <Table hoverable={true}>
-          <TableHead>
-            <TableHeadCell>タイトル</TableHeadCell>
-            <TableHeadCell>追加日</TableHeadCell>
-            <TableHeadCell class="text-center">Cards</TableHeadCell>
-            <TableHeadCell><span class="sr-only">Actions</span></TableHeadCell>
-          </TableHead>
-          <TableBody>
-            {#each episodes as episode (episode.id)}
-              <TableBodyRow class="cursor-pointer" onclick={() => openEpisode(episode.id)}>
-                <TableBodyCell class="font-semibold">{episode.title}</TableBodyCell>
-                <TableBodyCell>{formatDate(episode.createdAt)}</TableBodyCell>
-                <TableBodyCell class="text-center">{episode.sentenceCardCount}</TableBodyCell>
-                <TableBodyCell>
-                  <div class="flex justify-center">
-                    <Button
-                      size="xs"
-                      pill
-                      color="alternative"
-                      onclick={(e: MouseEvent) => {
-                        e.stopPropagation(); // イベント伝播を停止
-                      }}
-                      onkeydown={(e: KeyboardEvent) => {
-                        e.stopPropagation(); // キーボードイベントの伝播も停止
-                      }}
-                    >
-                      <DotsHorizontalOutline class="h-4 w-4" />
-                    </Button>
-                    <Dropdown simple>
-                      <DropdownItem onclick={(e: MouseEvent) => handleMoveClick(e, episode)}>
-                        移動
-                      </DropdownItem>
-                    </Dropdown>
-                  </div>
-                </TableBodyCell>
-              </TableBodyRow>
-            {/each}
-          </TableBody>
-        </Table>
-      </div>
+      <EpisodeListTable
+        {episodes}
+        onEpisodeClick={openEpisode}
+        onMoveEpisodeClick={handleMoveEpisodeClick}
+      />
     {/if}
   {:else}
     <div class="flex items-center justify-center py-20">
