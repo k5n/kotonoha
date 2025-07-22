@@ -35,7 +35,7 @@ For a more detailed explanation of the architecture, please refer to [`doc/archi
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) (v18 or later)
+- [Node.js](https://nodejs.org/en/) (v20 or later)
 - [Rust](https://www.rust-lang.org/tools/install)
 
 ### Installation

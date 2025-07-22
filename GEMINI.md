@@ -1,3 +1,10 @@
+@doc/requirements_definition.md
+@doc/technical_specification.md
+@doc/architecture.md
+@doc/svelte_coding_rules.md
+@doc/typescript_coding_style.md
+@doc/testing_rules.md
+
 # AI Agent ガイドライン
 
 ## Commands
@@ -12,7 +19,6 @@
 
 - 最初は一切のファイル変更を行わない Plan mode に入って、作業方針と不明点をまとめて説明すること。この時点で一旦作業を終了すること。
 - 作業開始を指示されてから、Plan mode を抜けてファイルの変更を伴う作業を開始すること。
-- ファイルの作成・変更は１ファイルずつ行い、次のファイルの作成・変更に進む前に一旦作業を終了すること。
 - ファイルを作成・編集した後は `npm run format` を実行してコードを整形すること。
 - ファイルを作成・編集した後は `npm run lint` を実行してリンターエラーがないか確認すること。
 - テストコードを作成したり修正した場合、まずテストコードの作成・修正内容を説明して、テストは実行せずに一旦作業を終了すること。
@@ -20,7 +26,7 @@
 ## プロジェクトの概要
 
 - 要件を確認するには [要件定義書](doc/requirements_definition.md) を参照すること。
-- 技術仕様を確認するには [技術仕様書](doc/technical_specification.md) を参照すること。
+- [技術仕様書](doc/technical_specification.md) に沿って実装すること。
 
 ## Architecture Overview
 
@@ -37,4 +43,4 @@
 
 ## Testing Guidelines
 
-- テストを作成する際には `doc/testing_rules.md` のガイドラインに従うこと。
+- テストを作成する際には [テスト作成ルール](doc/testing_rules.md) に従うこと。
