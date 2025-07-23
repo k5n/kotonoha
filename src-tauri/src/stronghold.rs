@@ -1,30 +1,53 @@
-// cSpell:words HWID
-use argon2::{hash_raw, Config, Variant, Version};
-use machineid_rs::{Encryption, HWIDComponent, IdBuilder};
+use keyring::Entry;
+use log;
+use rand::{
+    distr::{Alphanumeric, SampleString},
+    RngCore,
+};
+use std::{fs, path::Path};
 
-/// Generates a hardware ID (HWID) for the system.
-fn get_hwid() -> String {
-    const HWID_KEY: &str = "3f8b0c3b519340974b0fa3aad09939402d969f52f1d84a4abac56f17e32623ba";
-    IdBuilder::new(Encryption::SHA256)
-        .add_component(HWIDComponent::SystemID)
-        .add_component(HWIDComponent::Username)
-        .build(HWID_KEY)
-        .unwrap_or_else(|_| HWID_KEY.to_string())
+const SERVICE_NAME: &str = "com.k5-n.kotonoha.mining";
+const PASSWORD_USERNAME: &str = "stronghold-password";
+
+fn generate_random_bytes(len: usize) -> Vec<u8> {
+    let mut bytes = vec![0u8; len];
+    rand::rng().fill_bytes(&mut bytes);
+    bytes
 }
 
-/// password hashing function for stronghold plugin
-pub fn password_hash_function(_password: &str) -> Vec<u8> {
-    let config = Config {
-        lanes: 4,
-        mem_cost: 10_000,
-        time_cost: 10,
-        variant: Variant::Argon2id,
-        version: Version::Version13,
-        ..Default::default()
-    };
-    let salt = "kotonoha".as_bytes();
-    let password = get_hwid();
-    hash_raw(password.as_ref(), salt, &config)
-        .expect("failed to hash password")
-        .to_vec()
+fn generate_random_password(len: usize) -> String {
+    Alphanumeric.sample_string(&mut rand::rng(), len)
+}
+
+fn get_or_create_password() -> Result<String, keyring::Error> {
+    let entry = Entry::new(SERVICE_NAME, PASSWORD_USERNAME)?;
+    match entry.get_password() {
+        Ok(password) => Ok(password),
+        Err(keyring::Error::NoEntry) => {
+            let new_password = generate_random_password(32);
+            log::debug!(
+                "Generated new stronghold password: length {}",
+                new_password.len()
+            );
+            entry.set_password(&new_password)?;
+            Ok(new_password)
+        }
+        Err(e) => Err(e),
+    }
+}
+
+pub fn create_salt_file_if_not_exists(salt_path: &Path) -> std::io::Result<()> {
+    if !salt_path.exists() {
+        let salt = generate_random_bytes(16)
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
+        fs::write(salt_path, salt)?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_stronghold_password() -> Result<String, String> {
+    get_or_create_password().map_err(|e| e.to_string())
 }

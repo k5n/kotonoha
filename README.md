@@ -37,6 +37,7 @@ For a more detailed explanation of the architecture, please refer to [`doc/archi
 
 - [Node.js](https://nodejs.org/en/) (v20 or later)
 - [Rust](https://www.rust-lang.org/tools/install)
+- **For Linux users:** A secret service implementation (e.g., GNOME Keyring, KWallet) is required to securely store application credentials. Please ensure one is installed and configured on your system.
 
 ### Installation
 

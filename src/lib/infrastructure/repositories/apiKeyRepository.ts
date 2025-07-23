@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import { appDataDir } from '@tauri-apps/api/path';
 import { Client, Stronghold } from '@tauri-apps/plugin-stronghold';
 
@@ -8,7 +9,7 @@ async function initStronghold(): Promise<{
   client: Client;
 }> {
   const vaultPath = `${await appDataDir()}/vault.hold`;
-  const vaultPassword = 'dummy-password'; // The password is managed by the Rust side.
+  const vaultPassword = await invoke<string>('get_stronghold_password');
   const stronghold = await Stronghold.load(vaultPath, vaultPassword);
 
   const clientName = 'kotonoha-client';
