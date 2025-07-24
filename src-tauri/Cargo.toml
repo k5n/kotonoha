@@ -1,8 +1,8 @@
 [package]
 name = "kotonoha"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["k5n"]
+description = "An app that automates sentence mining for immersive learning."
+authors = ["Keigo Nakatani <k5n@users.noreply.github.com> (https://github.com/k5n)"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
