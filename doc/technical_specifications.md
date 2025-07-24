@@ -26,36 +26,67 @@ Tauriの標準構成とフロントエンドのレイヤードアーキテクチ
 
 ```plaintext
 /
-├── src/                      # SvelteKit フロントエンド
+├── src/                                # SvelteKit フロントエンド
 │   ├── lib/
-│   │   ├── presentation/   # UI層: SvelteコンポーネントとUIロジック
-│   │   │   ├── components/   # 再利用可能なUIコンポーネント
-│   │   │   ├── types/        # UI表示用データ型
+│   │   ├── presentation/             # UI層: SvelteコンポーネントとUIロジック
+│   │   │   ├── components/           # 再利用可能なUIコンポーネント
+│   │   │   │   ├── AudioPlayer.svelte
+│   │   │   │   ├── Breadcrumbs.svelte
+│   │   │   │   ├── ...
+│   │   │   │   └── TranscriptViewer.svelte
+│   │   │   ├── utils/                # UIで利用するユーティリティ関数
+│   │   │   │   ├── dateFormatter.ts
+│   │   │   │   └── getAudioDuration.ts
+│   │   │   └── types/                # UI表示用データ型 (将来追加する可能性あり)
+│   │   ├── application/              # アプリケーション層: ユースケースと状態管理
+│   │   │   ├── usecases/             # ユーザー操作を起点とする処理フロー
+│   │   │   │   ├── addEpisodeGroup.ts
+│   │   │   │   ├── ...
+│   │   │   │   └── updateEpisodeGroupName.ts
+│   │   │   └── stores/               # アプリケーション全体の状態(Svelte Stores)
+│   │   │       ├── apiKeyStore.svelte.ts
+│   │   │       └── groupPathStore.svelte.ts
+│   │   ├── domain/                   # ドメイン層: アプリケーションの核となるルールとデータ構造
+│   │   │   ├── entities/             # アプリケーションの核となるデータ型(エンティティ)
+│   │   │   │   ├── dialogue.ts
+│   │   │   │   ├── ...
+│   │   │   │   └── settings.ts
+│   │   │   └── services/             # ドメイン固有のロジック（単体テストが容易な純粋関数）
+│   │   │       ├── buildEpisodeGroupTree.ts
+│   │   │       ├── generateEpisodeFilenames.ts
+│   │   │       └── parseSrtToDialogues.ts
+│   │   └── infrastructure/           # インフラ層: 外部システムとの連携
+│   │       ├── config.ts             # 設定ファイル
+│   │       ├── contracts/            # 外部との通信に使われるデータ型(API契約) (将来追加する可能性あり)
+│   │       └── repositories/         # DBやRustバックエンドとの通信処理
+│   │           ├── apiKeyRepository.ts
+│   │           ├── dialogueRepository.ts
+│   │           ├── ...
+│   │           └── sentenceCardRepository.ts
+│   ├── routes/                       # SvelteKitのルーティング (Presentation層の一部)
+│   │   ├── +layout.svelte
+│   │   ├── [...groupId]/
+│   │   │   ├── +page.svelte
+│   │   │   └── +page.ts
+│   │   ├── episode/[id]/
 │   │   │   └── ...
-│   │   ├── application/    # アプリケーション層: ユースケースと状態管理
-│   │   │   ├── usecases/     # ユーザー操作を起点とする処理フロー
-│   │   │   └── stores/       # アプリケーション全体の状態(Svelte Stores)
-│   │   ├── domain/         # ドメイン層: アプリケーションの核となるルールとデータ構造
-│   │   │   ├── entities/     # アプリケーションの核となるデータ型(エンティティ)
-│   │   │   └── services/     # ドメイン固有のロジック
-│   │   └── infrastructure/ # インフラ層: 外部システムとの連携
-│   │       ├── contracts/    # 外部との通信に使われるデータ型(API契約)
-│   │       └── repositories/ # DBやRustバックエンドとの通信処理
-│   ├── routes/             # SvelteKitのルーティング (Presentation層の一部)
-│   │   ├── +page.svelte
-│   │   └── episode/[id]/
-│   │       └── +page.svelte
+│   │   ├── episode-list/[groupId]/
+│   │   │   └── ...
+│   │   └── settings/
+│   │       └── ...
 │   └── app.html
-├── src-tauri/                # Rust バックエンド
+├── src-tauri/                        # Rust バックエンド
 │   ├── src/
-│   │   ├── main.rs               # エントリーポイント
-│   │   ├── db.rs                 # DB関連のTauriコマンド (複雑な処理担当)
-│   │   ├── models.rs             # Rust側で扱うデータ構造体
-│   │   ├── commands.rs           # ファイルI/OやLLM連携などのTauriコマンド
-│   │   └── llm.rs                # LLM API連携関連
+│   │   ├── main.rs                   # エントリーポイント
+│   │   ├── lib.rs                    # ライブラリとしてのエントリーポイント
+│   │   ├── llm.rs                    # LLM API連携関連
+│   │   ├── stronghold.rs             # Stronghold関連
+│   │   └── migrations.rs             # DBマイグレーション関連
 │   └── tauri.conf.json
 └── ...
 ```
+
+#### 各階層の依存関係
 
 ```mermaid
 graph TD
@@ -109,6 +140,15 @@ graph TD
     PureTypeScript[Pure TypeScript Code]:::cssPure
     TypeDefinitions[Type Definitions]:::cssTypes
 ```
+
+#### NOTES
+
+- types/ ディレクトリは、複数コンポーネントで共有する表示用のデータ型を定義するために使用する。
+  - 各コンポーネントとその利用側だけで完結する型は、コンポーネント内で定義する。
+  - ほとんどの場合はコンポーネント内で定義すれば済むため、現時点では空だが、必要に応じて追加する。
+- contracts/ ディレクトリは、複数リポジトリで共通に利用する外部システムとの通信に使われるデータ型を定義する。
+  - 各リポジトリで完結する型は、リポジトリ内で定義する。
+  - ほとんどの場合はリポジトリ内で定義すれば済むため、現時点では空だが、必要に応じて追加する。
 
 ---
 
