@@ -2,216 +2,205 @@
 
 ```mermaid
 graph LR
-    subgraph "Routes"
-        subgraph "/"
-            routes_layout_svelte["+layout.svelte"]
-            routes_layout_ts["+layout.ts"]
+        subgraph "routes"
+            src_routes__layout_ts["+layout.ts"]
+            src_routes__layout_svelte["+layout.svelte"]
+            subgraph "settings"
+                src_routes_settings__page_ts["+page.ts"]
+                src_routes_settings__page_svelte["+page.svelte"]
+            end
+            subgraph "[...groupId]"
+                src_routes_____groupId___page_ts["+page.ts"]
+                src_routes_____groupId___page_svelte["+page.svelte"]
+            end
+            subgraph "episode"
+                subgraph "[id]"
+                    src_routes_episode__id___page_ts["+page.ts"]
+                    src_routes_episode__id___page_svelte["+page.svelte"]
+                end
+            end
+            subgraph "episode-list"
+                subgraph "[groupId]"
+                    src_routes_episode_list__groupId___page_ts["+page.ts"]
+                    src_routes_episode_list__groupId___page_svelte["+page.svelte"]
+                end
+            end
         end
-        subgraph "/[...groupId]"
-            routes_...groupId__page_svelte["[...groupId]/+page.svelte"]
-            routes_...groupId__page_ts["[...groupId]/+page.ts"]
+        subgraph "lib"
+            subgraph "infrastructure"
+                src_lib_infrastructure_config_ts["config.ts"]
+                subgraph "repositories"
+                    src_lib_infrastructure_repositories_sentenceCardRepository_ts["sentenceCardRepository.ts"]
+                    src_lib_infrastructure_repositories_llmRepository_ts["llmRepository.ts"]
+                    src_lib_infrastructure_repositories_fileRepository_ts["fileRepository.ts"]
+                    src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository.ts"]
+                    src_lib_infrastructure_repositories_episodeGroupRepository_ts["episodeGroupRepository.ts"]
+                    src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository.ts"]
+                    src_lib_infrastructure_repositories_apiKeyRepository_ts["apiKeyRepository.ts"]
+                end
+            end
+            subgraph "presentation"
+                subgraph "utils"
+                    src_lib_presentation_utils_getAudioDuration_ts["getAudioDuration.ts"]
+                    src_lib_presentation_utils_dateFormatter_ts["dateFormatter.ts"]
+                end
+                subgraph "components"
+                    src_lib_presentation_components_TranscriptViewer_svelte["TranscriptViewer.svelte"]
+                    src_lib_presentation_components_SentenceMiningModal_svelte["SentenceMiningModal.svelte"]
+                    src_lib_presentation_components_SentenceCardList_svelte["SentenceCardList.svelte"]
+                    src_lib_presentation_components_GroupNameEditModal_svelte["GroupNameEditModal.svelte"]
+                    src_lib_presentation_components_GroupMoveModal_svelte["GroupMoveModal.svelte"]
+                    src_lib_presentation_components_GroupGrid_svelte["GroupGrid.svelte"]
+                    src_lib_presentation_components_GroupAddModal_svelte["GroupAddModal.svelte"]
+                    src_lib_presentation_components_EpisodeMoveModal_svelte["EpisodeMoveModal.svelte"]
+                    src_lib_presentation_components_EpisodeListTable_svelte["EpisodeListTable.svelte"]
+                    src_lib_presentation_components_EpisodeAddModal_svelte["EpisodeAddModal.svelte"]
+                    src_lib_presentation_components_Breadcrumbs_svelte["Breadcrumbs.svelte"]
+                    src_lib_presentation_components_AudioPlayer_svelte["AudioPlayer.svelte"]
+                end
+            end
+            subgraph "domain"
+                subgraph "services"
+                    src_lib_domain_services_parseSrtToDialogues_ts["parseSrtToDialogues.ts"]
+                    src_lib_domain_services_parseSrtToDialogues_test_ts["parseSrtToDialogues.test.ts"]
+                    src_lib_domain_services_groupTreeHelper_ts["groupTreeHelper.ts"]
+                    src_lib_domain_services_generateEpisodeFilenames_ts["generateEpisodeFilenames.ts"]
+                    src_lib_domain_services_generateEpisodeFilenames_test_ts["generateEpisodeFilenames.test.ts"]
+                    src_lib_domain_services_buildEpisodeGroupTree_ts["buildEpisodeGroupTree.ts"]
+                    src_lib_domain_services_buildEpisodeGroupTree_test_ts["buildEpisodeGroupTree.test.ts"]
+                end
+                subgraph "entities"
+                    src_lib_domain_entities_settings_ts["settings.ts"]
+                    src_lib_domain_entities_sentenceCard_ts["sentenceCard.ts"]
+                    src_lib_domain_entities_sentenceAnalysisResult_ts["sentenceAnalysisResult.ts"]
+                    src_lib_domain_entities_episodeGroup_ts["episodeGroup.ts"]
+                    src_lib_domain_entities_episode_ts["episode.ts"]
+                    src_lib_domain_entities_dialogue_ts["dialogue.ts"]
+                end
+            end
+            subgraph "application"
+                subgraph "usecases"
+                    src_lib_application_usecases_updateEpisodeGroupName_ts["updateEpisodeGroupName.ts"]
+                    src_lib_application_usecases_saveSettings_ts["saveSettings.ts"]
+                    src_lib_application_usecases_moveEpisodeGroup_ts["moveEpisodeGroup.ts"]
+                    src_lib_application_usecases_moveEpisode_ts["moveEpisode.ts"]
+                    src_lib_application_usecases_fetchSettings_ts["fetchSettings.ts"]
+                    src_lib_application_usecases_fetchEpisodes_ts["fetchEpisodes.ts"]
+                    src_lib_application_usecases_fetchEpisodeGroups_ts["fetchEpisodeGroups.ts"]
+                    src_lib_application_usecases_fetchEpisodeDetail_ts["fetchEpisodeDetail.ts"]
+                    src_lib_application_usecases_fetchAvailableParentGroups_ts["fetchAvailableParentGroups.ts"]
+                    src_lib_application_usecases_fetchAlbumGroups_ts["fetchAlbumGroups.ts"]
+                    src_lib_application_usecases_analyzeDialogueForMining_ts["analyzeDialogueForMining.ts"]
+                    src_lib_application_usecases_addSentenceCards_ts["addSentenceCards.ts"]
+                    src_lib_application_usecases_addNewEpisode_ts["addNewEpisode.ts"]
+                    src_lib_application_usecases_addEpisodeGroup_ts["addEpisodeGroup.ts"]
+                end
+                subgraph "stores"
+                    src_lib_application_stores_groupPathStore_svelte_ts["groupPathStore.svelte.ts"]
+                    src_lib_application_stores_apiKeyStore_svelte_ts["apiKeyStore.svelte.ts"]
+                end
+            end
         end
-        subgraph "/episode-list/[groupId]"
-            routes_episode-list__groupId___page_svelte["episode-list/[groupId]/+page.svelte"]
-            routes_episode-list__groupId___page_ts["episode-list/[groupId]/+page.ts"]
-        end
-        subgraph "/episode/[id]"
-            routes_episode__id___page_svelte["episode/[id]/+page.svelte"]
-            routes_episode__id___page_ts["episode/[id]/+page.ts"]
-        end
-        subgraph "/settings"
-            routes_settings__page_svelte["settings/+page.svelte"]
-            routes_settings__page_ts["settings/+page.ts"]
-        end
-    end
-
-    subgraph "Presentation"
-        subgraph "Components"
-            presentation_components_AudioPlayer_svelte["components/AudioPlayer.svelte"]
-            presentation_components_Breadcrumbs_svelte["components/Breadcrumbs.svelte"]
-            presentation_components_EpisodeAddModal_svelte["components/EpisodeAddModal.svelte"]
-            presentation_components_EpisodeListTable_svelte["components/EpisodeListTable.svelte"]
-            presentation_components_EpisodeMoveModal_svelte["components/EpisodeMoveModal.svelte"]
-            presentation_components_GroupAddModal_svelte["components/GroupAddModal.svelte"]
-            presentation_components_GroupGrid_svelte["components/GroupGrid.svelte"]
-            presentation_components_GroupMoveModal_svelte["components/GroupMoveModal.svelte"]
-            presentation_components_GroupNameEditModal_svelte["components/GroupNameEditModal.svelte"]
-            presentation_components_SentenceCardList_svelte["components/SentenceCardList.svelte"]
-            presentation_components_SentenceMiningModal_svelte["components/SentenceMiningModal.svelte"]
-            presentation_components_TranscriptViewer_svelte["components/TranscriptViewer.svelte"]
-        end
-        subgraph "Utils"
-            presentation_utils_dateFormatter_ts["utils/dateFormatter.ts"]
-            presentation_utils_getAudioDuration_ts["utils/getAudioDuration.ts"]
-        end
-    end
-
-    subgraph "Application"
-        subgraph "Stores"
-            application_stores_apiKeyStore_svelte_ts["stores/apiKeyStore.svelte.ts"]
-            application_stores_groupPathStore_svelte_ts["stores/groupPathStore.svelte.ts"]
-        end
-        subgraph "Use Cases"
-            application_usecases_addEpisodeGroup_ts["usecases/addEpisodeGroup.ts"]
-            application_usecases_addNewEpisode_ts["usecases/addNewEpisode.ts"]
-            application_usecases_addSentenceCards_ts["usecases/addSentenceCards.ts"]
-            application_usecases_analyzeDialogueForMining_ts["usecases/analyzeDialogueForMining.ts"]
-            application_usecases_fetchAlbumGroups_ts["usecases/fetchAlbumGroups.ts"]
-            application_usecases_fetchAvailableParentGroups_ts["usecases/fetchAvailableParentGroups.ts"]
-            application_usecases_fetchEpisodeDetail_ts["usecases/fetchEpisodeDetail.ts"]
-            application_usecases_fetchEpisodeGroups_ts["usecases/fetchEpisodeGroups.ts"]
-            application_usecases_fetchEpisodes_ts["usecases/fetchEpisodes.ts"]
-            application_usecases_fetchSettings_ts["usecases/fetchSettings.ts"]
-            application_usecases_moveEpisode_ts["usecases/moveEpisode.ts"]
-            application_usecases_moveEpisodeGroup_ts["usecases/moveEpisodeGroup.ts"]
-            application_usecases_saveSettings_ts["usecases/saveSettings.ts"]
-            application_usecases_updateEpisodeGroupName_ts["usecases/updateEpisodeGroupName.ts"]
-        end
-    end
-
-    subgraph "Domain"
-        subgraph "Entities"
-            domain_entities_dialogue_ts["entities/dialogue.ts"]
-            domain_entities_episode_ts["entities/episode.ts"]
-            domain_entities_episodeGroup_ts["entities/episodeGroup.ts"]
-            domain_entities_sentenceAnalysisResult_ts["entities/sentenceAnalysisResult.ts"]
-            domain_entities_sentenceCard_ts["entities/sentenceCard.ts"]
-            domain_entities_settings_ts["entities/settings.ts"]
-        end
-        subgraph "Services"
-            domain_services_buildEpisodeGroupTree_ts["services/buildEpisodeGroupTree.ts"]
-            domain_services_generateEpisodeFilenames_ts["services/generateEpisodeFilenames.ts"]
-            domain_services_groupTreeHelper_ts["services/groupTreeHelper.ts"]
-            domain_services_parseSrtToDialogues_ts["services/parseSrtToDialogues.ts"]
-        end
-    end
-
-    subgraph "Infrastructure"
-        subgraph "Repositories"
-            infrastructure_repositories_apiKeyRepository_ts["repositories/apiKeyRepository.ts"]
-            infrastructure_repositories_dialogueRepository_ts["repositories/dialogueRepository.ts"]
-            infrastructure_repositories_episodeGroupRepository_ts["repositories/episodeGroupRepository.ts"]
-            infrastructure_repositories_episodeRepository_ts["repositories/episodeRepository.ts"]
-            infrastructure_repositories_fileRepository_ts["repositories/fileRepository.ts"]
-            infrastructure_repositories_llmRepository_ts["repositories/llmRepository.ts"]
-            infrastructure_repositories_sentenceCardRepository_ts["repositories/sentenceCardRepository.ts"]
-        end
-        subgraph "Config"
-            infrastructure_config_ts["config.ts"]
-        end
-    end
-
-    routes_...groupId__page_svelte --> application_stores_groupPathStore_svelte_ts
-    routes_...groupId__page_svelte --> application_usecases_addEpisodeGroup_ts
-    routes_...groupId__page_svelte --> application_usecases_fetchAvailableParentGroups_ts
-    routes_...groupId__page_svelte --> application_usecases_moveEpisodeGroup_ts
-    routes_...groupId__page_svelte --> application_usecases_updateEpisodeGroupName_ts
-    routes_...groupId__page_svelte --> domain_entities_episodeGroup_ts
-    routes_...groupId__page_svelte --> presentation_components_Breadcrumbs_svelte
-    routes_...groupId__page_svelte --> presentation_components_GroupAddModal_svelte
-    routes_...groupId__page_svelte --> presentation_components_GroupGrid_svelte
-    routes_...groupId__page_svelte --> presentation_components_GroupMoveModal_svelte
-    routes_...groupId__page_svelte --> presentation_components_GroupNameEditModal_svelte
-    routes_...groupId__page_ts --> application_usecases_fetchEpisodeGroups_ts
-    routes_episode-list__groupId___page_svelte --> application_usecases_addNewEpisode_ts
-    routes_episode-list__groupId___page_svelte --> application_usecases_fetchAlbumGroups_ts
-    routes_episode-list__groupId___page_svelte --> application_usecases_moveEpisode_ts
-    routes_episode-list__groupId___page_svelte --> domain_entities_episode_ts
-    routes_episode-list__groupId___page_svelte --> domain_entities_episodeGroup_ts
-    routes_episode-list__groupId___page_svelte --> presentation_components_Breadcrumbs_svelte
-    routes_episode-list__groupId___page_svelte --> presentation_components_EpisodeAddModal_svelte
-    routes_episode-list__groupId___page_svelte --> presentation_components_EpisodeListTable_svelte
-    routes_episode-list__groupId___page_svelte --> presentation_components_EpisodeMoveModal_svelte
-    routes_episode-list__groupId___page_ts --> application_usecases_fetchEpisodes_ts
-    routes_episode__id___page_svelte --> application_usecases_addSentenceCards_ts
-    routes_episode__id___page_svelte --> application_usecases_analyzeDialogueForMining_ts
-    routes_episode__id___page_svelte --> domain_entities_dialogue_ts
-    routes_episode__id___page_svelte --> domain_entities_sentenceAnalysisResult_ts
-    routes_episode__id___page_svelte --> presentation_components_AudioPlayer_svelte
-    routes_episode__id___page_svelte --> presentation_components_SentenceCardList_svelte
-    routes_episode__id___page_svelte --> presentation_components_SentenceMiningModal_svelte
-    routes_episode__id___page_svelte --> presentation_components_TranscriptViewer_svelte
-    routes_episode__id___page_ts --> application_usecases_fetchEpisodeDetail_ts
-    routes_settings__page_svelte --> application_usecases_saveSettings_ts
-    routes_settings__page_ts --> application_usecases_fetchSettings_ts
-
-    presentation_components_Breadcrumbs_svelte --> domain_entities_episodeGroup_ts
-    presentation_components_EpisodeAddModal_svelte --> presentation_utils_getAudioDuration_ts
-    presentation_components_EpisodeListTable_svelte --> domain_entities_episode_ts
-    presentation_components_EpisodeListTable_svelte --> presentation_utils_dateFormatter_ts
-    presentation_components_EpisodeMoveModal_svelte --> domain_entities_episode_ts
-    presentation_components_EpisodeMoveModal_svelte --> domain_entities_episodeGroup_ts
-    presentation_components_GroupAddModal_svelte --> domain_entities_episodeGroup_ts
-    presentation_components_GroupGrid_svelte --> domain_entities_episodeGroup_ts
-    presentation_components_GroupMoveModal_svelte --> domain_entities_episodeGroup_ts
-    presentation_components_SentenceCardList_svelte --> domain_entities_sentenceCard_ts
-    presentation_components_SentenceCardList_svelte --> presentation_utils_dateFormatter_ts
-    presentation_components_SentenceMiningModal_svelte --> domain_entities_dialogue_ts
-    presentation_components_SentenceMiningModal_svelte --> domain_entities_sentenceAnalysisResult_ts
-    presentation_components_TranscriptViewer_svelte --> domain_entities_dialogue_ts
-
-    application_stores_groupPathStore_svelte_ts --> domain_entities_episodeGroup_ts
-    application_usecases_addEpisodeGroup_ts --> domain_entities_episodeGroup_ts
-    application_usecases_addEpisodeGroup_ts --> infrastructure_repositories_episodeGroupRepository_ts
-    application_usecases_addNewEpisode_ts --> domain_services_generateEpisodeFilenames_ts
-    application_usecases_addNewEpisode_ts --> domain_services_parseSrtToDialogues_ts
-    application_usecases_addNewEpisode_ts --> infrastructure_repositories_dialogueRepository_ts
-    application_usecases_addNewEpisode_ts --> infrastructure_repositories_episodeRepository_ts
-    application_usecases_addNewEpisode_ts --> infrastructure_repositories_fileRepository_ts
-    application_usecases_addSentenceCards_ts --> infrastructure_repositories_sentenceCardRepository_ts
-    application_usecases_analyzeDialogueForMining_ts --> application_stores_apiKeyStore_svelte_ts
-    application_usecases_analyzeDialogueForMining_ts --> domain_entities_dialogue_ts
-    application_usecases_analyzeDialogueForMining_ts --> domain_entities_sentenceAnalysisResult_ts
-    application_usecases_analyzeDialogueForMining_ts --> infrastructure_repositories_apiKeyRepository_ts
-    application_usecases_analyzeDialogueForMining_ts --> infrastructure_repositories_dialogueRepository_ts
-    application_usecases_analyzeDialogueForMining_ts --> infrastructure_repositories_llmRepository_ts
-    application_usecases_analyzeDialogueForMining_ts --> infrastructure_repositories_sentenceCardRepository_ts
-    application_usecases_fetchAlbumGroups_ts --> domain_services_buildEpisodeGroupTree_ts
-    application_usecases_fetchAlbumGroups_ts --> infrastructure_repositories_episodeGroupRepository_ts
-    application_usecases_fetchAvailableParentGroups_ts --> domain_entities_episodeGroup_ts
-    application_usecases_fetchAvailableParentGroups_ts --> domain_services_buildEpisodeGroupTree_ts
-    application_usecases_fetchAvailableParentGroups_ts --> domain_services_groupTreeHelper_ts
-    application_usecases_fetchAvailableParentGroups_ts --> infrastructure_repositories_episodeGroupRepository_ts
-    application_usecases_fetchEpisodeDetail_ts --> domain_entities_dialogue_ts
-    application_usecases_fetchEpisodeDetail_ts --> domain_entities_episode_ts
-    application_usecases_fetchEpisodeDetail_ts --> domain_entities_sentenceCard_ts
-    application_usecases_fetchEpisodeDetail_ts --> infrastructure_repositories_dialogueRepository_ts
-    application_usecases_fetchEpisodeDetail_ts --> infrastructure_repositories_episodeRepository_ts
-    application_usecases_fetchEpisodeDetail_ts --> infrastructure_repositories_fileRepository_ts
-    application_usecases_fetchEpisodeDetail_ts --> infrastructure_repositories_sentenceCardRepository_ts
-    application_usecases_fetchEpisodeGroups_ts --> domain_entities_episodeGroup_ts
-    application_usecases_fetchEpisodeGroups_ts --> infrastructure_repositories_episodeGroupRepository_ts
-    application_usecases_fetchEpisodes_ts --> domain_entities_episode_ts
-    application_usecases_fetchEpisodes_ts --> domain_entities_episodeGroup_ts
-    application_usecases_fetchEpisodes_ts --> infrastructure_repositories_episodeGroupRepository_ts
-    application_usecases_fetchEpisodes_ts --> infrastructure_repositories_episodeRepository_ts
-    application_usecases_fetchSettings_ts --> application_stores_apiKeyStore_svelte_ts
-    application_usecases_fetchSettings_ts --> domain_entities_settings_ts
-    application_usecases_fetchSettings_ts --> infrastructure_repositories_apiKeyRepository_ts
-    application_usecases_moveEpisode_ts --> infrastructure_repositories_episodeRepository_ts
-    application_usecases_moveEpisodeGroup_ts --> domain_entities_episodeGroup_ts
-    application_usecases_moveEpisodeGroup_ts --> domain_services_groupTreeHelper_ts
-    application_usecases_moveEpisodeGroup_ts --> infrastructure_repositories_episodeGroupRepository_ts
-    application_usecases_saveSettings_ts --> domain_entities_settings_ts
-    application_usecases_saveSettings_ts --> infrastructure_repositories_apiKeyRepository_ts
-    application_usecases_updateEpisodeGroupName_ts --> domain_entities_episodeGroup_ts
-    application_usecases_updateEpisodeGroupName_ts --> infrastructure_repositories_episodeGroupRepository_ts
-
-    domain_entities_sentenceAnalysisResult_ts --> domain_entities_sentenceCard_ts
-    domain_services_buildEpisodeGroupTree_ts --> domain_entities_episodeGroup_ts
-    domain_services_groupTreeHelper_ts --> domain_entities_episodeGroup_ts
-    domain_services_parseSrtToDialogues_ts --> domain_entities_dialogue_ts
-
-    infrastructure_repositories_apiKeyRepository_ts --> infrastructure_config_ts
-    infrastructure_repositories_dialogueRepository_ts --> domain_entities_dialogue_ts
-    infrastructure_repositories_dialogueRepository_ts --> infrastructure_config_ts
-    infrastructure_repositories_episodeGroupRepository_ts --> domain_entities_episodeGroup_ts
-    infrastructure_repositories_episodeGroupRepository_ts --> infrastructure_config_ts
-    infrastructure_repositories_episodeRepository_ts --> domain_entities_episode_ts
-    infrastructure_repositories_episodeRepository_ts --> infrastructure_config_ts
-    infrastructure_repositories_fileRepository_ts --> infrastructure_config_ts
-    infrastructure_repositories_llmRepository_ts --> domain_entities_sentenceAnalysisResult_ts
-    infrastructure_repositories_sentenceCardRepository_ts --> domain_entities_sentenceAnalysisResult_ts
-    infrastructure_repositories_sentenceCardRepository_ts --> domain_entities_sentenceCard_ts
-    infrastructure_repositories_sentenceCardRepository_ts --> infrastructure_config_ts
+src_routes_settings__page_ts --> src_lib_application_usecases_fetchSettings_ts
+src_routes_settings__page_svelte --> src_lib_application_usecases_saveSettings_ts
+src_routes_____groupId___page_ts --> src_lib_application_usecases_fetchEpisodeGroups_ts
+src_routes_____groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
+src_routes_____groupId___page_svelte --> src_lib_application_usecases_addEpisodeGroup_ts
+src_routes_____groupId___page_svelte --> src_lib_application_usecases_fetchAvailableParentGroups_ts
+src_routes_____groupId___page_svelte --> src_lib_application_usecases_moveEpisodeGroup_ts
+src_routes_____groupId___page_svelte --> src_lib_application_usecases_updateEpisodeGroupName_ts
+src_routes_____groupId___page_svelte --> src_lib_domain_entities_episodeGroup_ts
+src_routes_episode__id___page_ts --> src_lib_application_usecases_fetchEpisodeDetail_ts
+src_routes_episode__id___page_ts --> src_lib_application_usecases_fetchSettings_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_addSentenceCards_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_analyzeDialogueForMining_ts
+src_routes_episode__id___page_svelte --> src_lib_domain_entities_dialogue_ts
+src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
+src_routes_episode_list__groupId___page_ts --> src_lib_application_usecases_fetchEpisodes_ts
+src_routes_episode_list__groupId___page_ts --> src_lib_domain_entities_episode_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_addNewEpisode_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchAlbumGroups_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_moveEpisode_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_domain_entities_episode_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_domain_entities_episodeGroup_ts
+src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceAnalysisResult_ts
+src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceCard_ts
+src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_infrastructure_config_ts
+src_lib_infrastructure_repositories_llmRepository_ts --> src_lib_domain_entities_sentenceAnalysisResult_ts
+src_lib_infrastructure_repositories_fileRepository_ts --> src_lib_infrastructure_config_ts
+src_lib_infrastructure_repositories_episodeRepository_ts --> src_lib_domain_entities_episode_ts
+src_lib_infrastructure_repositories_episodeRepository_ts --> src_lib_infrastructure_config_ts
+src_lib_infrastructure_repositories_episodeGroupRepository_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_infrastructure_repositories_episodeGroupRepository_ts --> src_lib_infrastructure_config_ts
+src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_infrastructure_config_ts
+src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_domain_entities_dialogue_ts
+src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_entities_dialogue_ts
+src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
+src_lib_presentation_components_SentenceCardList_svelte --> src_lib_domain_entities_sentenceCard_ts
+src_lib_presentation_components_SentenceCardList_svelte --> src_lib_presentation_utils_dateFormatter_ts
+src_lib_presentation_components_GroupMoveModal_svelte --> src_lib_domain_entities_episodeGroup_ts
+src_lib_presentation_components_GroupGrid_svelte --> src_lib_domain_entities_episodeGroup_ts
+src_lib_presentation_components_GroupAddModal_svelte --> src_lib_domain_entities_episodeGroup_ts
+src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_domain_entities_episode_ts
+src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_domain_entities_episodeGroup_ts
+src_lib_presentation_components_EpisodeListTable_svelte --> src_lib_domain_entities_episode_ts
+src_lib_presentation_components_EpisodeListTable_svelte --> src_lib_presentation_utils_dateFormatter_ts
+src_lib_presentation_components_EpisodeAddModal_svelte --> src_lib_presentation_utils_getAudioDuration_ts
+src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_domain_entities_episodeGroup_ts
+src_lib_domain_services_parseSrtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_domain_services_parseSrtToDialogues_test_ts --> src_lib_domain_services_parseSrtToDialogues_ts
+src_lib_domain_services_groupTreeHelper_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_domain_services_generateEpisodeFilenames_test_ts --> src_lib_domain_services_generateEpisodeFilenames_ts
+src_lib_domain_services_buildEpisodeGroupTree_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_domain_services_buildEpisodeGroupTree_test_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_domain_services_buildEpisodeGroupTree_test_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
+src_lib_domain_entities_sentenceAnalysisResult_ts --> src_lib_domain_entities_sentenceCard_ts
+src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_saveSettings_ts --> src_lib_domain_entities_settings_ts
+src_lib_application_usecases_saveSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
+src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_domain_services_groupTreeHelper_ts
+src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_moveEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
+src_lib_application_usecases_fetchSettings_ts --> src_lib_application_stores_apiKeyStore_svelte_ts
+src_lib_application_usecases_fetchSettings_ts --> src_lib_domain_entities_settings_ts
+src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
+src_lib_application_usecases_fetchEpisodes_ts --> src_lib_domain_entities_episode_ts
+src_lib_application_usecases_fetchEpisodes_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_application_usecases_fetchEpisodes_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_fetchEpisodes_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
+src_lib_application_usecases_fetchEpisodeGroups_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_application_usecases_fetchEpisodeGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_episode_ts
+src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_sentenceCard_ts
+src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
+src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
+src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_fileRepository_ts
+src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
+src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
+src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_services_groupTreeHelper_ts
+src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
+src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_application_stores_apiKeyStore_svelte_ts
+src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_domain_entities_sentenceAnalysisResult_ts
+src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
+src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
+src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_llmRepository_ts
+src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
+src_lib_application_usecases_addSentenceCards_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
+src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_generateEpisodeFilenames_ts
+src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseSrtToDialogues_ts
+src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
+src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
+src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_fileRepository_ts
+src_lib_application_usecases_addEpisodeGroup_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_application_usecases_addEpisodeGroup_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_stores_groupPathStore_svelte_ts --> src_lib_domain_entities_episodeGroup_ts
 ```
