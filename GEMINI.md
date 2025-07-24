@@ -4,6 +4,7 @@
 @doc/svelte_coding_rules.md
 @doc/typescript_coding_style.md
 @doc/testing_rules.md
+@doc/dependency-graph.md
 
 # AI Agent ガイドライン
 
