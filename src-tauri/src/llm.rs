@@ -132,7 +132,7 @@ pub async fn analyze_sentence_with_llm(
         log::error!("Failed to create Google AI client: {}", e);
         "Failed to create Google AI client".to_string()
     })?;
-    let model = TypedModel::<SentenceMiningResult>::new(&client, "gemini-2.5-flash");
+    let model = TypedModel::<SentenceMiningResult>::new(&client, "gemini-2.5-flash-lite");
     let result = model.generate_content(prompt).await.map_err(|e| {
         log::error!("Failed to generate content: {}", e);
         "Failed to generate content".to_string()
