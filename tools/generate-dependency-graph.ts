@@ -3,7 +3,6 @@ import { glob } from 'glob';
 import * as path from 'path';
 import * as ts from 'typescript';
 
-//const projectRoot = path.resolve(__dirname, '..');
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const projectRoot = path.resolve(__dirname, '..');
 const srcDir = path.join(projectRoot, 'src');
@@ -50,12 +49,21 @@ function normalizePath(filePath: string): string {
   return path.relative(projectRoot, filePath).replace(/\\/g, '/');
 }
 
+// get script content from Svelte files
+function getScriptContentFromSvelte(fileContent: string): string {
+  const match = fileContent.match(/<script[^>]*>([\s\S]*?)<\/script>/);
+  return match ? match[1] : '';
+}
+
 function getDependencies(filePath: string): Set<string> {
   const dependencies = new Set<string>();
-  const fileContent = fs.readFileSync(filePath, 'utf-8');
+  const fileContent = filePath.endsWith('.svelte')
+    ? getScriptContentFromSvelte(fs.readFileSync(filePath, 'utf-8'))
+    : fs.readFileSync(filePath, 'utf-8');
   const sourceFile = ts.createSourceFile(filePath, fileContent, ts.ScriptTarget.Latest, true);
 
   ts.forEachChild(sourceFile, (node) => {
+    // Only process import/export declarations
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
       const moduleSpecifier = node.moduleSpecifier;
       if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
@@ -75,27 +83,57 @@ function getDependencies(filePath: string): Set<string> {
           importedModulePath = resolveAliasPath(importedModulePath, path.dirname(filePath));
         }
 
-        // Attempt to resolve file extensions for TypeScript and Svelte files
+        // Try to resolve the import path
         const possibleExtensions = ['.ts', '.svelte.ts', '.svelte'];
         let resolvedPath = '';
-        for (const ext of possibleExtensions) {
-          if (fs.existsSync(importedModulePath + ext)) {
-            resolvedPath = importedModulePath + ext;
-            break;
+
+        // If the import already has an extension, check as-is, then try other extensions if not found
+        if (/\.(ts|svelte|svelte\.ts)$/.test(importedModulePath)) {
+          // Try the path as-is
+          if (fs.existsSync(importedModulePath)) {
+            resolvedPath = importedModulePath;
+          } else {
+            // Try replacing the extension with each possible extension
+            const base = importedModulePath.replace(/\.(ts|svelte|svelte\.ts)$/, '');
+            for (const ext of possibleExtensions) {
+              if (fs.existsSync(base + ext)) {
+                resolvedPath = base + ext;
+                break;
+              }
+              if (fs.existsSync(path.join(base, 'index' + ext))) {
+                resolvedPath = path.join(base, 'index' + ext);
+                break;
+              }
+            }
           }
-          // Handle directory imports (e.g., import 'foo/bar' which resolves to 'foo/bar/index.ts')
-          if (fs.existsSync(path.join(importedModulePath, 'index' + ext))) {
-            resolvedPath = path.join(importedModulePath, 'index' + ext);
-            break;
+          // Also check for directory import with index file
+          for (const ext of possibleExtensions) {
+            if (fs.existsSync(path.join(importedModulePath, 'index' + ext))) {
+              resolvedPath = path.join(importedModulePath, 'index' + ext);
+              break;
+            }
+          }
+        } else {
+          // Try each possible extension
+          for (const ext of possibleExtensions) {
+            if (fs.existsSync(importedModulePath + ext)) {
+              resolvedPath = importedModulePath + ext;
+              break;
+            }
+            if (fs.existsSync(path.join(importedModulePath, 'index' + ext))) {
+              resolvedPath = path.join(importedModulePath, 'index' + ext);
+              break;
+            }
           }
         }
 
         if (resolvedPath) {
+          // Add the resolved dependency (relative to project root)
           dependencies.add(normalizePath(resolvedPath));
         } else {
           // If not resolved, it might be a node_module or a non-existent path.
           // For this tool, we only care about internal project dependencies.
-          // console.warn(`Could not resolve import: ${moduleSpecifier.text} in ${filePath}`);
+          console.warn(`Could not resolve import: ${moduleSpecifier.text} in ${filePath}`);
         }
       }
     }
@@ -103,8 +141,38 @@ function getDependencies(filePath: string): Set<string> {
   return dependencies;
 }
 
+// Group files by their directory structure
+interface FileNode {
+  files?: string[];
+  [key: string]: FileNode | string[] | undefined;
+}
+
+// Sort: Alphabetically sort the 'files' array in each directory
+function sortFileTree(level: FileNode) {
+  if (level.files) {
+    level.files.sort((a, b) => a.localeCompare(b));
+  }
+  for (const key of Object.keys(level)) {
+    if (
+      key !== 'files' &&
+      typeof level[key] === 'object' &&
+      level[key] !== null &&
+      !Array.isArray(level[key])
+    ) {
+      sortFileTree(level[key] as FileNode);
+    }
+  }
+}
+
 async function generateDependencyGraph() {
-  const files = await glob('**/*.{ts,svelte.ts,svelte}', { cwd: srcDir, absolute: true });
+  // Exclude .test.ts files using glob ignore option
+  let files = await glob('**/*.{ts,svelte.ts,svelte}', {
+    cwd: srcDir,
+    absolute: true,
+    ignore: ['**/*.test.ts'],
+  });
+  // Additional filter for safety
+  files = files.filter((file) => !file.endsWith('.test.ts'));
   const graph: DependencyGraph = {};
 
   for (const file of files) {
@@ -120,11 +188,6 @@ async function generateDependencyGraph() {
     return filePath.replace(/[^a-zA-Z0-9_]/g, '_');
   };
 
-  // Group files by their directory structure
-  interface FileNode {
-    files?: string[];
-    [key: string]: FileNode | string[] | undefined;
-  }
   const fileTree: FileNode = {};
   files.forEach((file) => {
     const relativePath = path.relative(srcDir, file);
@@ -148,12 +211,16 @@ async function generateDependencyGraph() {
     }
   });
 
+  sortFileTree(fileTree);
+
   // Recursively generate subgraphs
   const generateSubgraphs = (level: FileNode, currentPath: string, indent: string) => {
     let subgraphContent = '';
-    for (const key in level) {
+    // Loop through sorted keys
+    for (const key of Object.keys(level).sort()) {
       if (key === 'files') {
         if (level.files) {
+          // files are already sorted
           level.files.forEach((file: string) => {
             const fileName = path.basename(file);
             const mermaidId = getNodeMermaidId(normalizePath(file));
@@ -180,10 +247,11 @@ async function generateDependencyGraph() {
 
   mermaidGraph += generateSubgraphs(fileTree, '', '    ');
 
-  // Add dependencies
-  for (const sourceFile in graph) {
+  // Add dependencies (sorted)
+  for (const sourceFile of Object.keys(graph).sort()) {
     const sourceMermaidId = getNodeMermaidId(sourceFile);
-    for (const targetFile of graph[sourceFile]) {
+    const sortedTargets = Array.from(graph[sourceFile]).sort();
+    for (const targetFile of sortedTargets) {
       const targetMermaidId = getNodeMermaidId(targetFile);
       // Ensure both source and target are part of the graph (i.e., within srcDir)
       if (graph[targetFile] || files.map(normalizePath).includes(targetFile)) {
