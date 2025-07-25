@@ -1,15 +1,26 @@
 <script lang="ts">
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
+  import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
   import { Dropdown, DropdownItem } from 'flowbite-svelte';
   import { DotsVerticalOutline, FolderOutline, ListOutline } from 'flowbite-svelte-icons';
+  import { flip } from 'svelte/animate';
+
+  type OnOrderChange = (event: { detail: { items: readonly EpisodeGroup[] } }) => void;
 
   interface Props {
     groups: readonly EpisodeGroup[];
     onGroupClick: (_group: EpisodeGroup) => void;
     onChangeName: (_group: EpisodeGroup) => void;
     onMoveGroup: (_group: EpisodeGroup) => void;
+    onOrderChange?: OnOrderChange;
   }
-  let { groups, onGroupClick, onChangeName, onMoveGroup }: Props = $props();
+  let {
+    groups,
+    onGroupClick,
+    onChangeName,
+    onMoveGroup,
+    onOrderChange = () => {},
+  }: Props = $props();
 
   function handleChangeName(e: Event, group: EpisodeGroup) {
     e.stopPropagation(); // 下のボタンへの伝播を停止
@@ -20,12 +31,42 @@
     e.stopPropagation(); // 下のボタンへの伝播を停止
     onMoveGroup(group);
   }
+
+  function handleDrop(state: DragDropState<EpisodeGroup>, targetGroup: EpisodeGroup) {
+    const { draggedItem } = state;
+    if (!draggedItem || draggedItem.id === targetGroup.id) {
+      return;
+    }
+
+    const newOrder = [...groups];
+    const draggedIndex = newOrder.findIndex((g) => g.id === draggedItem.id);
+    const targetIndex = newOrder.findIndex((g) => g.id === targetGroup.id);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      return;
+    }
+
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+
+    if (onOrderChange) {
+      onOrderChange({ detail: { items: newOrder } });
+    }
+  }
 </script>
 
 <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
   {#if groups.length > 0}
     {#each groups as group (group.id)}
       <div
+        use:draggable={{ container: 'groups', dragData: group }}
+        use:droppable={{
+          container: 'groups',
+          callbacks: {
+            onDrop: (state: DragDropState<EpisodeGroup>) => handleDrop(state, group),
+          },
+        }}
+        animate:flip={{ duration: 300 }}
         class={`relative rounded-lg border p-4 text-center transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800
     ${group.groupType === 'album' ? 'bg-blue-50 dark:bg-blue-900' : ''}`}
         tabindex="0"

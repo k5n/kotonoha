@@ -129,4 +129,25 @@ export const episodeGroupRepository = {
     );
     return rows.map(mapRowToEpisodeGroup);
   },
+
+  /**
+   * 複数のグループの表示順序を一括で更新する
+   * @param groups グループIDと新しい表示順序のペアの配列
+   */
+  async updateOrders(groups: readonly { id: number; display_order: number }[]): Promise<void> {
+    const db = new Database(getDatabasePath());
+    await db.execute('BEGIN TRANSACTION');
+    try {
+      for (const group of groups) {
+        await db.execute('UPDATE episode_groups SET display_order = ? WHERE id = ?', [
+          group.display_order,
+          group.id,
+        ]);
+      }
+      await db.execute('COMMIT');
+    } catch (e) {
+      await db.execute('ROLLBACK');
+      throw e;
+    }
+  },
 };

@@ -5,6 +5,7 @@
   import { fetchAvailableParentGroups } from '$lib/application/usecases/fetchAvailableParentGroups';
   import { moveEpisodeGroup } from '$lib/application/usecases/moveEpisodeGroup';
   import { updateEpisodeGroupName } from '$lib/application/usecases/updateEpisodeGroupName';
+  import { updateEpisodeGroupsOrder } from '$lib/application/usecases/updateEpisodeGroupsOrder';
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import GroupAddModal from '$lib/presentation/components/GroupAddModal.svelte';
@@ -18,7 +19,7 @@
 
   // --- ページデータ受け取り ---
   let { data }: PageProps = $props();
-  let displayedGroups: readonly EpisodeGroup[] = $derived(data.groups);
+  let displayedGroups = $derived(data.groups);
 
   // --- State Management ---
   let errorMessage = $state('');
@@ -40,6 +41,16 @@
   }
 
   // --- Event Handlers ---
+  const handleGroupOrderChange = async (event: { detail: { items: readonly EpisodeGroup[] } }) => {
+    try {
+      await updateEpisodeGroupsOrder(event.detail.items);
+      await invalidateAll();
+    } catch (err) {
+      error(`Failed to update group order: ${err}`);
+      errorMessage = err instanceof Error ? err.message : 'グループの並び替えに失敗しました。';
+    }
+  };
+
   const handleGroupClick = (selectedGroup: EpisodeGroup) => {
     groupPathStore.pushGroup(selectedGroup);
     if (selectedGroup.groupType == 'album') {
@@ -169,6 +180,7 @@
       onGroupClick={handleGroupClick}
       onChangeName={handleChangeGroupName}
       onMoveGroup={handleMoveGroup}
+      onOrderChange={handleGroupOrderChange}
     />
   {/if}
 
