@@ -110,9 +110,14 @@ export const episodeGroupRepository = {
     const db = new Database(getDatabasePath());
     let rows;
     if (parentId === null) {
-      rows = await db.select('SELECT * FROM episode_groups WHERE parent_group_id IS NULL');
+      rows = await db.select(
+        'SELECT * FROM episode_groups WHERE parent_group_id IS NULL ORDER BY display_order ASC'
+      );
     } else {
-      rows = await db.select('SELECT * FROM episode_groups WHERE parent_group_id = ?', [parentId]);
+      rows = await db.select(
+        'SELECT * FROM episode_groups WHERE parent_group_id = ? ORDER BY display_order ASC',
+        [parentId]
+      );
     }
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
     return rows.map(mapRowToEpisodeGroup);

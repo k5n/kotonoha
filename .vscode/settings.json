@@ -36,7 +36,9 @@
     "machineid",
     "rfind",
     "serde",
+    "sveltednd",
     "tauri",
+    "thisux",
     "timecode",
     "usecases",
     "Vitest"
