@@ -4,6 +4,7 @@
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
+  import { updateEpisodesOrder } from '$lib/application/usecases/updateEpisodesOrder';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
@@ -22,7 +23,11 @@
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
 
-  let episodes = $derived(data.episodes);
+  // eslint-disable-next-line svelte/prefer-writable-derived
+  let episodes = $state(data.episodes);
+  $effect(() => {
+    episodes = data.episodes;
+  });
 
   // エピソード詳細ページへ遷移
   function openEpisode(episodeId: number) {
@@ -131,6 +136,10 @@
         {episodes}
         onEpisodeClick={openEpisode}
         onMoveEpisodeClick={handleMoveEpisodeClick}
+        onOrderChange={async (newOrder) => {
+          episodes = newOrder;
+          await updateEpisodesOrder(newOrder);
+        }}
       />
     {/if}
   {:else}

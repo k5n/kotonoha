@@ -1,5 +1,7 @@
 # Src Dependency Graph
 
+`src/` 以下の各ファイルの import 依存関係を解析した結果グラフ。
+
 ```mermaid
 graph LR
         subgraph "lib"
@@ -24,6 +26,7 @@ graph LR
                     src_lib_application_usecases_saveSettings_ts["saveSettings.ts"]
                     src_lib_application_usecases_updateEpisodeGroupName_ts["updateEpisodeGroupName.ts"]
                     src_lib_application_usecases_updateEpisodeGroupsOrder_ts["updateEpisodeGroupsOrder.ts"]
+                    src_lib_application_usecases_updateEpisodesOrder_ts["updateEpisodesOrder.ts"]
                 end
             end
             subgraph "domain"
@@ -147,6 +150,8 @@ src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_domain_entiti
 src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_updateEpisodeGroupsOrder_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_updateEpisodeGroupsOrder_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_updateEpisodesOrder_ts --> src_lib_domain_entities_episode_ts
+src_lib_application_usecases_updateEpisodesOrder_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_domain_entities_sentenceAnalysisResult_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_domain_services_buildEpisodeGroupTree_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_groupTreeHelper_ts --> src_lib_domain_entities_episodeGroup_ts
@@ -193,6 +198,7 @@ src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_gr
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_addNewEpisode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchAlbumGroups_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_moveEpisode_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_updateEpisodesOrder_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_domain_entities_episode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_Breadcrumbs_svelte

@@ -150,4 +150,25 @@ export const episodeRepository = {
       episodeId,
     ]);
   },
+
+  /**
+   * 複数のエピソードの表示順序を一括で更新する
+   * @param episodes エピソードIDと新しい表示順序のペアの配列
+   */
+  async updateOrders(episodes: readonly { id: number; display_order: number }[]): Promise<void> {
+    const db = new Database(getDatabasePath());
+    await db.execute('BEGIN TRANSACTION');
+    try {
+      for (const episode of episodes) {
+        await db.execute('UPDATE episodes SET display_order = ? WHERE id = ?', [
+          episode.display_order,
+          episode.id,
+        ]);
+      }
+      await db.execute('COMMIT');
+    } catch (e) {
+      await db.execute('ROLLBACK');
+      throw e;
+    }
+  },
 };

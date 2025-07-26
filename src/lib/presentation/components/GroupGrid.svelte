@@ -10,7 +10,7 @@
     onGroupClick: (_group: EpisodeGroup) => void;
     onGroupNameChange: (_group: EpisodeGroup) => void;
     onGroupMove: (_group: EpisodeGroup) => void;
-    onOrderChange?: (_items: readonly EpisodeGroup[]) => void;
+    onOrderChange: (_items: readonly EpisodeGroup[]) => void;
   }
   let {
     groups,

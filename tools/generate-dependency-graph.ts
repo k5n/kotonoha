@@ -260,7 +260,7 @@ async function generateDependencyGraph() {
     }
   }
 
-  const fullMermaidContent = `# Src Dependency Graph\n\n\`\`\`mermaid\n${mermaidGraph}\`\`\`\n`;
+  const fullMermaidContent = `# Src Dependency Graph\n\n\`src/\` 以下の各ファイルの import 依存関係を解析した結果グラフ。\n\n\`\`\`mermaid\n${mermaidGraph}\`\`\`\n`;
 
   fs.writeFileSync(dependencyGraphMd, fullMermaidContent, 'utf-8');
   console.log(`Dependency graph generated at ${dependencyGraphMd}`);
