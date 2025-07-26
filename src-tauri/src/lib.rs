@@ -44,7 +44,12 @@ pub fn run() {
                 .add_migrations(&db_url, get_migrations())
                 .build(),
         )
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .max_file_size(1 * 1024 * 1024)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(5))
+                .build(),
+        )
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             analyze_sentence_with_llm,
