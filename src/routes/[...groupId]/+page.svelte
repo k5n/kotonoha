@@ -41,35 +41,35 @@
   }
 
   // --- Event Handlers ---
-  const handleGroupOrderChange = async (event: { detail: { items: readonly EpisodeGroup[] } }) => {
+  async function handleGroupOrderChange(items: readonly EpisodeGroup[]) {
     try {
-      await updateEpisodeGroupsOrder(event.detail.items);
+      await updateEpisodeGroupsOrder(items);
       await invalidateAll();
     } catch (err) {
       error(`Failed to update group order: ${err}`);
       errorMessage = err instanceof Error ? err.message : 'グループの並び替えに失敗しました。';
     }
-  };
+  }
 
-  const handleGroupClick = (selectedGroup: EpisodeGroup) => {
+  function handleGroupClick(selectedGroup: EpisodeGroup) {
     groupPathStore.pushGroup(selectedGroup);
     if (selectedGroup.groupType == 'album') {
       goto(`/episode-list/${selectedGroup.id}`);
     } else {
       transition();
     }
-  };
+  }
 
-  const handleBreadcrumbClick = (targetIndex: number | null) => {
+  function handleBreadcrumbClick(targetIndex: number | null) {
     groupPathStore.popTo(targetIndex);
     transition();
-  };
+  }
 
-  const handleAddNewEpisode = () => {
+  function handleAddNewEpisode() {
     isAddModalOpen = true;
-  };
+  }
 
-  const handleAddGroupSubmit = async (name: string, groupType: EpisodeGroupType) => {
+  async function handleAddGroupSubmit(name: string, groupType: EpisodeGroupType) {
     isSubmitting = true;
     try {
       const parentId = groupPathStore.current?.id ?? null;
@@ -86,14 +86,14 @@
     } finally {
       isSubmitting = false;
     }
-  };
+  }
 
-  const handleChangeGroupName = (group: EpisodeGroup) => {
+  function handleChangeGroupName(group: EpisodeGroup) {
     editingGroup = group;
     isEditModalOpen = true;
-  };
+  }
 
-  const handleEditGroupNameSubmit = async (newName: string) => {
+  async function handleEditGroupNameSubmit(newName: string) {
     if (!editingGroup) return;
     isSubmitting = true;
     try {
@@ -110,9 +110,9 @@
     } finally {
       isSubmitting = false;
     }
-  };
+  }
 
-  const handleMoveGroup = async (group: EpisodeGroup) => {
+  async function handleMoveGroup(group: EpisodeGroup) {
     editingGroup = group;
     try {
       availableParentGroupsTree = await fetchAvailableParentGroups(group);
@@ -121,9 +121,9 @@
       error(`Failed to fetch available parent groups: ${err}`);
       errorMessage = err instanceof Error ? err.message : '移動先グループの取得に失敗しました。';
     }
-  };
+  }
 
-  const handleMoveGroupSubmit = async (newParentId: number | null) => {
+  async function handleMoveGroupSubmit(newParentId: number | null) {
     if (!editingGroup) return;
     isSubmitting = true;
     errorMessage = ''; // Clear previous errors
@@ -141,7 +141,7 @@
       isSubmitting = false;
       editingGroup = null;
     }
-  };
+  }
 </script>
 
 <div class="p-4 md:p-6">
@@ -178,8 +178,8 @@
     <GroupGrid
       groups={displayedGroups}
       onGroupClick={handleGroupClick}
-      onChangeName={handleChangeGroupName}
-      onMoveGroup={handleMoveGroup}
+      onGroupNameChange={handleChangeGroupName}
+      onGroupMove={handleMoveGroup}
       onOrderChange={handleGroupOrderChange}
     />
   {/if}

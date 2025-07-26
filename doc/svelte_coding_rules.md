@@ -185,3 +185,32 @@ console.log(counterStore.value); // 1
 counterStore.reset();
 console.log(counterStore.value); // 0
 ```
+
+## イベントハンドラの命名規則
+
+### 基本方針
+
+- Svelte コンポーネントのイベントハンドラ属性は、**「on + 対象 + 動作」**（camelCase）で命名します。
+  - 例: `onGroupClick`, `onGroupNameChange`, `onGroupMove`, `onGroupOrderChange`
+- camelCase の命名規則を採用します。（HTML 標準イベント名（`onclick`, `onchange` など）と区別可能）
+- 対象（目的語）は、コンポーネント固有のイベントの場合のみ付与します。
+
+### 命名パターン
+
+- `on` + 対象 + 動作（動詞または動詞句）
+  - 例:  
+    - `onGroupClick`（グループのクリック）
+    - `onGroupNameChange`（グループ名の変更）
+    - `onGroupMove`（グループの移動）
+    - `onGroupOrderChange`（グループの並び順変更）
+
+### 例
+
+```typescript
+interface Props {
+  onGroupClick: (_group: EpisodeGroup) => void;
+  onGroupNameChange: (_group: EpisodeGroup) => void;
+  onGroupMove: (_group: EpisodeGroup) => void;
+  onGroupOrderChange?: (_items: readonly EpisodeGroup[]) => void;
+}
+```

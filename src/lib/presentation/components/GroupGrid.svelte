@@ -5,31 +5,29 @@
   import { DotsVerticalOutline, FolderOutline, ListOutline } from 'flowbite-svelte-icons';
   import { flip } from 'svelte/animate';
 
-  type OnOrderChange = (event: { detail: { items: readonly EpisodeGroup[] } }) => void;
-
   interface Props {
     groups: readonly EpisodeGroup[];
     onGroupClick: (_group: EpisodeGroup) => void;
-    onChangeName: (_group: EpisodeGroup) => void;
-    onMoveGroup: (_group: EpisodeGroup) => void;
-    onOrderChange?: OnOrderChange;
+    onGroupNameChange: (_group: EpisodeGroup) => void;
+    onGroupMove: (_group: EpisodeGroup) => void;
+    onOrderChange?: (_items: readonly EpisodeGroup[]) => void;
   }
   let {
     groups,
     onGroupClick,
-    onChangeName,
-    onMoveGroup,
+    onGroupNameChange,
+    onGroupMove,
     onOrderChange = () => {},
   }: Props = $props();
 
   function handleChangeName(e: Event, group: EpisodeGroup) {
     e.stopPropagation(); // 下のボタンへの伝播を停止
-    onChangeName(group);
+    onGroupNameChange(group);
   }
 
   function handleMoveGroup(e: Event, group: EpisodeGroup) {
     e.stopPropagation(); // 下のボタンへの伝播を停止
-    onMoveGroup(group);
+    onGroupMove(group);
   }
 
   function handleDrop(state: DragDropState<EpisodeGroup>, targetGroup: EpisodeGroup) {
@@ -49,9 +47,7 @@
     const [removed] = newOrder.splice(draggedIndex, 1);
     newOrder.splice(targetIndex, 0, removed);
 
-    if (onOrderChange) {
-      onOrderChange({ detail: { items: newOrder } });
-    }
+    onOrderChange(newOrder);
   }
 </script>
 
