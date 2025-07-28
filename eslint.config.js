@@ -55,6 +55,9 @@ export default tsEslint.config(
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
+      globals: {
+        ...globals.node,
+      },
     },
   },
   // Prettierと競合するルールを無効化

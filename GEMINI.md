@@ -12,6 +12,7 @@
 
 - **Build**: `npm run build`
 - **Lint**: `npm run lint`
+- **Check**: `npm run check`
 - **Format**: `npm run format`
 - **Test all**: `npx vitest run`
 - **Test single file**: `npx vitest <path_to_test_file> run`（例: `npx vitest src/lib/domain/services/buildEpisodeGroupTree.test.ts run`）
@@ -22,6 +23,7 @@
 - 作業開始を指示されてから、Plan mode を抜けてファイルの変更を伴う作業を開始すること。
 - ファイルを作成・編集した後は `npm run format` を実行してコードを整形すること。
 - ファイルを作成・編集した後は `npm run lint` を実行してリンターエラーがないか確認すること。
+- ファイルを作成・編集した後は `npm run check` を実行してSvelteKitによるチェックエラーがないか確認すること。
 - テストコードを作成したり修正した場合、まずテストコードの作成・修正内容を説明して、テストは実行せずに一旦作業を終了すること。
 
 ## プロジェクトの概要
@@ -36,7 +38,7 @@
 ## Coding Rules
 
 - `src/routes` 以下のファイル、`src/lib/presentation/components/*.svelte` ファイル、`src/lib/application/stores/*.svelte.ts` ファイルに対しては [Svelte/SvelteKitコーディングルール](doc/svelte_coding_rules.md) の規約に従うこと。
-- TypeScript ファイルに対しては [TypeScriptコーディングルール](doc/typescript_coding_style.md) の規約に従うこと。
+- TypeScript のコードに対しては [TypeScriptコーディングルール](doc/typescript_coding_style.md) の規約に従うこと。
 - ログ出力は Tauri の `log` プラグインを使用すること。
   - TypeScript 側では `import { info, warn, error } from '@tauri-apps/plugin-log';` を使用する。
   - ただし `src/lib/domain/services/*.ts` ファイルでは Vitest による単体テストを行うため、ログ出力は行わない。
