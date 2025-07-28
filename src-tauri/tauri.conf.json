@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.k5-n.kotonoha.mining",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npx vite dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npx vite build",
     "frontendDist": "../build"
   },
   "app": {
