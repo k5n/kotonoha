@@ -2,12 +2,14 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
+  import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
   import { updateEpisodesOrder } from '$lib/application/usecases/updateEpisodesOrder';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
+  import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
   import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
@@ -19,9 +21,11 @@
   let { data }: PageProps = $props();
   let showAddEpisodeModal = $state(false);
   let showMoveEpisodeModal = $state(false);
+  let showDeleteConfirmModal = $state(false);
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
+  let errorMessage = $derived(data.error || '');
 
   // eslint-disable-next-line svelte/prefer-writable-derived
   let episodes = $state(data.episodes);
@@ -48,6 +52,28 @@
       showMoveEpisodeModal = true;
     } catch (e) {
       error(`Failed to fetch album groups: ${e}`);
+      errorMessage = 'アルバムグループの取得に失敗しました';
+    }
+  }
+
+  function openDeleteConfirmModal(episode: Episode) {
+    targetEpisode = episode;
+    showDeleteConfirmModal = true;
+  }
+
+  async function handleConfirmDelete() {
+    if (!targetEpisode) return;
+    isSubmitting = true;
+    try {
+      await deleteEpisode(targetEpisode);
+      await invalidateAll();
+    } catch (e) {
+      error(`Failed to delete episode: ${e}`);
+      errorMessage = 'エピソードの削除に失敗しました';
+    } finally {
+      showDeleteConfirmModal = false;
+      isSubmitting = false;
+      targetEpisode = null;
     }
   }
 
@@ -84,6 +110,7 @@
       await invalidateAll();
     } catch (e) {
       error(`Failed to move episode: ${e}`);
+      errorMessage = 'エピソードの移動に失敗しました';
     } finally {
       showMoveEpisodeModal = false;
       isSubmitting = false;
@@ -100,11 +127,11 @@
 </script>
 
 <div class="p-4 md:p-6">
-  {#if data.error}
+  {#if errorMessage}
     <Alert color="red" class="mb-6">
       <ExclamationCircleOutline class="h-5 w-5" />
       <span class="font-medium">エラー:</span>
-      {data.error}
+      {errorMessage}
     </Alert>
   {:else if data.episodeGroup}
     <div class="mb-4 flex items-center justify-between">
@@ -136,6 +163,7 @@
         {episodes}
         onEpisodeClick={openEpisode}
         onMoveEpisodeClick={handleMoveEpisodeClick}
+        onDeleteEpisodeClick={openDeleteConfirmModal}
         onOrderChange={async (newOrder) => {
           episodes = newOrder;
           await updateEpisodesOrder(newOrder);
@@ -166,4 +194,16 @@
     targetEpisode = null;
   }}
   onSubmit={handleMoveEpisodeSubmit}
+/>
+
+<ConfirmModal
+  bind:open={showDeleteConfirmModal}
+  title="エピソードの削除"
+  message={`エピソード「${targetEpisode?.title}」を削除しますか？関連するデータも全て削除されます。`}
+  isProcessing={isSubmitting}
+  onConfirm={handleConfirmDelete}
+  onCancel={() => {
+    showDeleteConfirmModal = false;
+    targetEpisode = null;
+  }}
 />

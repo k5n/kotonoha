@@ -146,4 +146,21 @@ export const sentenceCardRepository = {
     const db = new Database(getDatabasePath());
     await db.execute('DELETE FROM sentence_cards WHERE id = ?', [cardId]);
   },
+
+  /**
+   * 指定したエピソードIDに紐づく全てのSentence Cardを削除する
+   */
+  async deleteByEpisodeId(episodeId: number): Promise<void> {
+    const db = new Database(getDatabasePath());
+    const dialogueIds = await db.select<{ id: number }[]>(
+      'SELECT id FROM dialogues WHERE episode_id = ?',
+      [episodeId]
+    );
+    if (dialogueIds.length === 0) {
+      return;
+    }
+    const ids = dialogueIds.map((d) => d.id);
+    const placeholders = ids.map(() => '?').join(',');
+    await db.execute(`DELETE FROM sentence_cards WHERE dialogue_id IN (${placeholders})`, ids);
+  },
 };

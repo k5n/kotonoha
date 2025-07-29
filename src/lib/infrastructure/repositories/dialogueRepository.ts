@@ -68,4 +68,9 @@ export const dialogueRepository = {
       dialogueId,
     ]);
   },
+
+  async deleteByEpisodeId(episodeId: number): Promise<void> {
+    const db = new Database(getDatabasePath());
+    await db.execute('DELETE FROM dialogues WHERE episode_id = ?', [episodeId]);
+  },
 };

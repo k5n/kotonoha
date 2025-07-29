@@ -15,6 +15,7 @@ graph LR
                     src_lib_application_usecases_addNewEpisode_ts["addNewEpisode.ts"]
                     src_lib_application_usecases_addSentenceCards_ts["addSentenceCards.ts"]
                     src_lib_application_usecases_analyzeDialogueForMining_ts["analyzeDialogueForMining.ts"]
+                    src_lib_application_usecases_deleteEpisode_ts["deleteEpisode.ts"]
                     src_lib_application_usecases_fetchAlbumGroups_ts["fetchAlbumGroups.ts"]
                     src_lib_application_usecases_fetchAvailableParentGroups_ts["fetchAvailableParentGroups.ts"]
                     src_lib_application_usecases_fetchEpisodeDetail_ts["fetchEpisodeDetail.ts"]
@@ -61,6 +62,7 @@ graph LR
                 subgraph "components"
                     src_lib_presentation_components_AudioPlayer_svelte["AudioPlayer.svelte"]
                     src_lib_presentation_components_Breadcrumbs_svelte["Breadcrumbs.svelte"]
+                    src_lib_presentation_components_ConfirmModal_svelte["ConfirmModal.svelte"]
                     src_lib_presentation_components_EpisodeAddModal_svelte["EpisodeAddModal.svelte"]
                     src_lib_presentation_components_EpisodeListTable_svelte["EpisodeListTable.svelte"]
                     src_lib_presentation_components_EpisodeMoveModal_svelte["EpisodeMoveModal.svelte"]
@@ -118,6 +120,10 @@ src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastruct
 src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_llmRepository_ts
 src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
+src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
+src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
+src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_fileRepository_ts
+src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
 src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
 src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_entities_episodeGroup_ts
@@ -196,12 +202,14 @@ src_routes_____groupId___page_svelte --> src_lib_presentation_components_GroupNa
 src_routes_____groupId___page_ts --> src_lib_application_usecases_fetchEpisodeGroups_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_addNewEpisode_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_deleteEpisode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchAlbumGroups_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_moveEpisode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_updateEpisodesOrder_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_domain_entities_episode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_Breadcrumbs_svelte
+src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_ConfirmModal_svelte
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_EpisodeAddModal_svelte
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_EpisodeListTable_svelte
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_EpisodeMoveModal_svelte

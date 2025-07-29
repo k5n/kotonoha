@@ -20,16 +20,11 @@
     onEpisodeClick: (episodeId: number) => void;
     onMoveEpisodeClick: (episode: Episode) => void;
     onOrderChange: (_items: readonly Episode[]) => void;
-    // onDeleteEpisodeClick: (episodeId: number) => void; // TODO: 将来の削除機能のためにコメントアウト
+    onDeleteEpisodeClick: (episode: Episode) => void;
   };
 
-  let {
-    episodes,
-    onEpisodeClick,
-    onMoveEpisodeClick,
-    onOrderChange,
-    // onDeleteEpisodeClick,
-  }: Props = $props();
+  let { episodes, onEpisodeClick, onMoveEpisodeClick, onOrderChange, onDeleteEpisodeClick }: Props =
+    $props();
 
   function handleDrop(state: DragDropState<Episode>, targetEpisode: Episode) {
     const { draggedItem } = state;
@@ -107,6 +102,15 @@
                   }}
                 >
                   移動
+                </DropdownItem>
+                <DropdownItem
+                  class="text-red-600"
+                  onclick={(e: MouseEvent) => {
+                    e.stopPropagation();
+                    onDeleteEpisodeClick(episode);
+                  }}
+                >
+                  削除
                 </DropdownItem>
               </Dropdown>
             </div>
