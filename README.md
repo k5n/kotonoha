@@ -61,15 +61,16 @@ For a more detailed explanation of the architecture, please refer to [`doc/archi
 
 ## 📜 Available Scripts
 
-- `npm run tauri dev`: Starts the development server.
-- `npm run tauri build`: Builds the application for production.
+- `npm run dev`: Starts the development server.
+- `npm run build`: Builds the application for production.
 - `npm run test`: Runs the test suite.
 - `npm run lint`: Lints the codebase for errors.
+- `npm run check`: Run svelte-check to validate Svelte components.
 - `npm run format`: Formats the code.
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+This project is licensed under the GPLv3 License. See the [LICENSE](./LICENSE) file for details.
 
 ## 🗄️ Database Usage
 
