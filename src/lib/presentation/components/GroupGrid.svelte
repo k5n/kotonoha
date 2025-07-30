@@ -10,6 +10,7 @@
     onGroupClick: (_group: EpisodeGroup) => void;
     onGroupNameChange: (_group: EpisodeGroup) => void;
     onGroupMove: (_group: EpisodeGroup) => void;
+    onGroupDelete: (_group: EpisodeGroup) => void;
     onOrderChange: (_items: readonly EpisodeGroup[]) => void;
   }
   let {
@@ -17,6 +18,7 @@
     onGroupClick,
     onGroupNameChange,
     onGroupMove,
+    onGroupDelete,
     onOrderChange = () => {},
   }: Props = $props();
 
@@ -28,6 +30,11 @@
   function handleMoveGroup(e: Event, group: EpisodeGroup) {
     e.stopPropagation(); // 下のボタンへの伝播を停止
     onGroupMove(group);
+  }
+
+  function handleDeleteGroup(e: Event, group: EpisodeGroup) {
+    e.stopPropagation();
+    onGroupDelete(group);
   }
 
   function handleDrop(state: DragDropState<EpisodeGroup>, targetGroup: EpisodeGroup) {
@@ -102,6 +109,10 @@
               >名前を変更</DropdownItem
             >
             <DropdownItem onclick={(e: MouseEvent) => handleMoveGroup(e, group)}>移動</DropdownItem>
+            <DropdownItem
+              onclick={(e: MouseEvent) => handleDeleteGroup(e, group)}
+              class="text-red-600 dark:text-red-500">削除</DropdownItem
+            >
           </Dropdown>
         </div>
       </div>

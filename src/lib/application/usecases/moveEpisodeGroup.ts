@@ -1,5 +1,5 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
-import { findDescendantIds } from '$lib/domain/services/groupTreeHelper';
+import { groupTreeHelper } from '$lib/domain/services/groupTreeHelper';
 import { episodeGroupRepository } from '$lib/infrastructure/repositories/episodeGroupRepository';
 
 /**
@@ -23,7 +23,7 @@ export async function moveEpisodeGroup({
   // 移動先が自分の子孫でないことを確認 (循環参照の防止)
   if (newParentId !== null) {
     const allGroups = await episodeGroupRepository.getAllGroups();
-    const descendantIds = findDescendantIds(allGroups, group.id);
+    const descendantIds = groupTreeHelper.findDescendantIds(group.id, allGroups);
     if (descendantIds.includes(newParentId)) {
       throw new Error('A group cannot be moved into its own descendant.');
     }

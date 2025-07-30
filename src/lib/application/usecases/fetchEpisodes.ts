@@ -10,6 +10,6 @@ export async function fetchEpisodes(groupId: number): Promise<[EpisodeGroup, rea
   if (!episodeGroup) {
     throw new Error(`Episode group with ID ${groupId} not found`);
   }
-  const episodes = await episodeRepository.getEpisodesByGroupId(groupId);
+  const episodes = await episodeRepository.getEpisodesWithCardCountByGroupId(groupId);
   return [episodeGroup, episodes];
 }

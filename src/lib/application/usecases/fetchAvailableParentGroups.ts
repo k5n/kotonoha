@@ -1,6 +1,6 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 import { buildEpisodeGroupTree } from '$lib/domain/services/buildEpisodeGroupTree';
-import { findDescendantIds } from '$lib/domain/services/groupTreeHelper';
+import { groupTreeHelper } from '$lib/domain/services/groupTreeHelper';
 import { episodeGroupRepository } from '$lib/infrastructure/repositories/episodeGroupRepository';
 
 /**
@@ -21,7 +21,8 @@ export async function fetchAvailableParentGroups(
   }
 
   // 移動対象のグループ自身と、その子孫のIDを特定
-  const excludedIds = [currentGroup.id, ...findDescendantIds(folderGroupsFlat, currentGroup.id)];
+  const descendantIds = groupTreeHelper.findDescendantIds(currentGroup.id, folderGroupsFlat);
+  const excludedIds = [currentGroup.id, ...descendantIds];
 
   // 除外対象のグループを除いたリストを作成
   const availableGroupsFlat = folderGroupsFlat.filter((group) => !excludedIds.includes(group.id));

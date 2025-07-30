@@ -21,6 +21,8 @@ This is a test.
       endTimeMs: 3000,
       originalText: 'Hello, world.',
       correctedText: null,
+      explanation: null,
+      translation: null,
     });
     expect(dialogues[1]).toEqual({
       id: 0,
@@ -29,6 +31,8 @@ This is a test.
       endTimeMs: 6000,
       originalText: 'This is a test.',
       correctedText: null,
+      explanation: null,
+      translation: null,
     });
     expect(warnings.length).toBe(0);
   });

@@ -16,6 +16,7 @@ graph LR
                     src_lib_application_usecases_addSentenceCards_ts["addSentenceCards.ts"]
                     src_lib_application_usecases_analyzeDialogueForMining_ts["analyzeDialogueForMining.ts"]
                     src_lib_application_usecases_deleteEpisode_ts["deleteEpisode.ts"]
+                    src_lib_application_usecases_deleteGroupRecursive_ts["deleteGroupRecursive.ts"]
                     src_lib_application_usecases_fetchAlbumGroups_ts["fetchAlbumGroups.ts"]
                     src_lib_application_usecases_fetchAvailableParentGroups_ts["fetchAvailableParentGroups.ts"]
                     src_lib_application_usecases_fetchEpisodeDetail_ts["fetchEpisodeDetail.ts"]
@@ -124,6 +125,11 @@ src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_reposit
 src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_fileRepository_ts
 src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
+src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_application_usecases_deleteEpisode_ts
+src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_domain_services_groupTreeHelper_ts
+src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
 src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_entities_episodeGroup_ts
@@ -189,12 +195,14 @@ src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_en
 src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_domain_entities_dialogue_ts
 src_routes_____groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
 src_routes_____groupId___page_svelte --> src_lib_application_usecases_addEpisodeGroup_ts
+src_routes_____groupId___page_svelte --> src_lib_application_usecases_deleteGroupRecursive_ts
 src_routes_____groupId___page_svelte --> src_lib_application_usecases_fetchAvailableParentGroups_ts
 src_routes_____groupId___page_svelte --> src_lib_application_usecases_moveEpisodeGroup_ts
 src_routes_____groupId___page_svelte --> src_lib_application_usecases_updateEpisodeGroupName_ts
 src_routes_____groupId___page_svelte --> src_lib_application_usecases_updateEpisodeGroupsOrder_ts
 src_routes_____groupId___page_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_Breadcrumbs_svelte
+src_routes_____groupId___page_svelte --> src_lib_presentation_components_ConfirmModal_svelte
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_GroupAddModal_svelte
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_GroupGrid_svelte
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_GroupMoveModal_svelte

@@ -2,12 +2,14 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addEpisodeGroup } from '$lib/application/usecases/addEpisodeGroup';
+  import { deleteGroupRecursive } from '$lib/application/usecases/deleteGroupRecursive';
   import { fetchAvailableParentGroups } from '$lib/application/usecases/fetchAvailableParentGroups';
   import { moveEpisodeGroup } from '$lib/application/usecases/moveEpisodeGroup';
   import { updateEpisodeGroupName } from '$lib/application/usecases/updateEpisodeGroupName';
   import { updateEpisodeGroupsOrder } from '$lib/application/usecases/updateEpisodeGroupsOrder';
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
+  import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
   import GroupAddModal from '$lib/presentation/components/GroupAddModal.svelte';
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
   import GroupMoveModal from '$lib/presentation/components/GroupMoveModal.svelte';
@@ -26,8 +28,9 @@
   let isAddModalOpen = $state(false);
   let isEditModalOpen = $state(false);
   let isMoveModalOpen = $state(false);
+  let isDeleteModalOpen = $state(false);
   let isSubmitting = $state(false);
-  let editingGroup: EpisodeGroup | null = $state(null);
+  let editingGroup: EpisodeGroup | null = $state<EpisodeGroup | null>(null);
   let availableParentGroupsTree: readonly EpisodeGroup[] = $state([]);
 
   // --- Computed State ---
@@ -142,6 +145,28 @@
       editingGroup = null;
     }
   }
+
+  function handleDeleteGroup(group: EpisodeGroup) {
+    editingGroup = group;
+    isDeleteModalOpen = true;
+  }
+
+  async function handleDeleteConfirm() {
+    if (!editingGroup) return;
+    isSubmitting = true;
+    errorMessage = '';
+    try {
+      await deleteGroupRecursive(editingGroup);
+      await invalidateAll(); // Refresh data
+    } catch (err) {
+      error(`Failed to delete group: ${err}`);
+      errorMessage = err instanceof Error ? err.message : 'グループの削除に失敗しました。';
+    } finally {
+      isDeleteModalOpen = false;
+      isSubmitting = false;
+      editingGroup = null;
+    }
+  }
 </script>
 
 <div class="p-4 md:p-6">
@@ -180,6 +205,7 @@
       onGroupClick={handleGroupClick}
       onGroupNameChange={handleChangeGroupName}
       onGroupMove={handleMoveGroup}
+      onGroupDelete={handleDeleteGroup}
       onOrderChange={handleGroupOrderChange}
     />
   {/if}
@@ -212,5 +238,16 @@
       editingGroup = null;
     }}
     onSubmit={handleMoveGroupSubmit}
+  />
+
+  <ConfirmModal
+    bind:show={isDeleteModalOpen}
+    {isSubmitting}
+    message={`グループ「${editingGroup?.name}」を削除しますか？このグループの子グループやエピソード、センテンスマイニングしたカードも全て削除され、この操作は元に戻せません。`}
+    onClose={() => {
+      isDeleteModalOpen = false;
+      editingGroup = null;
+    }}
+    onConfirm={handleDeleteConfirm}
   />
 </div>

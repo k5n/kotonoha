@@ -3,42 +3,42 @@
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
 
   type Props = {
-    open?: boolean;
+    show?: boolean;
     title?: string;
     message: string;
-    isProcessing?: boolean;
+    isSubmitting?: boolean;
     onConfirm: () => void;
-    onCancel: () => void;
+    onClose: () => void;
   };
 
   let {
-    open = $bindable(),
+    show = $bindable(),
     title,
     message,
-    isProcessing = false,
+    isSubmitting = false,
     onConfirm,
-    onCancel,
+    onClose,
   }: Props = $props();
 
   function handleConfirm() {
-    if (isProcessing) return;
+    if (isSubmitting) return;
     onConfirm();
   }
 
   function handleCancel() {
-    if (isProcessing) return;
-    onCancel();
+    if (isSubmitting) return;
+    onClose();
   }
 </script>
 
 {#snippet footer()}
-  <Button color="red" disabled={isProcessing} onclick={handleConfirm}
-    >{isProcessing ? '処理中...' : 'はい、削除します'}</Button
+  <Button color="red" disabled={isSubmitting} onclick={handleConfirm}
+    >{isSubmitting ? '処理中...' : 'はい、削除します'}</Button
   >
-  <Button color="alternative" disabled={isProcessing} onclick={handleCancel}>キャンセル</Button>
+  <Button color="alternative" disabled={isSubmitting} onclick={handleCancel}>キャンセル</Button>
 {/snippet}
 
-<Modal bind:open size="sm" onclose={handleCancel} {footer}>
+<Modal bind:open={show} size="sm" onclose={handleCancel} {footer}>
   <div class="text-center">
     <ExclamationCircleOutline class="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
     {#if title}

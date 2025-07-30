@@ -1,16 +1,25 @@
-import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
+import type { EpisodeGroup } from '../entities/episodeGroup';
 
 /**
- * 指定したグループの全ての子孫グループのIDを再帰的に検索する
- * @param allGroups 全てのグループのフラットなリスト
- * @param parentId 親となるグループID
- * @returns 子孫グループのIDの配列
+ * 指定されたグループIDを起点として、その配下にあるすべての子孫グループのIDを再帰的に検索して返します。
+ * @param startGroupId 検索を開始するグループのID
+ * @param allGroups すべてのグループを含むフラットな配列
+ * @returns 子孫グループのIDの配列（読み取り専用）
  */
-export function findDescendantIds(allGroups: readonly EpisodeGroup[], parentId: number): number[] {
-  const children = allGroups.filter((g) => g.parentId === parentId);
-  let descendantIds: number[] = children.map((c) => c.id);
+function findDescendantIds(
+  startGroupId: number,
+  allGroups: readonly EpisodeGroup[]
+): readonly number[] {
+  const children = allGroups.filter((group) => group.parentId === startGroupId);
+  let descendantIds: number[] = children.map((child) => child.id);
+
   for (const child of children) {
-    descendantIds = [...descendantIds, ...findDescendantIds(allGroups, child.id)];
+    descendantIds = descendantIds.concat(findDescendantIds(child.id, allGroups));
   }
+
   return descendantIds;
 }
+
+export const groupTreeHelper = {
+  findDescendantIds,
+};

@@ -29,7 +29,7 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
 }
 
 export const episodeRepository = {
-  async getEpisodesByGroupId(groupId: number): Promise<readonly Episode[]> {
+  async getEpisodesWithCardCountByGroupId(groupId: number): Promise<readonly Episode[]> {
     const db = new Database(getDatabasePath());
     const rows = await db.select(
       `
@@ -47,6 +47,28 @@ export const episodeRepository = {
     );
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
     return rows.map(mapRowToEpisode);
+  },
+
+  /**
+   * 複数のグループIDに所属するすべてのエピソードの基本情報を一括で取得する（削除処理用）
+   * @param groupIds 取得対象のグループIDの配列
+   * @returns エピソードの基本情報（id, title, audioPath）の配列
+   */
+  async getPartialEpisodesByGroupIds(
+    groupIds: readonly number[]
+  ): Promise<
+    readonly { readonly id: number; readonly title: string; readonly audioPath: string }[]
+  > {
+    if (groupIds.length === 0) {
+      return [];
+    }
+    const db = new Database(getDatabasePath());
+    const placeholders = groupIds.map(() => '?').join(',');
+    const rows = await db.select<{ id: number; title: string; audio_path: string }[]>(
+      `SELECT id, title, audio_path FROM episodes WHERE episode_group_id IN (${placeholders})`,
+      [...groupIds]
+    );
+    return rows.map((row) => ({ id: row.id, title: row.title, audioPath: row.audio_path }));
   },
 
   async getEpisodeById(id: number): Promise<Episode | null> {

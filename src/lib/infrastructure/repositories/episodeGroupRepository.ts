@@ -155,4 +155,17 @@ export const episodeGroupRepository = {
       throw e;
     }
   },
+
+  /**
+   * 複数のグループIDを指定して、関連するグループを一括で削除する
+   * @param groupIds 削除するグループIDの配列
+   */
+  async deleteGroups(groupIds: readonly number[]): Promise<void> {
+    if (groupIds.length === 0) {
+      return;
+    }
+    const db = new Database(getDatabasePath());
+    const placeholders = groupIds.map(() => '?').join(',');
+    await db.execute(`DELETE FROM episode_groups WHERE id IN (${placeholders})`, [...groupIds]);
+  },
 };

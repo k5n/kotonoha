@@ -47,3 +47,8 @@
 ## Testing Guidelines
 
 - テストを作成する際には [テスト作成ルール](doc/testing_rules.md) に従うこと。
+
+## 特記事項
+
+Svelte/SvelteKit コーディングルールに記載しているにも関わらず、`on:click` にような古い記述を提示することが多くあります。
+Svelte5 では `onclick` のように記述してください。

@@ -1,4 +1,3 @@
-import type { Episode } from '$lib/domain/entities/episode';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
@@ -7,9 +6,13 @@ import { error } from '@tauri-apps/plugin-log';
 
 /**
  * エピソードを、関連するファイルやデータと共に削除します。
- * @param episodeId 削除するエピソードのID
+ * @param episode 削除するエピソードの情報
  */
-export async function deleteEpisode(episode: Episode): Promise<void> {
+export async function deleteEpisode(episode: {
+  readonly id: number;
+  readonly title: string;
+  readonly audioPath: string;
+}): Promise<void> {
   try {
     // 関連ファイルを削除
     // audioPath から uuid を抽出 (例: media/uuid/audio.mp3 -> uuid)

@@ -197,12 +197,12 @@
 />
 
 <ConfirmModal
-  bind:open={showDeleteConfirmModal}
+  bind:show={showDeleteConfirmModal}
   title="エピソードの削除"
   message={`エピソード「${targetEpisode?.title}」を削除しますか？関連するデータも全て削除されます。`}
-  isProcessing={isSubmitting}
+  {isSubmitting}
   onConfirm={handleConfirmDelete}
-  onCancel={() => {
+  onClose={() => {
     showDeleteConfirmModal = false;
     targetEpisode = null;
   }}
