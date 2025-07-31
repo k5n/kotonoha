@@ -25,10 +25,10 @@
 
   // --- State Management ---
   let errorMessage = $state('');
-  let isAddModalOpen = $state(false);
-  let isEditModalOpen = $state(false);
-  let isMoveModalOpen = $state(false);
-  let isDeleteModalOpen = $state(false);
+  let showGroupAdd = $state(false);
+  let showGroupNameEdit = $state(false);
+  let showGroupMove = $state(false);
+  let showConfirm = $state(false);
   let isSubmitting = $state(false);
   let editingGroup: EpisodeGroup | null = $state<EpisodeGroup | null>(null);
   let availableParentGroupsTree: readonly EpisodeGroup[] = $state([]);
@@ -44,15 +44,8 @@
   }
 
   // --- Event Handlers ---
-  async function handleGroupOrderChange(items: readonly EpisodeGroup[]) {
-    try {
-      await updateEpisodeGroupsOrder(items);
-      await invalidateAll();
-    } catch (err) {
-      error(`Failed to update group order: ${err}`);
-      errorMessage = err instanceof Error ? err.message : 'グループの並び替えに失敗しました。';
-    }
-  }
+
+  // === ページ遷移 ===
 
   function handleGroupClick(selectedGroup: EpisodeGroup) {
     groupPathStore.pushGroup(selectedGroup);
@@ -68,8 +61,20 @@
     transition();
   }
 
+  async function handleGroupOrderChange(items: readonly EpisodeGroup[]) {
+    try {
+      await updateEpisodeGroupsOrder(items);
+      await invalidateAll();
+    } catch (err) {
+      error(`Failed to update group order: ${err}`);
+      errorMessage = err instanceof Error ? err.message : 'グループの並び替えに失敗しました。';
+    }
+  }
+
+  // === グループ追加 ===
+
   function handleAddNewEpisode() {
-    isAddModalOpen = true;
+    showGroupAdd = true;
   }
 
   async function handleAddGroupSubmit(name: string, groupType: EpisodeGroupType) {
@@ -83,7 +88,7 @@
         siblings: displayedGroups,
       });
       await invalidateAll();
-      isAddModalOpen = false;
+      showGroupAdd = false;
     } catch (err) {
       error(`Failed to add group: ${err}`);
     } finally {
@@ -91,9 +96,11 @@
     }
   }
 
+  // === グループ名編集 ===
+
   function handleChangeGroupName(group: EpisodeGroup) {
     editingGroup = group;
-    isEditModalOpen = true;
+    showGroupNameEdit = true;
   }
 
   async function handleEditGroupNameSubmit(newName: string) {
@@ -105,7 +112,7 @@
         newName,
       });
       await invalidateAll();
-      isEditModalOpen = false;
+      showGroupNameEdit = false;
       editingGroup = null;
     } catch (err) {
       error(`Failed to update group: ${err}`);
@@ -115,11 +122,13 @@
     }
   }
 
+  // === グループ移動 ===
+
   async function handleMoveGroup(group: EpisodeGroup) {
     editingGroup = group;
     try {
       availableParentGroupsTree = await fetchAvailableParentGroups(group);
-      isMoveModalOpen = true;
+      showGroupMove = true;
     } catch (err) {
       error(`Failed to fetch available parent groups: ${err}`);
       errorMessage = err instanceof Error ? err.message : '移動先グループの取得に失敗しました。';
@@ -140,15 +149,17 @@
       error(`Failed to move group: ${err}`);
       errorMessage = err instanceof Error ? err.message : 'グループの移動に失敗しました。';
     } finally {
-      isMoveModalOpen = false;
+      showGroupMove = false;
       isSubmitting = false;
       editingGroup = null;
     }
   }
 
+  // === グループ削除 ===
+
   function handleDeleteGroup(group: EpisodeGroup) {
     editingGroup = group;
-    isDeleteModalOpen = true;
+    showConfirm = true;
   }
 
   async function handleDeleteConfirm() {
@@ -162,7 +173,7 @@
       error(`Failed to delete group: ${err}`);
       errorMessage = err instanceof Error ? err.message : 'グループの削除に失敗しました。';
     } finally {
-      isDeleteModalOpen = false;
+      showConfirm = false;
       isSubmitting = false;
       editingGroup = null;
     }
@@ -211,41 +222,41 @@
   {/if}
 
   <GroupAddModal
-    show={isAddModalOpen}
+    show={showGroupAdd}
     {isSubmitting}
-    onClose={() => (isAddModalOpen = false)}
+    onClose={() => (showGroupAdd = false)}
     onSubmit={handleAddGroupSubmit}
   />
 
   <GroupNameEditModal
-    show={isEditModalOpen}
+    show={showGroupNameEdit}
     {isSubmitting}
     initialName={editingGroup ? editingGroup.name : ''}
     onClose={() => {
-      isEditModalOpen = false;
+      showGroupNameEdit = false;
       editingGroup = null;
     }}
     onSubmit={handleEditGroupNameSubmit}
   />
 
   <GroupMoveModal
-    show={isMoveModalOpen}
+    show={showGroupMove}
     {isSubmitting}
     currentGroup={editingGroup}
     availableParentGroups={availableParentGroupsTree}
     onClose={() => {
-      isMoveModalOpen = false;
+      showGroupMove = false;
       editingGroup = null;
     }}
     onSubmit={handleMoveGroupSubmit}
   />
 
   <ConfirmModal
-    bind:show={isDeleteModalOpen}
+    bind:show={showConfirm}
     {isSubmitting}
     message={`グループ「${editingGroup?.name}」を削除しますか？このグループの子グループやエピソード、センテンスマイニングしたカードも全て削除され、この操作は元に戻せません。`}
     onClose={() => {
-      isDeleteModalOpen = false;
+      showConfirm = false;
       editingGroup = null;
     }}
     onConfirm={handleDeleteConfirm}

@@ -21,10 +21,10 @@
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
-  let showEpisodeAddModal = $state(false);
-  let showEpisodeMoveModal = $state(false);
-  let showEpisodeNameEditModal = $state(false);
-  let showDeleteConfirmModal = $state(false);
+  let showEpisodeAdd = $state(false);
+  let showEpisodeMove = $state(false);
+  let showEpisodeNameEdit = $state(false);
+  let showDeleteConfirm = $state(false);
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
@@ -47,7 +47,7 @@
   // === エピソード追加 ===
 
   function openEpisodeAddModal() {
-    showEpisodeAddModal = true;
+    showEpisodeAdd = true;
   }
 
   async function handleEpisodeAddSubmit(
@@ -72,7 +72,7 @@
       durationSeconds: duration,
     });
     await invalidateAll();
-    showEpisodeAddModal = false;
+    showEpisodeAdd = false;
   }
 
   // === エピソード移動 ===
@@ -82,7 +82,7 @@
       const allAlbumGroups = await fetchAlbumGroups();
       availableTargetGroups = allAlbumGroups.filter((g) => g.id !== episode.episodeGroupId);
       targetEpisode = episode;
-      showEpisodeMoveModal = true;
+      showEpisodeMove = true;
     } catch (e) {
       error(`Failed to fetch album groups: ${e}`);
       errorMessage = 'アルバムグループの取得に失敗しました';
@@ -99,7 +99,7 @@
       error(`Failed to move episode: ${e}`);
       errorMessage = 'エピソードの移動に失敗しました';
     } finally {
-      showEpisodeMoveModal = false;
+      showEpisodeMove = false;
       isSubmitting = false;
       targetEpisode = null;
     }
@@ -109,7 +109,7 @@
 
   function handleEpisodeDeleteClick(episode: Episode) {
     targetEpisode = episode;
-    showDeleteConfirmModal = true;
+    showDeleteConfirm = true;
   }
 
   async function handleConfirmDelete() {
@@ -122,7 +122,7 @@
       error(`Failed to delete episode: ${e}`);
       errorMessage = 'エピソードの削除に失敗しました';
     } finally {
-      showDeleteConfirmModal = false;
+      showDeleteConfirm = false;
       isSubmitting = false;
       targetEpisode = null;
     }
@@ -132,7 +132,7 @@
 
   function handleEpisodeRenameClick(episode: Episode) {
     targetEpisode = episode;
-    showEpisodeNameEditModal = true;
+    showEpisodeNameEdit = true;
   }
 
   async function handleEpisodeNameSubmit(newName: string) {
@@ -145,7 +145,7 @@
       error(`Failed to update episode name: ${e}`);
       errorMessage = 'エピソード名の更新に失敗しました';
     } finally {
-      showEpisodeNameEditModal = false;
+      showEpisodeNameEdit = false;
       isSubmitting = false;
       targetEpisode = null;
     }
@@ -206,42 +206,42 @@
 </div>
 
 <EpisodeAddModal
-  show={showEpisodeAddModal}
-  onClose={() => (showEpisodeAddModal = false)}
+  show={showEpisodeAdd}
+  onClose={() => (showEpisodeAdd = false)}
   onSubmit={handleEpisodeAddSubmit}
 />
 
 <EpisodeMoveModal
-  show={showEpisodeMoveModal}
+  show={showEpisodeMove}
   {isSubmitting}
   episode={targetEpisode}
   {availableTargetGroups}
   onClose={() => {
-    showEpisodeMoveModal = false;
+    showEpisodeMove = false;
     targetEpisode = null;
   }}
   onSubmit={handleMoveEpisodeSubmit}
 />
 
 <EpisodeNameEditModal
-  show={showEpisodeNameEditModal}
+  show={showEpisodeNameEdit}
   {isSubmitting}
   initialName={targetEpisode?.title}
   onClose={() => {
-    showEpisodeNameEditModal = false;
+    showEpisodeNameEdit = false;
     targetEpisode = null;
   }}
   onSubmit={handleEpisodeNameSubmit}
 />
 
 <ConfirmModal
-  bind:show={showDeleteConfirmModal}
+  bind:show={showDeleteConfirm}
   title="エピソードの削除"
   message={`エピソード「${targetEpisode?.title}」を削除しますか？関連するデータも全て削除されます。`}
   {isSubmitting}
   onConfirm={handleConfirmDelete}
   onClose={() => {
-    showDeleteConfirmModal = false;
+    showDeleteConfirm = false;
     targetEpisode = null;
   }}
 />
