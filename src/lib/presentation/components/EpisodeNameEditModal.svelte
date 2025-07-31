@@ -15,7 +15,7 @@
 
   function handleSubmit() {
     if (!name.trim()) {
-      errorMessage = 'グループ名を入力してください';
+      errorMessage = 'エピソード名を入力してください';
       return;
     }
     onSubmit(name.trim());
@@ -25,15 +25,15 @@
 
 <Modal open={show} onclose={onClose}>
   <div class="p-4">
-    <Heading tag="h2" class="mb-4 text-xl font-bold">グループ名の編集</Heading>
+    <Heading tag="h2" class="mb-4 text-xl font-bold">エピソード名の編集</Heading>
     <div class="mb-4">
-      <Label for="groupName">グループ名</Label>
+      <Label for="episodeName">エピソード名</Label>
       <Input
-        id="groupName"
+        id="episodeName"
         type="text"
         class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
         bind:value={name}
-        placeholder="新しいグループ名"
+        placeholder="新しいエピソード名"
         disabled={isSubmitting}
       />
       {#if errorMessage}

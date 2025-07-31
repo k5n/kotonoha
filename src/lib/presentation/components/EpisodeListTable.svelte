@@ -21,10 +21,17 @@
     onMoveEpisodeClick: (episode: Episode) => void;
     onOrderChange: (_items: readonly Episode[]) => void;
     onDeleteEpisodeClick: (episode: Episode) => void;
+    onEpisodeNameChangeClick: (episode: Episode) => void;
   };
 
-  let { episodes, onEpisodeClick, onMoveEpisodeClick, onOrderChange, onDeleteEpisodeClick }: Props =
-    $props();
+  let {
+    episodes,
+    onEpisodeClick,
+    onMoveEpisodeClick,
+    onOrderChange,
+    onDeleteEpisodeClick,
+    onEpisodeNameChangeClick,
+  }: Props = $props();
 
   function handleDrop(state: DragDropState<Episode>, targetEpisode: Episode) {
     const { draggedItem } = state;
@@ -95,6 +102,14 @@
                 <DotsHorizontalOutline class="h-4 w-4" />
               </Button>
               <Dropdown simple>
+                <DropdownItem
+                  onclick={(e: MouseEvent) => {
+                    e.stopPropagation();
+                    onEpisodeNameChangeClick(episode);
+                  }}
+                >
+                  名前の変更
+                </DropdownItem>
                 <DropdownItem
                   onclick={(e: MouseEvent) => {
                     e.stopPropagation();

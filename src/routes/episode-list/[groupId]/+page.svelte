@@ -5,6 +5,7 @@
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
+  import { updateEpisodeName } from '$lib/application/usecases/updateEpisodeName';
   import { updateEpisodesOrder } from '$lib/application/usecases/updateEpisodesOrder';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
@@ -13,6 +14,7 @@
   import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
+  import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ExclamationCircleOutline, FileOutline, PlusOutline } from 'flowbite-svelte-icons';
@@ -22,6 +24,7 @@
   let showAddEpisodeModal = $state(false);
   let showMoveEpisodeModal = $state(false);
   let showDeleteConfirmModal = $state(false);
+  let showNameEditModal = $state(false);
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
@@ -59,6 +62,11 @@
   function openDeleteConfirmModal(episode: Episode) {
     targetEpisode = episode;
     showDeleteConfirmModal = true;
+  }
+
+  function handleEpisodeNameChangeClick(episode: Episode) {
+    targetEpisode = episode;
+    showNameEditModal = true;
   }
 
   async function handleConfirmDelete() {
@@ -118,6 +126,22 @@
     }
   }
 
+  async function handleEpisodeNameSubmit(newName: string) {
+    if (!targetEpisode) return;
+    isSubmitting = true;
+    try {
+      await updateEpisodeName(targetEpisode.id, newName);
+      await invalidateAll();
+    } catch (e) {
+      error(`Failed to update episode name: ${e}`);
+      errorMessage = 'エピソード名の更新に失敗しました';
+    } finally {
+      showNameEditModal = false;
+      isSubmitting = false;
+      targetEpisode = null;
+    }
+  }
+
   function handleBreadcrumbClick(targetIndex: number | null) {
     debug(`Breadcrumb clicked: targetIndex=${targetIndex}`);
     if (groupPathStore.popTo(targetIndex)) {
@@ -164,6 +188,7 @@
         onEpisodeClick={openEpisode}
         onMoveEpisodeClick={handleMoveEpisodeClick}
         onDeleteEpisodeClick={openDeleteConfirmModal}
+        onEpisodeNameChangeClick={handleEpisodeNameChangeClick}
         onOrderChange={async (newOrder) => {
           episodes = newOrder;
           await updateEpisodesOrder(newOrder);
@@ -194,6 +219,17 @@
     targetEpisode = null;
   }}
   onSubmit={handleMoveEpisodeSubmit}
+/>
+
+<EpisodeNameEditModal
+  show={showNameEditModal}
+  {isSubmitting}
+  initialName={targetEpisode?.title}
+  onClose={() => {
+    showNameEditModal = false;
+    targetEpisode = null;
+  }}
+  onSubmit={handleEpisodeNameSubmit}
 />
 
 <ConfirmModal
