@@ -18,19 +18,19 @@
   type Props = {
     episodes: readonly Episode[];
     onEpisodeClick: (episodeId: number) => void;
-    onMoveEpisodeClick: (episode: Episode) => void;
+    onEpisodeMoveClick: (episode: Episode) => void;
     onOrderChange: (_items: readonly Episode[]) => void;
-    onDeleteEpisodeClick: (episode: Episode) => void;
-    onEpisodeNameChangeClick: (episode: Episode) => void;
+    onEpisodeDeleteClick: (episode: Episode) => void;
+    onEpisodeRenameClick: (episode: Episode) => void;
   };
 
   let {
     episodes,
     onEpisodeClick,
-    onMoveEpisodeClick,
+    onEpisodeMoveClick,
     onOrderChange,
-    onDeleteEpisodeClick,
-    onEpisodeNameChangeClick,
+    onEpisodeDeleteClick,
+    onEpisodeRenameClick,
   }: Props = $props();
 
   function handleDrop(state: DragDropState<Episode>, targetEpisode: Episode) {
@@ -105,7 +105,7 @@
                 <DropdownItem
                   onclick={(e: MouseEvent) => {
                     e.stopPropagation();
-                    onEpisodeNameChangeClick(episode);
+                    onEpisodeRenameClick(episode);
                   }}
                 >
                   名前の変更
@@ -113,7 +113,7 @@
                 <DropdownItem
                   onclick={(e: MouseEvent) => {
                     e.stopPropagation();
-                    onMoveEpisodeClick(episode);
+                    onEpisodeMoveClick(episode);
                   }}
                 >
                   移動
@@ -122,7 +122,7 @@
                   class="text-red-600"
                   onclick={(e: MouseEvent) => {
                     e.stopPropagation();
-                    onDeleteEpisodeClick(episode);
+                    onEpisodeDeleteClick(episode);
                   }}
                 >
                   削除

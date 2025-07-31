@@ -21,71 +21,36 @@
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
-  let showAddEpisodeModal = $state(false);
-  let showMoveEpisodeModal = $state(false);
+  let showEpisodeAddModal = $state(false);
+  let showEpisodeMoveModal = $state(false);
+  let showEpisodeNameEditModal = $state(false);
   let showDeleteConfirmModal = $state(false);
-  let showNameEditModal = $state(false);
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
   let errorMessage = $derived(data.error || '');
+  let episodes = $derived(data.episodes);
 
-  // eslint-disable-next-line svelte/prefer-writable-derived
-  let episodes = $state(data.episodes);
-  $effect(() => {
-    episodes = data.episodes;
-  });
+  // === ページ遷移 ===
 
-  // エピソード詳細ページへ遷移
   function openEpisode(episodeId: number) {
     goto(`/episode/${episodeId}`);
   }
 
-  // 新規エピソード追加ダイアログを開く
-  function openAddEpisodeModal() {
-    showAddEpisodeModal = true;
-  }
-
-  // エピソード移動モーダルを開く
-  async function handleMoveEpisodeClick(episode: Episode) {
-    try {
-      const allAlbumGroups = await fetchAlbumGroups();
-      availableTargetGroups = allAlbumGroups.filter((g) => g.id !== episode.episodeGroupId);
-      targetEpisode = episode;
-      showMoveEpisodeModal = true;
-    } catch (e) {
-      error(`Failed to fetch album groups: ${e}`);
-      errorMessage = 'アルバムグループの取得に失敗しました';
+  function handleBreadcrumbClick(targetIndex: number | null) {
+    debug(`Breadcrumb clicked: targetIndex=${targetIndex}`);
+    if (groupPathStore.popTo(targetIndex)) {
+      goto('/');
     }
   }
 
-  function openDeleteConfirmModal(episode: Episode) {
-    targetEpisode = episode;
-    showDeleteConfirmModal = true;
+  // === エピソード追加 ===
+
+  function openEpisodeAddModal() {
+    showEpisodeAddModal = true;
   }
 
-  function handleEpisodeNameChangeClick(episode: Episode) {
-    targetEpisode = episode;
-    showNameEditModal = true;
-  }
-
-  async function handleConfirmDelete() {
-    if (!targetEpisode) return;
-    isSubmitting = true;
-    try {
-      await deleteEpisode(targetEpisode);
-      await invalidateAll();
-    } catch (e) {
-      error(`Failed to delete episode: ${e}`);
-      errorMessage = 'エピソードの削除に失敗しました';
-    } finally {
-      showDeleteConfirmModal = false;
-      isSubmitting = false;
-      targetEpisode = null;
-    }
-  }
-
-  async function handleAddEpisodeSubmit(
+  async function handleEpisodeAddSubmit(
     title: string,
     audioFile: File,
     srtFile: File,
@@ -107,7 +72,21 @@
       durationSeconds: duration,
     });
     await invalidateAll();
-    showAddEpisodeModal = false;
+    showEpisodeAddModal = false;
+  }
+
+  // === エピソード移動 ===
+
+  async function handleEpisodeMoveClick(episode: Episode) {
+    try {
+      const allAlbumGroups = await fetchAlbumGroups();
+      availableTargetGroups = allAlbumGroups.filter((g) => g.id !== episode.episodeGroupId);
+      targetEpisode = episode;
+      showEpisodeMoveModal = true;
+    } catch (e) {
+      error(`Failed to fetch album groups: ${e}`);
+      errorMessage = 'アルバムグループの取得に失敗しました';
+    }
   }
 
   async function handleMoveEpisodeSubmit(targetGroupId: number) {
@@ -120,10 +99,40 @@
       error(`Failed to move episode: ${e}`);
       errorMessage = 'エピソードの移動に失敗しました';
     } finally {
-      showMoveEpisodeModal = false;
+      showEpisodeMoveModal = false;
       isSubmitting = false;
       targetEpisode = null;
     }
+  }
+
+  // === エピソード削除 ===
+
+  function handleEpisodeDeleteClick(episode: Episode) {
+    targetEpisode = episode;
+    showDeleteConfirmModal = true;
+  }
+
+  async function handleConfirmDelete() {
+    if (!targetEpisode) return;
+    isSubmitting = true;
+    try {
+      await deleteEpisode(targetEpisode);
+      await invalidateAll();
+    } catch (e) {
+      error(`Failed to delete episode: ${e}`);
+      errorMessage = 'エピソードの削除に失敗しました';
+    } finally {
+      showDeleteConfirmModal = false;
+      isSubmitting = false;
+      targetEpisode = null;
+    }
+  }
+
+  // === エピソード名変更 ===
+
+  function handleEpisodeRenameClick(episode: Episode) {
+    targetEpisode = episode;
+    showEpisodeNameEditModal = true;
   }
 
   async function handleEpisodeNameSubmit(newName: string) {
@@ -136,16 +145,9 @@
       error(`Failed to update episode name: ${e}`);
       errorMessage = 'エピソード名の更新に失敗しました';
     } finally {
-      showNameEditModal = false;
+      showEpisodeNameEditModal = false;
       isSubmitting = false;
       targetEpisode = null;
-    }
-  }
-
-  function handleBreadcrumbClick(targetIndex: number | null) {
-    debug(`Breadcrumb clicked: targetIndex=${targetIndex}`);
-    if (groupPathStore.popTo(targetIndex)) {
-      goto('/');
     }
   }
 </script>
@@ -162,7 +164,7 @@
       <div>
         <Heading tag="h1" class="text-3xl font-bold">{data.episodeGroup.name}</Heading>
       </div>
-      <Button onclick={openAddEpisodeModal}>
+      <Button onclick={openEpisodeAddModal}>
         <PlusOutline class="me-2 h-5 w-5" />
         エピソードを追加
       </Button>
@@ -177,7 +179,7 @@
         <FileOutline class="mx-auto mb-4 h-12 w-12 text-gray-400" />
         <Heading tag="h3" class="mb-2 text-xl font-semibold">エピソードがありません</Heading>
         <p class="mb-4 text-gray-500">このコレクションに最初のエピソードを追加しましょう。</p>
-        <Button color="alternative" onclick={openAddEpisodeModal}>
+        <Button color="alternative" onclick={openEpisodeAddModal}>
           <PlusOutline class="me-2 h-5 w-5" />
           最初のエピソードを追加
         </Button>
@@ -186,9 +188,9 @@
       <EpisodeListTable
         {episodes}
         onEpisodeClick={openEpisode}
-        onMoveEpisodeClick={handleMoveEpisodeClick}
-        onDeleteEpisodeClick={openDeleteConfirmModal}
-        onEpisodeNameChangeClick={handleEpisodeNameChangeClick}
+        onEpisodeMoveClick={handleEpisodeMoveClick}
+        onEpisodeDeleteClick={handleEpisodeDeleteClick}
+        onEpisodeRenameClick={handleEpisodeRenameClick}
         onOrderChange={async (newOrder) => {
           episodes = newOrder;
           await updateEpisodesOrder(newOrder);
@@ -204,29 +206,29 @@
 </div>
 
 <EpisodeAddModal
-  show={showAddEpisodeModal}
-  onClose={() => (showAddEpisodeModal = false)}
-  onSubmit={handleAddEpisodeSubmit}
+  show={showEpisodeAddModal}
+  onClose={() => (showEpisodeAddModal = false)}
+  onSubmit={handleEpisodeAddSubmit}
 />
 
 <EpisodeMoveModal
-  show={showMoveEpisodeModal}
+  show={showEpisodeMoveModal}
   {isSubmitting}
   episode={targetEpisode}
   {availableTargetGroups}
   onClose={() => {
-    showMoveEpisodeModal = false;
+    showEpisodeMoveModal = false;
     targetEpisode = null;
   }}
   onSubmit={handleMoveEpisodeSubmit}
 />
 
 <EpisodeNameEditModal
-  show={showNameEditModal}
+  show={showEpisodeNameEditModal}
   {isSubmitting}
   initialName={targetEpisode?.title}
   onClose={() => {
-    showNameEditModal = false;
+    showEpisodeNameEditModal = false;
     targetEpisode = null;
   }}
   onSubmit={handleEpisodeNameSubmit}
