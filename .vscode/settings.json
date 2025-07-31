@@ -42,5 +42,86 @@
     "timecode",
     "usecases",
     "Vitest"
-  ]
+  ],
+  "todohighlight.isCaseSensitive": true,
+  "todohighlight.include": [
+    "**/*.js",
+    "**/*.ts",
+    "**/*.html",
+    "**/*.rs",
+    "**/*.css",
+    "**/*.scss",
+    "**/*.svelte",
+    "**/*.json",
+    "**/*.md"
+  ],
+  "todohighlight.defaultStyle": {
+    "color": "#222",
+    "cursor": "pointer",
+    "border": "1px solid #eee",
+    "borderRadius": "4px",
+    "isWholeLine": true
+  },
+  "todohighlight.keywords": [
+    {
+      "text": "TODO:",
+      "before": {
+        "contentText": "✅"
+      },
+      "color": "#222",
+      "backgroundColor": "#ffaa00",
+      "overviewRulerColor": "#ffaa00"
+    },
+    {
+      "text": "FIXME:",
+      "before": {
+        "contentText": "🐛"
+      },
+      "color": "#fff",
+      "backgroundColor": "#ff33aa",
+      "overviewRulerColor": "#ff33aa"
+    },
+    {
+      "text": "XXX:",
+      "before": {
+        "contentText": "‼️"
+      },
+      "color": "#fff",
+      "backgroundColor": "#ff33aa",
+      "overviewRulerColor": "#ff33aa"
+    },
+    {
+      "text": "NOTE:",
+      "before": {
+        "contentText": "📝"
+      },
+      "color": "#fff",
+      "backgroundColor": "#0066ff",
+      "overviewRulerColor": "#0066ff",
+      "border": "0px",
+      "isWholeLine": false
+    },
+    {
+      "text": "HACK:",
+      "before": {
+        "contentText": "🧑‍💻"
+      },
+      "color": "#333",
+      "backgroundColor": "#00ff00",
+      "overviewRulerColor": "#00ff00"
+    },
+    {
+      "text": "DEBUG:",
+      "before": {
+        "contentText": "🔍"
+      },
+      "color": "#222",
+      "backgroundColor": "#ddeeff",
+      "overviewRulerColor": "#ddeeff",
+      "cursor": "pointer",
+      "border": "1px solid #eee",
+      "borderRadius": "4px"
+    }
+  ],
+  "todo-tree.general.tags": ["TODO:", "FIXME:", "XXX:", "HACK:", "DEBUG:"]
 }

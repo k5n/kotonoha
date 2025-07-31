@@ -10,6 +10,7 @@ function findDescendantIds(
   startGroupId: number,
   allGroups: readonly EpisodeGroup[]
 ): readonly number[] {
+  // NOTE: 利用用途的に深くても１０〜２０階層程度なので、YAGNI/KISSの原則に従い、再帰的な実装でシンプルに実装。
   const children = allGroups.filter((group) => group.parentId === startGroupId);
   let descendantIds: number[] = children.map((child) => child.id);
 
