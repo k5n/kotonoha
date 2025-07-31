@@ -22,7 +22,16 @@
       "identifier": "fs:allow-mkdir",
       "allow": [
         {
-          "path": "$APPLOCALDATA/**"
+          "path": "$APPLOCALDATA/media"
+        },
+        {
+          "path": "$APPLOCALDATA/dev_media"
+        },
+        {
+          "path": "$APPLOCALDATA/media/**"
+        },
+        {
+          "path": "$APPLOCALDATA/dev_media/**"
         }
       ]
     },
@@ -30,7 +39,10 @@
       "identifier": "fs:allow-write-text-file",
       "allow": [
         {
-          "path": "$APPLOCALDATA/**"
+          "path": "$APPLOCALDATA/media/**"
+        },
+        {
+          "path": "$APPLOCALDATA/dev_media/**"
         }
       ]
     },
@@ -38,7 +50,10 @@
       "identifier": "fs:allow-write-file",
       "allow": [
         {
-          "path": "$APPLOCALDATA/**"
+          "path": "$APPLOCALDATA/media/**"
+        },
+        {
+          "path": "$APPLOCALDATA/dev_media/**"
         }
       ]
     },
@@ -46,7 +61,10 @@
       "identifier": "fs:allow-read-text-file",
       "allow": [
         {
-          "path": "$APPLOCALDATA/**"
+          "path": "$APPLOCALDATA/media/**"
+        },
+        {
+          "path": "$APPLOCALDATA/dev_media/**"
         }
       ]
     },
@@ -54,7 +72,10 @@
       "identifier": "fs:allow-read-file",
       "allow": [
         {
-          "path": "$APPLOCALDATA/**"
+          "path": "$APPLOCALDATA/media/**"
+        },
+        {
+          "path": "$APPLOCALDATA/dev_media/**"
         }
       ]
     },
@@ -63,6 +84,17 @@
       "allow": [
         {
           "path": "$APPLOCALDATA/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/media/**"
+        },
+        {
+          "path": "$APPLOCALDATA/dev_media/**"
         }
       ]
     },
