@@ -1,5 +1,5 @@
 @doc/requirements_definition.md
-@doc/technical_specification.md
+@doc/technical_specifications.md
 @doc/architecture.md
 @doc/svelte_coding_rules.md
 @doc/typescript_coding_style.md
