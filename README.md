@@ -71,7 +71,31 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 
 This project is licensed under the GPLv3. See the [LICENSE](./LICENSE) file for details.
 
----
+## ⚠️ Known Issue
+
+### Blank/Black Window on Linux with WebKitGTK 2.48
+
+<!-- cSpell:words Xorg DMABUF -->
+
+If you experience a blank or black window when running this application on Linux, it may be due to a widely reported compatibility issue between Tauri 2 applications and [WebKitGTK version 2.48](https://webkitgtk.org/2025/04/08/webkitgtk-2.48.html).
+
+Notably, this issue often appears when the application is started from a desktop launcher. Launching it directly from a command-line terminal may work correctly and serve as a temporary workaround.
+
+This issue can occurs even when recommended environment variables are set (e.g. WEBKIT_DISABLE_COMPOSITING_MODE=1 or WEBKIT_DISABLE_DMABUF_RENDERER=1).
+
+The problem is not specific to this application but is a well-known upstream bug in WebKitGTK 2.48 affecting multiple GTK-based apps.
+
+As of now, there is no complete workaround if you are using WebKitGTK 2.48; downgrading WebKitGTK to 2.40.x or 2.44.x is the most reliable solution.
+
+References:
+
+- [Tauri GitHub issue #9662](https://github.com/tauri-apps/tauri/issues/9662)
+- [Tauri GitHub issue #13183](https://github.com/tauri-apps/tauri/issues/13183)
+- [Tauri GitHub issue #13204](https://github.com/tauri-apps/tauri/issues/13204)
+- [Tauri GitHub issue #13899](https://github.com/tauri-apps/tauri/issues/13899)
+- [Tauri GitHub issue #13885](https://github.com/tauri-apps/tauri/issues/13885)
+
+## You may add or edit references as needed. This description informs users of the technical root cause, shows attempted mitigations, and gives guidance for workaround or future updates.
 
 ## 🛠️ Development
 
