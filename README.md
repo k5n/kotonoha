@@ -95,7 +95,7 @@ References:
 - [Tauri GitHub issue #13899](https://github.com/tauri-apps/tauri/issues/13899)
 - [Tauri GitHub issue #13885](https://github.com/tauri-apps/tauri/issues/13885)
 
-## You may add or edit references as needed. This description informs users of the technical root cause, shows attempted mitigations, and gives guidance for workaround or future updates.
+---
 
 ## 🛠️ Development
 
