@@ -70,6 +70,8 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
       audioPath,
       scriptPath,
       durationSeconds,
+      learningLanguage: 'English',
+      explanationLanguage: 'Japanese',
     });
     try {
       const script = await scriptFile.text();

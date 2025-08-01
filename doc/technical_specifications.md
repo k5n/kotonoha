@@ -230,6 +230,8 @@ erDiagram
 | `audio_path`    | TEXT        | 音声ファイルの絶対パス             |
 | `script_path`   | TEXT        | スクリプトファイルの絶対パス       |
 | `duration_seconds` | INTEGER  | 音声の再生時間（秒）               |
+| `learning_language` | TEXT    | 学習ターゲット言語 (例: 'English') |
+| `explanation_language` | TEXT  | 説明言語 (例: 'Japanese')        |
 | `created_at`    | TEXT        | 作成日時 (ISO 8601)                |
 | `updated_at`    | TEXT        | 更新日時 (ISO 8601)                |
 

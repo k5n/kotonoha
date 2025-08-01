@@ -9,6 +9,8 @@ type EpisodeRow = {
   title: string;
   audio_path: string;
   duration_seconds: number;
+  learning_language: string;
+  explanation_language: string;
   created_at: string;
   updated_at: string;
   sentence_card_count?: number;
@@ -22,6 +24,8 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
     title: row.title,
     audioPath: row.audio_path,
     durationSeconds: row.duration_seconds,
+    learningLanguage: row.learning_language,
+    explanationLanguage: row.explanation_language,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     sentenceCardCount: row.sentence_card_count || 0,
@@ -31,7 +35,7 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
 export const episodeRepository = {
   async getEpisodesWithCardCountByGroupId(groupId: number): Promise<readonly Episode[]> {
     const db = new Database(getDatabasePath());
-    const rows = await db.select(
+    const rows = await db.select<EpisodeRow[]>(
       `
       SELECT
         e.*,
@@ -45,7 +49,6 @@ export const episodeRepository = {
       `,
       [groupId]
     );
-    if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
     return rows.map(mapRowToEpisode);
   },
 
@@ -73,11 +76,11 @@ export const episodeRepository = {
 
   async getEpisodeById(id: number): Promise<Episode | null> {
     const db = new Database(getDatabasePath());
-    const rows = await db.select('SELECT * FROM episodes WHERE id = ?', [id]);
-    if (!Array.isArray(rows) || rows.length === 0) {
+    const rows = await db.select<EpisodeRow[]>('SELECT * FROM episodes WHERE id = ?', [id]);
+    if (rows.length === 0) {
       return null;
     }
-    return mapRowToEpisode(rows[0] as EpisodeRow);
+    return mapRowToEpisode(rows[0]);
   },
 
   async addEpisode(params: {
@@ -87,12 +90,14 @@ export const episodeRepository = {
     audioPath: string;
     scriptPath: string;
     durationSeconds: number | null;
+    learningLanguage: string;
+    explanationLanguage: string;
   }): Promise<Episode> {
     const db = new Database(getDatabasePath());
     const now = new Date().toISOString();
     await db.execute(
-      `INSERT INTO episodes (episode_group_id, display_order, title, audio_path, script_path, duration_seconds, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO episodes (episode_group_id, display_order, title, audio_path, script_path, duration_seconds, learning_language, explanation_language, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         params.episodeGroupId,
         params.displayOrder,
@@ -100,29 +105,21 @@ export const episodeRepository = {
         params.audioPath,
         params.scriptPath,
         params.durationSeconds,
+        params.learningLanguage,
+        params.explanationLanguage,
         now,
         now,
       ]
     );
 
-    const rows = await db.select(`SELECT last_insert_rowid() as id`);
-    const [{ id }] = rows as { id: number }[];
+    const rows = await db.select<{ id: number }[]>(`SELECT last_insert_rowid() as id`);
+    const [{ id }] = rows;
 
-    const newEpisode = await db.select('SELECT * FROM episodes WHERE id = ?', [id]);
-    return mapRowToEpisode(
-      (
-        newEpisode as {
-          id: number;
-          episode_group_id: number;
-          display_order: number;
-          title: string;
-          audio_path: string;
-          duration_seconds: number;
-          created_at: string;
-          updated_at: string;
-        }[]
-      )[0]
-    );
+    const newEpisode = await this.getEpisodeById(id);
+    if (!newEpisode) {
+      throw new Error('Failed to fetch the newly created episode.');
+    }
+    return newEpisode;
   },
 
   async updateEpisode(

@@ -22,6 +22,8 @@ pub fn get_migrations() -> Vec<Migration> {
                 audio_path TEXT NOT NULL,
                 script_path TEXT NOT NULL,
                 duration_seconds INTEGER,
+                learning_language TEXT NOT NULL DEFAULT 'English',
+                explanation_language TEXT NOT NULL DEFAULT 'Japanese',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY(episode_group_id) REFERENCES episode_groups(id)
