@@ -13,7 +13,26 @@ Kotonoha is a desktop application designed for immersion language learning, with
 - **Episode Management**: Organize your learning materials (audio + transcripts) into groups and episodes for structured study.
 - **Interactive Transcript Viewer**: View synchronized transcripts with audio playback and click-to-analyze functionality.
 - **Contextual Learning Cards**: Generate study cards with sentences, highlighted target expressions, and AI-generated explanations.
+
+## 🗺️ Roadmap
+
+We are continuously working to improve Kotonoha. Here's a look at our planned features and future ideas:
+
+### Near-term (v1.x)
+
+- **Cross-Platform Support**: Official installers and support for Windows and macOS.
 - **Audio-Synchronized Learning**: Listen to original audio while studying extracted vocabulary in context.
+- **Card Management**:
+    - Hide/suspend cards that you have already learned.
+    - A toggle to show/hide suspended cards.
+    - Functionality to unsuspend cards.
+- **Anki Export**: Export your sentence cards to an Anki-compatible format (e.g., CSV).
+
+### Future Ideas
+
+- **Multi-language Support**: Full internationalization of the app interface, and support for a wider range of learning and explanation languages.
+- **Cloud Sync**: Sync your learning data across multiple devices via services like Google Drive.
+- **Mobile App**: A mobile version of the application for learning on the go.
 
 ## 📥 Installation
 
@@ -30,11 +49,20 @@ Kotonoha is a desktop application designed for immersion language learning, with
 
 ## 🚀 Getting Started
 
-1. Launch Kotonoha
-2. **Configure AI settings**: On first launch, you'll need to set up your Google Gemini API key in the settings to enable AI-powered sentence mining
-3. Import your learning materials
-4. Create episode groups to organize your content
-5. Start studying with transcript viewing and sentence mining
+1.  **Prepare Your Materials**:
+    *   Kotonoha works with pairs of audio and transcript files.
+    *   The audio can be in common formats like MP3, M4A, WAV, and OGG.
+    *   The transcript **must be in SRT (`.srt`) format**. You can use transcription tools like [Whisper](https://github.com/openai/whisper) to generate SRT files from your audio/video content.
+
+2.  **Launch Kotonoha**: Start the application.
+
+3.  **Configure AI Settings**: On first launch, you'll need to set up your Google Gemini API key in the settings to enable AI-powered sentence mining.
+
+4.  **Import Your Episode**:
+    *   Create an **Album** to store your episodes. You can also create Folders to organize your Albums, but episodes can only be added directly to an Album.
+    *   Click the "Add Episode" button within an Album and select your audio and SRT transcript file pair.
+
+5.  **Start Studying**: Open an episode to view the synchronized transcript and begin your sentence mining session.
 
 ## 📄 License
 
