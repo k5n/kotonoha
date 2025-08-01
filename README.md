@@ -2,7 +2,9 @@
 
 Kotonoha is a desktop application designed for immersion language learning, with a focus on automating sentence mining through AI-powered analysis. It intelligently extracts vocabulary and expressions from your learning materials, helping you understand language in context.
 
-> ⚠️ **Warning:** This application is in early development and is not yet usable. Please do not expect a stable experience.
+> ⚠️ **Warning:** This application is in early development. Please do not expect a stable experience.
+
+![Kotonoha Screenshot](doc/images/screenshots.png)
 
 ## ✨ Features
 
