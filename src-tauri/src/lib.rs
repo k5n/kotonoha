@@ -11,13 +11,12 @@ use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
 use tauri::Manager;
 
 fn get_db_name() -> String {
-    let env_file = if cfg!(debug_assertions) {
-        ".env.development"
+    if cfg!(debug_assertions) {
+        let _ = from_filename(".env.development");
+        env::var("PUBLIC_APP_DB_NAME").unwrap_or_else(|_| "app.db".to_string())
     } else {
-        ".env.production"
-    };
-    let _ = from_filename(env_file);
-    env::var("PUBLIC_APP_DB_NAME").unwrap_or_else(|_| "app.db".to_string())
+        "app.db".to_string()
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
