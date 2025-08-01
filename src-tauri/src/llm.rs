@@ -12,13 +12,13 @@ pub struct SentenceMiningItem {
     pub expression: String,
 
     #[schema(
-        description = "The part of speech or type of the expression (e.g., 'Phrasal verb', 'Idiom', 'Noun')."
+        description = "The part of speech or type of the expression, chosen from the predefined PART_OF_SPEECH_OPTIONS list provided in the input."
     )]
     #[serde(rename = "partOfSpeech")]
     pub part_of_speech: String,
 
     #[schema(
-        description = "A concise definition of the expression in the learner's native language, explaining its meaning as used in the target sentence."
+        description = "A concise, direct definition of the expression in the learner's native language, explaining its meaning *specifically as used in the target sentence*. Avoid overtly explanatory or redundant phrasing."
     )]
     #[serde(rename = "contextualDefinition")]
     pub contextual_definition: String,
@@ -74,7 +74,7 @@ Analyze the `TARGET_SENTENCE` below. It is part of a larger conversation provide
 2.  For each identified item, you must:
     a.  Extract the expression. If it's a verb, provide its base form (lemma).
     b.  Provide its part of speech.
-    c.  Write a **concise, contextual definition** in the `contextualDefinition` field, in the specified `EXPLANATION_LANGUAGE`.
+    c.  Write a **concise, contextual definition** in the `contextualDefinition` field, in the specified `EXPLANATION_LANGUAGE`. This definition should be a direct, brief explanation of its meaning *within the given TARGET_SENTENCE*, **without** any overtly explanatory or redundant phrasing.
     d.  Write a **detailed, core meaning explanation** in the `coreMeaning` field, in the specified `EXPLANATION_LANGUAGE`.
     e.  Provide the original `TARGET_SENTENCE` with the expression highlighted using `<b>` tags.
 
@@ -88,16 +88,17 @@ Analyze the `TARGET_SENTENCE` below. It is part of a larger conversation provide
 * **Part-of-Speech Selection**: The value for the `part_of_speech` field MUST be chosen from the list provided in `PART_OF_SPEECH_OPTIONS` in the `Input`.
 * **Empty Result**: If no relevant expressions are found, return a JSON object with an empty "items" array, but still provide the `translation` and `explanation`.
 * **Character Encoding**: Ensure all content within the JSON is properly escaped.
+* **Highlighting**: For the `exampleSentence` field, *always* enclose the extracted `expression` within `<b>` tags. Ensure the highlighting is precise and covers only the identified expression.
 
 # Input
-- **LEARNING_LANGUAGE**:  {learning_language}
-- **EXPLANATION_LANGUAGE**: {explanation_language}
-- **PART_OF_SPEECH_OPTIONS**: [{part_of_speech_options}]
-- **CONTEXT**:
+* **LEARNING_LANGUAGE**:  {learning_language}
+* **EXPLANATION_LANGUAGE**: {explanation_language}
+* **PART_OF_SPEECH_OPTIONS**: [{part_of_speech_options}]
+* **CONTEXT**:
 ```
 {context}
 ```
-- **TARGET_SENTENCE**:
+* **TARGET_SENTENCE**:
 ```
 {target_sentence}
 ```

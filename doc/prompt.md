@@ -9,7 +9,7 @@ Analyze the `TARGET_SENTENCE` below. It is part of a larger conversation provide
 2.  For each identified item, you must:
     a.  Extract the expression. If it's a verb, provide its base form (lemma).
     b.  Provide its part of speech.
-    c.  Write a **concise, contextual definition** in the `contextualDefinition` field, in the specified `EXPLANATION_LANGUAGE`.
+    c.  Write a **concise, contextual definition** in the `contextualDefinition` field, in the specified `EXPLANATION_LANGUAGE`. This definition should be a direct, brief explanation of its meaning *within the given TARGET_SENTENCE*, **without** any overtly explanatory or redundant phrasing.
     d.  Write a **detailed, core meaning explanation** in the `coreMeaning` field, in the specified `EXPLANATION_LANGUAGE`.
     e.  Provide the original `TARGET_SENTENCE` with the expression highlighted using `<b>` tags.
 
@@ -23,6 +23,7 @@ Analyze the `TARGET_SENTENCE` below. It is part of a larger conversation provide
 * **Part-of-Speech Selection**: The value for the `part_of_speech` field MUST be chosen from the list provided in `PART_OF_SPEECH_OPTIONS` in the `Input`.
 * **Empty Result**: If no relevant expressions are found, return a JSON object with an empty "items" array, but still provide the `translation` and `explanation`.
 * **Character Encoding**: Ensure all content within the JSON is properly escaped.
+* **Highlighting**: For the `exampleSentence` field, *always* enclose the extracted `expression` within `<b>` tags. Ensure the highlighting is precise and covers only the identified expression.
 
 # Input
 * **LEARNING_LANGUAGE**: English
@@ -44,14 +45,12 @@ Analyze the `TARGET_SENTENCE` below. It is part of a larger conversation provide
     ]
 * **CONTEXT**:
 
-
-- **CONTEXT**:
 ```
 A: Did you finish the report for the meeting?
 B: Not yet. I had to pull an all-nighter to get it done, but it's almost there.
 A: Make sure it's ready by noon.
 ```
-- **TARGET_SENTENCE**:
+* **TARGET_SENTENCE**:
 ```
 I had to pull an all-nighter to get it done, but it's almost there.
 ```
