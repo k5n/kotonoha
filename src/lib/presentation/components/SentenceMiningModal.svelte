@@ -53,6 +53,7 @@
       selectedItemIds.includes(item.id)
     );
     onCreate(selectedObjects);
+    selectedItemIds = [];
   }
 
   function handleCancel() {
