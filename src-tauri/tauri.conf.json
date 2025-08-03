@@ -23,14 +23,22 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["deb", "rpm", "appimage", "nsis", "app"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "copyright": "Copyright (C) 2025 Keigo Nakatani (https://github.com/k5n)",
+    "shortDescription": "An app for language learning, centered around AI-powered sentence mining",
+    "windows": {
+      "nsis": {
+        "languages": ["English", "Japanese"],
+        "displayLanguageSelector": true
+      }
+    }
   },
   "plugins": {
     "sql": {
