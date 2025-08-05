@@ -25,6 +25,50 @@ Analyze the `TARGET_SENTENCE` below. It is part of a larger conversation provide
 * **Character Encoding**: Ensure all content within the JSON is properly escaped.
 * **Highlighting**: For the `exampleSentence` field, *always* enclose the extracted `expression` within `<b>` tags. Ensure the highlighting is precise and covers only the identified expression.
 
+# Example
+Here is an example of how to apply the rules.
+
+**Scenario:**
+- A user is learning **English** and wants explanations in **Japanese**.
+- The `PART_OF_SPEECH_OPTIONS` are `["Noun", "Pronoun", "Verb", "Adjective", "Adverb", "Preposition", "Conjunction", "Interjection", "Determiner", "Phrasal Verb", "Idiom", "Collocation", "Expression"]`.
+- The conversation context is:
+  > Did you finish the report for the meeting?
+  > Not yet. I had to pull an all-nighter to get it done, but it's almost there.
+  > Make sure it's ready by noon.
+- The `TARGET_SENTENCE` to be analyzed is:
+  > I had to pull an all-nighter to get it done, but it's almost there.
+
+**Expected Output:**
+
+Below is the expected output format. Do not include the field names in the final JSON output; they are for explanation only.
+
+**translation**:
+それを終わらせるために徹夜しなければなりませんでしたが、もうほとんど出来ています。
+
+**explanation**:
+この文は、2つの節が接続詞 'but' で繋がれた構造をしています。前半の 'I had to pull an all-nighter to get it done' は、「～するために徹夜しなければならなかった」という意味です。'had to' は義務を表し、'to get it done' は目的を表す不定詞句です。'pull an all-nighter' が「徹夜する」という重要なイディオムです。後半の 'it's almost there' は「もうすぐだ」「ゴールは近い」という意味の口語表現で、ここではレポートの完成が間近であることを示しています。これらを組み合わせることで、全体の意味が形成されます。
+
+**items**:
+- **Item 1**:
+  - **expression**: `pull an all-nighter`
+  - **partOfSpeech**: `Idiom`
+  - **contextualDefinition**: 徹夜する
+  - **coreMeaning**: 一晩中、特に勉強や仕事のために起きていること。睡眠をとらずに夜を明かすという行為そのものを指す表現。
+  - **exampleSentence**: `I had to <b>pull an all-nighter</b> to get it done, but it's almost there.`
+- **Item 2**:
+  - **expression**: `get something done`
+  - **partOfSpeech**: `Expression`
+  - **contextualDefinition**: ～を終わらせる、完成させる
+  - **coreMeaning**: あるタスクや仕事を完了させる、または誰かに完了させることを示す使役的な表現。ここでは自分自身で終わらせることを指す。
+  - **exampleSentence**: `I had to pull an all-nighter to <b>get it done</b>, but it's almost there.`
+- **Item 3**:
+  - **expression**: `almost there`
+  - **partOfSpeech**: `Idiom`
+  - **contextualDefinition**: もうほとんど出来ている、完成間近である
+  - **coreMeaning**: 物理的な目的地や、目標達成まであと少しのところまで来ている状態を指す口語的な表現。
+  - **exampleSentence**: `I had to pull an all-nighter to get it done, but it's <b>almost there</b>.`
+
+
 # Input
 * **LEARNING_LANGUAGE**: English
 * **EXPLANATION_LANGUAGE**: Japanese
@@ -55,21 +99,17 @@ A: Make sure it's ready by noon.
 I had to pull an all-nighter to get it done, but it's almost there.
 ```
 
-# Output Format
-Provide your analysis in the following JSON format.
+----
+
+# Expected Output JSON
+
+This section is **not** included in the actual prompt, as we use the Structured API.
 
 ```json
 {
   "translation": "それを終わらせるために徹夜しなければなりませんでしたが、もうほとんど出来ています。",
   "explanation": "この文は、2つの節が接続詞 'but' で繋がれた構造をしています。前半の 'I had to pull an all-nighter to get it done' は、「～するために徹夜しなければならなかった」という意味です。'had to' は義務を表し、'to get it done' は目的を表す不定詞句です。'pull an all-nighter' が「徹夜する」という重要なイディオムです。後半の 'it's almost there' は「もうすぐだ」「ゴールは近い」という意味の口語表現で、ここではレポートの完成が間近であることを示しています。これらを組み合わせることで、全体の意味が形成されます。",
   "items": [
-    {
-      "expression": "have to",
-      "partOfSpeech": "Expression",
-      "contextualDefinition": "～しなければならない",
-      "coreMeaning": "外部の要因や規則によって何かをする義務があることを示す表現。'must' よりも客観的な必要性を表すことが多い。",
-      "exampleSentence": "I <b>had to</b> pull an all-nighter to get it done, but it's almost there."
-    },
     {
       "expression": "pull an all-nighter",
       "partOfSpeech": "Idiom",
