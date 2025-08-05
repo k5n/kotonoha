@@ -27,6 +27,7 @@
     "@tauri-apps/plugin-stronghold": "^2.3.0",
     "@thisux/sveltednd": "^0.0.20",
     "dompurify": "^3.2.6",
+    "i18next": "^25.3.2",
     "tailwindcss": "^4.1.10",
     "uuid": "^11.1.0"
   },

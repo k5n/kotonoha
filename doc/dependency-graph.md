@@ -9,6 +9,7 @@ graph LR
                 subgraph "stores"
                     src_lib_application_stores_apiKeyStore_svelte_ts["apiKeyStore.svelte.ts"]
                     src_lib_application_stores_groupPathStore_svelte_ts["groupPathStore.svelte.ts"]
+                    src_lib_application_stores_i18n_svelte_ts["i18n.svelte.ts"]
                 end
                 subgraph "usecases"
                     src_lib_application_usecases_addEpisodeGroup_ts["addEpisodeGroup.ts"]
@@ -48,6 +49,7 @@ graph LR
                     src_lib_domain_services_parseSrtToDialogues_ts["parseSrtToDialogues.ts"]
                 end
             end
+            src_lib_i18n_ts["i18n.ts"]
             subgraph "infrastructure"
                 src_lib_infrastructure_config_ts["config.ts"]
                 subgraph "repositories"
@@ -59,6 +61,10 @@ graph LR
                     src_lib_infrastructure_repositories_llmRepository_ts["llmRepository.ts"]
                     src_lib_infrastructure_repositories_sentenceCardRepository_ts["sentenceCardRepository.ts"]
                 end
+            end
+            subgraph "locales"
+                src_lib_locales_en_ts["en.ts"]
+                src_lib_locales_ja_ts["ja.ts"]
             end
             subgraph "presentation"
                 subgraph "components"
@@ -172,6 +178,8 @@ src_lib_domain_entities_sentenceAnalysisResult_ts --> src_lib_domain_entities_se
 src_lib_domain_services_buildEpisodeGroupTree_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_groupTreeHelper_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_parseSrtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_i18n_ts --> src_lib_locales_en_ts
+src_lib_i18n_ts --> src_lib_locales_ja_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_episodeGroupRepository_ts --> src_lib_domain_entities_episodeGroup_ts
@@ -197,6 +205,7 @@ src_lib_presentation_components_SentenceCardList_svelte --> src_lib_presentation
 src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_entities_dialogue_ts
 src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_domain_entities_dialogue_ts
+src_routes__layout_ts --> src_lib_i18n_ts
 src_routes_____groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
 src_routes_____groupId___page_svelte --> src_lib_application_usecases_addEpisodeGroup_ts
 src_routes_____groupId___page_svelte --> src_lib_application_usecases_deleteGroupRecursive_ts
