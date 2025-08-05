@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { saveSettings } from '$lib/application/usecases/saveSettings';
   import { Alert, Button, Input, Label, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline } from 'flowbite-svelte-icons';
@@ -8,7 +9,7 @@
 
   let apiKeyInput = $state('');
   let settings = $derived(data.settings);
-  let errorMessage = $derived(data.error ?? '');
+  let errorMessage = $state(data.error ?? '');
   let successMessage = $state('');
   let isSaving = $state(false);
 
@@ -23,13 +24,13 @@
 
   async function handleSave() {
     if (!settings) {
-      errorMessage = '設定が読み込まれていません。';
+      errorMessage = t('settings.notifications.loadError');
       return;
     }
     errorMessage = '';
     successMessage = '';
     if (!apiKeyInput) {
-      errorMessage = 'APIキーを入力してください。';
+      errorMessage = t('settings.notifications.apiKeyRequired');
       return;
     }
     isSaving = true;
@@ -37,9 +38,9 @@
       await saveSettings(settings, apiKeyInput);
       settings = { ...settings, isApiKeySet: true }; // Update settings to reflect the new API key
       apiKeyInput = '';
-      successMessage = 'APIキーを保存しました。';
+      successMessage = t('settings.notifications.saveSuccess');
     } catch (e) {
-      errorMessage = 'APIキーの保存に失敗しました。';
+      errorMessage = t('settings.notifications.saveError');
       console.error(e);
     } finally {
       isSaving = false;
@@ -50,37 +51,42 @@
 <div class="p-4 md:p-6">
   <Button color="light" class="mb-4 w-fit" onclick={goBack}>
     <ArrowLeftOutline class="me-2 h-5 w-5" />
-    戻る
+    {t('settings.backButton')}
   </Button>
 
-  <h1 class="text-xl font-bold">設定</h1>
+  <h1 class="text-xl font-bold">{t('settings.title')}</h1>
 
   {#if settings}
     <div class="mt-4">
       {#if settings.isApiKeySet}
         <Alert color="green" class="mb-4">
-          <span class="font-medium">APIキーは設定済みです。</span>
-          新しいキーを保存すると上書きされます。
+          <span class="font-medium">{t('settings.apiKey.alreadySet')}</span>
+          {t('settings.apiKey.overwriteWarning')}
         </Alert>
       {:else}
         <Alert color="yellow" class="mb-4">
-          <span class="font-medium">APIキーは設定されていません。</span>
-          機能を利用するにはAPIキーの登録が必要です。
+          <span class="font-medium">{t('settings.apiKey.notSet')}</span>
+          {t('settings.apiKey.notSetWarning')}
         </Alert>
       {/if}
     </div>
 
     <div class="mt-6">
-      <Label for="api-key" class="mb-2">Gemini API Key</Label>
-      <Input type="password" id="api-key" bind:value={apiKeyInput} placeholder="APIキーを入力" />
+      <Label for="api-key" class="mb-2">{t('settings.apiKey.label')}</Label>
+      <Input
+        type="password"
+        id="api-key"
+        bind:value={apiKeyInput}
+        placeholder={t('settings.apiKey.placeholder')}
+      />
     </div>
 
     <div class="mt-6">
       <Button onclick={handleSave} disabled={isSaving}>
         {#if isSaving}
-          <Spinner size="6" color="blue" class="me-2" />保存中...
+          <Spinner size="6" color="blue" class="me-2" />{t('settings.saveButton.saving')}
         {:else}
-          保存
+          {t('settings.saveButton.label')}
         {/if}
       </Button>
     </div>
