@@ -1,6 +1,7 @@
 .tool-versions
 /doc/plans
 /doc/reviews
+.serena
 
 .DS_Store
 node_modules

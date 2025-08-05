@@ -1,1 +1,0 @@
-This project, "Kotonoha," is a language learning application designed to assist intermediate and advanced learners. It uses AI-powered "Sentence Mining" to transform audio and script content into effective learning materials. The application's primary goal is to help users expand their vocabulary and understanding of expressions in context.
