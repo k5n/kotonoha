@@ -59,5 +59,16 @@ export const en = {
           'Are you sure you want to delete the episode "{{episodeTitle}}"? All related data will also be deleted.',
       },
     },
+    episodeDetailPage: {
+      backButton: 'Back',
+      errorPrefix: 'Error:',
+      playbackTime: 'Duration: {{minutes}}min {{seconds}}s',
+      scriptTitle: 'Transcript',
+      sentenceCardsTitle: 'Sentence Cards',
+      errors: {
+        analyzeFailed: 'An error occurred while analyzing the dialogue.',
+        createCardsFailed: 'An error occurred while creating cards.',
+      },
+    },
   },
 };

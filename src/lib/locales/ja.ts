@@ -58,5 +58,16 @@ export const ja = {
         message: 'エピソード「{{episodeTitle}}」を削除しますか？関連するデータも全て削除されます。',
       },
     },
+    episodeDetailPage: {
+      backButton: '戻る',
+      errorPrefix: 'エラー:',
+      playbackTime: '再生時間: {{minutes}}分 {{seconds}}秒',
+      scriptTitle: 'スクリプト',
+      sentenceCardsTitle: '作成したカード',
+      errors: {
+        analyzeFailed: '対話の分析中にエラーが発生しました。',
+        createCardsFailed: 'カードの作成中にエラーが発生しました。',
+      },
+    },
   },
 };
