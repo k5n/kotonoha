@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import type { Episode } from '$lib/domain/entities/episode';
   import { formatDate } from '$lib/presentation/utils/dateFormatter';
   import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
@@ -57,10 +58,12 @@
 <div class="mt-6 overflow-hidden rounded-lg border">
   <Table hoverable={true}>
     <TableHead>
-      <TableHeadCell>タイトル</TableHeadCell>
-      <TableHeadCell>追加日</TableHeadCell>
-      <TableHeadCell class="text-center">Cards</TableHeadCell>
-      <TableHeadCell><span class="sr-only">Actions</span></TableHeadCell>
+      <TableHeadCell>{t('components.episodeListTable.title')}</TableHeadCell>
+      <TableHeadCell>{t('components.episodeListTable.addDate')}</TableHeadCell>
+      <TableHeadCell class="text-center">{t('components.episodeListTable.cards')}</TableHeadCell>
+      <TableHeadCell
+        ><span class="sr-only">{t('components.episodeListTable.actions')}</span></TableHeadCell
+      >
     </TableHead>
     <TableBody>
       {#each episodes as episode (episode.id)}
@@ -108,7 +111,7 @@
                     onEpisodeRenameClick(episode);
                   }}
                 >
-                  名前の変更
+                  {t('components.episodeListTable.rename')}
                 </DropdownItem>
                 <DropdownItem
                   onclick={(e: MouseEvent) => {
@@ -116,7 +119,7 @@
                     onEpisodeMoveClick(episode);
                   }}
                 >
-                  移動
+                  {t('components.episodeListTable.move')}
                 </DropdownItem>
                 <DropdownItem
                   class="text-red-600"
@@ -125,7 +128,7 @@
                     onEpisodeDeleteClick(episode);
                   }}
                 >
-                  削除
+                  {t('components.episodeListTable.delete')}
                 </DropdownItem>
               </Dropdown>
             </div>

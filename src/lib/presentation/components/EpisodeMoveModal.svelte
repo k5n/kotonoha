@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import { Alert, Button, Heading, Label, Modal, Select } from 'flowbite-svelte';
@@ -25,7 +26,7 @@
 
   function handleSubmit() {
     if (selectedGroupId === null) {
-      errorMessage = '移動先を選択してください。';
+      errorMessage = t('components.episodeMoveModal.errorTargetRequired');
       return;
     }
     onSubmit(selectedGroupId);
@@ -64,19 +65,21 @@
 
 <Modal open={show} onclose={handleClose}>
   <div class="p-4">
-    <Heading tag="h2" class="mb-4 text-xl font-bold">エピソードの移動</Heading>
-    <p class="mb-4">「{episode?.title}」をどこに移動しますか？</p>
+    <Heading tag="h2" class="mb-4 text-xl font-bold"
+      >{t('components.episodeMoveModal.title')}</Heading
+    >
+    <p class="mb-4">{t('components.episodeMoveModal.message', { title: episode?.title })}</p>
 
     <div class="mb-4">
-      <Label for="targetGroup" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-        >移動先グループ</Label
-      >
+      <Label for="targetGroup" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+        {t('components.episodeMoveModal.targetGroupLabel')}
+      </Label>
       <Select
         items={flattenedOptions}
         bind:value={selectedGroupId}
         disabled={isSubmitting}
         class="w-full"
-        placeholder="移動先を選択..."
+        placeholder={t('components.episodeMoveModal.targetGroupPlaceholder')}
       />
     </div>
 
@@ -87,9 +90,13 @@
     {/if}
 
     <div class="flex justify-end gap-2">
-      <Button color="gray" onclick={handleClose} disabled={isSubmitting}>キャンセル</Button>
+      <Button color="gray" onclick={handleClose} disabled={isSubmitting}
+        >{t('components.episodeMoveModal.cancel')}</Button
+      >
       <Button onclick={handleSubmit} disabled={isSubmitting || selectedGroupId === null}>
-        {isSubmitting ? '移動中...' : '移動'}
+        {isSubmitting
+          ? t('components.episodeMoveModal.submitting')
+          : t('components.episodeMoveModal.submit')}
       </Button>
     </div>
   </div>

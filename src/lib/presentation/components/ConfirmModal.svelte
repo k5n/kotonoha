@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { Button, Modal, P } from 'flowbite-svelte';
   import { ExclamationCircleOutline } from 'flowbite-svelte-icons';
 
@@ -32,10 +33,14 @@
 </script>
 
 {#snippet footer()}
-  <Button color="red" disabled={isSubmitting} onclick={handleConfirm}
-    >{isSubmitting ? '処理中...' : 'はい、削除します'}</Button
-  >
-  <Button color="alternative" disabled={isSubmitting} onclick={handleCancel}>キャンセル</Button>
+  <Button color="red" disabled={isSubmitting} onclick={handleConfirm}>
+    {isSubmitting
+      ? t('components.confirmModal.processing')
+      : t('components.confirmModal.confirmDelete')}
+  </Button>
+  <Button color="alternative" disabled={isSubmitting} onclick={handleCancel}>
+    {t('components.confirmModal.cancel')}
+  </Button>
 {/snippet}
 
 <Modal bind:open={show} size="sm" onclose={handleCancel} {footer}>

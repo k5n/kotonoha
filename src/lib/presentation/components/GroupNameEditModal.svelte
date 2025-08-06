@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { Alert, Button, Heading, Input, Label, Modal } from 'flowbite-svelte';
 
   type Props = {
@@ -15,7 +16,7 @@
 
   function handleSubmit() {
     if (!name.trim()) {
-      errorMessage = 'グループ名を入力してください';
+      errorMessage = t('components.groupNameEditModal.errorNameRequired');
       return;
     }
     onSubmit(name.trim());
@@ -25,15 +26,17 @@
 
 <Modal open={show} onclose={onClose}>
   <div class="p-4">
-    <Heading tag="h2" class="mb-4 text-xl font-bold">グループ名の編集</Heading>
+    <Heading tag="h2" class="mb-4 text-xl font-bold"
+      >{t('components.groupNameEditModal.title')}</Heading
+    >
     <div class="mb-4">
-      <Label for="groupName">グループ名</Label>
+      <Label for="groupName">{t('components.groupNameEditModal.nameLabel')}</Label>
       <Input
         id="groupName"
         type="text"
         class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
         bind:value={name}
-        placeholder="新しいグループ名"
+        placeholder={t('components.groupNameEditModal.namePlaceholder')}
         disabled={isSubmitting}
       />
       {#if errorMessage}
@@ -43,9 +46,13 @@
       {/if}
     </div>
     <div class="flex justify-end gap-2">
-      <Button color="gray" onclick={onClose} disabled={isSubmitting}>キャンセル</Button>
+      <Button color="gray" onclick={onClose} disabled={isSubmitting}
+        >{t('components.groupNameEditModal.cancel')}</Button
+      >
       <Button onclick={handleSubmit} disabled={isSubmitting}>
-        {isSubmitting ? '保存中...' : '保存'}
+        {isSubmitting
+          ? t('components.groupNameEditModal.submitting')
+          : t('components.groupNameEditModal.submit')}
       </Button>
     </div>
   </div>

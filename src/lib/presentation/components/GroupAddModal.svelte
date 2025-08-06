@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import type { EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import { Alert, Button, Heading, Input, Label, Modal, Radio } from 'flowbite-svelte';
 
@@ -16,7 +17,7 @@
 
   function handleSubmit() {
     if (!groupName.trim()) {
-      errorMessage = 'グループ名を入力してください';
+      errorMessage = t('components.groupAddModal.errorNameRequired');
       return;
     }
     onSubmit(groupName, groupType);
@@ -27,24 +28,24 @@
 
 <Modal open={show} onclose={onClose}>
   <div class="p-4">
-    <Heading tag="h2" class="mb-4 text-xl font-bold">グループ新規追加</Heading>
+    <Heading tag="h2" class="mb-4 text-xl font-bold">{t('components.groupAddModal.title')}</Heading>
     <div class="mb-4">
-      <Label for="groupName">グループ名</Label>
+      <Label for="groupName">{t('components.groupAddModal.nameLabel')}</Label>
       <Input
         id="groupName"
         type="text"
         class="mt-1 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
         bind:value={groupName}
-        placeholder="グループ名を入力"
+        placeholder={t('components.groupAddModal.namePlaceholder')}
       />
     </div>
     <div class="mb-4">
-      <Label>グループ種別</Label>
+      <Label>{t('components.groupAddModal.typeLabel')}</Label>
       <div class="mt-2 flex gap-4">
         <Radio id="type-folder" name="groupType" value="folder" bind:group={groupType} />
-        <Label for="type-folder">フォルダ</Label>
+        <Label for="type-folder">{t('components.groupAddModal.typeFolder')}</Label>
         <Radio id="type-album" name="groupType" value="album" bind:group={groupType} />
-        <Label for="type-album">アルバム</Label>
+        <Label for="type-album">{t('components.groupAddModal.typeAlbum')}</Label>
       </div>
     </div>
     {#if errorMessage}
@@ -53,10 +54,14 @@
       </Alert>
     {/if}
     <div class="flex justify-end gap-2">
-      <Button color="gray" onclick={onClose} disabled={isSubmitting}>キャンセル</Button>
-      <Button onclick={handleSubmit} disabled={isSubmitting}
-        >{isSubmitting ? '作成中...' : '作成'}</Button
+      <Button color="gray" onclick={onClose} disabled={isSubmitting}
+        >{t('components.groupAddModal.cancel')}</Button
       >
+      <Button onclick={handleSubmit} disabled={isSubmitting}>
+        {isSubmitting
+          ? t('components.groupAddModal.submitting')
+          : t('components.groupAddModal.submit')}
+      </Button>
     </div>
   </div>
 </Modal>

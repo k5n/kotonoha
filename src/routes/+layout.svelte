@@ -1,6 +1,7 @@
-<script>
-  let { children } = $props();
+<script lang="ts">
   import '../app.css';
+
+  let { children } = $props();
 </script>
 
 <div class="container mx-auto px-4">
