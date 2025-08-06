@@ -22,5 +22,21 @@ export const ja = {
         apiKeyRequired: 'APIキーを入力してください。',
       },
     },
+    groupPage: {
+      title: 'グループ一覧',
+      addNewButton: '新規追加',
+      errorPrefix: 'エラー:',
+      errors: {
+        updateOrder: 'グループの並び替えに失敗しました。',
+        updateName: 'グループ名の更新に失敗しました。',
+        fetchParents: '移動先グループの取得に失敗しました。',
+        moveGroup: 'グループの移動に失敗しました。',
+        deleteGroup: 'グループの削除に失敗しました。',
+      },
+      confirmDelete: {
+        message:
+          'グループ「{{groupName}}」を削除しますか？このグループの子グループやエピソード、センテンスマイニングしたカードも全て削除され、この操作は元に戻せません。',
+      },
+    },
   },
 };

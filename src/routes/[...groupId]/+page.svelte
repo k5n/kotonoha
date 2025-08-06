@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addEpisodeGroup } from '$lib/application/usecases/addEpisodeGroup';
   import { deleteGroupRecursive } from '$lib/application/usecases/deleteGroupRecursive';
@@ -67,7 +68,7 @@
       await invalidateAll();
     } catch (err) {
       error(`Failed to update group order: ${err}`);
-      errorMessage = err instanceof Error ? err.message : 'グループの並び替えに失敗しました。';
+      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.updateOrder');
     }
   }
 
@@ -116,7 +117,7 @@
       editingGroup = null;
     } catch (err) {
       error(`Failed to update group: ${err}`);
-      errorMessage = err instanceof Error ? err.message : 'グループ名の更新に失敗しました。';
+      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.updateName');
     } finally {
       isSubmitting = false;
     }
@@ -131,7 +132,7 @@
       showGroupMove = true;
     } catch (err) {
       error(`Failed to fetch available parent groups: ${err}`);
-      errorMessage = err instanceof Error ? err.message : '移動先グループの取得に失敗しました。';
+      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.fetchParents');
     }
   }
 
@@ -147,7 +148,7 @@
       await invalidateAll();
     } catch (err) {
       error(`Failed to move group: ${err}`);
-      errorMessage = err instanceof Error ? err.message : 'グループの移動に失敗しました。';
+      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.moveGroup');
     } finally {
       showGroupMove = false;
       isSubmitting = false;
@@ -171,7 +172,7 @@
       await invalidateAll(); // Refresh data
     } catch (err) {
       error(`Failed to delete group: ${err}`);
-      errorMessage = err instanceof Error ? err.message : 'グループの削除に失敗しました。';
+      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.deleteGroup');
     } finally {
       showConfirm = false;
       isSubmitting = false;
@@ -182,11 +183,11 @@
 
 <div class="p-4 md:p-6">
   <div class="mb-4 flex items-center justify-between">
-    <Heading tag="h1" class="text-3xl font-bold">グループ一覧</Heading>
+    <Heading tag="h1" class="text-3xl font-bold">{t('groupPage.title')}</Heading>
     <div class="flex items-center space-x-2">
       <Button onclick={handleAddNewEpisode} disabled={currentGroupType === 'album'}>
         <PlusOutline class="me-2 h-5 w-5" />
-        新規追加
+        {t('groupPage.addNewButton')}
       </Button>
       <a href="/settings" class="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
         <CogOutline
@@ -207,7 +208,7 @@
     </div>
   {:else if errorMessage}
     <Alert color="red">
-      <span class="font-medium">エラー:</span>
+      <span class="font-medium">{t('groupPage.errorPrefix')}</span>
       {errorMessage}
     </Alert>
   {:else}
@@ -254,7 +255,7 @@
   <ConfirmModal
     bind:show={showConfirm}
     {isSubmitting}
-    message={`グループ「${editingGroup?.name}」を削除しますか？このグループの子グループやエピソード、センテンスマイニングしたカードも全て削除され、この操作は元に戻せません。`}
+    message={t('groupPage.confirmDelete.message', { groupName: editingGroup?.name })}
     onClose={() => {
       showConfirm = false;
       editingGroup = null;
