@@ -41,7 +41,7 @@ async function generateUniqueEpisodeFilenames(
     info(`Generated filenames: audio=${audioFilename}, script=${scriptFilename}, uuid=${uuid}`);
     attempts++;
     if (attempts > maxAttempts) {
-      throw new Error('UUIDの生成に失敗しました。しばらくしてから再度お試しください。');
+      throw new Error('Failed to generate a unique UUID. Please try again later.');
     }
   } while (await fileRepository.uuidFileExists(uuid));
   return { audioFilename, scriptFilename, uuid };
@@ -88,6 +88,6 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
   } catch (err) {
     error(`Failed to add new episode: ${err instanceof Error ? err.stack : err}`);
     await fileRepository.deleteEpisodeData(uuid);
-    throw new Error('エピソードの追加に失敗しました。');
+    throw new Error('Failed to add new episode.');
   }
 }

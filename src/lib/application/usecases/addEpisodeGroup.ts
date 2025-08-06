@@ -13,19 +13,16 @@ export async function addEpisodeGroup(params: {
 }): Promise<void> {
   const { name, parentId, groupType, siblings } = params;
 
-  // バリデーション
   if (!name.trim()) {
-    throw new Error('グループ名を入力してください');
+    throw new Error('Please enter a group name.');
   }
   if (groupType !== 'album' && groupType !== 'folder') {
-    throw new Error('グループ種別が不正です');
+    throw new Error('Invalid group type.');
   }
 
-  // siblings から表示順を決定
   const maxOrder = siblings.length > 0 ? Math.max(...siblings.map((g) => g.displayOrder)) : 0;
   const displayOrder = maxOrder + 1;
 
-  // 追加
   await episodeGroupRepository.addGroup({
     name,
     parentId,
