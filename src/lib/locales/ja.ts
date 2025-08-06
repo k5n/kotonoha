@@ -38,5 +38,25 @@ export const ja = {
           'グループ「{{groupName}}」を削除しますか？このグループの子グループやエピソード、センテンスマイニングしたカードも全て削除され、この操作は元に戻せません。',
       },
     },
+    episodeListPage: {
+      addNewButton: 'エピソードを追加',
+      errorPrefix: 'エラー:',
+      loading: '読み込み中...',
+      emptyState: {
+        title: 'エピソードがありません',
+        message: 'このコレクションに最初のエピソードを追加しましょう。',
+        addButton: '最初のエピソードを追加',
+      },
+      errors: {
+        fetchAlbumGroups: 'アルバムグループの取得に失敗しました',
+        moveEpisode: 'エピソードの移動に失敗しました',
+        deleteEpisode: 'エピソードの削除に失敗しました',
+        updateName: 'エピソード名の更新に失敗しました',
+      },
+      confirmDelete: {
+        title: 'エピソードの削除',
+        message: 'エピソード「{{episodeTitle}}」を削除しますか？関連するデータも全て削除されます。',
+      },
+    },
   },
 };

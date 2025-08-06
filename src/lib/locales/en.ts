@@ -38,5 +38,26 @@ export const en = {
           'Are you sure you want to delete the group "{{groupName}}"? All child groups, episodes, and sentence mining cards within this group will also be deleted. This action cannot be undone.',
       },
     },
+    episodeListPage: {
+      addNewButton: 'Add Episode',
+      errorPrefix: 'Error:',
+      loading: 'Loading...',
+      emptyState: {
+        title: 'No Episodes',
+        message: "Let's add the first episode to this collection.",
+        addButton: 'Add First Episode',
+      },
+      errors: {
+        fetchAlbumGroups: 'Failed to fetch album groups',
+        moveEpisode: 'Failed to move episode',
+        deleteEpisode: 'Failed to delete episode',
+        updateName: 'Failed to update episode name',
+      },
+      confirmDelete: {
+        title: 'Delete Episode',
+        message:
+          'Are you sure you want to delete the episode "{{episodeTitle}}"? All related data will also be deleted.',
+      },
+    },
   },
 };
