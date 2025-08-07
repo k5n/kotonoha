@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import type {
     SentenceAnalysisItem,
@@ -63,9 +64,14 @@
   }
 </script>
 
-<Modal title="Sentence Mining" bind:open={openModal} onclose={handleCancel} size="lg">
+<Modal
+  title={t('components.sentenceMiningModal.title')}
+  bind:open={openModal}
+  onclose={handleCancel}
+  size="lg"
+>
   <div class="space-y-4">
-    <p class="text-sm text-gray-500">以下の文から学習カードを作成します。</p>
+    <p class="text-sm text-gray-500">{t('components.sentenceMiningModal.description')}</p>
     <blockquote
       class="border-s-4 border-gray-300 bg-gray-50 p-4 dark:border-gray-500 dark:bg-gray-800"
     >
@@ -81,7 +87,7 @@
       <Accordion>
         <AccordionItem>
           {#snippet header()}
-            <span>翻訳と解説を表示</span>
+            <span>{t('components.sentenceMiningModal.showTranslation')}</span>
           {/snippet}
           <div class="space-y-2">
             <p class="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -97,10 +103,10 @@
       {#if isLoading}
         <div class="flex flex-col items-center justify-center py-10 text-center">
           <Spinner size="8" />
-          <p class="mt-4 text-gray-500">AIが重要表現を抽出しています...</p>
+          <p class="mt-4 text-gray-500">{t('components.sentenceMiningModal.loading')}</p>
         </div>
       {:else if analysisResult}
-        <p class="mb-2 text-sm text-gray-500">カードにしたい単語・表現を選択してください。</p>
+        <p class="mb-2 text-sm text-gray-500">{t('components.sentenceMiningModal.selectPrompt')}</p>
         <div class="space-y-3">
           {#each analysisResult.items as item (item.id)}
             {@const isDisabled = item.status === 'active' || item.status === 'suspended'}
@@ -125,13 +131,13 @@
                   <p class="text-sm text-gray-500 dark:text-gray-400">
                     <span
                       class="me-1 inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                      >文脈</span
+                      >{t('components.sentenceMiningModal.contextLabel')}</span
                     >{item.contextualDefinition}
                   </p>
                   <p class="text-sm text-gray-500 dark:text-gray-400">
                     <span
                       class="me-1 inline-block rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-                      >コア</span
+                      >{t('components.sentenceMiningModal.coreMeaningLabel')}</span
                     >{item.coreMeaning}
                   </p>
                 </div>
@@ -146,15 +152,15 @@
   <div class="flex justify-end space-x-2">
     <Button color="alternative" onclick={handleCancel} disabled={isProcessing}>
       <CloseOutline class="me-2 h-5 w-5" />
-      キャンセル
+      {t('components.sentenceMiningModal.cancel')}
     </Button>
     <Button disabled={selectedItemIds.length === 0 || isProcessing} onclick={handleCreate}>
       {#if isProcessing}
         <Spinner size="5" class="me-2" />
-        追加中...
+        {t('components.sentenceMiningModal.submitting')}
       {:else}
         <CheckOutline class="me-2 h-5 w-5" />
-        選択した {selectedItemIds.length} 件をカードに追加
+        {t('components.sentenceMiningModal.submit', { count: selectedItemIds.length })}
       {/if}
     </Button>
   </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
@@ -28,7 +29,7 @@
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
-  let errorMessage = $derived(data.error || '');
+  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
 
   // === ページ遷移 ===
@@ -85,7 +86,7 @@
       showEpisodeMove = true;
     } catch (e) {
       error(`Failed to fetch album groups: ${e}`);
-      errorMessage = 'アルバムグループの取得に失敗しました';
+      errorMessage = t('episodeListPage.errors.fetchAlbumGroups');
     }
   }
 
@@ -97,7 +98,7 @@
       await invalidateAll();
     } catch (e) {
       error(`Failed to move episode: ${e}`);
-      errorMessage = 'エピソードの移動に失敗しました';
+      errorMessage = t('episodeListPage.errors.moveEpisode');
     } finally {
       showEpisodeMove = false;
       isSubmitting = false;
@@ -120,7 +121,7 @@
       await invalidateAll();
     } catch (e) {
       error(`Failed to delete episode: ${e}`);
-      errorMessage = 'エピソードの削除に失敗しました';
+      errorMessage = t('episodeListPage.errors.deleteEpisode');
     } finally {
       showDeleteConfirm = false;
       isSubmitting = false;
@@ -143,7 +144,7 @@
       await invalidateAll();
     } catch (e) {
       error(`Failed to update episode name: ${e}`);
-      errorMessage = 'エピソード名の更新に失敗しました';
+      errorMessage = t('episodeListPage.errors.updateName');
     } finally {
       showEpisodeNameEdit = false;
       isSubmitting = false;
@@ -156,7 +157,7 @@
   {#if errorMessage}
     <Alert color="red" class="mb-6">
       <ExclamationCircleOutline class="h-5 w-5" />
-      <span class="font-medium">エラー:</span>
+      <span class="font-medium">{t('episodeListPage.errorPrefix')}</span>
       {errorMessage}
     </Alert>
   {:else if data.episodeGroup}
@@ -166,7 +167,7 @@
       </div>
       <Button onclick={openEpisodeAddModal}>
         <PlusOutline class="me-2 h-5 w-5" />
-        エピソードを追加
+        {t('episodeListPage.addNewButton')}
       </Button>
     </div>
 
@@ -177,11 +178,13 @@
     {#if episodes.length === 0}
       <div class="mt-8 rounded-lg border-2 border-dashed px-6 py-16 text-center">
         <FileOutline class="mx-auto mb-4 h-12 w-12 text-gray-400" />
-        <Heading tag="h3" class="mb-2 text-xl font-semibold">エピソードがありません</Heading>
-        <p class="mb-4 text-gray-500">このコレクションに最初のエピソードを追加しましょう。</p>
+        <Heading tag="h3" class="mb-2 text-xl font-semibold"
+          >{t('episodeListPage.emptyState.title')}</Heading
+        >
+        <p class="mb-4 text-gray-500">{t('episodeListPage.emptyState.message')}</p>
         <Button color="alternative" onclick={openEpisodeAddModal}>
           <PlusOutline class="me-2 h-5 w-5" />
-          最初のエピソードを追加
+          {t('episodeListPage.emptyState.addButton')}
         </Button>
       </div>
     {:else}
@@ -200,7 +203,7 @@
   {:else}
     <div class="flex items-center justify-center py-20">
       <Spinner size="8" />
-      <span class="ms-4 text-gray-500">読み込み中...</span>
+      <span class="ms-4 text-gray-500">{t('episodeListPage.loading')}</span>
     </div>
   {/if}
 </div>
@@ -236,8 +239,8 @@
 
 <ConfirmModal
   bind:show={showDeleteConfirm}
-  title="エピソードの削除"
-  message={`エピソード「${targetEpisode?.title}」を削除しますか？関連するデータも全て削除されます。`}
+  title={t('episodeListPage.confirmDelete.title')}
+  message={t('episodeListPage.confirmDelete.message', { episodeTitle: targetEpisode?.title })}
   {isSubmitting}
   onConfirm={handleConfirmDelete}
   onClose={() => {

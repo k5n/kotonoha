@@ -14,7 +14,6 @@ export async function deleteEpisode(episode: {
   readonly audioPath: string;
 }): Promise<void> {
   try {
-    // 関連ファイルを削除
     // audioPath から uuid を抽出 (例: media/uuid/audio.mp3 -> uuid)
     const uuid = episode.audioPath.split('/')[1];
     if (uuid) {
@@ -25,14 +24,10 @@ export async function deleteEpisode(episode: {
       );
     }
 
-    // Sentence Cards を削除
+    // NOTE: sentence_cards テーブル自体は episode_id を持っていないので、
     // Dialogues を削除する前に、Sentence Cards を先に削除する必要あり。
     await sentenceCardRepository.deleteByEpisodeId(episode.id);
-
-    // Dialogues を削除
     await dialogueRepository.deleteByEpisodeId(episode.id);
-
-    // エピソードを削除
     await episodeRepository.deleteEpisode(episode.id);
   } catch (e) {
     error(`Failed to delete episode ${episode.id}: ${e}`);

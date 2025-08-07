@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
@@ -26,7 +27,8 @@
   let miningTarget: Dialogue | null = $state(null);
   let analysisResult: SentenceAnalysisResult | null = $state(null); // セリフの分析結果
   let isProcessingMining = $state(false); // マイニング処理中かどうかのフラグ
-  let canMine = $derived(data.settings?.isApiKeySet || false); // マイニング可能かどうか
+  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
+  let canMine = $derived(data.isApiKeySet || false); // マイニング可能かどうか
 
   function goBack() {
     if (history.length > 1) {
@@ -48,8 +50,8 @@
       analysisResult = await analyzeDialogueForMining(dialogue, context);
     } catch (err) {
       error(`Error analyzing dialogue for mining: ${err}`);
+      errorMessage = t('episodeDetailPage.errors.analyzeFailed');
       resetMiningModalState();
-      // TODO: Show error message to user
     }
   }
 
@@ -66,7 +68,7 @@
       await addSentenceCards(selectedCardIds);
     } catch (err) {
       error(`Error in createMiningCards: ${err}`);
-      // TODO: Show error message to user
+      errorMessage = t('episodeDetailPage.errors.createCardsFailed');
     } finally {
       resetMiningModalState();
       invalidateAll();
@@ -84,29 +86,32 @@
 <div class="p-4 md:p-6">
   <Button color="light" class="mb-4" onclick={goBack}>
     <ArrowLeftOutline class="me-2 h-5 w-5" />
-    戻る
+    {t('episodeDetailPage.backButton')}
   </Button>
 
-  {#if data.error}
+  {#if errorMessage}
     <Alert color="red">
       <ExclamationCircleOutline class="h-5 w-5" />
-      <span class="font-medium">エラー:</span>
-      {data.error}
+      <span class="font-medium">{t('episodeDetailPage.errorPrefix')}</span>
+      {errorMessage}
     </Alert>
   {:else if data.episode}
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
       <div class="lg:col-span-2">
         <Heading tag="h1" class="mb-2 text-3xl font-bold">{data.episode.title}</Heading>
         <p class="mb-6 text-gray-500">
-          再生時間: {Math.floor((data.episode.durationSeconds ?? 0) / 60)}分 {Math.floor(
-            (data.episode.durationSeconds ?? 0) % 60
-          )}秒
+          {t('episodeDetailPage.playbackTime', {
+            minutes: Math.floor((data.episode.durationSeconds ?? 0) / 60),
+            seconds: Math.floor((data.episode.durationSeconds ?? 0) % 60),
+          })}
         </p>
 
         <AudioPlayer src={data.audioBlobUrl} bind:currentTime />
 
         <div class="mt-6">
-          <Heading tag="h2" class="mb-3 text-xl font-semibold">スクリプト</Heading>
+          <Heading tag="h2" class="mb-3 text-xl font-semibold">
+            {t('episodeDetailPage.scriptTitle')}
+          </Heading>
           <TranscriptViewer
             dialogues={data.dialogues}
             {currentTime}
@@ -120,7 +125,9 @@
       </div>
 
       <div class="lg:col-span-1">
-        <Heading tag="h2" class="mb-3 text-xl font-semibold">Sentence Cards</Heading>
+        <Heading tag="h2" class="mb-3 text-xl font-semibold">
+          {t('episodeDetailPage.sentenceCardsTitle')}
+        </Heading>
         <SentenceCardList sentenceCards={data.sentenceCards} />
       </div>
     </div>

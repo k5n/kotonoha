@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
   import { formatDate } from '$lib/presentation/utils/dateFormatter';
   import DOMPurify from 'dompurify';
@@ -17,7 +18,7 @@
 <div class="space-y-2">
   {#if sentenceCards.length === 0}
     <div class="rounded-lg border-2 border-dashed py-10 text-center">
-      <p class="text-gray-500">このエピソードにはSentence Cardがありません。</p>
+      <p class="text-gray-500">{t('components.sentenceCardList.noCards')}</p>
     </div>
   {:else}
     <Accordion>
@@ -38,17 +39,21 @@
               <p class="text-sm text-gray-500 dark:text-gray-400">
                 <span
                   class="me-1 inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                  >文脈</span
+                  >{t('components.sentenceCardList.contextLabel')}</span
                 >{card.contextualDefinition}
               </p>
               <p class="text-sm text-gray-500 dark:text-gray-400">
                 <span
                   class="me-1 inline-block rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-800 dark:bg-purple-900 dark:text-purple-300"
-                  >コア</span
+                  >{t('components.sentenceCardList.coreMeaningLabel')}</span
                 >{card.coreMeaning}
               </p>
             </div>
-            <p class="text-xs text-gray-400">作成日: {formatDate(card.createdAt)}</p>
+            <p class="text-xs text-gray-400">
+              {t('components.sentenceCardList.createdAtLabel', {
+                date: formatDate(card.createdAt),
+              })}
+            </p>
           </div>
         </AccordionItem>
       {/each}

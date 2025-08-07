@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import { Button } from 'flowbite-svelte';
   import { SunOutline } from 'flowbite-svelte-icons';
@@ -84,7 +85,7 @@
           {#if canMine && index === activeIndex}
             <Button size="xs" onclick={() => onMine(dialogue, getContext(index))}>
               <SunOutline class="me-1 h-4 w-4" />
-              Mine
+              {t('components.transcriptViewer.mine')}
             </Button>
           {/if}
         </div>
@@ -92,6 +93,6 @@
     {/each}
     <div class="h-[calc(50%-1.25rem)]"></div>
   {:else}
-    <p class="text-center text-gray-500">スクリプトがありません。</p>
+    <p class="text-center text-gray-500">{t('components.transcriptViewer.noScript')}</p>
   {/if}
 </div>

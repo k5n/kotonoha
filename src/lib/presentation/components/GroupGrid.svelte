@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
   import { Dropdown, DropdownItem } from 'flowbite-svelte';
@@ -105,21 +106,25 @@
           </button>
 
           <Dropdown simple triggeredBy={`#card-menu-button-${group.id}`}>
-            <DropdownItem onclick={(e: MouseEvent) => handleChangeName(e, group)}
-              >名前を変更</DropdownItem
-            >
-            <DropdownItem onclick={(e: MouseEvent) => handleMoveGroup(e, group)}>移動</DropdownItem>
+            <DropdownItem onclick={(e: MouseEvent) => handleChangeName(e, group)}>
+              {t('components.groupGrid.rename')}
+            </DropdownItem>
+            <DropdownItem onclick={(e: MouseEvent) => handleMoveGroup(e, group)}>
+              {t('components.groupGrid.move')}
+            </DropdownItem>
             <DropdownItem
               onclick={(e: MouseEvent) => handleDeleteGroup(e, group)}
-              class="text-red-600 dark:text-red-500">削除</DropdownItem
+              class="text-red-600 dark:text-red-500"
             >
+              {t('components.groupGrid.delete')}
+            </DropdownItem>
           </Dropdown>
         </div>
       </div>
     {/each}
   {:else}
     <p class="col-span-full py-8 text-center text-gray-500">
-      このフォルダーにはグループがありません。
+      {t('components.groupGrid.noGroups')}
     </p>
   {/if}
 </div>

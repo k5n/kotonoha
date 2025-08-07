@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { getAudioDuration } from '$lib/presentation/utils/getAudioDuration';
   import { Alert, Button, Fileupload, Heading, Input, Label, Modal } from 'flowbite-svelte';
 
@@ -18,17 +19,17 @@
 
   async function handleSubmit() {
     if (!title.trim()) {
-      errorMessage = 'タイトルを入力してください';
+      errorMessage = t('components.episodeAddModal.errorTitleRequired');
       return;
     }
     const audioFile = audioFiles?.[0];
     if (!audioFile) {
-      errorMessage = '音声ファイルを選択してください';
+      errorMessage = t('components.episodeAddModal.errorAudioFileRequired');
       return;
     }
     const srtFile = srtFiles?.[0];
     if (!srtFile) {
-      errorMessage = '字幕ファイルを選択してください';
+      errorMessage = t('components.episodeAddModal.errorSrtFileRequired');
       return;
     }
 
@@ -37,7 +38,7 @@
       onSubmit(title, audioFile, srtFile, duration);
       resetForm();
     } catch (error) {
-      errorMessage = '音声ファイルの読み込みに失敗しました。';
+      errorMessage = t('components.episodeAddModal.errorAudioFileLoad');
       console.error(error);
     }
 
@@ -52,17 +53,24 @@
 
 <Modal onclose={onClose} open={show}>
   <div class="p-4">
-    <Heading class="mb-4 text-xl font-bold">エピソード新規追加</Heading>
+    <Heading class="mb-4 text-xl font-bold">{t('components.episodeAddModal.title')}</Heading>
     <div class="mb-4">
-      <Label class="mb-2 block" for="title">タイトル</Label>
-      <Input id="title" placeholder="エピソードのタイトル" bind:value={title} type="text" />
+      <Label class="mb-2 block" for="title">{t('components.episodeAddModal.titleLabel')}</Label>
+      <Input
+        id="title"
+        placeholder={t('components.episodeAddModal.titlePlaceholder')}
+        bind:value={title}
+        type="text"
+      />
     </div>
     <div class="mb-4">
-      <Label class="mb-2 block" for="audioFile">音声ファイル</Label>
+      <Label class="mb-2 block" for="audioFile"
+        >{t('components.episodeAddModal.audioFileLabel')}</Label
+      >
       <Fileupload accept="audio/*" bind:files={audioFiles} id="audioFile" />
     </div>
     <div class="mb-4">
-      <Label class="mb-2 block" for="srtFile">字幕ファイル (*.srt)</Label>
+      <Label class="mb-2 block" for="srtFile">{t('components.episodeAddModal.srtFileLabel')}</Label>
       <Fileupload accept=".srt" bind:files={srtFiles} id="srtFile" />
     </div>
     {#if errorMessage}
@@ -71,12 +79,16 @@
       </Alert>
     {/if}
     <div class="flex justify-end gap-2">
-      <Button color="gray" disabled={isSubmitting} onclick={onClose}>キャンセル</Button>
+      <Button color="gray" disabled={isSubmitting} onclick={onClose}
+        >{t('components.episodeAddModal.cancel')}</Button
+      >
       <Button
         disabled={isSubmitting || !title.trim() || !audioFiles?.length || !srtFiles?.length}
         onclick={handleSubmit}
       >
-        {isSubmitting ? '作成中...' : '作成'}
+        {isSubmitting
+          ? t('components.episodeAddModal.submitting')
+          : t('components.episodeAddModal.submit')}
       </Button>
     </div>
   </div>

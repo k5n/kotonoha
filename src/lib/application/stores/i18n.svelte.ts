@@ -1,0 +1,48 @@
+import { env } from '$env/dynamic/public';
+import { en } from '$lib/locales/en';
+import { ja } from '$lib/locales/ja';
+import { info } from '@tauri-apps/plugin-log';
+import i18next, { type TFunction } from 'i18next';
+
+let store = $state(i18next.t);
+
+function isDebugMode(): boolean {
+  const debugMode = env.PUBLIC_I18NEXT_DEBUG || 'false';
+  return debugMode === 'true';
+}
+
+export const i18nStore = {
+  init(language: string) {
+    info('Initializing i18next ...');
+    i18next
+      .init({
+        lng: language,
+        fallbackLng: 'en',
+        debug: isDebugMode(),
+        resources: {
+          ja,
+          en,
+        },
+      })
+      .then((t) => {
+        info('i18next initialized');
+        store = t;
+      });
+  },
+
+  changeLanguage(lang: string) {
+    info(`Changing language to ${lang}`);
+    i18next.changeLanguage(lang).then((t) => {
+      store = t;
+      info(`Language changed to ${lang}`);
+    });
+  },
+};
+
+/**
+ * リアクティブな翻訳関数
+ * UIコンポーネントで `t('key')` のように直接使用できます。
+ */
+export function t(...args: Parameters<TFunction>): ReturnType<TFunction> {
+  return store(...args);
+}

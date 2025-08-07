@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { appDataDir } from '@tauri-apps/api/path';
-import { Client, Stronghold } from '@tauri-apps/plugin-stronghold';
+import { type Client, Stronghold } from '@tauri-apps/plugin-stronghold';
 
 const STRONGHOLD_KEY_GEMINI_API_KEY = 'gemini_api_key';
 
