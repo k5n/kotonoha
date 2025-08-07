@@ -1,3 +1,7 @@
 export type AppInfo = {
-  readonly appVersion: string;
+  readonly name: string;
+  readonly version: string;
+  readonly copyright: string;
+  readonly license: string;
+  readonly homepage: string;
 };

@@ -1,5 +1,12 @@
 export const en = {
   translation: {
+    appInfo: {
+      title: 'About {{appName}}',
+      version: 'Version',
+      copyright: 'Copyright',
+      license: 'License',
+      homepage: 'Homepage',
+    },
     settings: {
       title: 'Settings',
       backButton: 'Back',
@@ -24,10 +31,6 @@ export const en = {
         label: 'Language',
         english: 'English',
         japanese: 'Japanese',
-      },
-      appInfo: {
-        title: 'About Kotonoha',
-        version: 'Version',
       },
     },
     groupPage: {

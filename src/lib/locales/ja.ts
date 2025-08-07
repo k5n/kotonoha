@@ -1,5 +1,12 @@
 export const ja = {
   translation: {
+    appInfo: {
+      title: '{{appName}}について',
+      version: 'バージョン',
+      copyright: '著作権',
+      license: 'ライセンス',
+      homepage: 'ホームページ',
+    },
     settings: {
       title: '設定',
       backButton: '戻る',
@@ -24,10 +31,6 @@ export const ja = {
         label: '言語',
         english: '英語',
         japanese: '日本語',
-      },
-      appInfo: {
-        title: 'Kotonohaについて',
-        version: 'バージョン',
       },
     },
     groupPage: {
