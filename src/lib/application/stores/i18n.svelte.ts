@@ -1,16 +1,20 @@
 import { en } from '$lib/locales/en';
 import { ja } from '$lib/locales/ja';
-import { info } from '@tauri-apps/plugin-log';
+import { info, warn } from '@tauri-apps/plugin-log';
 import i18next from 'i18next';
 
 let store = $state(i18next.t);
+let initialized = $state(false);
 
 export const i18nStore = {
-  init() {
+  init(language: string) {
     info('Initializing i18next ...');
+    if (initialized) {
+      warn('i18next already initialized');
+    }
     i18next
       .init({
-        lng: 'ja',
+        lng: language,
         fallbackLng: 'en',
         debug: true,
         resources: {
@@ -21,7 +25,12 @@ export const i18nStore = {
       .then((t) => {
         info('i18next initialized');
         store = t;
+        initialized = true;
       });
+  },
+
+  get initialized() {
+    return initialized;
   },
 
   changeLanguage(lang: string) {

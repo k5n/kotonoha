@@ -24,6 +24,7 @@ graph LR
                     src_lib_application_usecases_fetchEpisodeGroups_ts["fetchEpisodeGroups.ts"]
                     src_lib_application_usecases_fetchEpisodes_ts["fetchEpisodes.ts"]
                     src_lib_application_usecases_fetchSettings_ts["fetchSettings.ts"]
+                    src_lib_application_usecases_initializeApplication_ts["initializeApplication.ts"]
                     src_lib_application_usecases_moveEpisode_ts["moveEpisode.ts"]
                     src_lib_application_usecases_moveEpisodeGroup_ts["moveEpisodeGroup.ts"]
                     src_lib_application_usecases_saveSettings_ts["saveSettings.ts"]
@@ -59,6 +60,7 @@ graph LR
                     src_lib_infrastructure_repositories_fileRepository_ts["fileRepository.ts"]
                     src_lib_infrastructure_repositories_llmRepository_ts["llmRepository.ts"]
                     src_lib_infrastructure_repositories_sentenceCardRepository_ts["sentenceCardRepository.ts"]
+                    src_lib_infrastructure_repositories_settingsRepository_ts["settingsRepository.ts"]
                 end
             end
             subgraph "locales"
@@ -161,12 +163,17 @@ src_lib_application_usecases_fetchEpisodes_ts --> src_lib_infrastructure_reposit
 src_lib_application_usecases_fetchSettings_ts --> src_lib_application_stores_apiKeyStore_svelte_ts
 src_lib_application_usecases_fetchSettings_ts --> src_lib_domain_entities_settings_ts
 src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
+src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
+src_lib_application_usecases_initializeApplication_ts --> src_lib_application_stores_i18n_svelte_ts
+src_lib_application_usecases_initializeApplication_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
 src_lib_application_usecases_moveEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_domain_services_groupTreeHelper_ts
 src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_saveSettings_ts --> src_lib_application_stores_i18n_svelte_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_domain_entities_settings_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
+src_lib_application_usecases_saveSettings_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
 src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_updateEpisodeGroupsOrder_ts --> src_lib_domain_entities_episodeGroup_ts
@@ -190,6 +197,7 @@ src_lib_infrastructure_repositories_llmRepository_ts --> src_lib_domain_entities
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_infrastructure_config_ts
+src_lib_infrastructure_repositories_settingsRepository_ts --> src_lib_domain_entities_settings_ts
 src_lib_presentation_components_AudioPlayer_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_domain_entities_episodeGroup_ts
@@ -218,7 +226,7 @@ src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_en
 src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_domain_entities_dialogue_ts
-src_routes__layout_ts --> src_lib_application_stores_i18n_svelte_ts
+src_routes__layout_ts --> src_lib_application_usecases_initializeApplication_ts
 src_routes_____groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
 src_routes_____groupId___page_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes_____groupId___page_svelte --> src_lib_application_usecases_addEpisodeGroup_ts

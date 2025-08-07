@@ -1,24 +1,34 @@
 <script lang="ts">
+  import { invalidateAll } from '$app/navigation';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { saveSettings } from '$lib/application/usecases/saveSettings';
-  import { Alert, Button, Input, Label, Spinner } from 'flowbite-svelte';
+  import { error } from '@tauri-apps/plugin-log';
+  import { Alert, Button, Input, Label, Select, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
 
   let apiKeyInput = $state('');
-  let settings = $derived(data.settings);
-  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let successMessage = $state('');
   let isSaving = $state(false);
+
+  let settings = $derived(data.settings);
+  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
 
   function goBack() {
     if (history.length > 1) {
       history.back();
     } else {
-      // Cannot go back, navigate to the top page
+      error('Cannot go back, navigate to the top page');
       window.location.href = '/';
+    }
+  }
+
+  function handleLanguageChange(event: Event) {
+    if (settings != null) {
+      const target = event.target as HTMLSelectElement;
+      settings = { ...settings, language: target.value };
     }
   }
 
@@ -29,19 +39,19 @@
     }
     errorMessage = '';
     successMessage = '';
-    if (!apiKeyInput) {
+    if (!apiKeyInput && !settings.isApiKeySet) {
       errorMessage = t('settings.notifications.apiKeyRequired');
       return;
     }
     isSaving = true;
     try {
       await saveSettings(settings, apiKeyInput);
-      settings = { ...settings, isApiKeySet: true }; // Update settings to reflect the new API key
       apiKeyInput = '';
       successMessage = t('settings.notifications.saveSuccess');
+      invalidateAll(); // Invalidate all data to refresh settings
     } catch (e) {
       errorMessage = t('settings.notifications.saveError');
-      console.error(e);
+      error(`Failed to save settings: ${e}`);
     } finally {
       isSaving = false;
     }
@@ -78,6 +88,19 @@
         id="api-key"
         bind:value={apiKeyInput}
         placeholder={t('settings.apiKey.placeholder')}
+      />
+    </div>
+
+    <div class="mt-6">
+      <Label for="language-select" class="mb-2">{t('settings.language.label')}</Label>
+      <Select
+        id="language-select"
+        value={settings.language}
+        onchange={handleLanguageChange}
+        items={[
+          { value: 'en', name: t('settings.language.english') },
+          { value: 'ja', name: t('settings.language.japanese') },
+        ]}
       />
     </div>
 

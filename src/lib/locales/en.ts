@@ -16,10 +16,15 @@ export const en = {
         saving: 'Saving...',
       },
       notifications: {
-        saveSuccess: 'API key saved successfully.',
-        saveError: 'Failed to save API key.',
+        saveSuccess: 'Settings saved successfully.',
+        saveError: 'Failed to save settings.',
         loadError: 'Settings are not loaded.',
         apiKeyRequired: 'Please enter an API key.',
+      },
+      language: {
+        label: 'Language',
+        english: 'English',
+        japanese: 'Japanese',
       },
     },
     groupPage: {

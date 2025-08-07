@@ -16,10 +16,15 @@ export const ja = {
         saving: '保存中...',
       },
       notifications: {
-        saveSuccess: 'APIキーを保存しました。',
-        saveError: 'APIキーの保存に失敗しました。',
+        saveSuccess: '設定を保存しました。',
+        saveError: '設定の保存に失敗しました。',
         loadError: '設定が読み込まれていません。',
         apiKeyRequired: 'APIキーを入力してください。',
+      },
+      language: {
+        label: '言語',
+        english: '英語',
+        japanese: '日本語',
       },
     },
     groupPage: {

@@ -98,6 +98,7 @@
         }
       ]
     },
-    "stronghold:default"
+    "stronghold:default",
+    "store:default"
   ]
 }

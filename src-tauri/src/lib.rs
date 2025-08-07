@@ -26,17 +26,7 @@ pub fn run() {
     println!("Using database URL: {}", db_url);
 
     tauri::Builder::default()
-        .setup(|app| {
-            let salt_path = app
-                .path()
-                .app_local_data_dir()
-                .expect("could not resolve app local data path")
-                .join("salt.txt");
-            create_salt_file_if_not_exists(&salt_path)?;
-            app.handle()
-                .plugin(tauri_plugin_stronghold::Builder::with_argon2(&salt_path).build())?;
-            Ok(())
-        })
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
@@ -59,6 +49,17 @@ pub fn run() {
                 .build()
         })
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            let salt_path = app
+                .path()
+                .app_local_data_dir()
+                .expect("could not resolve app local data path")
+                .join("salt.txt");
+            create_salt_file_if_not_exists(&salt_path)?;
+            app.handle()
+                .plugin(tauri_plugin_stronghold::Builder::with_argon2(&salt_path).build())?;
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             analyze_sentence_with_llm,
             get_stronghold_password
