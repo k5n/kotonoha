@@ -5,7 +5,7 @@ const SETTINGS_FILENAME = 'settings.json';
 const DEFAULT_LANGUAGE = 'en';
 
 export const settingsRepository = {
-  async getSettings(): Promise<Omit<Settings, 'isApiKeySet'>> {
+  async getSettings(): Promise<Settings> {
     const store = await load(SETTINGS_FILENAME, { autoSave: false });
     const language = await store.get<string>('language');
 
@@ -14,7 +14,7 @@ export const settingsRepository = {
     };
   },
 
-  async saveSettings(settings: Omit<Settings, 'isApiKeySet'>): Promise<void> {
+  async saveSettings(settings: Settings): Promise<void> {
     const store = await load(SETTINGS_FILENAME, { autoSave: false });
     await store.set('language', settings.language);
     await store.save();

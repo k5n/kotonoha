@@ -39,10 +39,6 @@
     }
     errorMessage = '';
     successMessage = '';
-    if (!apiKeyInput && !settings.isApiKeySet) {
-      errorMessage = t('settings.notifications.apiKeyRequired');
-      return;
-    }
     isSaving = true;
     try {
       await saveSettings(settings, apiKeyInput);
@@ -68,7 +64,7 @@
 
   {#if settings}
     <div class="mt-4">
-      {#if settings.isApiKeySet}
+      {#if data.isApiKeySet}
         <Alert color="green" class="mb-4">
           <span class="font-medium">{t('settings.apiKey.alreadySet')}</span>
           {t('settings.apiKey.overwriteWarning')}

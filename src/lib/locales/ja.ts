@@ -19,7 +19,6 @@ export const ja = {
         saveSuccess: '設定を保存しました。',
         saveError: '設定の保存に失敗しました。',
         loadError: '設定が読み込まれていません。',
-        apiKeyRequired: 'APIキーを入力してください。',
       },
       language: {
         label: '言語',

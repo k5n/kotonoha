@@ -28,7 +28,7 @@
   let analysisResult: SentenceAnalysisResult | null = $state(null); // セリフの分析結果
   let isProcessingMining = $state(false); // マイニング処理中かどうかのフラグ
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
-  let canMine = $derived(data.settings?.isApiKeySet || false); // マイニング可能かどうか
+  let canMine = $derived(data.isApiKeySet || false); // マイニング可能かどうか
 
   function goBack() {
     if (history.length > 1) {

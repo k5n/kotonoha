@@ -13,12 +13,13 @@ export const load: PageLoad = async ({ params }) => {
     if (!result) {
       return { errorKey: 'episodeDetailPage.errors.episodeNotFound' };
     }
-    const settings = await fetchSettings();
+    const { isApiKeySet, settings } = await fetchSettings();
     return {
       episode: result.episode,
       dialogues: result.dialogues,
       sentenceCards: result.sentenceCards,
       audioBlobUrl: result.audioBlobUrl,
+      isApiKeySet: isApiKeySet,
       settings: settings,
       errorKey: null,
     };

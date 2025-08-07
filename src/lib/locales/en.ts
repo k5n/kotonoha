@@ -19,7 +19,6 @@ export const en = {
         saveSuccess: 'Settings saved successfully.',
         saveError: 'Failed to save settings.',
         loadError: 'Settings are not loaded.',
-        apiKeyRequired: 'Please enter an API key.',
       },
       language: {
         label: 'Language',
