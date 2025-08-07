@@ -11,7 +11,7 @@ export const appInfoRepository = {
     const version = await getVersion();
     return {
       name: APP_NAME,
-      version: version,
+      version,
       copyright: APP_COPYRIGHT,
       license: APP_LICENSE,
       homepage: APP_HOMEPAGE,
