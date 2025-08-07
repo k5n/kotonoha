@@ -7,11 +7,11 @@ export const load: PageLoad = async ({ params }) => {
   try {
     const groupId = parseInt(params.groupId, 10);
     const [episodeGroup, episodes] = await fetchEpisodes(groupId);
-    return { episodeGroup, episodes, error: null, groupId: params.groupId };
+    return { episodeGroup, episodes, errorKey: null, groupId: params.groupId };
   } catch (e) {
     error(`Failed to fetch episode list for group ${params.groupId}: ${e}`);
     return {
-      error: 'エピソード一覧の取得に失敗しました',
+      errorKey: 'episodeListPage.errors.fetchEpisodes',
       groupId: params.groupId,
       episodeGroup: null,
       episodes: [] as readonly Episode[],

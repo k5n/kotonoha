@@ -27,7 +27,7 @@
   let miningTarget: Dialogue | null = $state(null);
   let analysisResult: SentenceAnalysisResult | null = $state(null); // セリフの分析結果
   let isProcessingMining = $state(false); // マイニング処理中かどうかのフラグ
-  let errorMessage = $derived(data.error);
+  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let canMine = $derived(data.settings?.isApiKeySet || false); // マイニング可能かどうか
 
   function goBack() {
@@ -89,7 +89,7 @@
     {t('episodeDetailPage.backButton')}
   </Button>
 
-  {#if data.error}
+  {#if errorMessage}
     <Alert color="red">
       <ExclamationCircleOutline class="h-5 w-5" />
       <span class="font-medium">{t('episodeDetailPage.errorPrefix')}</span>

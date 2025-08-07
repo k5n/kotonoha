@@ -25,7 +25,7 @@
   let displayedGroups = $derived(data.groups);
 
   // --- State Management ---
-  let errorMessage = $state('');
+  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let showGroupAdd = $state(false);
   let showGroupNameEdit = $state(false);
   let showGroupMove = $state(false);

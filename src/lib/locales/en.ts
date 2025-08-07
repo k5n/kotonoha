@@ -32,6 +32,7 @@ export const en = {
         fetchParents: 'Failed to fetch destination groups.',
         moveGroup: 'Failed to move group.',
         deleteGroup: 'Failed to delete group.',
+        fetchGroups: 'Failed to fetch groups.',
       },
       confirmDelete: {
         message:
@@ -52,6 +53,7 @@ export const en = {
         moveEpisode: 'Failed to move episode',
         deleteEpisode: 'Failed to delete episode',
         updateName: 'Failed to update episode name',
+        fetchEpisodes: 'Failed to fetch episodes.',
       },
       confirmDelete: {
         title: 'Delete Episode',
@@ -68,6 +70,9 @@ export const en = {
       errors: {
         analyzeFailed: 'An error occurred while analyzing the dialogue.',
         createCardsFailed: 'An error occurred while creating cards.',
+        invalidEpisodeId: 'Invalid episode ID.',
+        episodeNotFound: 'Episode not found.',
+        fetchDetail: 'Failed to fetch episode details.',
       },
     },
     components: {

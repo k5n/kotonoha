@@ -32,6 +32,7 @@ export const ja = {
         fetchParents: '移動先グループの取得に失敗しました。',
         moveGroup: 'グループの移動に失敗しました。',
         deleteGroup: 'グループの削除に失敗しました。',
+        fetchGroups: 'グループの取得に失敗しました。',
       },
       confirmDelete: {
         message:
@@ -52,6 +53,7 @@ export const ja = {
         moveEpisode: 'エピソードの移動に失敗しました',
         deleteEpisode: 'エピソードの削除に失敗しました',
         updateName: 'エピソード名の更新に失敗しました',
+        fetchEpisodes: 'エピソードの取得に失敗しました。',
       },
       confirmDelete: {
         title: 'エピソードの削除',
@@ -67,6 +69,9 @@ export const ja = {
       errors: {
         analyzeFailed: '対話の分析中にエラーが発生しました。',
         createCardsFailed: 'カードの作成中にエラーが発生しました。',
+        invalidEpisodeId: '無効なエピソードIDです。',
+        episodeNotFound: 'エピソードが見つかりません。',
+        fetchDetail: 'エピソード詳細の取得に失敗しました。',
       },
     },
     components: {

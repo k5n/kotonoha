@@ -29,7 +29,7 @@
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
-  let errorMessage = $derived(data.error || '');
+  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
 
   // === ページ遷移 ===

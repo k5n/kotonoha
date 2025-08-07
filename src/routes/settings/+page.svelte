@@ -9,7 +9,7 @@
 
   let apiKeyInput = $state('');
   let settings = $derived(data.settings);
-  let errorMessage = $state(data.error ?? '');
+  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let successMessage = $state('');
   let isSaving = $state(false);
 

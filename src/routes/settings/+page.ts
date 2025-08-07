@@ -13,7 +13,7 @@ export const load: PageLoad = async () => {
     error(`Failed to load API Key: ${e}`);
     return {
       settings: null,
-      error: '設定の読み込みに失敗しました。',
+      errorKey: 'settings.notifications.loadError',
     };
   }
 };
