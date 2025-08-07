@@ -8,7 +8,7 @@ export const load: PageLoad = async () => {
     return {
       isApiKeySet,
       settings,
-      error: null,
+      errorKey: null,
     };
   } catch (e) {
     error(`Failed to load API Key: ${e}`);
