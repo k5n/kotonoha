@@ -14,6 +14,7 @@
   let isSaving = $state(false);
 
   let settings = $derived(data.settings);
+  let appInfo = $derived(data.appInfo);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
 
   function goBack() {
@@ -121,5 +122,24 @@
     <Alert color="green" class="mt-4">
       {successMessage}
     </Alert>
+  {/if}
+
+  {#if appInfo}
+    <div class="mt-8 border-t border-gray-200 pt-4">
+      <h2 class="mb-2 text-lg font-semibold">
+        {t('appInfo.title', { appName: appInfo.name })}
+      </h2>
+      <div class="space-y-1 text-sm text-gray-500">
+        <div>{t('appInfo.version')}: {appInfo.version}</div>
+        <div>{t('appInfo.copyright')}: {appInfo.copyright}</div>
+        <div>{t('appInfo.license')}: {appInfo.license}</div>
+        <div>
+          {t('appInfo.homepage')}:
+          <a href={appInfo.homepage} target="_blank" rel="noopener" class="text-blue-600 underline"
+            >{appInfo.homepage}</a
+          >
+        </div>
+      </div>
+    </div>
   {/if}
 </div>

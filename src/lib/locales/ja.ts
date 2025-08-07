@@ -1,5 +1,12 @@
 export const ja = {
   translation: {
+    appInfo: {
+      title: '{{appName}}について',
+      version: 'バージョン',
+      copyright: '著作権',
+      license: 'ライセンス',
+      homepage: 'ホームページ',
+    },
     settings: {
       title: '設定',
       backButton: '戻る',

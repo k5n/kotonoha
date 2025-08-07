@@ -1,5 +1,12 @@
 export const en = {
   translation: {
+    appInfo: {
+      title: 'About {{appName}}',
+      version: 'Version',
+      copyright: 'Copyright',
+      license: 'License',
+      homepage: 'Homepage',
+    },
     settings: {
       title: 'Settings',
       backButton: 'Back',
