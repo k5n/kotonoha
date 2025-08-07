@@ -1,9 +1,15 @@
+import { env } from '$env/dynamic/public';
 import { en } from '$lib/locales/en';
 import { ja } from '$lib/locales/ja';
 import { info, warn } from '@tauri-apps/plugin-log';
 import i18next, { type TFunction } from 'i18next';
 
 let store = $state({ t: i18next.t, initialized: false });
+
+function isDebugMode(): boolean {
+  const debugMode = env.PUBLIC_I18NEXT_DEBUG || 'false';
+  return debugMode === 'true';
+}
 
 export const i18nStore = {
   init(language: string) {
@@ -15,7 +21,7 @@ export const i18nStore = {
       .init({
         lng: language,
         fallbackLng: 'en',
-        debug: true,
+        debug: isDebugMode(),
         resources: {
           ja,
           en,
