@@ -1,6 +1,6 @@
 [package]
 name = "kotonoha"
-version = "0.1.0"
+# The version is managed centrally in package.json
 description = "An app that automates sentence mining for immersive learning."
 authors = ["Keigo Nakatani <k5n@users.noreply.github.com> (https://github.com/k5n)"]
 license = "GNU General Public License v3.0"

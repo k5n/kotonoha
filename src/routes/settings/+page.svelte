@@ -14,6 +14,7 @@
   let isSaving = $state(false);
 
   let settings = $derived(data.settings);
+  let appInfo = $derived(data.appInfo);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
 
   function goBack() {
@@ -121,5 +122,14 @@
     <Alert color="green" class="mt-4">
       {successMessage}
     </Alert>
+  {/if}
+
+  {#if appInfo}
+    <div class="mt-8 border-t border-gray-200 pt-4">
+      <h2 class="mb-2 text-lg font-semibold">{t('settings.appInfo.title')}</h2>
+      <div class="text-sm text-gray-500">
+        {t('settings.appInfo.version')}: {appInfo.appVersion}
+      </div>
+    </div>
   {/if}
 </div>

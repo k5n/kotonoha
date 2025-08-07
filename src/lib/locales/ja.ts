@@ -25,6 +25,10 @@ export const ja = {
         english: '英語',
         japanese: '日本語',
       },
+      appInfo: {
+        title: 'Kotonohaについて',
+        version: 'バージョン',
+      },
     },
     groupPage: {
       title: 'グループ一覧',

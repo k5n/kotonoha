@@ -19,6 +19,7 @@ graph LR
                     src_lib_application_usecases_deleteEpisode_ts["deleteEpisode.ts"]
                     src_lib_application_usecases_deleteGroupRecursive_ts["deleteGroupRecursive.ts"]
                     src_lib_application_usecases_fetchAlbumGroups_ts["fetchAlbumGroups.ts"]
+                    src_lib_application_usecases_fetchAppInfo_ts["fetchAppInfo.ts"]
                     src_lib_application_usecases_fetchAvailableParentGroups_ts["fetchAvailableParentGroups.ts"]
                     src_lib_application_usecases_fetchEpisodeDetail_ts["fetchEpisodeDetail.ts"]
                     src_lib_application_usecases_fetchEpisodeGroups_ts["fetchEpisodeGroups.ts"]
@@ -36,6 +37,7 @@ graph LR
             end
             subgraph "domain"
                 subgraph "entities"
+                    src_lib_domain_entities_appInfo_ts["appInfo.ts"]
                     src_lib_domain_entities_dialogue_ts["dialogue.ts"]
                     src_lib_domain_entities_episode_ts["episode.ts"]
                     src_lib_domain_entities_episodeGroup_ts["episodeGroup.ts"]
@@ -54,6 +56,7 @@ graph LR
                 src_lib_infrastructure_config_ts["config.ts"]
                 subgraph "repositories"
                     src_lib_infrastructure_repositories_apiKeyRepository_ts["apiKeyRepository.ts"]
+                    src_lib_infrastructure_repositories_appInfoRepository_ts["appInfoRepository.ts"]
                     src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository.ts"]
                     src_lib_infrastructure_repositories_episodeGroupRepository_ts["episodeGroupRepository.ts"]
                     src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository.ts"]
@@ -143,6 +146,8 @@ src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_infrastructure_
 src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
 src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_fetchAppInfo_ts --> src_lib_domain_entities_appInfo_ts
+src_lib_application_usecases_fetchAppInfo_ts --> src_lib_infrastructure_repositories_appInfoRepository_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_services_groupTreeHelper_ts
@@ -186,6 +191,7 @@ src_lib_domain_entities_sentenceAnalysisResult_ts --> src_lib_domain_entities_se
 src_lib_domain_services_buildEpisodeGroupTree_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_groupTreeHelper_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_parseSrtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_infrastructure_repositories_appInfoRepository_ts --> src_lib_domain_entities_appInfo_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_episodeGroupRepository_ts --> src_lib_domain_entities_episodeGroup_ts
@@ -274,5 +280,6 @@ src_routes_episode__id___page_ts --> src_lib_application_usecases_fetchEpisodeDe
 src_routes_episode__id___page_ts --> src_lib_application_usecases_fetchSettings_ts
 src_routes_settings__page_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes_settings__page_svelte --> src_lib_application_usecases_saveSettings_ts
+src_routes_settings__page_ts --> src_lib_application_usecases_fetchAppInfo_ts
 src_routes_settings__page_ts --> src_lib_application_usecases_fetchSettings_ts
 ```
