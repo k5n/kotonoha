@@ -1,5 +1,5 @@
-import { buildEpisodeGroupTree } from '../../domain/services/buildEpisodeGroupTree';
-import { episodeGroupRepository } from '../../infrastructure/repositories/episodeGroupRepository';
+import { buildEpisodeGroupTree } from '$lib/domain/services/buildEpisodeGroupTree';
+import { episodeGroupRepository } from '$lib/infrastructure/repositories/episodeGroupRepository';
 
 /**
  * Fetches all episode groups that can contain episodes (i.e., type 'album')

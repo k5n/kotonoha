@@ -1,8 +1,8 @@
-# Immersion Learning 自動支援アプリ v1.0 技術仕様書
+# Kotonoha v1.0 技術仕様書
 
 ## 1. 概要 (Overview)
 
-本ドキュメントは「Immersion Learning 自動支援アプリ ver1」の技術的な仕様を定義するものである。要件定義書に基づき、AI Agentによるコード生成を円滑に行うことを目的として、データ構造、コンポーネント設計、処理フローを明確化する。
+本ドキュメントは「Kotonoha v1」の技術的な仕様を定義するものである。要件定義書に基づき、AI Agentによるコード生成を円滑に行うことを目的として、データ構造、コンポーネント設計、処理フローを明確化する。
 
 ### 1.1. システムアーキテクチャ
 
@@ -32,37 +32,35 @@ Tauriの標準構成とフロントエンドのレイヤードアーキテクチ
 │   │   │   ├── components/           # 再利用可能なUIコンポーネント
 │   │   │   │   ├── AudioPlayer.svelte
 │   │   │   │   ├── Breadcrumbs.svelte
-│   │   │   │   ├── ...
-│   │   │   │   └── TranscriptViewer.svelte
+│   │   │   │   └── ...
 │   │   │   ├── utils/                # UIで利用するユーティリティ関数
 │   │   │   │   ├── dateFormatter.ts
-│   │   │   │   └── getAudioDuration.ts
+│   │   │   │   └── ...
 │   │   │   └── types/                # UI表示用データ型 (将来追加する可能性あり)
 │   │   ├── application/              # アプリケーション層: ユースケースと状態管理
+│   │   │   ├── locales/              # 多言語対応
+│   │   │   │   ├── en.ts
+│   │   │   │   ├── ja.ts
+│   │   │   │   └── ...
 │   │   │   ├── usecases/             # ユーザー操作を起点とする処理フロー
 │   │   │   │   ├── addEpisodeGroup.ts
-│   │   │   │   ├── ...
-│   │   │   │   └── updateEpisodeGroupName.ts
+│   │   │   │   └── ...
 │   │   │   └── stores/               # アプリケーション全体の状態(Svelte Stores)
-│   │   │       ├── apiKeyStore.svelte.ts
-│   │   │       └── groupPathStore.svelte.ts
+│   │   │       ├── groupPathStore.svelte.ts
+│   │   │       └── ...
 │   │   ├── domain/                   # ドメイン層: アプリケーションの核となるルールとデータ構造
 │   │   │   ├── entities/             # アプリケーションの核となるデータ型(エンティティ)
 │   │   │   │   ├── dialogue.ts
-│   │   │   │   ├── ...
-│   │   │   │   └── settings.ts
+│   │   │   │   └── ...
 │   │   │   └── services/             # ドメイン固有のロジック（単体テストが容易な純粋関数）
 │   │   │       ├── buildEpisodeGroupTree.ts
-│   │   │       ├── generateEpisodeFilenames.ts
-│   │   │       └── parseSrtToDialogues.ts
+│   │   │       └── ...
 │   │   └── infrastructure/           # インフラ層: 外部システムとの連携
 │   │       ├── config.ts             # 設定ファイル
 │   │       ├── contracts/            # 外部との通信に使われるデータ型(API契約) (将来追加する可能性あり)
 │   │       └── repositories/         # DBやRustバックエンドとの通信処理
-│   │           ├── apiKeyRepository.ts
 │   │           ├── dialogueRepository.ts
-│   │           ├── ...
-│   │           └── sentenceCardRepository.ts
+│   │           └── ...
 │   ├── routes/                       # SvelteKitのルーティング (Presentation層の一部)
 │   │   ├── +layout.svelte
 │   │   ├── [...groupId]/
@@ -175,6 +173,8 @@ erDiagram
         TEXT audio_path
         TEXT script_path
         INTEGER duration_seconds
+        TEXT learning_language
+        TEXT explanation_language
         TEXT created_at
         TEXT updated_at
     }
@@ -185,6 +185,8 @@ erDiagram
         INTEGER end_time_ms
         TEXT original_text
         TEXT corrected_text
+        TEXT translation
+        TEXT explanation
     }
     SENTENCE_CARDS {
         INTEGER id PK
@@ -227,8 +229,8 @@ erDiagram
 | `episode_group_id` | INTEGER  | `episode_groups.id`への外部キー    |
 | `display_order` | INTEGER     | グループ内でのエピソードの表示順序 |
 | `title`         | TEXT        | エピソードのタイトル               |
-| `audio_path`    | TEXT        | 音声ファイルの絶対パス             |
-| `script_path`   | TEXT        | スクリプトファイルの絶対パス       |
+| `audio_path`    | TEXT        | 音声ファイルのパス             |
+| `script_path`   | TEXT        | スクリプトファイルのパス       |
 | `duration_seconds` | INTEGER  | 音声の再生時間（秒）               |
 | `learning_language` | TEXT    | 学習ターゲット言語 (例: 'English') |
 | `explanation_language` | TEXT  | 説明言語 (例: 'Japanese')        |
@@ -297,13 +299,13 @@ Sentence Miningによって作成されたカードを管理する。
 ### 4.1. フロントエンド レイヤー別責務
 
 - **Presentation (`src/routes`, `src/lib/presentation/`)**: Svelteコンポーネントで構成。ユーザーからの入力を受け取り、`Application`層のユースケースを呼び出す。ユースケースから返された結果や`stores`の状態を画面に描画することに専念する。
-- **Application (`src/lib/application/`)**: ユースケースを実装する層。例えば「新しいSentence Cardを作成する」というユースケースは、`Domain`のデータ構造を使い、`Infrastructure`のリポジトリを呼び出して永続化を行う、といった一連の処理フローを定義する。`stores`を用いてUIにまたがる状態を管理する。
+- **Application (`src/lib/application/`)**: ユースケースを実装する層。ユースケースは、`Domain`のデータ構造やサービスを使い、`Infrastructure`のリポジトリを呼び出して永続化を行う、といった一連の処理フローを定義する。`stores`を用いてUIにまたがる状態を管理する。
 - **Domain (`src/lib/domain/`)**: アプリケーションのビジネスロジックの核。外部のライブラリやフレームワークに依存しない、純粋なTypeScriptで記述される。
   - **`entities/`**: アプリケーションの核となるデータ型、エンティティ（例: `Episode`, `SentenceCard`）の型定義。
-  - `services/`: ドメイン固有のルールや計算を行うロジック。
+  - **`services/`**: ドメイン固有のルールや計算を行うロジック。
 - **Infrastructure (`src/lib/infrastructure/`)**: 外部システムとの通信を担当する層。
   - **`contracts/`**: 外部システムとの「契約」を定義するデータ型。Tauriコマンドの引数や戻り値となるData Transfer Object (DTO)などをここに置く。
-  - `repositories/`: Tauri SQL Pluginを介したDB操作や、RustバックエンドのTauriコマンドを呼び出す処理を実装する。`Application`層はここのインターフェースを通じて外部と通信する。
+  - **`repositories/`**: Tauri SQL Pluginを介したDB操作や、RustバックエンドのTauriコマンドを呼び出す処理を実装する。`Application`層はここのインターフェースを通じて外部と通信する。
 
 ### 4.2. バックエンド API (Tauri Commands)
 
