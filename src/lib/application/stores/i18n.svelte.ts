@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/public';
-import { en } from '$lib/locales/en';
-import { ja } from '$lib/locales/ja';
+import { en } from '$lib/application/locales/en';
+import { ja } from '$lib/application/locales/ja';
 import { info } from '@tauri-apps/plugin-log';
 import i18next, { type TFunction } from 'i18next';
 

@@ -14,7 +14,7 @@
 - **Lint**: `npm run lint`
 - **Check**: `npm run check`
 - **Format**: `npm run format`
-- **Test all**: `npx vitest run`
+- **Test all**: `npm run test`
 - **Test single file**: `npx vitest <path_to_test_file> run`（例: `npx vitest src/lib/domain/services/buildEpisodeGroupTree.test.ts run`）
 
 ## 作業共通ルール
@@ -24,7 +24,7 @@
 - ファイルを作成・編集した後は `npm run format` を実行してコードを整形すること。
 - ファイルを作成・編集した後は `npm run lint` を実行してリンターエラーがないか確認すること。
 - ファイルを作成・編集した後は `npm run check` を実行してSvelteKitによるチェックエラーがないか確認すること。
-- テストコードを作成したり修正した場合、まずテストコードの作成・修正内容を説明して、テストは実行せずに一旦作業を終了すること。
+- テストコードを作成したり修正した場合、まずテストコードの変更内容を説明して、テストは実行せずに一旦作業を終了すること。
 
 ## プロジェクトの概要
 
@@ -50,5 +50,5 @@
 
 ## 特記事項
 
-Svelte/SvelteKit コーディングルールに記載しているにも関わらず、`on:click` にような古い記述を提示することが多くあります。
-Svelte5 では `onclick` のように記述してください。
+- コードの解析や編集に serena を積極的に利用すること。
+- Svelte/SvelteKit コーディングルールに記載しているにも関わらず、`on:click` にような古い記述を提示することが多く見られる。Svelte5 では `onclick` のように記述すること。

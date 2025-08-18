@@ -23,7 +23,6 @@ fn get_db_name() -> String {
 pub fn run() {
     let db_name = get_db_name();
     let db_url = format!("sqlite:{}", db_name);
-    println!("Using database URL: {}", db_url);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())

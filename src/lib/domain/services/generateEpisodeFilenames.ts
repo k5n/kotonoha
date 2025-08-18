@@ -21,7 +21,7 @@ function getExtension(filename: string): string {
 export function generateEpisodeFilenames(
   audioFilename: string,
   scriptFilename: string
-): { audio: string; script: string; uuid: string } {
+): { readonly audio: string; readonly script: string; readonly uuid: string } {
   const uuid = uuidV4();
   const audioExt = getExtension(audioFilename);
   const scriptExt = getExtension(scriptFilename);

@@ -1,5 +1,5 @@
-import { i18nStore } from '../../application/stores/i18n.svelte';
-import { settingsRepository } from '../../infrastructure/repositories/settingsRepository';
+import { i18nStore } from '$lib/application/stores/i18n.svelte';
+import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 
 let initialized = false;
 
