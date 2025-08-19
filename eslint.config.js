@@ -1,4 +1,5 @@
 import eslint from '@eslint/js';
+import vitest from '@vitest/eslint-plugin';
 import prettier from 'eslint-config-prettier';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
@@ -45,6 +46,22 @@ export default tsEslint.config(
       },
       globals: {
         ...globals.browser,
+      },
+    },
+  },
+  // Vitest plugin for test files (flat config requires the plugin object
+  // to be defined in the same config object that applies the rules)
+  {
+    files: ['**/*.test.ts'],
+    plugins: {
+      vitest,
+    },
+    rules: {
+      ...vitest.configs.recommended.rules,
+    },
+    languageOptions: {
+      globals: {
+        ...vitest.environments.env.globals,
       },
     },
   },
