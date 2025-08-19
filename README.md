@@ -71,30 +71,6 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 
 This project is licensed under the GPLv3. See the [LICENSE](./LICENSE) file for details.
 
-## ⚠️ Known Issue
-
-### Blank/Black Window on Linux with WebKitGTK 2.48
-
-<!-- cSpell:words Xorg DMABUF -->
-
-If you experience a blank or black window when running this application on Linux, it may be due to a widely reported compatibility issue between Tauri 2 applications and [WebKitGTK version 2.48](https://webkitgtk.org/2025/04/08/webkitgtk-2.48.html).
-
-Notably, this issue often appears when the application is started from a desktop launcher. Launching it directly from a command-line terminal may work correctly and serve as a temporary workaround.
-
-This issue can occurs even when recommended environment variables are set (e.g. WEBKIT_DISABLE_COMPOSITING_MODE=1 or WEBKIT_DISABLE_DMABUF_RENDERER=1).
-
-The problem is not specific to this application but is a well-known upstream bug in WebKitGTK 2.48 affecting multiple GTK-based apps.
-
-As of now, there is no complete workaround if you are using WebKitGTK 2.48; downgrading WebKitGTK to 2.40.x or 2.44.x is the most reliable solution.
-
-References:
-
-- [Tauri GitHub issue #9662](https://github.com/tauri-apps/tauri/issues/9662)
-- [Tauri GitHub issue #13183](https://github.com/tauri-apps/tauri/issues/13183)
-- [Tauri GitHub issue #13204](https://github.com/tauri-apps/tauri/issues/13204)
-- [Tauri GitHub issue #13899](https://github.com/tauri-apps/tauri/issues/13899)
-- [Tauri GitHub issue #13885](https://github.com/tauri-apps/tauri/issues/13885)
-
 ---
 
 ## 🛠️ Development
@@ -165,3 +141,51 @@ Kotonoha uses different database files depending on the build environment:
 
 This is controlled by the `PUBLIC_APP_DB_NAME` variable set in `.env.development`. Both the TypeScript and Rust sides of the application read this variable and switch the database file accordingly.  
 This ensures that development and production data are kept separate.
+
+### Building AppImage Locally on Linux (for Developers)
+
+If you are developing on Linux, you can build the AppImage package locally using Docker and Docker Compose. This provides a reproducible environment similar to the official GitHub Actions workflow.
+
+#### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+#### Steps
+
+1. **Set your user ID and group ID**
+
+   To ensure build artifacts are owned by your user, create a `.env` file in the project root with your UID and GID:
+
+   ```sh
+   echo "UID=$(id -u)" > .env
+   echo "GID=$(id -g)" >> .env
+   ```
+
+2. **Build and run the container**
+
+   ```sh
+   docker-compose up
+   ```
+
+   This will install all dependencies, build the project, and generate the AppImage file in `src-tauri/target/release/bundle/appimage`.
+
+3. **Check the build output**
+
+   The build progress will be shown in your terminal. After completion, you can find the generated `.AppImage` file in the above directory.
+
+#### Notes
+
+- This workflow is intended for **local development only**. Official release builds are performed by GitHub Actions.
+- The container uses your UID/GID to avoid permission issues with build artifacts.
+- If you encounter permission errors related to Rust or Node.js, ensure your UID/GID are set correctly in `.env`.
+
+If you build the AppImage without using the provided Docker environment (Ubuntu 22.04), you may encounter issues related to WebKitGTK version compatibility (such as problems with WebKitGTK 2.48).
+
+References:
+
+- [Tauri GitHub issue #9662](https://github.com/tauri-apps/tauri/issues/9662)
+- [Tauri GitHub issue #13183](https://github.com/tauri-apps/tauri/issues/13183)
+- [Tauri GitHub issue #13204](https://github.com/tauri-apps/tauri/issues/13204)
+- [Tauri GitHub issue #13899](https://github.com/tauri-apps/tauri/issues/13899)
+- [Tauri GitHub issue #13885](https://github.com/tauri-apps/tauri/issues/13885)

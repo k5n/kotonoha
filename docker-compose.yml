@@ -1,0 +1,13 @@
+# This docker-compose file is intended for local development only, specifically for Linux users.
+# Release builds are handled by GitHub Actions workflows; do not use this configuration for production releases.
+
+version: '3.8'
+services:
+  kotonoha-linux-build:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - UID=${UID}
+      - GID=${GID}
+    user: "${UID}:${GID}"
