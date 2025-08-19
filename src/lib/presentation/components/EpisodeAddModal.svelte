@@ -71,7 +71,7 @@
     </div>
     <div class="mb-4">
       <Label class="mb-2 block" for="srtFile">{t('components.episodeAddModal.srtFileLabel')}</Label>
-      <Fileupload accept=".srt" bind:files={srtFiles} id="srtFile" />
+      <Fileupload accept=".srt,.sswt" bind:files={srtFiles} id="srtFile" />
     </div>
     {#if errorMessage}
       <Alert class="mb-4" color="red">

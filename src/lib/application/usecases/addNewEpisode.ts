@@ -1,5 +1,7 @@
+import type { Dialogue } from '$lib/domain/entities/dialogue';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
 import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
+import { parseSswtToDialogues } from '$lib/domain/services/parseSswtToDialogues';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
@@ -74,11 +76,27 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
       explanationLanguage: 'Japanese',
     });
     try {
-      const script = await scriptFile.text();
-      const { dialogues, warnings } = parseSrtToDialogues(script, episode.id);
-      for (const warning of warnings) {
-        warn(`SRT parsing warning for episode ${episode.id}: ${warning}`);
+      const scriptContent = await scriptFile.text();
+      const scriptExtension = scriptFile.name.split('.').pop()?.toLowerCase();
+
+      let dialogues: readonly Dialogue[] = [];
+      let warnings: readonly string[] = [];
+
+      if (scriptExtension === 'srt') {
+        const result = parseSrtToDialogues(scriptContent, episode.id);
+        dialogues = result.dialogues;
+        warnings = result.warnings;
+      } else if (scriptExtension === 'sswt') {
+        dialogues = parseSswtToDialogues(scriptContent, episode.id);
+      } else {
+        warn(`Unsupported script file extension: ${scriptExtension}`);
+        throw new Error(`Unsupported script file type: ${scriptExtension}`);
       }
+
+      for (const warning of warnings) {
+        warn(`Script parsing warning for episode ${episode.id}: ${warning}`);
+      }
+
       // NOTE: 本当はトランザクションでepisodeと一緒に入れるべきだけど・・・。実装の楽さを優先した。
       await dialogueRepository.bulkInsertDialogues(episode.id, dialogues);
     } catch (err) {
