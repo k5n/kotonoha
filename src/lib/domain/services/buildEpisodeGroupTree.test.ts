@@ -1,5 +1,4 @@
 import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
-import { describe, expect, it } from 'vitest';
 import { buildEpisodeGroupTree } from './buildEpisodeGroupTree';
 
 describe('buildEpisodeGroupTree', () => {
