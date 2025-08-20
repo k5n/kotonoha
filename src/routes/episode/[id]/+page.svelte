@@ -83,11 +83,13 @@
   }
 </script>
 
-<div class="p-4 md:p-6">
-  <Button color="light" class="mb-4" onclick={goBack}>
-    <ArrowLeftOutline class="me-2 h-5 w-5" />
-    {t('episodeDetailPage.backButton')}
-  </Button>
+<div class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col">
+  <div>
+    <Button color="light" class="mb-4" onclick={goBack}>
+      <ArrowLeftOutline class="me-2 h-5 w-5" />
+      {t('episodeDetailPage.backButton')}
+    </Button>
+  </div>
 
   {#if errorMessage}
     <Alert color="red">
@@ -96,19 +98,20 @@
       {errorMessage}
     </Alert>
   {:else if data.episode}
-    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-      <div class="lg:col-span-2">
-        <Heading tag="h1" class="mb-2 text-3xl font-bold">{data.episode.title}</Heading>
-        <p class="mb-6 text-gray-500">
-          {t('episodeDetailPage.playbackTime', {
-            minutes: Math.floor((data.episode.durationSeconds ?? 0) / 60),
-            seconds: Math.floor((data.episode.durationSeconds ?? 0) % 60),
-          })}
-        </p>
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:flex-1 lg:min-h-0">
+      <div class="flex flex-col lg:col-span-2 lg:min-h-0">
+        <div>
+          <Heading tag="h1" class="mb-2 text-3xl font-bold">{data.episode.title}</Heading>
+          <p class="mb-6 text-gray-500">
+            {t('episodeDetailPage.playbackTime', {
+              minutes: Math.floor((data.episode.durationSeconds ?? 0) / 60),
+              seconds: Math.floor((data.episode.durationSeconds ?? 0) % 60),
+            })}
+          </p>
+          <AudioPlayer src={data.audioBlobUrl} bind:currentTime />
+        </div>
 
-        <AudioPlayer src={data.audioBlobUrl} bind:currentTime />
-
-        <div class="mt-6">
+        <div class="mt-6 flex flex-col lg:flex-1 lg:min-h-0">
           <Heading tag="h2" class="mb-3 text-xl font-semibold">
             {t('episodeDetailPage.scriptTitle')}
           </Heading>
@@ -124,7 +127,7 @@
         </div>
       </div>
 
-      <div class="lg:col-span-1">
+      <div class="flex flex-col lg:col-span-1 lg:min-h-0">
         <Heading tag="h2" class="mb-3 text-xl font-semibold">
           {t('episodeDetailPage.sentenceCardsTitle')}
         </Heading>
