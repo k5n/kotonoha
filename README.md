@@ -30,7 +30,6 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 
 ### Future Ideas
 
-- **AI-Powered Transcription (ASR)**: To streamline the import process, we are exploring an Automatic Speech Recognition (ASR) feature for users who only have audio files. This may be integrated directly into Kotonoha or offered as a separate, specialized companion app.
 - **Multi-language Support**: Full internationalization of the app interface, and support for a wider range of learning and explanation languages.
 - **Cloud Sync**: Sync your learning data across multiple devices via services like Google Drive.
 - **Mobile App**: A mobile version of the application for learning on the go.
@@ -54,7 +53,7 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 
     - Kotonoha works with pairs of audio and transcript files.
     - The audio can be in common formats like MP3, M4A, WAV, and OGG.
-    - The transcript **must be in SRT (`.srt`) format**. You can use transcription tools like [Whisper](https://github.com/openai/whisper) to generate SRT files from your audio/video content.
+    - The transcript can be in either **SRT (`.srt`) format** or our original **SSWT (`.sswt`) format**. If you only have audio files, you can use our companion app [Kotonoha-ASR](https://github.com/k5n/kotonoha-asr) to generate SRT or SSWT subtitle files. Download releases from [here](https://github.com/k5n/kotonoha-asr/releases). You can also use transcription tools like [Whisper](https://github.com/openai/whisper) to generate SRT files from your audio/video content. See below for details about the SSWT format.
 
 2.  **Launch Kotonoha**: Start the application.
 
@@ -63,9 +62,44 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 4.  **Import Your Episode**:
 
     - Create an **Album** to store your episodes. You can also create Folders to organize your Albums, but episodes can only be added directly to an Album.
-    - Click the "Add Episode" button within an Album and select your audio and SRT transcript file pair.
+    - Click the "Add Episode" button within an Album and select your audio and transcript file pair (SRT or SSWT).
 
 5.  **Start Studying**: Open an episode to view the synchronized transcript and begin your sentence mining session.
+
+## 📄 Supported Subtitle Formats
+
+Kotonoha supports the following subtitle formats:
+
+### SRT (SubRip Subtitle)
+
+The standard SRT format is widely used and compatible with most subtitle tools. Each entry consists of a sequence number, a time range, and the subtitle text.
+
+### SSWT (Simple Subtitle With Timestamps)
+
+SSWT is a simple, original format designed for Kotonoha. Each line represents a single subtitle and includes a time range and the text:
+
+```
+[HH:MM:SS.mmm -> HH:MM:SS.mmm] Subtitle text here
+```
+
+- `HH:MM:SS.mmm` is the start and end time (hours:minutes:seconds.milliseconds)
+- `->` separates the start and end times
+- The subtitle text follows after the time range
+
+**Example:**
+
+```
+[00:00:01.000 -> 00:00:02.500] This is a test sentence.
+[00:00:05.500 -> 00:00:07.000] And here is line two.
+[00:00:07.100 -> 00:00:09.900] Finally, the third line.
+```
+
+**Note:** SSWT is a Kotonoha-specific format and is not compatible with other subtitle tools. SRT remains fully supported for interoperability.
+
+**Automatic Speech Recognition (ASR):**
+Kotonoha does not include built-in ASR functionality. If you only have audio files, please use our companion app [Kotonoha-ASR](https://github.com/k5n/kotonoha-asr) to generate SRT or SSWT subtitle files. Download releases from [here](https://github.com/k5n/kotonoha-asr/releases).
+
+---
 
 ## 📄 License
 
