@@ -56,9 +56,13 @@
 
 <div
   bind:this={containerEl}
-  class="h-[400px] space-y-1 overflow-y-auto scroll-smooth rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
+  class="h-[50vh] space-y-1 overflow-y-auto scroll-smooth rounded-lg border bg-gray-50 p-4 lg:h-full dark:border-gray-700 dark:bg-gray-800"
 >
   {#if dialogues.length > 0}
+    <!--
+      上下の余白（50% - 1.25rem）は、アクティブな項目が中央に来るように調整するためのものです。
+      1.25rem は、p-3（0.75rem）と rounded-lg の境界付近の余白を考慮したおおよその値です。
+    -->
     <div class="h-[calc(50%-1.25rem)]"></div>
     {#each dialogues as dialogue, index (dialogue.id)}
       <div
