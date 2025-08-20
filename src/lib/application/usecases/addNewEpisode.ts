@@ -1,4 +1,3 @@
-import type { Dialogue } from '$lib/domain/entities/dialogue';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
 import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
 import { parseSswtToDialogues } from '$lib/domain/services/parseSswtToDialogues';
@@ -79,19 +78,15 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
       const scriptContent = await scriptFile.text();
       const scriptExtension = scriptFile.name.split('.').pop()?.toLowerCase();
 
-      let dialogues: readonly Dialogue[] = [];
-      let warnings: readonly string[] = [];
-
-      if (scriptExtension === 'srt') {
-        const result = parseSrtToDialogues(scriptContent, episode.id);
-        dialogues = result.dialogues;
-        warnings = result.warnings;
-      } else if (scriptExtension === 'sswt') {
-        dialogues = parseSswtToDialogues(scriptContent, episode.id);
-      } else {
-        warn(`Unsupported script file extension: ${scriptExtension}`);
+      const supportedExtensions = ['srt', 'sswt'];
+      if (scriptExtension === undefined || !supportedExtensions.includes(scriptExtension)) {
         throw new Error(`Unsupported script file type: ${scriptExtension}`);
       }
+      const parseFunction = scriptExtension === 'srt' ? parseSrtToDialogues : parseSswtToDialogues;
+
+      const result = parseFunction(scriptContent, episode.id);
+      const dialogues = result.dialogues;
+      const warnings = result.warnings;
 
       for (const warning of warnings) {
         warn(`Script parsing warning for episode ${episode.id}: ${warning}`);
