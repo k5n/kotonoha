@@ -15,8 +15,8 @@ function parseTimeToMs(timeString: string): number | null {
   const secMsParts = timeParts[2].split('.');
   if (secMsParts.length < 1) return null;
   const seconds = parseInt(secMsParts[0], 10);
-  // Just to be safe, if there are no milliseconds, set it to 0.
-  const milliseconds = secMsParts.length > 1 ? parseInt(secMsParts[1], 10) : 0;
+  if (secMsParts.length !== 2 || secMsParts[1].length !== 3) return null;
+  const milliseconds = parseInt(secMsParts[1], 10);
   if ([hours, minutes, seconds, milliseconds].some((v) => isNaN(v))) return null;
   return (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds;
 }
