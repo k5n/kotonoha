@@ -4,7 +4,8 @@ Kotonoha is a desktop application for language learning, centered around AI-powe
 
 > ⚠️ **Warning:** This application is in early development. Please do not expect a stable experience.
 
-![Kotonoha Screenshot](doc/images/screenshots.png)
+![Kotonoha Screenshot - Episode](doc/images/episode.png)
+![Kotonoha Screenshot- Sentence Mining](doc/images/sentence-mining.png)
 
 ## ✨ Features
 

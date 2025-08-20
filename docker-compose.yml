@@ -10,4 +10,4 @@ services:
     environment:
       - UID=${UID}
       - GID=${GID}
-    user: "${UID}:${GID}"
+    user: '${UID}:${GID}'

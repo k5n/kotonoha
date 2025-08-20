@@ -6,6 +6,10 @@
 graph LR
         subgraph "lib"
             subgraph "application"
+                subgraph "locales"
+                    src_lib_application_locales_en_ts["en.ts"]
+                    src_lib_application_locales_ja_ts["ja.ts"]
+                end
                 subgraph "stores"
                     src_lib_application_stores_apiKeyStore_svelte_ts["apiKeyStore.svelte.ts"]
                     src_lib_application_stores_groupPathStore_svelte_ts["groupPathStore.svelte.ts"]
@@ -50,6 +54,7 @@ graph LR
                     src_lib_domain_services_generateEpisodeFilenames_ts["generateEpisodeFilenames.ts"]
                     src_lib_domain_services_groupTreeHelper_ts["groupTreeHelper.ts"]
                     src_lib_domain_services_parseSrtToDialogues_ts["parseSrtToDialogues.ts"]
+                    src_lib_domain_services_parseSswtToDialogues_ts["parseSswtToDialogues.ts"]
                 end
             end
             subgraph "infrastructure"
@@ -65,10 +70,6 @@ graph LR
                     src_lib_infrastructure_repositories_sentenceCardRepository_ts["sentenceCardRepository.ts"]
                     src_lib_infrastructure_repositories_settingsRepository_ts["settingsRepository.ts"]
                 end
-            end
-            subgraph "locales"
-                src_lib_locales_en_ts["en.ts"]
-                src_lib_locales_ja_ts["ja.ts"]
             end
             subgraph "presentation"
                 subgraph "components"
@@ -118,12 +119,13 @@ graph LR
             end
         end
 src_lib_application_stores_groupPathStore_svelte_ts --> src_lib_domain_entities_episodeGroup_ts
-src_lib_application_stores_i18n_svelte_ts --> src_lib_locales_en_ts
-src_lib_application_stores_i18n_svelte_ts --> src_lib_locales_ja_ts
+src_lib_application_stores_i18n_svelte_ts --> src_lib_application_locales_en_ts
+src_lib_application_stores_i18n_svelte_ts --> src_lib_application_locales_ja_ts
 src_lib_application_usecases_addEpisodeGroup_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_addEpisodeGroup_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_generateEpisodeFilenames_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseSrtToDialogues_ts
+src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseSswtToDialogues_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_fileRepository_ts
@@ -191,6 +193,7 @@ src_lib_domain_entities_sentenceAnalysisResult_ts --> src_lib_domain_entities_se
 src_lib_domain_services_buildEpisodeGroupTree_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_groupTreeHelper_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_parseSrtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_domain_services_parseSswtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_appInfoRepository_ts --> src_lib_domain_entities_appInfo_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_infrastructure_config_ts
