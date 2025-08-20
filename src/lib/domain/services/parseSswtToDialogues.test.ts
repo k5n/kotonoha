@@ -77,11 +77,11 @@ Another invalid line.
   });
 
   it('should return warnings for lines with invalid time format', () => {
-    const sswtContent = '[00:00:XX.000 -> 00:00:02.000] Invalid time line.';
+    const sswtContent = '[00:00:60.002 -> 00:00:02.000] Invalid time line.';
     const { dialogues, warnings } = parseSswtToDialogues(sswtContent, 1);
 
     expect(dialogues).toHaveLength(0);
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toMatch(/Invalid SSWT format/);
+    expect(warnings[0]).toMatch(/Invalid time format/);
   });
 });

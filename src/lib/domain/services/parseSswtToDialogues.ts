@@ -5,16 +5,19 @@ const sswtLineRegex = /^\[(\d{2}:\d{2}:\d{2}\.\d{3}) -> (\d{2}:\d{2}:\d{2}\.\d{3
 /**
  * Parses a time string (HH:MM:SS.ms) into milliseconds.
  * @param timeString The time string to parse.
- * @returns The time in milliseconds.(returns null if the format is invalid)
+ * @returns The time in milliseconds. (returns null if the format is invalid)
  */
 function parseTimeToMs(timeString: string): number | null {
   const timeParts = timeString.split(':');
   if (timeParts.length !== 3) return null;
   const hours = parseInt(timeParts[0], 10);
+  if (hours < 0 || hours > 23) return null; // Validate hours
   const minutes = parseInt(timeParts[1], 10);
+  if (minutes < 0 || minutes > 59) return null; // Validate minutes
   const secMsParts = timeParts[2].split('.');
   if (secMsParts.length < 1) return null;
   const seconds = parseInt(secMsParts[0], 10);
+  if (seconds < 0 || seconds > 59) return null; // Validate seconds
   if (secMsParts.length !== 2 || secMsParts[1].length !== 3) return null;
   const milliseconds = parseInt(secMsParts[1], 10);
   if ([hours, minutes, seconds, milliseconds].some((v) => isNaN(v))) return null;
