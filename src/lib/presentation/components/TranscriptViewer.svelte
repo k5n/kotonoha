@@ -56,7 +56,7 @@
 
 <div
   bind:this={containerEl}
-  class="h-[50vh] space-y-1 overflow-y-auto scroll-smooth rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800 lg:h-full"
+  class="h-[50vh] space-y-1 overflow-y-auto scroll-smooth rounded-lg border bg-gray-50 p-4 lg:h-full dark:border-gray-700 dark:bg-gray-800"
 >
   {#if dialogues.length > 0}
     <!--

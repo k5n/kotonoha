@@ -98,7 +98,7 @@
       {errorMessage}
     </Alert>
   {:else if data.episode}
-    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:flex-1 lg:min-h-0">
+    <div class="grid grid-cols-1 gap-8 lg:min-h-0 lg:flex-1 lg:grid-cols-3">
       <div class="flex flex-col lg:col-span-2 lg:min-h-0">
         <div>
           <Heading tag="h1" class="mb-2 text-3xl font-bold">{data.episode.title}</Heading>
@@ -111,7 +111,7 @@
           <AudioPlayer src={data.audioBlobUrl} bind:currentTime />
         </div>
 
-        <div class="mt-6 flex flex-col lg:flex-1 lg:min-h-0">
+        <div class="mt-6 flex flex-col lg:min-h-0 lg:flex-1">
           <Heading tag="h2" class="mb-3 text-xl font-semibold">
             {t('episodeDetailPage.scriptTitle')}
           </Heading>
