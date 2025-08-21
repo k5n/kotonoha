@@ -4,14 +4,14 @@
 
   type Props = {
     show: boolean;
-    isSubmitting?: boolean;
-    initialName?: string;
+    isSubmitting: boolean;
+    initialName: string;
     onClose: () => void;
     onSubmit: (_name: string) => void;
   };
-  let { show, isSubmitting = false, initialName = '', onClose, onSubmit }: Props = $props();
+  let { show, isSubmitting, initialName, onClose, onSubmit }: Props = $props();
 
-  let name = $state(initialName);
+  let name = $derived(initialName);
   let errorMessage = $state('');
 
   function handleSubmit() {
