@@ -27,6 +27,14 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
 }
 
 export const dialogueRepository = {
+  async getDialogueById(dialogueId: number): Promise<Dialogue | null> {
+    const db = new Database(getDatabasePath());
+    const rows = await db.select<DialogueRow[]>('SELECT * FROM dialogues WHERE id = ?', [
+      dialogueId,
+    ]);
+    return rows.length > 0 ? mapRowToDialogue(rows[0]) : null;
+  },
+
   async getDialoguesByEpisodeId(episodeId: number): Promise<readonly Dialogue[]> {
     const db = new Database(getDatabasePath());
     const rows = await db.select<DialogueRow[]>(

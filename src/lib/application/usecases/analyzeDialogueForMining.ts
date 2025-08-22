@@ -47,23 +47,23 @@ export async function analyzeDialogueForMining(
   context: readonly Dialogue[]
 ): Promise<SentenceAnalysisResult> {
   // 1. キャッシュを確認
-  if (dialogue.translation && dialogue.explanation) {
-    const cachedCards = await sentenceCardRepository.getSentenceCardsByDialogueId(dialogue.id);
-    if (cachedCards.length > 0) {
-      return {
-        translation: dialogue.translation,
-        explanation: dialogue.explanation,
-        items: cachedCards.map((card) => ({
-          id: card.id,
-          expression: card.expression,
-          partOfSpeech: card.partOfSpeech,
-          contextualDefinition: card.contextualDefinition,
-          coreMeaning: card.coreMeaning,
-          exampleSentence: card.sentence,
-          status: card.status,
-        })),
-      };
-    }
+  const cachedCards = await sentenceCardRepository.getSentenceCardsByDialogueId(dialogue.id);
+  if (cachedCards.length > 0) {
+    // ダイアログの翻訳と説明をキャッシュから取得
+    const cachedDialogue = await dialogueRepository.getDialogueById(dialogue.id);
+    return {
+      translation: cachedDialogue?.translation || '',
+      explanation: cachedDialogue?.explanation || '',
+      items: cachedCards.map((card) => ({
+        id: card.id,
+        expression: card.expression,
+        partOfSpeech: card.partOfSpeech,
+        contextualDefinition: card.contextualDefinition,
+        coreMeaning: card.coreMeaning,
+        exampleSentence: card.sentence,
+        status: card.status,
+      })),
+    };
   }
 
   // 2. キャッシュがなければLLMで解析
