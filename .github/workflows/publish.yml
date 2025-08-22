@@ -36,12 +36,7 @@ jobs:
             librsvg2-dev \
             patchelf \
             xdg-utils \
-            file \
-            gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good \
-            gstreamer1.0-plugins-bad \
-            gstreamer1.0-plugins-ugly \
-            gstreamer1.0-libav
+            file
 
       - name: setup node
         uses: actions/setup-node@v4
