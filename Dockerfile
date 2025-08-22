@@ -3,7 +3,7 @@
 # This Dockerfile is intended for local development only, and should be used by developers working on Linux.
 # Release builds are performed by GitHub Actions workflows; do not use this container for production releases.
 #
-# cSpell:ignore noninteractive ignore libwebkit libappindicator librsvg patchelf usermod
+# cSpell:ignore noninteractive ignore libwebkit libappindicator librsvg patchelf usermod gstreamer fdkaac libav
 
 FROM ubuntu:jammy-20250730
 
@@ -21,6 +21,13 @@ RUN apt-get update && \
     git \
     xdg-utils \
     file
+#    file \
+#    gstreamer1.0-plugins-base \
+#    gstreamer1.0-plugins-good \
+#    gstreamer1.0-plugins-bad \
+#    gstreamer1.0-plugins-ugly \
+#    gstreamer1.0-fdkaac
+#    gstreamer1.0-libav
 
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get install -y nodejs
