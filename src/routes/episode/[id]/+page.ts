@@ -18,7 +18,6 @@ export const load: PageLoad = async ({ params }) => {
       episode: result.episode,
       dialogues: result.dialogues,
       sentenceCards: result.sentenceCards,
-      audioBlobUrl: result.audioBlobUrl,
       isApiKeySet: isApiKeySet,
       settings: settings,
       errorKey: null,

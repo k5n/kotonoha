@@ -1,4 +1,5 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+mod audio;
 mod llm;
 mod migrations;
 mod stronghold;
@@ -19,12 +20,15 @@ fn get_db_name() -> String {
     }
 }
 
+use audio::AudioState;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let db_name = get_db_name();
     let db_url = format!("sqlite:{}", db_name);
 
     tauri::Builder::default()
+        .manage(AudioState::default())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(
@@ -61,7 +65,12 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             analyze_sentence_with_llm,
-            get_stronghold_password
+            get_stronghold_password,
+            audio::play_audio,
+            audio::pause_audio,
+            audio::resume_audio,
+            audio::stop_audio,
+            audio::seek_audio
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2,13 +2,12 @@ import {
   BaseDirectory,
   exists,
   mkdir,
-  readFile,
   readTextFile,
   remove,
   writeFile,
   writeTextFile,
 } from '@tauri-apps/plugin-fs';
-import { trace, warn } from '@tauri-apps/plugin-log';
+import { trace } from '@tauri-apps/plugin-log';
 import { getMediaDir } from '../config';
 
 /**
@@ -18,24 +17,6 @@ async function ensureDirExists(dirPath: string, baseDir: BaseDirectory): Promise
   if (!(await exists(dirPath, { baseDir }))) {
     trace(`Directory does not exist, creating: ${dirPath}`);
     await mkdir(dirPath, { recursive: true, baseDir });
-  }
-}
-
-function getMimeType(filename: string): string {
-  const extension = filename.split('.').pop()?.toLowerCase();
-  switch (extension) {
-    case 'mp3':
-      return 'audio/mpeg';
-    case 'wav':
-      return 'audio/wav';
-    case 'ogg':
-      return 'audio/ogg';
-    case 'm4a':
-      return 'audio/mp4';
-    default:
-      warn(`Unknown audio file extension: ${extension}. Falling back to application/octet-stream.`);
-      // 不明な拡張子の場合は、ブラウザにMIMEタイプを推測させる
-      return 'application/octet-stream';
   }
 }
 
@@ -67,17 +48,6 @@ export const fileRepository = {
     const path = `${dir}/${filename}`;
     await writeTextFile(path, text, { baseDir: BaseDirectory.AppLocalData });
     return path;
-  },
-
-  async getAudioBlobUrl(relativePath: string): Promise<string> {
-    if (!(await this.fileExists(relativePath))) {
-      warn(`Audio file not found at: ${relativePath}`);
-      return '';
-    }
-    const audioData = await readFile(relativePath, { baseDir: BaseDirectory.AppLocalData });
-    const mimeType = getMimeType(relativePath);
-    const blob = new Blob([audioData], { type: mimeType });
-    return URL.createObjectURL(blob);
   },
 
   async readScriptFile(relativePath: string): Promise<string> {

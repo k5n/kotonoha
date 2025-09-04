@@ -32,7 +32,12 @@ graph LR
                     src_lib_application_usecases_initializeApplication_ts["initializeApplication.ts"]
                     src_lib_application_usecases_moveEpisode_ts["moveEpisode.ts"]
                     src_lib_application_usecases_moveEpisodeGroup_ts["moveEpisodeGroup.ts"]
+                    src_lib_application_usecases_pauseAudio_ts["pauseAudio.ts"]
+                    src_lib_application_usecases_playAudio_ts["playAudio.ts"]
+                    src_lib_application_usecases_resumeAudio_ts["resumeAudio.ts"]
                     src_lib_application_usecases_saveSettings_ts["saveSettings.ts"]
+                    src_lib_application_usecases_seekAudio_ts["seekAudio.ts"]
+                    src_lib_application_usecases_stopAudio_ts["stopAudio.ts"]
                     src_lib_application_usecases_updateEpisodeGroupName_ts["updateEpisodeGroupName.ts"]
                     src_lib_application_usecases_updateEpisodeGroupsOrder_ts["updateEpisodeGroupsOrder.ts"]
                     src_lib_application_usecases_updateEpisodeName_ts["updateEpisodeName.ts"]
@@ -62,6 +67,7 @@ graph LR
                 subgraph "repositories"
                     src_lib_infrastructure_repositories_apiKeyRepository_ts["apiKeyRepository.ts"]
                     src_lib_infrastructure_repositories_appInfoRepository_ts["appInfoRepository.ts"]
+                    src_lib_infrastructure_repositories_audioRepository_ts["audioRepository.ts"]
                     src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository.ts"]
                     src_lib_infrastructure_repositories_episodeGroupRepository_ts["episodeGroupRepository.ts"]
                     src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository.ts"]
@@ -159,7 +165,6 @@ src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_e
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
-src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_fileRepository_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
 src_lib_application_usecases_fetchEpisodeGroups_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_fetchEpisodeGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
@@ -177,10 +182,15 @@ src_lib_application_usecases_moveEpisode_ts --> src_lib_infrastructure_repositor
 src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_domain_services_groupTreeHelper_ts
 src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_pauseAudio_ts --> src_lib_infrastructure_repositories_audioRepository_ts
+src_lib_application_usecases_playAudio_ts --> src_lib_infrastructure_repositories_audioRepository_ts
+src_lib_application_usecases_resumeAudio_ts --> src_lib_infrastructure_repositories_audioRepository_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_application_stores_i18n_svelte_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_domain_entities_settings_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
+src_lib_application_usecases_seekAudio_ts --> src_lib_infrastructure_repositories_audioRepository_ts
+src_lib_application_usecases_stopAudio_ts --> src_lib_infrastructure_repositories_audioRepository_ts
 src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_updateEpisodeGroupsOrder_ts --> src_lib_domain_entities_episodeGroup_ts
@@ -207,7 +217,6 @@ src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_settingsRepository_ts --> src_lib_domain_entities_settings_ts
-src_lib_presentation_components_AudioPlayer_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_lib_presentation_components_ConfirmModal_svelte --> src_lib_application_stores_i18n_svelte_ts
@@ -273,6 +282,11 @@ src_routes_episode_list__groupId___page_ts --> src_lib_domain_entities_episode_t
 src_routes_episode__id___page_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_addSentenceCards_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_analyzeDialogueForMining_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_pauseAudio_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_playAudio_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_resumeAudio_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_seekAudio_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_stopAudio_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_dialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_AudioPlayer_svelte

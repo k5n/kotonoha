@@ -8,6 +8,11 @@
 
   import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
   import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
+  import { pauseAudio } from '$lib/application/usecases/pauseAudio';
+  import { playAudio } from '$lib/application/usecases/playAudio';
+  import { resumeAudio } from '$lib/application/usecases/resumeAudio';
+  import { seekAudio } from '$lib/application/usecases/seekAudio';
+  import { stopAudio } from '$lib/application/usecases/stopAudio';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import type {
     SentenceAnalysisItem,
@@ -22,13 +27,21 @@
   const contextAfter = 3; // コンテキストに含める注目セリフの後のセリフ件数
 
   let { data }: PageProps = $props();
-  let currentTime = $state(0); // 現在の再生時間（秒）
-  let isModalOpen = $state(false); // モーダルの開閉状態
+
+  // Audio Player State
+  let audioState = $state({
+    isPlaying: false,
+    currentTime: 0,
+  });
+  let timerId: ReturnType<typeof setInterval> | null = $state(null);
+
+  // Sentence Mining State
+  let isModalOpen = $state(false);
   let miningTarget: Dialogue | null = $state(null);
-  let analysisResult: SentenceAnalysisResult | null = $state(null); // セリフの分析結果
-  let isProcessingMining = $state(false); // マイニング処理中かどうかのフラグ
+  let analysisResult: SentenceAnalysisResult | null = $state(null);
+  let isProcessingMining = $state(false);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
-  let canMine = $derived(data.isApiKeySet || false); // マイニング可能かどうか
+  let canMine = $derived(data.isApiKeySet || false);
 
   function goBack() {
     if (history.length > 1) {
@@ -38,8 +51,57 @@
     }
   }
 
+  // Audio Player Handlers
+  function handlePlay() {
+    const audioPath = data.episode?.audioPath;
+    if (!audioPath) return;
+    playAudio(audioPath);
+    audioState.isPlaying = true;
+    if (timerId) clearInterval(timerId);
+    timerId = setInterval(() => {
+      if (audioState.currentTime < (data.episode?.durationSeconds ?? 0)) {
+        audioState.currentTime++;
+      } else {
+        handlePause();
+      }
+    }, 1000);
+  }
+
+  function handlePause() {
+    pauseAudio();
+    audioState.isPlaying = false;
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
   function handleSeek(time: number) {
-    currentTime = time;
+    seekAudio(time * 1000);
+    audioState.currentTime = time;
+  }
+
+  function handleResume() {
+    resumeAudio();
+    audioState.isPlaying = true;
+    if (timerId) clearInterval(timerId);
+    timerId = setInterval(() => {
+      if (audioState.currentTime < (data.episode?.durationSeconds ?? 0)) {
+        audioState.currentTime++;
+      } else {
+        handlePause();
+      }
+    }, 1000);
+  }
+
+  function handleStop() {
+    stopAudio();
+    audioState.isPlaying = false;
+    audioState.currentTime = 0;
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
   }
 
   async function openMiningModal(dialogue: Dialogue, context: readonly Dialogue[]) {
@@ -108,7 +170,16 @@
               seconds: Math.floor((data.episode.durationSeconds ?? 0) % 60),
             })}
           </p>
-          <AudioPlayer src={data.audioBlobUrl} bind:currentTime />
+          <AudioPlayer
+            isPlaying={audioState.isPlaying}
+            currentTime={audioState.currentTime}
+            duration={data.episode.durationSeconds}
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onSeek={handleSeek}
+            onResume={handleResume}
+            onStop={handleStop}
+          />
         </div>
 
         <div class="mt-6 flex flex-col lg:min-h-0 lg:flex-1">
@@ -117,11 +188,11 @@
           </Heading>
           <TranscriptViewer
             dialogues={data.dialogues}
-            {currentTime}
+            currentTime={audioState.currentTime}
             {canMine}
             {contextBefore}
             {contextAfter}
-            onSeek={(e) => handleSeek(e)}
+            onSeek={handleSeek}
             onMine={openMiningModal}
           />
         </div>
