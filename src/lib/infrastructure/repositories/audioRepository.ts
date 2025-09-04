@@ -1,3 +1,4 @@
+import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import { invoke } from '@tauri-apps/api/core';
 
 /**
@@ -7,9 +8,19 @@ export const audioRepository = {
   /**
    * 指定されたパスのオーディオを再生します。
    * @param path - 再生するオーディオファイルのフルパス。
+   * @return 再生するオーディオの情報。
    */
-  async play(path: string): Promise<void> {
-    await invoke('play_audio', { path });
+  async open(path: string): Promise<AudioInfo> {
+    const maxPeaks = 1000;
+    const audioInfo = await invoke<AudioInfo>('open_audio', { path, maxPeaks });
+    return audioInfo;
+  },
+
+  /**
+   * オーディオを再生します。
+   */
+  async play(): Promise<void> {
+    await invoke('play_audio');
   },
 
   /**

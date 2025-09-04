@@ -1,5 +1,6 @@
-use log::{info, warn};
-use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink};
+use log::{debug, info, warn};
+use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
+use serde::Serialize;
 use std::fs;
 use std::io::{BufReader, Cursor};
 use std::sync::Mutex;
@@ -10,6 +11,12 @@ pub struct AudioState {
     pub stream: Mutex<Option<OutputStream>>, // to keep the stream alive
     pub sink: Mutex<Option<Sink>>,
     pub audio_data: Mutex<Option<Vec<u8>>>,
+}
+
+#[derive(Serialize, Clone)]
+pub struct AudioInfo {
+    duration: u64,
+    peaks: Vec<f32>,
 }
 
 impl Default for AudioState {
@@ -23,31 +30,80 @@ impl Default for AudioState {
 }
 
 #[tauri::command]
-pub fn play_audio(
+pub fn open_audio(
     app_handle: AppHandle,
-    path: String,
     state: State<AudioState>,
-) -> Result<(), String> {
+    path: String,
+    max_peaks: usize,
+) -> Result<AudioInfo, String> {
     let full_path = app_handle
         .path()
         .resolve(&path, BaseDirectory::AppLocalData)
         .map_err(|e| format!("Failed to resolve path '{}': {}", path, e))?;
-    info!("play_audio: {:?}", full_path);
+    info!("open_audio: {:?}", full_path);
+
+    let file_bytes =
+        fs::read(&full_path).map_err(|e| format!("Failed to read audio file: {}", e))?;
+
+    // Store audio data in state
+    {
+        let mut audio_data_guard = state.audio_data.lock().unwrap();
+        *audio_data_guard = Some(file_bytes.clone());
+    }
+
+    let cursor = Cursor::new(file_bytes);
+    let source = Decoder::try_from(BufReader::new(cursor))
+        .map_err(|e| format!("Failed to decode audio from memory: {}", e))?;
+
+    // 1. 音声全体の時間を取得
+    let duration = source
+        .total_duration()
+        .ok_or_else(|| "Could not get duration from audio source".to_string())?;
+    let duration_ms = duration.as_millis() as u64;
+    debug!("Audio duration: {} ms", duration_ms);
+
+    // 2. ピーク波形を計算
+    // サンプルをf32に変換して収集
+    let samples: Vec<f32> = source.map(|s| s as f32 / i16::MAX as f32).collect();
+    let num_samples = samples.len();
+
+    let peaks = if max_peaks > 0 && num_samples > 0 {
+        let chunk_size = (num_samples as f64 / max_peaks as f64).ceil() as usize;
+        if chunk_size > 0 {
+            let raw_peaks: Vec<f32> = samples
+                .chunks(chunk_size)
+                .map(|chunk| chunk.iter().map(|&s| s.abs()).fold(0.0f32, |a, b| a.max(b)))
+                .collect();
+            let max_peak = raw_peaks.iter().cloned().fold(0. / 0., f32::max).max(1e-6); // avoid division by zero
+            raw_peaks.iter().map(|&p| p / max_peak).collect()
+        } else {
+            vec![]
+        }
+    } else {
+        vec![]
+    };
+    debug!("Calculated {} peaks", peaks.len());
+
+    Ok(AudioInfo {
+        duration: duration_ms,
+        peaks,
+    })
+}
+
+#[tauri::command]
+pub fn play_audio(state: State<AudioState>) -> Result<(), String> {
+    info!("play_audio");
 
     if let Some(sink) = state.sink.lock().unwrap().as_ref() {
         warn!("Stopping existing audio playback");
         sink.stop();
     }
 
-    // Read the whole file into memory to make the source cloneable
-    let file_bytes =
-        fs::read(&full_path).map_err(|e| format!("Failed to read audio file: {}", e))?;
-
-    // Store the audio data
-    {
-        let mut data_guard = state.audio_data.lock().unwrap();
-        *data_guard = Some(file_bytes.clone());
-    }
+    let audio_data_guard = state.audio_data.lock().unwrap();
+    let file_bytes = audio_data_guard
+        .as_ref()
+        .ok_or("Audio data not found in state. Call open_audio first.".to_string())?
+        .clone();
 
     let cursor = Cursor::new(file_bytes);
     let source = Decoder::try_from(BufReader::new(cursor))

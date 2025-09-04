@@ -8,11 +8,13 @@
 
   import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
   import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
-  import { pauseAudio } from '$lib/application/usecases/pauseAudio';
-  import { playAudio } from '$lib/application/usecases/playAudio';
-  import { resumeAudio } from '$lib/application/usecases/resumeAudio';
-  import { seekAudio } from '$lib/application/usecases/seekAudio';
-  import { stopAudio } from '$lib/application/usecases/stopAudio';
+  import {
+    pauseAudio,
+    playAudio,
+    resumeAudio,
+    seekAudio,
+    stopAudio,
+  } from '$lib/application/usecases/controlAudio';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import type {
     SentenceAnalysisItem,
@@ -55,7 +57,7 @@
   function handlePlay() {
     const audioPath = data.episode?.audioPath;
     if (!audioPath) return;
-    playAudio(audioPath);
+    playAudio();
     audioState.isPlaying = true;
     if (timerId) clearInterval(timerId);
     timerId = setInterval(() => {
@@ -171,9 +173,10 @@
             })}
           </p>
           <AudioPlayer
+            peaks={data.audioInfo.peaks}
             isPlaying={audioState.isPlaying}
             currentTime={audioState.currentTime}
-            duration={data.episode.durationSeconds}
+            duration={data.audioInfo.duration * 1000}
             onPlay={handlePlay}
             onPause={handlePause}
             onSeek={handleSeek}

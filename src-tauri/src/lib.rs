@@ -5,11 +5,15 @@ mod migrations;
 mod stronghold;
 
 use dotenvy::from_filename;
+use std::env;
+use tauri::Manager;
+
+use audio::{
+    open_audio, pause_audio, play_audio, resume_audio, seek_audio, stop_audio, AudioState,
+};
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
-use std::env;
 use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
-use tauri::Manager;
 
 fn get_db_name() -> String {
     if cfg!(debug_assertions) {
@@ -19,8 +23,6 @@ fn get_db_name() -> String {
         "app.db".to_string()
     }
 }
-
-use audio::AudioState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -66,11 +68,12 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             analyze_sentence_with_llm,
             get_stronghold_password,
-            audio::play_audio,
-            audio::pause_audio,
-            audio::resume_audio,
-            audio::stop_audio,
-            audio::seek_audio
+            play_audio,
+            pause_audio,
+            resume_audio,
+            stop_audio,
+            seek_audio,
+            open_audio
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

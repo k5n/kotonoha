@@ -1,3 +1,4 @@
+import { openAudio } from '$lib/application/usecases/controlAudio';
 import { fetchEpisodeDetail } from '$lib/application/usecases/fetchEpisodeDetail';
 import { fetchSettings } from '$lib/application/usecases/fetchSettings';
 import { error } from '@tauri-apps/plugin-log';
@@ -14,12 +15,14 @@ export const load: PageLoad = async ({ params }) => {
       return { errorKey: 'episodeDetailPage.errors.episodeNotFound' };
     }
     const { isApiKeySet, settings } = await fetchSettings();
+    const audioInfo = await openAudio(result.episode.audioPath);
     return {
       episode: result.episode,
       dialogues: result.dialogues,
       sentenceCards: result.sentenceCards,
       isApiKeySet: isApiKeySet,
       settings: settings,
+      audioInfo: audioInfo,
       errorKey: null,
     };
   } catch (e) {
