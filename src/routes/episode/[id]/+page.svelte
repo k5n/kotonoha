@@ -54,15 +54,16 @@
   }
 
   // Audio Player Handlers
-  function handlePlay() {
+  async function handlePlay() {
     const audioPath = data.episode?.audioPath;
     if (!audioPath) return;
-    playAudio();
+    await playAudio();
     audioState.isPlaying = true;
     if (timerId) clearInterval(timerId);
+    const audioInfo = await data.audioInfo;
     timerId = setInterval(() => {
-      if (audioState.currentTime < (data.episode?.durationSeconds ?? 0)) {
-        audioState.currentTime++;
+      if (audioState.currentTime < (audioInfo?.duration ?? 0)) {
+        audioState.currentTime += 1000;
       } else {
         handlePause();
       }
@@ -79,7 +80,7 @@
   }
 
   function handleSeek(time: number) {
-    seekAudio(time * 1000);
+    seekAudio(time);
     audioState.currentTime = time;
   }
 
@@ -89,7 +90,7 @@
     if (timerId) clearInterval(timerId);
     timerId = setInterval(() => {
       if (audioState.currentTime < (data.episode?.durationSeconds ?? 0)) {
-        audioState.currentTime++;
+        audioState.currentTime += 1000;
       } else {
         handlePause();
       }
@@ -181,7 +182,7 @@
               peaks={audioInfo.peaks}
               isPlaying={audioState.isPlaying}
               currentTime={audioState.currentTime}
-              duration={audioInfo.duration * 1000}
+              duration={audioInfo.duration}
               onPlay={handlePlay}
               onPause={handlePause}
               onSeek={handleSeek}

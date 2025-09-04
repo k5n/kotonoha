@@ -7,7 +7,7 @@
   // --- Props ---
   interface Props {
     dialogues: readonly Dialogue[];
-    currentTime: number; // 秒単位
+    currentTime: number; // ミリ秒単位
     canMine: boolean; // マイニング可能かどうか
     onSeek: (_time: number) => void;
     onMine: (_dialogue: Dialogue, _context: readonly Dialogue[]) => void;
@@ -34,7 +34,7 @@
   // currentTimeが変更されたら、activeIndexとpreviousActiveIndexを更新し、該当要素までスクロールする$effect
   $effect(() => {
     const newActiveIndex = dialogues.findIndex(
-      (d) => currentTime * 1000 >= d.startTimeMs && currentTime * 1000 < d.endTimeMs
+      (d) => currentTime >= d.startTimeMs && currentTime < d.endTimeMs
     );
 
     if (newActiveIndex !== activeIndex) {
@@ -79,8 +79,8 @@
           class="flex-1 cursor-pointer"
           class:text-primary-800={index === activeIndex}
           class:dark:text-primary-200={index === activeIndex}
-          onclick={() => onSeek(dialogue.startTimeMs / 1000)}
-          onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs / 1000)}
+          onclick={() => onSeek(dialogue.startTimeMs)}
+          onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs)}
         >
           {dialogue.correctedText || dialogue.originalText}
         </div>

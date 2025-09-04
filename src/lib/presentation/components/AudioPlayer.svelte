@@ -80,7 +80,6 @@
 
   // --- Seeking Logic ---
   function handleCanvasClick(event: MouseEvent) {
-    if (!duration) return;
     const rect = canvasElement.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const newTime = (x / canvasWidth) * duration;
@@ -88,12 +87,12 @@
   }
 
   // Helper function to format time in MM:SS
-  function formatTime(seconds: number | null): string {
-    if (seconds === null || isNaN(seconds) || seconds < 0) {
+  function formatTime(milliseconds: number | null): string {
+    if (milliseconds === null || isNaN(milliseconds) || milliseconds < 0) {
       return '00:00';
     }
-    const min = Math.floor(seconds / 60);
-    const sec = Math.floor(seconds % 60);
+    const min = Math.floor(milliseconds / 60000);
+    const sec = Math.floor((milliseconds % 60000) / 1000);
     return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
 </script>
