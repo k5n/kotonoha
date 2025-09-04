@@ -172,17 +172,29 @@
               seconds: Math.floor((data.episode.durationSeconds ?? 0) % 60),
             })}
           </p>
-          <AudioPlayer
-            peaks={data.audioInfo.peaks}
-            isPlaying={audioState.isPlaying}
-            currentTime={audioState.currentTime}
-            duration={data.audioInfo.duration * 1000}
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onSeek={handleSeek}
-            onResume={handleResume}
-            onStop={handleStop}
-          />
+          {#await data.audioInfo}
+            <div class="flex items-center justify-center py-8">
+              <Spinner size="8" />
+            </div>
+          {:then audioInfo}
+            <AudioPlayer
+              peaks={audioInfo.peaks}
+              isPlaying={audioState.isPlaying}
+              currentTime={audioState.currentTime}
+              duration={audioInfo.duration * 1000}
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onSeek={handleSeek}
+              onResume={handleResume}
+              onStop={handleStop}
+            />
+          {:catch}
+            <Alert color="red">
+              <ExclamationCircleOutline class="h-5 w-5" />
+              <span class="font-medium">{t('episodeDetailPage.errorPrefix')}</span>
+              {t('episodeDetailPage.errors.audioLoadFailed')}
+            </Alert>
+          {/await}
         </div>
 
         <div class="mt-6 flex flex-col lg:min-h-0 lg:flex-1">

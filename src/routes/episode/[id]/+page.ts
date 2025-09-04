@@ -15,14 +15,17 @@ export const load: PageLoad = async ({ params }) => {
       return { errorKey: 'episodeDetailPage.errors.episodeNotFound' };
     }
     const { isApiKeySet, settings } = await fetchSettings();
-    const audioInfo = await openAudio(result.episode.audioPath);
+
+    // Function to load audio data asynchronously
+    const audioInfoPromise = openAudio(result.episode.audioPath);
+
     return {
       episode: result.episode,
       dialogues: result.dialogues,
       sentenceCards: result.sentenceCards,
       isApiKeySet: isApiKeySet,
       settings: settings,
-      audioInfo: audioInfo,
+      audioInfo: audioInfoPromise,
       errorKey: null,
     };
   } catch (e) {

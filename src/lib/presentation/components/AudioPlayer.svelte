@@ -110,7 +110,7 @@
   <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
 
   <!-- Wrapper div for responsive sizing -->
-  <div bind:this={containerElement} style="width: 100%; height: 40px;">
+  <div bind:this={containerElement} style="width: 100%; height: 80px;">
     <canvas
       width={canvasWidth}
       height={canvasHeight}

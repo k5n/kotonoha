@@ -30,9 +30,8 @@ impl Default for AudioState {
 }
 
 #[tauri::command]
-pub fn open_audio(
+pub async fn open_audio(
     app_handle: AppHandle,
-    state: State<AudioState>,
     path: String,
     max_peaks: usize,
 ) -> Result<AudioInfo, String> {
@@ -41,6 +40,8 @@ pub fn open_audio(
         .resolve(&path, BaseDirectory::AppLocalData)
         .map_err(|e| format!("Failed to resolve path '{}': {}", path, e))?;
     info!("open_audio: {:?}", full_path);
+
+    let state: State<AudioState> = app_handle.state();
 
     let file_bytes =
         fs::read(&full_path).map_err(|e| format!("Failed to read audio file: {}", e))?;
