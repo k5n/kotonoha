@@ -2,7 +2,6 @@
   // --- Props ---
   type Props = {
     peaks: number[]; // 波形データの配列 (0.0 - 1.0)
-    isPlaying: boolean;
     currentTime: number;
     duration: number;
     onPlay: () => void;
@@ -10,31 +9,23 @@
     onSeek: (_time: number) => void;
     onResume: () => void;
     onStop: () => void;
+    initialIsPlaying?: boolean; // 初期再生状態（オプション）
   };
 
-  let {
-    peaks,
-    isPlaying,
-    currentTime,
-    duration,
-    onPlay,
-    onPause,
-    onSeek,
-    onResume,
-    onStop,
-  }: Props = $props();
+  let { peaks, currentTime, duration, onPlay, onPause, onSeek, onResume, onStop }: Props = $props();
+
+  // --- Internal State ---
+  let isPlaying = $state(false);
+  let canvasWidth = $state(0);
+  let canvasHeight = $state(0);
+  let containerElement: HTMLDivElement;
+  let canvasElement: HTMLCanvasElement;
 
   // --- Internal Constants ---
   const WAVE_COLOR = '#E2E8F0'; // gray-300
   const PROGRESS_COLOR = '#63B3ED'; // blue-400
   const BAR_WIDTH = 2;
   const BAR_GAP = 1;
-
-  // --- Internal State ---
-  let canvasWidth = $state(0);
-  let canvasHeight = $state(0);
-  let containerElement: HTMLDivElement;
-  let canvasElement: HTMLCanvasElement;
 
   // --- Responsive Sizing ---
   $effect(() => {
@@ -78,11 +69,36 @@
     }
   });
 
+  // --- Audio Control Handlers ---
+  function handlePlayPause() {
+    if (isPlaying) {
+      onPause();
+      isPlaying = false;
+    } else {
+      if (currentTime > 0) {
+        onResume();
+      } else {
+        onPlay();
+      }
+      isPlaying = true;
+    }
+  }
+
+  function handleStop() {
+    onStop();
+    isPlaying = false;
+  }
+
   // --- Seeking Logic ---
   function handleCanvasClick(event: MouseEvent) {
+    if (!canvasElement || !isPlaying) {
+      return;
+    }
+
     const rect = canvasElement.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const newTime = (x / canvasWidth) * duration;
+
     onSeek(newTime);
   }
 
@@ -97,25 +113,54 @@
   }
 </script>
 
-<div>
-  {#if isPlaying}
-    <button onclick={() => onPause()}>Pause</button>
-  {:else}
-    <button onclick={() => onPlay()}>Play</button>
-  {/if}
-  <button onclick={() => onResume()}>Resume</button>
-  <button onclick={() => onStop()}>Stop</button>
+<div class="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+  <!-- Controls Section -->
+  <div class="flex items-center gap-3">
+    <button
+      class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm transition-all duration-200 hover:bg-blue-600 hover:shadow-md active:scale-95 sm:h-10 sm:w-10"
+      onclick={handlePlayPause}
+      aria-label={isPlaying ? 'Pause' : 'Play'}
+    >
+      {#if isPlaying}
+        <!-- Pause Icon -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="sm:h-5 sm:w-5">
+          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+        </svg>
+      {:else}
+        <!-- Play Icon -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="sm:h-5 sm:w-5">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      {/if}
+    </button>
 
-  <span>{formatTime(currentTime)} / {formatTime(duration)}</span>
+    <button
+      class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-500 text-white shadow-sm transition-all duration-200 hover:bg-slate-600 hover:shadow-md active:scale-95 sm:h-8 sm:w-8"
+      onclick={handleStop}
+      aria-label="Stop"
+    >
+      <!-- Stop Icon -->
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="sm:h-4 sm:w-4">
+        <path d="M6 6h12v12H6z" />
+      </svg>
+    </button>
 
-  <!-- Wrapper div for responsive sizing -->
-  <div bind:this={containerElement} style="width: 100%; height: 80px;">
+    <span class="ml-auto font-mono text-sm font-medium text-slate-600 sm:text-xs">
+      {formatTime(currentTime)} / {formatTime(duration)}
+    </span>
+  </div>
+
+  <!-- Waveform Section -->
+  <div
+    bind:this={containerElement}
+    class="h-20 w-full overflow-hidden rounded-md border border-slate-200 bg-white sm:h-15"
+  >
     <canvas
       width={canvasWidth}
       height={canvasHeight}
       bind:this={canvasElement}
       onclick={handleCanvasClick}
-      style="cursor: pointer;"
+      class="block h-full w-full cursor-pointer hover:opacity-90"
     ></canvas>
   </div>
 </div>

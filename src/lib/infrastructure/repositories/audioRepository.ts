@@ -1,6 +1,7 @@
 import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { error } from '@tauri-apps/plugin-log';
 
 /**
  * Tauriのaudioコマンドを呼び出すためのリポジトリ
@@ -50,7 +51,15 @@ export const audioRepository = {
    * @param positionMs - シーク先の時間（ミリ秒）。
    */
   async seek(positionMs: number): Promise<void> {
-    await invoke('seek_audio', { positionMs });
+    // Convert to integer for Tauri backend (u32 expected)
+    const positionMsInt = Math.round(positionMs);
+
+    if (isNaN(positionMsInt)) {
+      error('audioRepository.seek: positionMs is NaN');
+      return;
+    }
+
+    await invoke('seek_audio', { positionMs: positionMsInt });
   },
 
   /**

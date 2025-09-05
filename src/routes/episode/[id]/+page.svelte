@@ -33,10 +33,7 @@
   let { data }: PageProps = $props();
 
   // Audio Player State
-  let audioState = $state({
-    isPlaying: false,
-    currentTime: 0,
-  });
+  let currentTime = $state(0);
 
   // Sentence Mining State
   let isModalOpen = $state(false);
@@ -50,7 +47,7 @@
 
   onMount(async () => {
     unlisten = await listenPlaybackPosition((positionMs) => {
-      audioState.currentTime = positionMs;
+      currentTime = positionMs;
     });
   });
 
@@ -58,7 +55,6 @@
     if (unlisten) {
       unlisten();
     }
-    // Ensure audio is stopped when leaving the page
     stopAudio();
   });
 
@@ -70,32 +66,15 @@
     }
   }
 
-  // Audio Player Handlers
   async function handlePlay() {
     const audioPath = data.episode?.audioPath;
     if (!audioPath) return;
     await playAudio();
-    audioState.isPlaying = true;
-  }
-
-  function handlePause() {
-    pauseAudio();
-    audioState.isPlaying = false;
-  }
-
-  function handleSeek(time: number) {
-    seekAudio(time);
-  }
-
-  function handleResume() {
-    resumeAudio();
-    audioState.isPlaying = true;
   }
 
   function handleStop() {
     stopAudio();
-    audioState.isPlaying = false;
-    audioState.currentTime = 0;
+    currentTime = 0;
   }
 
   async function openMiningModal(dialogue: Dialogue, context: readonly Dialogue[]) {
@@ -171,13 +150,12 @@
           {:then audioInfo}
             <AudioPlayer
               peaks={audioInfo.peaks}
-              isPlaying={audioState.isPlaying}
-              currentTime={audioState.currentTime}
+              {currentTime}
               duration={audioInfo.duration}
               onPlay={handlePlay}
-              onPause={handlePause}
-              onSeek={handleSeek}
-              onResume={handleResume}
+              onPause={pauseAudio}
+              onSeek={seekAudio}
+              onResume={resumeAudio}
               onStop={handleStop}
             />
           {:catch}
@@ -195,11 +173,11 @@
           </Heading>
           <TranscriptViewer
             dialogues={data.dialogues}
-            currentTime={audioState.currentTime}
+            {currentTime}
             {canMine}
             {contextBefore}
             {contextAfter}
-            onSeek={handleSeek}
+            onSeek={seekAudio}
             onMine={openMiningModal}
           />
         </div>
