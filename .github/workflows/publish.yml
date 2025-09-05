@@ -1,4 +1,4 @@
-# cSpell:ignore libwebkit libappindicator librsvg patchelf dtolnay swatinem gstreamer libav
+# cSpell:ignore libwebkit libappindicator librsvg patchelf dtolnay swatinem libasound
 name: 'publish'
 
 on:
@@ -36,7 +36,8 @@ jobs:
             librsvg2-dev \
             patchelf \
             xdg-utils \
-            file
+            file \
+            libasound2-dev
 
       - name: setup node
         uses: actions/setup-node@v4
@@ -57,13 +58,21 @@ jobs:
       - name: install frontend dependencies
         run: npm install
 
+      - name: Get version from package.json
+        id: version
+        run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
           releaseName: 'v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: false
+          releaseBody: |
+            See the assets to download this version and install.
+            - **Linux**: `kotonoha_${{ env.VERSION }}_amd64.AppImage`
+            - **Windows**: `kotonoha_${{ env.VERSION }}_x64-setup.exe`
+            - **macOS**: `kotonoha_${{ env.VERSION }}_universal.app.tar.gz`
+          releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
