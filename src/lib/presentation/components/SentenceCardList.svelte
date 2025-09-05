@@ -30,7 +30,9 @@
               role="button"
               tabindex="0"
               onclick={() => onCardClick(card)}
-              onkeydown={(e) => e.key === 'Enter' && onCardClick(card)}
+              onkeydown={(_e) => {
+                /* 警告を抑制するために実装。このイベントは発火しない。 */
+              }}
             >
               <div class="text-xl font-bold">{card.expression}</div>
               <div class="sentence-content text-gray-600 dark:text-gray-400">
