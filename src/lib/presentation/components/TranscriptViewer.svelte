@@ -4,10 +4,14 @@
   import { Button } from 'flowbite-svelte';
   import { SunOutline } from 'flowbite-svelte-icons';
 
+  // --- Constants ---
+  const SCROLL_DEBOUNCE_MS = 100; // スクロール処理のデバウンス時間
+  const SMOOTH_SCROLL_DURATION_MS = 300; // スムーススクロールアニメーションの推定時間
+
   // --- Props ---
   interface Props {
     dialogues: readonly Dialogue[];
-    currentTime: number; // 秒単位
+    currentTime: number; // ミリ秒単位
     canMine: boolean; // マイニング可能かどうか
     onSeek: (_time: number) => void;
     onMine: (_dialogue: Dialogue, _context: readonly Dialogue[]) => void;
@@ -27,6 +31,8 @@
   // --- State ---
   let activeIndex = $state(-1);
   let previousActiveIndex = $state(-1);
+  let isScrolling = $state(false);
+  let scrollTimeout: ReturnType<typeof setTimeout> | undefined = $state();
 
   let containerEl: HTMLElement | undefined = $state();
   let itemEls: (HTMLElement | null)[] = [];
@@ -34,16 +40,34 @@
   // currentTimeが変更されたら、activeIndexとpreviousActiveIndexを更新し、該当要素までスクロールする$effect
   $effect(() => {
     const newActiveIndex = dialogues.findIndex(
-      (d) => currentTime * 1000 >= d.startTimeMs && currentTime * 1000 < d.endTimeMs
+      (d) => currentTime >= d.startTimeMs && currentTime < d.endTimeMs
     );
 
+    // activeIndexが実際に変更された場合のみ処理を実行
     if (newActiveIndex !== activeIndex) {
       previousActiveIndex = activeIndex;
       activeIndex = newActiveIndex;
-    }
 
-    if (activeIndex !== -1 && itemEls[activeIndex]) {
-      itemEls[activeIndex]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      // スクロール処理をデバウンス（連続した変更を抑制）
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        if (activeIndex !== -1 && itemEls[activeIndex] && !isScrolling) {
+          isScrolling = true;
+          itemEls[activeIndex]?.scrollIntoView({
+            block: 'center',
+            behavior: 'smooth',
+          });
+
+          // スクロールアニメーション完了を待つ
+          setTimeout(() => {
+            isScrolling = false;
+          }, SMOOTH_SCROLL_DURATION_MS);
+        }
+        scrollTimeout = undefined;
+      }, SCROLL_DEBOUNCE_MS);
     }
   });
 
@@ -79,8 +103,8 @@
           class="flex-1 cursor-pointer"
           class:text-primary-800={index === activeIndex}
           class:dark:text-primary-200={index === activeIndex}
-          onclick={() => onSeek(dialogue.startTimeMs / 1000)}
-          onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs / 1000)}
+          onclick={() => onSeek(dialogue.startTimeMs)}
+          onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs)}
         >
           {dialogue.correctedText || dialogue.originalText}
         </div>

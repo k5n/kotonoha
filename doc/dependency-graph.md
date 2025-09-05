@@ -20,6 +20,7 @@ graph LR
                     src_lib_application_usecases_addNewEpisode_ts["addNewEpisode.ts"]
                     src_lib_application_usecases_addSentenceCards_ts["addSentenceCards.ts"]
                     src_lib_application_usecases_analyzeDialogueForMining_ts["analyzeDialogueForMining.ts"]
+                    src_lib_application_usecases_controlAudio_ts["controlAudio.ts"]
                     src_lib_application_usecases_deleteEpisode_ts["deleteEpisode.ts"]
                     src_lib_application_usecases_deleteGroupRecursive_ts["deleteGroupRecursive.ts"]
                     src_lib_application_usecases_fetchAlbumGroups_ts["fetchAlbumGroups.ts"]
@@ -42,6 +43,7 @@ graph LR
             subgraph "domain"
                 subgraph "entities"
                     src_lib_domain_entities_appInfo_ts["appInfo.ts"]
+                    src_lib_domain_entities_audioInfo_ts["audioInfo.ts"]
                     src_lib_domain_entities_dialogue_ts["dialogue.ts"]
                     src_lib_domain_entities_episode_ts["episode.ts"]
                     src_lib_domain_entities_episodeGroup_ts["episodeGroup.ts"]
@@ -62,6 +64,7 @@ graph LR
                 subgraph "repositories"
                     src_lib_infrastructure_repositories_apiKeyRepository_ts["apiKeyRepository.ts"]
                     src_lib_infrastructure_repositories_appInfoRepository_ts["appInfoRepository.ts"]
+                    src_lib_infrastructure_repositories_audioRepository_ts["audioRepository.ts"]
                     src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository.ts"]
                     src_lib_infrastructure_repositories_episodeGroupRepository_ts["episodeGroupRepository.ts"]
                     src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository.ts"]
@@ -137,6 +140,8 @@ src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastruct
 src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_llmRepository_ts
 src_lib_application_usecases_analyzeDialogueForMining_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
+src_lib_application_usecases_controlAudio_ts --> src_lib_domain_entities_audioInfo_ts
+src_lib_application_usecases_controlAudio_ts --> src_lib_infrastructure_repositories_audioRepository_ts
 src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_fileRepository_ts
@@ -159,7 +164,6 @@ src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_e
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
-src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_fileRepository_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
 src_lib_application_usecases_fetchEpisodeGroups_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_fetchEpisodeGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
@@ -195,6 +199,7 @@ src_lib_domain_services_groupTreeHelper_ts --> src_lib_domain_entities_episodeGr
 src_lib_domain_services_parseSrtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_domain_services_parseSswtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_appInfoRepository_ts --> src_lib_domain_entities_appInfo_ts
+src_lib_infrastructure_repositories_audioRepository_ts --> src_lib_domain_entities_audioInfo_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_episodeGroupRepository_ts --> src_lib_domain_entities_episodeGroup_ts
@@ -207,7 +212,6 @@ src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_settingsRepository_ts --> src_lib_domain_entities_settings_ts
-src_lib_presentation_components_AudioPlayer_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_lib_presentation_components_ConfirmModal_svelte --> src_lib_application_stores_i18n_svelte_ts
@@ -273,12 +277,14 @@ src_routes_episode_list__groupId___page_ts --> src_lib_domain_entities_episode_t
 src_routes_episode__id___page_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_addSentenceCards_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_analyzeDialogueForMining_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_controlAudio_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_dialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_AudioPlayer_svelte
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_SentenceCardList_svelte
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_SentenceMiningModal_svelte
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_TranscriptViewer_svelte
+src_routes_episode__id___page_ts --> src_lib_application_usecases_controlAudio_ts
 src_routes_episode__id___page_ts --> src_lib_application_usecases_fetchEpisodeDetail_ts
 src_routes_episode__id___page_ts --> src_lib_application_usecases_fetchSettings_ts
 src_routes_settings__page_svelte --> src_lib_application_stores_i18n_svelte_ts

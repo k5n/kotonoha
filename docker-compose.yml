@@ -3,11 +3,19 @@
 
 version: '3.8'
 services:
-  kotonoha-linux-build:
-    build: .
+  linux-build:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER_NAME=${USER_NAME:-dev}
+        - GROUP_NAME=${GROUP_NAME:-dev}
     volumes:
       - .:/app
     environment:
       - UID=${UID}
       - GID=${GID}
     user: '${UID}:${GID}'
+    command: ['sh', '-c', 'npm install && npm run build']

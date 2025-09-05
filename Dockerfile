@@ -3,7 +3,7 @@
 # This Dockerfile is intended for local development only, and should be used by developers working on Linux.
 # Release builds are performed by GitHub Actions workflows; do not use this container for production releases.
 #
-# cSpell:ignore noninteractive ignore libwebkit libappindicator librsvg patchelf usermod gstreamer fdkaac libav
+# cSpell:ignore noninteractive ignore libwebkit libappindicator librsvg patchelf libasound
 
 FROM ubuntu:jammy-20250730
 
@@ -20,18 +20,13 @@ RUN apt-get update && \
     ca-certificates \
     git \
     xdg-utils \
-    file
-#    file \
-#    gstreamer1.0-plugins-base \
-#    gstreamer1.0-plugins-good \
-#    gstreamer1.0-plugins-bad \
-#    gstreamer1.0-plugins-ugly \
-#    gstreamer1.0-fdkaac
-#    gstreamer1.0-libav
+    file \
+    libasound2-dev
 
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get install -y nodejs
 RUN npm install -g @tauri-apps/cli
+
 
 ARG UID=1000
 ARG GID=1000
@@ -49,5 +44,3 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/home/${USER_NAME}/.cargo/bin:${PATH}"
 
 WORKDIR /app
-
-CMD ["sh", "-c", "npm install && npm run tauri build"]

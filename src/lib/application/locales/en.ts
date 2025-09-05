@@ -84,6 +84,7 @@ export const en = {
         invalidEpisodeId: 'Invalid episode ID.',
         episodeNotFound: 'Episode not found.',
         fetchDetail: 'Failed to fetch episode details.',
+        audioLoadFailed: 'Failed to load audio.',
       },
     },
     components: {

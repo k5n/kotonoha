@@ -41,6 +41,7 @@
     "machineid",
     "nsis",
     "rfind",
+    "rodio",
     "serde",
     "SSWT",
     "sveltednd",
@@ -48,6 +49,7 @@
     "thisux",
     "timecode",
     "TOEIC",
+    "Unlisten",
     "usecases",
     "Vitest"
   ],

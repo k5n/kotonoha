@@ -1,14 +1,19 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+mod audio;
 mod llm;
 mod migrations;
 mod stronghold;
 
 use dotenvy::from_filename;
+use std::env;
+use tauri::Manager;
+
+use audio::{
+    open_audio, pause_audio, play_audio, resume_audio, seek_audio, stop_audio, AudioState,
+};
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
-use std::env;
 use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
-use tauri::Manager;
 
 fn get_db_name() -> String {
     if cfg!(debug_assertions) {
@@ -25,6 +30,7 @@ pub fn run() {
     let db_url = format!("sqlite:{}", db_name);
 
     tauri::Builder::default()
+        .manage(AudioState::default())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(
@@ -61,7 +67,13 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             analyze_sentence_with_llm,
-            get_stronghold_password
+            get_stronghold_password,
+            play_audio,
+            pause_audio,
+            resume_audio,
+            stop_audio,
+            seek_audio,
+            open_audio,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

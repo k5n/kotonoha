@@ -83,6 +83,7 @@ export const ja = {
         invalidEpisodeId: '無効なエピソードIDです。',
         episodeNotFound: 'エピソードが見つかりません。',
         fetchDetail: 'エピソード詳細の取得に失敗しました。',
+        audioLoadFailed: '音声の読み込みに失敗しました。',
       },
     },
     components: {
