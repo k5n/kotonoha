@@ -7,8 +7,9 @@
 
   interface Props {
     sentenceCards: readonly SentenceCard[];
+    onCardClick: (card: SentenceCard) => void;
   }
-  let { sentenceCards }: Props = $props();
+  let { sentenceCards, onCardClick }: Props = $props();
 
   function sanitizeSentence(html: string): string {
     return DOMPurify.sanitize(html, { ALLOWED_TAGS: ['b'], ALLOWED_ATTR: [] });
@@ -25,7 +26,14 @@
       {#each sentenceCards as card (card.id)}
         <AccordionItem>
           {#snippet header()}
-            <div>
+            <div
+              role="button"
+              tabindex="0"
+              onclick={() => onCardClick(card)}
+              onkeydown={(_e) => {
+                /* 警告を抑制するために実装。このイベントは発火しない。 */
+              }}
+            >
               <div class="text-xl font-bold">{card.expression}</div>
               <div class="sentence-content text-gray-600 dark:text-gray-400">
                 <!-- サニタイズして表示しているので警告を抑制 -->
