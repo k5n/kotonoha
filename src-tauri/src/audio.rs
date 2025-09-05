@@ -232,6 +232,7 @@ pub fn seek_audio(
     if let Some(sink) = sink_opt.as_mut() {
         let current_pos = sink.get_pos();
         let target_pos = Duration::from_millis(position_ms as u64);
+        let is_paused = sink.is_paused();
 
         if target_pos < current_pos {
             warn!("Seeking backwards. Recreating source from stored data.");
@@ -245,6 +246,14 @@ pub fn seek_audio(
 
                     let new_sink =
                         seek_audio_backward_with_recreation(audio_data, stream, position_ms)?;
+                    if is_paused {
+                        new_sink.pause();
+                        app_handle
+                            .emit("playback-position", position_ms)
+                            .map_err(|e| {
+                                format!("Failed to emit playback-position event: {}", e)
+                            })?;
+                    }
 
                     // Replace the sink inside the Option.
                     *sink_opt = Some(new_sink);
@@ -263,16 +272,11 @@ pub fn seek_audio(
                 error!("No audio source stored in state");
                 return Err("No audio source stored".to_string());
             }
-        } else if sink.is_paused() {
-            sink.play();
-            seek_audio_forward(sink, position_ms)?;
-
-            let sink_mutex = Arc::clone(&state.sink);
-            let tracker_mutex = &state.playback_position_tracker;
-            start_playback_position_tracking(app_handle, sink_mutex, tracker_mutex)
-                .map_err(|e| format!("Failed to start playback position tracking: {}", e))?;
         } else {
             seek_audio_forward(sink, position_ms)?;
+            app_handle
+                .emit("playback-position", position_ms)
+                .map_err(|e| format!("Failed to emit playback-position event: {}", e))?;
         }
     } else {
         // Get audio data from state
@@ -284,6 +288,10 @@ pub fn seek_audio(
         // Play audio
         let (stream, sink) = create_audio_playback(file_bytes, None)?;
         seek_audio_forward(&sink, position_ms)?;
+        sink.pause();
+        app_handle
+            .emit("playback-position", position_ms)
+            .map_err(|e| format!("Failed to emit playback-position event: {}", e))?;
 
         // Store stream and sink in state
         let mut stream_guard = state.stream.lock().unwrap();

@@ -100,7 +100,6 @@
     const newTime = (x / canvasWidth) * duration;
 
     onSeek(newTime);
-    isPlaying = true;
   }
 
   // Helper function to format time in MM:SS

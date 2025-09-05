@@ -136,13 +136,7 @@
     <div class="grid grid-cols-1 gap-8 lg:min-h-0 lg:flex-1 lg:grid-cols-3">
       <div class="flex flex-col lg:col-span-2 lg:min-h-0">
         <div>
-          <Heading tag="h1" class="mb-2 text-3xl font-bold">{data.episode.title}</Heading>
-          <p class="mb-6 text-gray-500">
-            {t('episodeDetailPage.playbackTime', {
-              minutes: Math.floor((data.episode.durationSeconds ?? 0) / 60),
-              seconds: Math.floor((data.episode.durationSeconds ?? 0) % 60),
-            })}
-          </p>
+          <Heading tag="h1" class="mb-6 text-3xl font-bold">{data.episode.title}</Heading>
           {#await data.audioInfo}
             <div class="flex items-center justify-center py-8">
               <Spinner size="8" />
