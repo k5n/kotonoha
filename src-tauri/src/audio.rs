@@ -8,7 +8,7 @@ use std::thread;
 use std::time::Duration;
 use tauri::{path::BaseDirectory, AppHandle, Emitter, Manager, State};
 
-const POSITION_UPDATE_FREQUENCY: u64 = 1000;
+const POSITION_UPDATE_FREQUENCY: u64 = 200;
 
 pub struct AudioState {
     pub stream: Mutex<Option<OutputStream>>, // to keep the stream alive
