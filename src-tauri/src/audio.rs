@@ -34,30 +34,18 @@ impl Default for AudioState {
     }
 }
 
-#[tauri::command]
-pub async fn open_audio(
-    app_handle: AppHandle,
-    path: String,
-    max_peaks: usize,
-) -> Result<AudioInfo, String> {
-    let full_path = app_handle
-        .path()
-        .resolve(&path, BaseDirectory::AppLocalData)
-        .map_err(|e| format!("Failed to resolve path '{}': {}", path, e))?;
-    info!("open_audio: {:?}", full_path);
+// Core audio operations (reusable functions)
 
-    let state: State<AudioState> = app_handle.state();
+pub fn analyze_audio_file(
+    file_path: &std::path::Path,
+    max_peaks: usize,
+) -> Result<(AudioInfo, Vec<u8>), String> {
+    info!("analyze_audio_file: {:?}", file_path);
 
     let file_bytes =
-        fs::read(&full_path).map_err(|e| format!("Failed to read audio file: {}", e))?;
+        fs::read(file_path).map_err(|e| format!("Failed to read audio file: {}", e))?;
 
-    // Store audio data in state
-    {
-        let mut audio_data_guard = state.audio_data.lock().unwrap();
-        *audio_data_guard = Some(file_bytes.clone());
-    }
-
-    let cursor = Cursor::new(file_bytes);
+    let cursor = Cursor::new(file_bytes.clone());
     let source = Decoder::try_from(BufReader::new(cursor))
         .map_err(|e| format!("Failed to decode audio from memory: {}", e))?;
 
@@ -90,39 +78,102 @@ pub async fn open_audio(
     };
     debug!("Calculated {} peaks", peaks.len());
 
-    Ok(AudioInfo {
+    let audio_info = AudioInfo {
         duration: duration_ms,
         peaks,
-    })
+    };
+
+    Ok((audio_info, file_bytes))
+}
+
+pub fn create_audio_playback(
+    audio_data: &[u8],
+    stream: Option<&OutputStream>,
+) -> Result<(Option<OutputStream>, Sink), String> {
+    info!("create_audio_playback");
+
+    let cursor = Cursor::new(audio_data.to_vec());
+    let source = Decoder::try_from(BufReader::new(cursor))
+        .map_err(|e| format!("Failed to decode audio from memory: {}", e))?;
+
+    let (stream, sink) = if let Some(stream) = stream {
+        let sink = Sink::connect_new(stream.mixer());
+        (None, sink)
+    } else {
+        let stream = OutputStreamBuilder::open_default_stream()
+            .map_err(|e| format!("Failed to open audio output stream: {}", e))?;
+        let sink = Sink::connect_new(&stream.mixer());
+        (Some(stream), sink)
+    };
+
+    sink.append(source);
+
+    Ok((stream, sink))
+}
+
+pub fn seek_audio_forward(sink: &Sink, position_ms: u32) -> Result<(), String> {
+    info!("seek_audio_forward: {}", position_ms);
+    let target_pos = Duration::from_millis(position_ms as u64);
+    sink.try_seek(target_pos)
+        .map_err(|e| format!("Failed to seek audio: {}", e))?;
+    Ok(())
+}
+
+pub fn seek_audio_backward_with_recreation(
+    audio_data: &[u8],
+    stream: &OutputStream,
+    position_ms: u32,
+) -> Result<Sink, String> {
+    info!("seek_audio_backward_with_recreation: {}", position_ms);
+
+    let (_, new_sink) = create_audio_playback(audio_data, Some(stream))?;
+    seek_audio_forward(&new_sink, position_ms)?;
+
+    Ok(new_sink)
+}
+
+// Tauri command wrappers
+
+#[tauri::command]
+pub async fn open_audio(
+    app_handle: AppHandle,
+    path: String,
+    max_peaks: usize,
+) -> Result<AudioInfo, String> {
+    let full_path = app_handle
+        .path()
+        .resolve(&path, BaseDirectory::AppLocalData)
+        .map_err(|e| format!("Failed to resolve path '{}': {}", path, e))?;
+
+    let (audio_info, file_bytes) = analyze_audio_file(&full_path, max_peaks)?;
+
+    // Store audio data in state
+    let state: State<AudioState> = app_handle.state();
+    let mut audio_data_guard = state.audio_data.lock().unwrap();
+    *audio_data_guard = Some(file_bytes);
+
+    Ok(audio_info)
 }
 
 #[tauri::command]
 pub fn play_audio(app_handle: AppHandle, state: State<AudioState>) -> Result<(), String> {
-    info!("play_audio");
-
     if let Some(sink) = state.sink.lock().unwrap().as_ref() {
         warn!("Stopping existing audio playback");
         sink.stop();
     }
 
+    // Get audio data from state
     let audio_data_guard = state.audio_data.lock().unwrap();
     let file_bytes = audio_data_guard
         .as_ref()
-        .ok_or("Audio data not found in state. Call open_audio first.".to_string())?
-        .clone();
+        .ok_or("Audio data not found in state. Call open_audio first.".to_string())?;
 
-    let cursor = Cursor::new(file_bytes);
-    let source = Decoder::try_from(BufReader::new(cursor))
-        .map_err(|e| format!("Failed to decode audio from memory: {}", e))?;
+    // Play audio
+    let (stream, sink) = create_audio_playback(file_bytes, None)?;
 
-    let stream = OutputStreamBuilder::open_default_stream()
-        .map_err(|e| format!("Failed to open audio output stream: {}", e))?;
-    let sink = Sink::connect_new(&stream.mixer());
-
-    sink.append(source);
-
+    // Store stream and sink in state
     let mut stream_guard = state.stream.lock().unwrap();
-    *stream_guard = Some(stream);
+    *stream_guard = stream;
     let mut sink_guard = state.sink.lock().unwrap();
     *sink_guard = Some(sink);
 
@@ -141,8 +192,6 @@ pub fn pause_audio(state: State<AudioState>) -> Result<(), String> {
     if let Some(sink) = state.sink.lock().unwrap().as_ref() {
         sink.pause();
     }
-    // stop_playback_position_tracking(state)
-    //     .map_err(|e| format!("Failed to stop playback position tracking: {}", e))?;
     Ok(())
 }
 
@@ -173,8 +222,11 @@ pub fn stop_audio(state: State<AudioState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn seek_audio(position_ms: u32, state: State<AudioState>) -> Result<(), String> {
-    info!("seek_audio: {}", position_ms);
+pub fn seek_audio(
+    app_handle: AppHandle,
+    position_ms: u32,
+    state: State<AudioState>,
+) -> Result<(), String> {
     let mut sink_opt = state.sink.lock().unwrap();
 
     if let Some(sink) = sink_opt.as_mut() {
@@ -186,38 +238,63 @@ pub fn seek_audio(position_ms: u32, state: State<AudioState>) -> Result<(), Stri
 
             let data_guard = state.audio_data.lock().unwrap();
             if let Some(audio_data) = data_guard.as_ref() {
-                // Create new source from cached data
-                let cursor = Cursor::new(audio_data.clone());
-                let new_source = Decoder::try_from(BufReader::new(cursor))
-                    .map_err(|e| format!("Failed to decode audio from memory: {}", e))?;
-
                 let stream_guard = state.stream.lock().unwrap();
                 if let Some(stream) = stream_guard.as_ref() {
                     // Stop the old sink before replacing it.
                     sink.stop();
-                    // NOTE: start_playback_position_tracking のループ内では
-                    // Sink を格納する Mutex がロックされているので、停止は感知されず、
-                    // 新しい Sink に置き換わったものが使われる。
 
-                    let new_sink = Sink::connect_new(&stream.mixer());
-                    new_sink.append(new_source);
-                    new_sink
-                        .try_seek(target_pos)
-                        .map_err(|e| format!("Failed to seek on new sink: {}", e))?;
+                    let new_sink =
+                        seek_audio_backward_with_recreation(audio_data, stream, position_ms)?;
 
                     // Replace the sink inside the Option.
                     *sink_opt = Some(new_sink);
+
+                    let sink_mutex = Arc::clone(&state.sink);
+                    let tracker_mutex = &state.playback_position_tracker;
+                    start_playback_position_tracking(app_handle, sink_mutex, tracker_mutex)
+                        .map_err(|e| {
+                            format!("Failed to start playback position tracking: {}", e)
+                        })?;
                 } else {
+                    error!("No audio stream found in state");
                     return Err("No audio stream in state".to_string());
                 }
             } else {
+                error!("No audio source stored in state");
                 return Err("No audio source stored".to_string());
             }
+        } else if sink.is_paused() {
+            sink.play();
+            seek_audio_forward(sink, position_ms)?;
+
+            let sink_mutex = Arc::clone(&state.sink);
+            let tracker_mutex = &state.playback_position_tracker;
+            start_playback_position_tracking(app_handle, sink_mutex, tracker_mutex)
+                .map_err(|e| format!("Failed to start playback position tracking: {}", e))?;
         } else {
-            // Seek forwards
-            sink.try_seek(target_pos)
-                .map_err(|e| format!("Failed to seek audio: {}", e))?;
+            seek_audio_forward(sink, position_ms)?;
         }
+    } else {
+        // Get audio data from state
+        let audio_data_guard = state.audio_data.lock().unwrap();
+        let file_bytes = audio_data_guard
+            .as_ref()
+            .ok_or("Audio data not found in state. Call open_audio first.".to_string())?;
+
+        // Play audio
+        let (stream, sink) = create_audio_playback(file_bytes, None)?;
+        seek_audio_forward(&sink, position_ms)?;
+
+        // Store stream and sink in state
+        let mut stream_guard = state.stream.lock().unwrap();
+        *stream_guard = stream;
+        *sink_opt = Some(sink);
+
+        // Start tracking playback position
+        let sink_mutex = Arc::clone(&state.sink);
+        let tracker_mutex = &state.playback_position_tracker;
+        start_playback_position_tracking(app_handle, sink_mutex, tracker_mutex)
+            .map_err(|e| format!("Failed to start playback position tracking: {}", e))?;
     }
 
     Ok(())

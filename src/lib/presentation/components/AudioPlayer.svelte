@@ -91,7 +91,7 @@
 
   // --- Seeking Logic ---
   function handleCanvasClick(event: MouseEvent) {
-    if (!canvasElement || !isPlaying) {
+    if (!canvasElement) {
       return;
     }
 
@@ -100,6 +100,7 @@
     const newTime = (x / canvasWidth) * duration;
 
     onSeek(newTime);
+    isPlaying = true;
   }
 
   // Helper function to format time in MM:SS
