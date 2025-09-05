@@ -1,16 +1,20 @@
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
 use serde::Serialize;
 use std::fs;
 use std::io::{BufReader, Cursor};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+use std::thread;
 use std::time::Duration;
-use tauri::{path::BaseDirectory, AppHandle, Manager, State};
+use tauri::{path::BaseDirectory, AppHandle, Emitter, Manager, State};
+
+const POSITION_UPDATE_FREQUENCY: u64 = 1000;
 
 pub struct AudioState {
     pub stream: Mutex<Option<OutputStream>>, // to keep the stream alive
-    pub sink: Mutex<Option<Sink>>,
+    pub sink: Arc<Mutex<Option<Sink>>>,      // Arc to share between threads
     pub audio_data: Mutex<Option<Vec<u8>>>,
+    pub playback_position_tracker: Mutex<Option<thread::JoinHandle<()>>>,
 }
 
 #[derive(Serialize, Clone)]
@@ -23,8 +27,9 @@ impl Default for AudioState {
     fn default() -> Self {
         Self {
             stream: Mutex::new(None),
-            sink: Mutex::new(None),
+            sink: Arc::new(Mutex::new(None)),
             audio_data: Mutex::new(None),
+            playback_position_tracker: Mutex::new(None),
         }
     }
 }
@@ -92,7 +97,7 @@ pub async fn open_audio(
 }
 
 #[tauri::command]
-pub fn play_audio(state: State<AudioState>) -> Result<(), String> {
+pub fn play_audio(app_handle: AppHandle, state: State<AudioState>) -> Result<(), String> {
     info!("play_audio");
 
     if let Some(sink) = state.sink.lock().unwrap().as_ref() {
@@ -121,6 +126,12 @@ pub fn play_audio(state: State<AudioState>) -> Result<(), String> {
     let mut sink_guard = state.sink.lock().unwrap();
     *sink_guard = Some(sink);
 
+    // Start tracking playback position
+    let sink_mutex = Arc::clone(&state.sink);
+    let tracker_mutex = &state.playback_position_tracker;
+    start_playback_position_tracking(app_handle, sink_mutex, tracker_mutex)
+        .map_err(|e| format!("Failed to start playback position tracking: {}", e))?;
+
     Ok(())
 }
 
@@ -130,15 +141,23 @@ pub fn pause_audio(state: State<AudioState>) -> Result<(), String> {
     if let Some(sink) = state.sink.lock().unwrap().as_ref() {
         sink.pause();
     }
+    // stop_playback_position_tracking(state)
+    //     .map_err(|e| format!("Failed to stop playback position tracking: {}", e))?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn resume_audio(state: State<AudioState>) -> Result<(), String> {
+pub fn resume_audio(app_handle: AppHandle, state: State<AudioState>) -> Result<(), String> {
     info!("resume_audio");
     if let Some(sink) = state.sink.lock().unwrap().as_ref() {
         sink.play();
     }
+
+    let sink_mutex = Arc::clone(&state.sink);
+    let tracker_mutex = &state.playback_position_tracker;
+    start_playback_position_tracking(app_handle, sink_mutex, tracker_mutex)
+        .map_err(|e| format!("Failed to start playback position tracking: {}", e))?;
+
     Ok(())
 }
 
@@ -148,6 +167,8 @@ pub fn stop_audio(state: State<AudioState>) -> Result<(), String> {
     if let Some(sink) = state.sink.lock().unwrap().as_ref() {
         sink.stop();
     }
+    stop_playback_position_tracking(state)
+        .map_err(|e| format!("Failed to stop playback position tracking: {}", e))?;
     Ok(())
 }
 
@@ -174,6 +195,9 @@ pub fn seek_audio(position_ms: u32, state: State<AudioState>) -> Result<(), Stri
                 if let Some(stream) = stream_guard.as_ref() {
                     // Stop the old sink before replacing it.
                     sink.stop();
+                    // NOTE: start_playback_position_tracking のループ内では
+                    // Sink を格納する Mutex がロックされているので、停止は感知されず、
+                    // 新しい Sink に置き換わったものが使われる。
 
                     let new_sink = Sink::connect_new(&stream.mixer());
                     new_sink.append(new_source);
@@ -193,6 +217,81 @@ pub fn seek_audio(position_ms: u32, state: State<AudioState>) -> Result<(), Stri
             // Seek forwards
             sink.try_seek(target_pos)
                 .map_err(|e| format!("Failed to seek audio: {}", e))?;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn start_playback_position_tracking(
+    app_handle: AppHandle,
+    sink_mutex: Arc<Mutex<Option<Sink>>>,
+    tracker_mutex: &Mutex<Option<thread::JoinHandle<()>>>,
+) -> Result<(), String> {
+    info!("start_playback_position_tracking");
+    let mut tracker_guard = tracker_mutex
+        .lock()
+        .map_err(|e| format!("Failed to lock tracker mutex: {}", e))?;
+
+    // Stop any existing tracker
+    if let Some(_handle) = tracker_guard.take() {
+        warn!("Stopping existing playback position tracker.");
+        // It's not straightforward to "stop" a thread from outside.
+        // For now, we'll just drop the handle, assuming the thread will eventually
+        // terminate if the sink is stopped or dropped.
+        // A more robust solution would involve a channel for signaling termination.
+    }
+
+    let app_handle_clone = app_handle.clone();
+
+    let mut emit_error_count = 0;
+    let handle = thread::spawn(move || {
+        loop {
+            let (should_break, current_pos_ms) = {
+                let sink_locked = sink_mutex.lock().unwrap();
+                if let Some(sink) = sink_locked.as_ref() {
+                    if sink.is_paused() || sink.empty() {
+                        info!("Playback paused or empty, stopping tracker thread.");
+                        (true, 0)
+                    } else {
+                        (false, sink.get_pos().as_millis() as u64)
+                    }
+                } else {
+                    info!("No sink available, stopping tracker thread.");
+                    (true, 0)
+                }
+            };
+            if should_break {
+                break;
+            }
+
+            if let Err(e) = app_handle_clone.emit("playback-position", current_pos_ms) {
+                error!("Failed to emit playback-position event: {}", e);
+                emit_error_count += 1;
+                if emit_error_count >= 5 {
+                    error!("Too many emit errors, stopping playback position tracker thread.");
+                    break;
+                }
+            }
+
+            thread::sleep(Duration::from_millis(POSITION_UPDATE_FREQUENCY));
+        }
+        info!("Playback position tracker thread terminated.");
+    });
+
+    *tracker_guard = Some(handle);
+    Ok(())
+}
+
+pub fn stop_playback_position_tracking(state: State<AudioState>) -> Result<(), String> {
+    info!("stop_playback_position_tracking");
+    let mut tracker_guard = state.playback_position_tracker.lock().unwrap();
+    if let Some(handle) = tracker_guard.take() {
+        // Attempt to join the thread. This will block until the thread finishes.
+        // In a real application, you might want to send a signal to the thread
+        // to allow it to terminate gracefully without blocking the main thread.
+        if let Err(e) = handle.join() {
+            error!("Failed to join playback position tracker thread: {:?}", e);
         }
     }
     Ok(())

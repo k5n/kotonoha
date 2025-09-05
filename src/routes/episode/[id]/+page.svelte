@@ -4,11 +4,13 @@
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
+  import { onDestroy, onMount } from 'svelte';
   import type { PageProps } from './$types';
 
   import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
   import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
   import {
+    listenPlaybackPosition,
     pauseAudio,
     playAudio,
     resumeAudio,
@@ -35,7 +37,6 @@
     isPlaying: false,
     currentTime: 0,
   });
-  let timerId: ReturnType<typeof setInterval> | null = $state(null);
 
   // Sentence Mining State
   let isModalOpen = $state(false);
@@ -44,6 +45,22 @@
   let isProcessingMining = $state(false);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let canMine = $derived(data.isApiKeySet || false);
+
+  let unlisten: (() => void) | undefined;
+
+  onMount(async () => {
+    unlisten = await listenPlaybackPosition((positionMs) => {
+      audioState.currentTime = positionMs;
+    });
+  });
+
+  onDestroy(() => {
+    if (unlisten) {
+      unlisten();
+    }
+    // Ensure audio is stopped when leaving the page
+    stopAudio();
+  });
 
   function goBack() {
     if (history.length > 1) {
@@ -59,52 +76,26 @@
     if (!audioPath) return;
     await playAudio();
     audioState.isPlaying = true;
-    if (timerId) clearInterval(timerId);
-    const audioInfo = await data.audioInfo;
-    timerId = setInterval(() => {
-      if (audioState.currentTime < (audioInfo?.duration ?? 0)) {
-        audioState.currentTime += 1000;
-      } else {
-        handlePause();
-      }
-    }, 1000);
   }
 
   function handlePause() {
     pauseAudio();
     audioState.isPlaying = false;
-    if (timerId) {
-      clearInterval(timerId);
-      timerId = null;
-    }
   }
 
   function handleSeek(time: number) {
     seekAudio(time);
-    audioState.currentTime = time;
   }
 
   function handleResume() {
     resumeAudio();
     audioState.isPlaying = true;
-    if (timerId) clearInterval(timerId);
-    timerId = setInterval(() => {
-      if (audioState.currentTime < (data.episode?.durationSeconds ?? 0)) {
-        audioState.currentTime += 1000;
-      } else {
-        handlePause();
-      }
-    }, 1000);
   }
 
   function handleStop() {
     stopAudio();
     audioState.isPlaying = false;
     audioState.currentTime = 0;
-    if (timerId) {
-      clearInterval(timerId);
-      timerId = null;
-    }
   }
 
   async function openMiningModal(dialogue: Dialogue, context: readonly Dialogue[]) {

@@ -73,7 +73,7 @@ pub fn run() {
             resume_audio,
             stop_audio,
             seek_audio,
-            open_audio
+            open_audio,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

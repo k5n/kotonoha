@@ -1,5 +1,6 @@
 import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import { invoke } from '@tauri-apps/api/core';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
 /**
  * Tauriのaudioコマンドを呼び出すためのリポジトリ
@@ -50,5 +51,17 @@ export const audioRepository = {
    */
   async seek(positionMs: number): Promise<void> {
     await invoke('seek_audio', { positionMs });
+  },
+
+  /**
+   * 再生位置の変更を監視します。
+   * @param callback - 再生位置が変更されたときに呼び出されるコールバック関数。引数として現在の再生位置（ミリ秒）を受け取ります。
+   * @return 監視を停止するための関数。
+   */
+  async listenPlaybackPosition(callback: (positionMs: number) => void): Promise<UnlistenFn> {
+    const unlisten = await listen<number>('playback-position', (event) => {
+      callback(event.payload);
+    });
+    return unlisten;
   },
 };

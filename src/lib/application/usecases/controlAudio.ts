@@ -25,3 +25,10 @@ export async function resumeAudio(): Promise<void> {
 export async function seekAudio(positionMs: number): Promise<void> {
   await audioRepository.seek(positionMs);
 }
+
+export async function listenPlaybackPosition(
+  callback: (positionMs: number) => void
+): Promise<() => void> {
+  const unlisten = await audioRepository.listenPlaybackPosition(callback);
+  return unlisten;
+}
