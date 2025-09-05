@@ -22,6 +22,7 @@
     SentenceAnalysisItem,
     SentenceAnalysisResult,
   } from '$lib/domain/entities/sentenceAnalysisResult';
+  import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
   import AudioPlayer from '$lib/presentation/components/AudioPlayer.svelte';
   import SentenceCardList from '$lib/presentation/components/SentenceCardList.svelte';
   import SentenceMiningModal from '$lib/presentation/components/SentenceMiningModal.svelte';
@@ -75,6 +76,15 @@
   function handleStop() {
     stopAudio();
     currentTime = 0;
+  }
+
+  function handleCardClick(card: SentenceCard) {
+    const dialogue = data.dialogues?.find((d) => d.id === card.dialogueId);
+    if (dialogue) {
+      seekAudio(dialogue.startTimeMs);
+    } else {
+      error(`Dialogue not found for sentence card: ${card.id}, dialogueId: ${card.dialogueId}`);
+    }
   }
 
   async function openMiningModal(dialogue: Dialogue, context: readonly Dialogue[]) {
@@ -181,7 +191,7 @@
         <Heading tag="h2" class="mb-3 text-xl font-semibold">
           {t('episodeDetailPage.sentenceCardsTitle')}
         </Heading>
-        <SentenceCardList sentenceCards={data.sentenceCards} />
+        <SentenceCardList sentenceCards={data.sentenceCards} onCardClick={handleCardClick} />
       </div>
     </div>
   {:else}
