@@ -5,14 +5,6 @@ import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRep
  * @param dialogueId The ID of the dialogue to update.
  * @param correctedText The new corrected text. If the text is the same as the original, or empty, it will be stored as NULL.
  */
-export async function updateDialogue(
-  dialogueId: number,
-  correctedText: string,
-  originalText: string
-): Promise<void> {
-  const textToSave =
-    correctedText.trim() === originalText.trim() || correctedText.trim() === ''
-      ? null
-      : correctedText;
-  await dialogueRepository.updateDialogueText(dialogueId, textToSave);
+export async function updateDialogue(dialogueId: number, correctedText: string): Promise<void> {
+  await dialogueRepository.updateDialogueText(dialogueId, correctedText);
 }

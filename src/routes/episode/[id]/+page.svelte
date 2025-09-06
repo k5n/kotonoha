@@ -128,14 +128,10 @@
     isProcessingMining = false;
   }
 
-  async function handleSaveDialogue(details: {
-    dialogueId: number;
-    correctedText: string;
-    originalText: string;
-  }) {
-    const { dialogueId, correctedText, originalText } = details;
+  async function handleSaveDialogue(details: { dialogueId: number; correctedText: string }) {
+    const { dialogueId, correctedText } = details;
     try {
-      await updateDialogue(dialogueId, correctedText, originalText);
+      await updateDialogue(dialogueId, correctedText);
       await invalidateAll();
     } catch (err) {
       error(`Error updating dialogue: ${err}`);

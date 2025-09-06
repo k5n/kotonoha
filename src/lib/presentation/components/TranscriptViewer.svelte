@@ -2,7 +2,7 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import { Button, Textarea } from 'flowbite-svelte';
-  import { SunOutline, CheckOutline, CloseOutline } from 'flowbite-svelte-icons';
+  import { CheckOutline, CloseOutline, SunOutline } from 'flowbite-svelte-icons';
 
   // --- Constants ---
   const SCROLL_DEBOUNCE_MS = 100; // スクロール処理のデバウンス時間
@@ -15,7 +15,7 @@
     canMine: boolean; // マイニング可能かどうか
     onSeek: (_time: number) => void;
     onMine: (_dialogue: Dialogue, _context: readonly Dialogue[]) => void;
-    onSave: (details: { dialogueId: number; correctedText: string; originalText: string }) => void;
+    onSave: (details: { dialogueId: number; correctedText: string }) => void;
     contextBefore?: number; // 前の件数
     contextAfter?: number; // 後ろの件数
   }
@@ -100,7 +100,6 @@
     onSave({
       dialogueId: dialogue.id,
       correctedText: editText,
-      originalText: dialogue.originalText,
     });
 
     editingDialogueId = null;
