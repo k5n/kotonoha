@@ -1,5 +1,9 @@
 export const ja = {
   translation: {
+    common: {
+      save: '保存',
+      cancel: 'キャンセル',
+    },
     appInfo: {
       title: '{{appName}}について',
       version: 'バージョン',
@@ -80,6 +84,7 @@ export const ja = {
       errors: {
         analyzeFailed: '対話の分析中にエラーが発生しました。',
         createCardsFailed: 'カードの作成中にエラーが発生しました。',
+        updateDialogueFailed: 'セリフの更新に失敗しました。',
         invalidEpisodeId: '無効なエピソードIDです。',
         episodeNotFound: 'エピソードが見つかりません。',
         fetchDetail: 'エピソード詳細の取得に失敗しました。',
@@ -198,6 +203,7 @@ export const ja = {
       transcriptViewer: {
         mine: 'Mine',
         noScript: 'スクリプトがありません。',
+        original: '原文',
       },
     },
   },

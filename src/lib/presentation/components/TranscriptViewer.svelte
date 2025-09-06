@@ -1,8 +1,8 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
-  import { Button } from 'flowbite-svelte';
-  import { SunOutline } from 'flowbite-svelte-icons';
+  import { Button, Textarea } from 'flowbite-svelte';
+  import { SunOutline, CheckOutline, CloseOutline } from 'flowbite-svelte-icons';
 
   // --- Constants ---
   const SCROLL_DEBOUNCE_MS = 100; // スクロール処理のデバウンス時間
@@ -15,6 +15,7 @@
     canMine: boolean; // マイニング可能かどうか
     onSeek: (_time: number) => void;
     onMine: (_dialogue: Dialogue, _context: readonly Dialogue[]) => void;
+    onSave: (details: { dialogueId: number; correctedText: string; originalText: string }) => void;
     contextBefore?: number; // 前の件数
     contextAfter?: number; // 後ろの件数
   }
@@ -24,6 +25,7 @@
     canMine,
     onSeek,
     onMine,
+    onSave,
     contextBefore = 2,
     contextAfter = 2,
   }: Props = $props();
@@ -33,12 +35,18 @@
   let previousActiveIndex = $state(-1);
   let isScrolling = $state(false);
   let scrollTimeout: ReturnType<typeof setTimeout> | undefined = $state();
+  let editingDialogueId: number | null = $state(null);
+  let editText = $state('');
+  let editingOriginalText = $state('');
 
   let containerEl: HTMLElement | undefined = $state();
   let itemEls: (HTMLElement | null)[] = [];
 
   // currentTimeが変更されたら、activeIndexとpreviousActiveIndexを更新し、該当要素までスクロールする$effect
   $effect(() => {
+    //編集中は自動スクロールを無効
+    if (editingDialogueId !== null) return;
+
     const newActiveIndex = dialogues.findIndex(
       (d) => currentTime >= d.startTimeMs && currentTime < d.endTimeMs
     );
@@ -76,6 +84,39 @@
     const end = Math.min(dialogues.length, index + contextAfter + 1);
     return dialogues.slice(start, end);
   }
+
+  function handleDblClick(dialogue: Dialogue) {
+    editingDialogueId = dialogue.id;
+    editText = dialogue.correctedText || dialogue.originalText;
+    editingOriginalText = dialogue.originalText;
+  }
+
+  function handleSave() {
+    if (editingDialogueId === null) return;
+
+    const dialogue = dialogues.find((d) => d.id === editingDialogueId);
+    if (!dialogue) return;
+
+    onSave({
+      dialogueId: dialogue.id,
+      correctedText: editText,
+      originalText: dialogue.originalText,
+    });
+
+    editingDialogueId = null;
+  }
+
+  function handleCancel() {
+    editingDialogueId = null;
+  }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      handleCancel();
+    } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      handleSave();
+    }
+  }
 </script>
 
 <div
@@ -92,31 +133,64 @@
       <div
         bind:this={itemEls[index]}
         class="flex items-center justify-between rounded-lg p-3 transition-all"
-        class:bg-primary-100={index === activeIndex}
-        class:dark:bg-primary-900={index === activeIndex}
-        class:bg-gray-200={index === previousActiveIndex && index !== activeIndex}
-        class:dark:bg-gray-700={index === previousActiveIndex && index !== activeIndex}
+        class:bg-primary-100={index === activeIndex && editingDialogueId === null}
+        class:dark:bg-primary-900={index === activeIndex && editingDialogueId === null}
+        class:bg-gray-200={index === previousActiveIndex &&
+          index !== activeIndex &&
+          editingDialogueId === null}
+        class:dark:bg-gray-700={index === previousActiveIndex &&
+          index !== activeIndex &&
+          editingDialogueId === null}
+        class:ring-2={editingDialogueId === dialogue.id}
+        class:ring-primary-500={editingDialogueId === dialogue.id}
       >
-        <div
-          role="button"
-          tabindex="0"
-          class="flex-1 cursor-pointer"
-          class:text-primary-800={index === activeIndex}
-          class:dark:text-primary-200={index === activeIndex}
-          onclick={() => onSeek(dialogue.startTimeMs)}
-          onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs)}
-        >
-          {dialogue.correctedText || dialogue.originalText}
-        </div>
+        {#if editingDialogueId === dialogue.id}
+          <div class="flex w-full flex-col space-y-2">
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+              <strong class="font-semibold">{t('components.transcriptViewer.original')}:</strong>
+              {editingOriginalText}
+            </div>
+            <Textarea
+              bind:value={editText}
+              onkeydown={handleKeyDown}
+              rows={3}
+              autofocus
+              class="w-full"
+            />
+            <div class="flex justify-end space-x-2">
+              <Button size="xs" color="alternative" onclick={handleCancel}>
+                <CloseOutline class="me-1 h-4 w-4" />
+                {t('common.cancel')}
+              </Button>
+              <Button size="xs" onclick={handleSave}>
+                <CheckOutline class="me-1 h-4 w-4" />
+                {t('common.save')}
+              </Button>
+            </div>
+          </div>
+        {:else}
+          <div
+            role="button"
+            tabindex="0"
+            class="flex-1 cursor-pointer"
+            class:text-primary-800={index === activeIndex}
+            class:dark:text-primary-200={index === activeIndex}
+            onclick={() => onSeek(dialogue.startTimeMs)}
+            ondblclick={() => handleDblClick(dialogue)}
+            onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs)}
+          >
+            {dialogue.correctedText || dialogue.originalText}
+          </div>
 
-        <div class="w-24 text-right">
-          {#if canMine && index === activeIndex}
-            <Button size="xs" onclick={() => onMine(dialogue, getContext(index))}>
-              <SunOutline class="me-1 h-4 w-4" />
-              {t('components.transcriptViewer.mine')}
-            </Button>
-          {/if}
-        </div>
+          <div class="w-24 text-right">
+            {#if canMine && index === activeIndex}
+              <Button size="xs" onclick={() => onMine(dialogue, getContext(index))}>
+                <SunOutline class="me-1 h-4 w-4" />
+                {t('components.transcriptViewer.mine')}
+              </Button>
+            {/if}
+          </div>
+        {/if}
       </div>
     {/each}
     <div class="h-[calc(50%-1.25rem)]"></div>

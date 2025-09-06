@@ -1,5 +1,9 @@
 export const en = {
   translation: {
+    common: {
+      save: 'Save',
+      cancel: 'Cancel',
+    },
     appInfo: {
       title: 'About {{appName}}',
       version: 'Version',
@@ -81,6 +85,7 @@ export const en = {
       errors: {
         analyzeFailed: 'An error occurred while analyzing the dialogue.',
         createCardsFailed: 'An error occurred while creating cards.',
+        updateDialogueFailed: 'Failed to update dialogue.',
         invalidEpisodeId: 'Invalid episode ID.',
         episodeNotFound: 'Episode not found.',
         fetchDetail: 'Failed to fetch episode details.',
@@ -199,6 +204,7 @@ export const en = {
       transcriptViewer: {
         mine: 'Mine',
         noScript: 'No script available.',
+        original: 'Original',
       },
     },
   },

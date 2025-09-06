@@ -81,4 +81,12 @@ export const dialogueRepository = {
     const db = new Database(getDatabasePath());
     await db.execute('DELETE FROM dialogues WHERE episode_id = ?', [episodeId]);
   },
+
+  async updateDialogueText(dialogueId: number, correctedText: string | null): Promise<void> {
+    const db = new Database(getDatabasePath());
+    await db.execute('UPDATE dialogues SET corrected_text = ? WHERE id = ?', [
+      correctedText,
+      dialogueId,
+    ]);
+  },
 };

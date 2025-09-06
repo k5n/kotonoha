@@ -1,8 +1,13 @@
+import { audioInfoCacheStore } from '$lib/application/stores/audioInfoCacheStore.svelte';
 import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import { audioRepository } from '$lib/infrastructure/repositories/audioRepository';
 
 export async function openAudio(path: string): Promise<AudioInfo> {
+  if (audioInfoCacheStore.has(path)) {
+    return audioInfoCacheStore.get(path)!;
+  }
   const audioInfo = await audioRepository.open(path);
+  audioInfoCacheStore.set(path, audioInfo);
   return audioInfo;
 }
 
