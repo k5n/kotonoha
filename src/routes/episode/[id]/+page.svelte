@@ -17,6 +17,7 @@
     seekAudio,
     stopAudio,
   } from '$lib/application/usecases/controlAudio';
+  import { updateDialogue } from '$lib/application/usecases/updateDialogue';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import type {
     SentenceAnalysisItem,
@@ -126,6 +127,17 @@
     analysisResult = null;
     isProcessingMining = false;
   }
+
+  async function handleSaveDialogue(details: { dialogueId: number; correctedText: string }) {
+    const { dialogueId, correctedText } = details;
+    try {
+      await updateDialogue(dialogueId, correctedText);
+      await invalidateAll();
+    } catch (err) {
+      error(`Error updating dialogue: ${err}`);
+      errorMessage = t('episodeDetailPage.errors.updateDialogueFailed');
+    }
+  }
 </script>
 
 <div class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col">
@@ -183,6 +195,7 @@
             {contextAfter}
             onSeek={seekAudio}
             onMine={openMiningModal}
+            onSave={handleSaveDialogue}
           />
         </div>
       </div>
