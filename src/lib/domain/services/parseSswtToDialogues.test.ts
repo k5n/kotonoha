@@ -7,15 +7,10 @@ describe('parseSswtToDialogues', () => {
 
     expect(dialogues).toHaveLength(1);
     expect(dialogues[0]).toEqual({
-      id: 0,
       episodeId: 1,
       startTimeMs: 1000,
       endTimeMs: 2500,
       originalText: 'This is a test sentence.',
-      correctedText: null,
-      translation: null,
-      explanation: null,
-      deleted_at: null,
     });
     expect(warnings).toHaveLength(0);
   });

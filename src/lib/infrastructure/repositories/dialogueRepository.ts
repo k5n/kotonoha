@@ -1,4 +1,4 @@
-import type { Dialogue } from '$lib/domain/entities/dialogue';
+import type { Dialogue, NewDialogue } from '$lib/domain/entities/dialogue';
 import Database from '@tauri-apps/plugin-sql';
 import { getDatabasePath } from '../config';
 
@@ -24,16 +24,9 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
     correctedText: row.corrected_text,
     translation: row.translation,
     explanation: row.explanation,
-    deleted_at: row.deleted_at,
+    deletedAt: row.deleted_at,
   };
 }
-
-type NewDialogue = {
-  episodeId: number;
-  startTimeMs: number;
-  endTimeMs: number;
-  originalText: string;
-};
 
 export const dialogueRepository = {
   async getDialogueById(dialogueId: number): Promise<Dialogue | null> {

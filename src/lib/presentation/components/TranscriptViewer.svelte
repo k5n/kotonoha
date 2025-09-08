@@ -55,7 +55,7 @@
   let itemEls: (HTMLElement | null)[] = [];
 
   const displayedDialogues = $derived(
-    showDeleted ? dialogues : dialogues.filter((d) => d.deleted_at === null)
+    showDeleted ? dialogues : dialogues.filter((d) => d.deletedAt === null)
   );
 
   // currentTimeが変更されたら、activeIndexとpreviousActiveIndexを更新し、該当要素までスクロールする$effect
@@ -102,7 +102,7 @@
   }
 
   function handleDblClick(dialogue: Dialogue) {
-    if (dialogue.deleted_at) return;
+    if (dialogue.deletedAt) return;
     editingDialogueId = dialogue.id;
     editText = dialogue.correctedText || dialogue.originalText;
     editingOriginalText = dialogue.originalText;
@@ -157,23 +157,23 @@
         class="flex items-center justify-between rounded-lg p-3 transition-all"
         class:bg-primary-100={index === activeIndex &&
           editingDialogueId === null &&
-          !dialogue.deleted_at}
+          !dialogue.deletedAt}
         class:dark:bg-primary-900={index === activeIndex &&
           editingDialogueId === null &&
-          !dialogue.deleted_at}
+          !dialogue.deletedAt}
         class:bg-gray-200={index === previousActiveIndex &&
           index !== activeIndex &&
           editingDialogueId === null &&
-          !dialogue.deleted_at}
+          !dialogue.deletedAt}
         class:dark:bg-gray-700={index === previousActiveIndex &&
           index !== activeIndex &&
           editingDialogueId === null &&
-          !dialogue.deleted_at}
+          !dialogue.deletedAt}
         class:ring-2={editingDialogueId === dialogue.id}
         class:ring-primary-500={editingDialogueId === dialogue.id}
-        class:bg-red-100={!!dialogue.deleted_at}
-        class:dark:bg-red-900={!!dialogue.deleted_at}
-        class:dark:bg-opacity-50={!!dialogue.deleted_at}
+        class:bg-red-100={!!dialogue.deletedAt}
+        class:dark:bg-red-900={!!dialogue.deletedAt}
+        class:dark:bg-opacity-50={!!dialogue.deletedAt}
       >
         {#if editingDialogueId === dialogue.id}
           <div class="flex w-full flex-col space-y-2">
@@ -210,21 +210,21 @@
             role="button"
             tabindex="0"
             class="flex-1"
-            class:cursor-pointer={!dialogue.deleted_at}
-            class:text-primary-800={index === activeIndex && !dialogue.deleted_at}
-            class:dark:text-primary-200={index === activeIndex && !dialogue.deleted_at}
-            class:line-through={!!dialogue.deleted_at}
-            class:text-gray-500={!!dialogue.deleted_at}
-            onclick={() => !dialogue.deleted_at && onSeek(dialogue.startTimeMs)}
+            class:cursor-pointer={!dialogue.deletedAt}
+            class:text-primary-800={index === activeIndex && !dialogue.deletedAt}
+            class:dark:text-primary-200={index === activeIndex && !dialogue.deletedAt}
+            class:line-through={!!dialogue.deletedAt}
+            class:text-gray-500={!!dialogue.deletedAt}
+            onclick={() => !dialogue.deletedAt && onSeek(dialogue.startTimeMs)}
             ondblclick={() => handleDblClick(dialogue)}
             onkeydown={(e) =>
-              e.key === 'Enter' && !dialogue.deleted_at && onSeek(dialogue.startTimeMs)}
+              e.key === 'Enter' && !dialogue.deletedAt && onSeek(dialogue.startTimeMs)}
           >
             {dialogue.correctedText || dialogue.originalText}
           </div>
 
           <div class="w-24 text-right">
-            {#if dialogue.deleted_at}
+            {#if dialogue.deletedAt}
               <Button size="xs" color="alternative" onclick={() => onUndoDelete(dialogue.id)}>
                 <RedoOutline class="me-1 h-4 w-4" />
                 {t('common.undo')}

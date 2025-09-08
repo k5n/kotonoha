@@ -1,4 +1,4 @@
-import type { Dialogue } from '$lib/domain/entities/dialogue';
+import type { NewDialogue } from '$lib/domain/entities/dialogue';
 
 /**
  * Parses SRT content and converts it into an array of Dialogue objects.
@@ -10,8 +10,8 @@ import type { Dialogue } from '$lib/domain/entities/dialogue';
 export function parseSrtToDialogues(
   srtContent: string,
   episodeId: number
-): { dialogues: readonly Dialogue[]; warnings: readonly string[] } {
-  const dialogues: Dialogue[] = [];
+): { dialogues: readonly NewDialogue[]; warnings: readonly string[] } {
+  const dialogues: NewDialogue[] = [];
   const warnings: string[] = [];
   const normalizedContent = srtContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const blocks = normalizedContent
@@ -57,15 +57,10 @@ export function parseSrtToDialogues(
     const originalText = textLines.join('\n');
 
     dialogues.push({
-      id: 0, // Placeholder, will be assigned by DB
       episodeId: episodeId,
       startTimeMs: startTimeMs,
       endTimeMs: endTimeMs,
       originalText: originalText,
-      correctedText: null,
-      translation: null,
-      explanation: null,
-      deleted_at: null,
     });
   }
 

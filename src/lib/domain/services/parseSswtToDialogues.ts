@@ -1,4 +1,4 @@
-import type { Dialogue } from '$lib/domain/entities/dialogue';
+import type { NewDialogue } from '$lib/domain/entities/dialogue';
 
 const sswtLineRegex = /^\[(\d{2}:\d{2}:\d{2}\.\d{3}) -> (\d{2}:\d{2}:\d{2}\.\d{3})\]\s*(.*)$/;
 
@@ -36,8 +36,8 @@ function parseTimeToMs(timeString: string): number | null {
 export function parseSswtToDialogues(
   sswtContent: string,
   episodeId: number
-): { dialogues: readonly Dialogue[]; warnings: readonly string[] } {
-  const dialogues: Dialogue[] = [];
+): { dialogues: readonly NewDialogue[]; warnings: readonly string[] } {
+  const dialogues: NewDialogue[] = [];
   const warnings: string[] = [];
   const lines = sswtContent.split('\n');
 
@@ -63,15 +63,10 @@ export function parseSswtToDialogues(
     }
 
     dialogues.push({
-      id: 0, // Placeholder, will be assigned by DB
       episodeId,
       startTimeMs,
       endTimeMs,
       originalText,
-      correctedText: null,
-      translation: null,
-      explanation: null,
-      deleted_at: null,
     });
   }
 

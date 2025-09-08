@@ -14,26 +14,16 @@ This is a test.
     const { dialogues, warnings } = parseSrtToDialogues(srtContent, episodeId);
     expect(dialogues.length).toBe(2);
     expect(dialogues[0]).toEqual({
-      id: 0,
       episodeId: 1,
       startTimeMs: 1000,
       endTimeMs: 3000,
       originalText: 'Hello, world.',
-      correctedText: null,
-      explanation: null,
-      translation: null,
-      deleted_at: null,
     });
     expect(dialogues[1]).toEqual({
-      id: 0,
       episodeId: 1,
       startTimeMs: 4000,
       endTimeMs: 6000,
       originalText: 'This is a test.',
-      correctedText: null,
-      explanation: null,
-      translation: null,
-      deleted_at: null,
     });
     expect(warnings.length).toBe(0);
   });
