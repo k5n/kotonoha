@@ -187,6 +187,7 @@ erDiagram
         TEXT corrected_text
         TEXT translation
         TEXT explanation
+        TEXT deleted_at
     }
     SENTENCE_CARDS {
         INTEGER id PK
@@ -250,6 +251,7 @@ erDiagram
 | `corrected_text`  | TEXT        | ユーザーが修正した後のテキスト     |
 | `translation`     | TEXT        | LLMが生成した翻訳                  |
 | `explanation`     | TEXT        | LLMが生成した翻訳の解説            |
+| `deleted_at`      | TEXT        | 削除日時 (ISO 8601), NULLの場合は未削除 |
 
 ### 2.4. `sentence_cards` テーブル
 Sentence Miningによって作成されたカードを管理する。
