@@ -35,6 +35,8 @@ graph LR
                     src_lib_application_usecases_moveEpisode_ts["moveEpisode.ts"]
                     src_lib_application_usecases_moveEpisodeGroup_ts["moveEpisodeGroup.ts"]
                     src_lib_application_usecases_saveSettings_ts["saveSettings.ts"]
+                    src_lib_application_usecases_softDeleteDialogue_ts["softDeleteDialogue.ts"]
+                    src_lib_application_usecases_undoSoftDeleteDialogue_ts["undoSoftDeleteDialogue.ts"]
                     src_lib_application_usecases_updateDialogue_ts["updateDialogue.ts"]
                     src_lib_application_usecases_updateEpisodeGroupName_ts["updateEpisodeGroupName.ts"]
                     src_lib_application_usecases_updateEpisodeGroupsOrder_ts["updateEpisodeGroupsOrder.ts"]
@@ -189,6 +191,8 @@ src_lib_application_usecases_saveSettings_ts --> src_lib_application_stores_i18n
 src_lib_application_usecases_saveSettings_ts --> src_lib_domain_entities_settings_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
+src_lib_application_usecases_softDeleteDialogue_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
+src_lib_application_usecases_undoSoftDeleteDialogue_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_updateDialogue_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_updateEpisodeGroupName_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
@@ -283,11 +287,14 @@ src_routes_episode__id___page_svelte --> src_lib_application_stores_i18n_svelte_
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_addSentenceCards_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_analyzeDialogueForMining_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_controlAudio_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_softDeleteDialogue_ts
+src_routes_episode__id___page_svelte --> src_lib_application_usecases_undoSoftDeleteDialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_updateDialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_dialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceCard_ts
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_AudioPlayer_svelte
+src_routes_episode__id___page_svelte --> src_lib_presentation_components_ConfirmModal_svelte
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_SentenceCardList_svelte
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_SentenceMiningModal_svelte
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_TranscriptViewer_svelte

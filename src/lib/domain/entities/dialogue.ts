@@ -10,4 +10,5 @@ export type Dialogue = {
   readonly correctedText: string | null;
   readonly translation: string | null;
   readonly explanation: string | null;
+  readonly deleted_at: string | null;
 };

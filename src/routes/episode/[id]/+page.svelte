@@ -1,8 +1,10 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { softDeleteDialogue } from '$lib/application/usecases/softDeleteDialogue';
+  import { undoSoftDeleteDialogue } from '$lib/application/usecases/undoSoftDeleteDialogue';
   import { debug, error } from '@tauri-apps/plugin-log';
-  import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
+  import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import { onDestroy, onMount } from 'svelte';
   import type { PageProps } from './$types';
@@ -25,6 +27,7 @@
   } from '$lib/domain/entities/sentenceAnalysisResult';
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
   import AudioPlayer from '$lib/presentation/components/AudioPlayer.svelte';
+  import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
   import SentenceCardList from '$lib/presentation/components/SentenceCardList.svelte';
   import SentenceMiningModal from '$lib/presentation/components/SentenceMiningModal.svelte';
   import TranscriptViewer from '$lib/presentation/components/TranscriptViewer.svelte';
@@ -34,16 +37,21 @@
 
   let { data }: PageProps = $props();
 
-  // Audio Player State
+  // --- Component State ---
   let currentTime = $state(0);
-
-  // Sentence Mining State
   let isModalOpen = $state(false);
   let miningTarget: Dialogue | null = $state(null);
   let analysisResult: SentenceAnalysisResult | null = $state(null);
   let isProcessingMining = $state(false);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let canMine = $derived(data.isApiKeySet || false);
+  let showDeleted = $state(false);
+
+  // Delete confirmation
+  let isConfirmModalOpen = $state(false);
+  let dialogueToDeleteId: number | null = $state(null);
+
+  const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deleted_at !== null) ?? false);
 
   let unlisten: (() => void) | undefined;
 
@@ -138,6 +146,36 @@
       errorMessage = t('episodeDetailPage.errors.updateDialogueFailed');
     }
   }
+
+  function handleDeleteRequest(dialogueId: number) {
+    dialogueToDeleteId = dialogueId;
+    isConfirmModalOpen = true;
+  }
+
+  async function handleDeleteConfirm() {
+    if (dialogueToDeleteId === null) return;
+
+    try {
+      await softDeleteDialogue(dialogueToDeleteId);
+      await invalidateAll();
+    } catch (err) {
+      error(`Error soft deleting dialogue: ${err}`);
+      errorMessage = t('episodeDetailPage.errors.deleteDialogueFailed');
+    } finally {
+      isConfirmModalOpen = false;
+      dialogueToDeleteId = null;
+    }
+  }
+
+  async function handleUndoDelete(dialogueId: number) {
+    try {
+      await undoSoftDeleteDialogue(dialogueId);
+      await invalidateAll();
+    } catch (err) {
+      error(`Error undoing soft delete for dialogue: ${err}`);
+      errorMessage = t('episodeDetailPage.errors.undoDeleteDialogueFailed');
+    }
+  }
 </script>
 
 <div class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col">
@@ -184,18 +222,26 @@
         </div>
 
         <div class="mt-6 flex flex-col lg:min-h-0 lg:flex-1">
-          <Heading tag="h2" class="mb-3 text-xl font-semibold">
-            {t('episodeDetailPage.scriptTitle')}
-          </Heading>
+          <div class="mb-3 flex items-center justify-between">
+            <Heading tag="h2" class="text-xl font-semibold">
+              {t('episodeDetailPage.scriptTitle')}
+            </Heading>
+            {#if hasDeletedDialogues}
+              <Checkbox bind:checked={showDeleted}>{t('episodeDetailPage.showDeleted')}</Checkbox>
+            {/if}
+          </div>
           <TranscriptViewer
             dialogues={data.dialogues}
             {currentTime}
             {canMine}
+            {showDeleted}
             {contextBefore}
             {contextAfter}
             onSeek={seekAudio}
             onMine={openMiningModal}
             onSave={handleSaveDialogue}
+            onDelete={handleDeleteRequest}
+            onUndoDelete={handleUndoDelete}
           />
         </div>
       </div>
@@ -221,4 +267,12 @@
   onCreate={createMiningCards}
   isProcessing={isProcessingMining}
   onClose={resetMiningModalState}
+/>
+
+<ConfirmModal
+  bind:show={isConfirmModalOpen}
+  title={t('episodeDetailPage.deleteConfirm.title')}
+  message={t('episodeDetailPage.deleteConfirm.message')}
+  onConfirm={handleDeleteConfirm}
+  onClose={() => (isConfirmModalOpen = false)}
 />

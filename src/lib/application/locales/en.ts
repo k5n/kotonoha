@@ -3,6 +3,8 @@ export const en = {
     common: {
       save: 'Save',
       cancel: 'Cancel',
+      delete: 'Delete',
+      undo: 'Undo',
     },
     appInfo: {
       title: 'About {{appName}}',
@@ -82,10 +84,18 @@ export const en = {
       playbackTime: 'Duration: {{minutes}}min {{seconds}}s',
       scriptTitle: 'Transcript',
       sentenceCardsTitle: 'Sentence Cards',
+      showDeleted: 'Show Deleted',
+      dialogueDeleted: 'Dialogue deleted.',
+      deleteConfirm: {
+        title: 'Delete Dialogue',
+        message: 'Are you sure you want to delete this dialogue? This action can be undone.',
+      },
       errors: {
         analyzeFailed: 'An error occurred while analyzing the dialogue.',
         createCardsFailed: 'An error occurred while creating cards.',
         updateDialogueFailed: 'Failed to update dialogue.',
+        deleteDialogueFailed: 'Failed to delete dialogue.',
+        undoDeleteDialogueFailed: 'Failed to undo dialogue deletion.',
         invalidEpisodeId: 'Invalid episode ID.',
         episodeNotFound: 'Episode not found.',
         fetchDetail: 'Failed to fetch episode details.',

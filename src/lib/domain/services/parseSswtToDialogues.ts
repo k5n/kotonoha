@@ -71,6 +71,7 @@ export function parseSswtToDialogues(
       correctedText: null,
       translation: null,
       explanation: null,
+      deleted_at: null,
     });
   }
 

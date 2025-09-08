@@ -11,6 +11,7 @@ type DialogueRow = {
   corrected_text: string | null;
   translation: string | null;
   explanation: string | null;
+  deleted_at: string | null;
 };
 
 function mapRowToDialogue(row: DialogueRow): Dialogue {
@@ -23,8 +24,16 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
     correctedText: row.corrected_text,
     translation: row.translation,
     explanation: row.explanation,
+    deleted_at: row.deleted_at,
   };
 }
+
+type NewDialogue = {
+  episodeId: number;
+  startTimeMs: number;
+  endTimeMs: number;
+  originalText: string;
+};
 
 export const dialogueRepository = {
   async getDialogueById(dialogueId: number): Promise<Dialogue | null> {
@@ -44,17 +53,12 @@ export const dialogueRepository = {
     return rows.map(mapRowToDialogue);
   },
 
-  async bulkInsertDialogues(
-    episodeId: number,
-    dialogues: readonly Omit<Dialogue, 'id' | 'episodeId' | 'translation' | 'explanation'>[]
-  ): Promise<void> {
+  async bulkInsertDialogues(episodeId: number, dialogues: readonly NewDialogue[]): Promise<void> {
     const db = new Database(getDatabasePath());
     const values = dialogues
       .map(
         (d) =>
-          `(${episodeId}, ${d.startTimeMs}, ${d.endTimeMs}, '${d.originalText.replace(/'/g, "''")}', ${
-            d.correctedText ? `'${d.correctedText.replace(/'/g, "''")}'` : 'NULL'
-          })`
+          `(${episodeId}, ${d.startTimeMs}, ${d.endTimeMs}, '${d.originalText.replace(/'/g, "''")}')`
       )
       .join(',');
 
@@ -88,5 +92,16 @@ export const dialogueRepository = {
       correctedText,
       dialogueId,
     ]);
+  },
+
+  async softDeleteDialogue(dialogueId: number): Promise<void> {
+    const db = new Database(getDatabasePath());
+    const now = new Date().toISOString();
+    await db.execute('UPDATE dialogues SET deleted_at = ? WHERE id = ?', [now, dialogueId]);
+  },
+
+  async undoSoftDeleteDialogue(dialogueId: number): Promise<void> {
+    const db = new Database(getDatabasePath());
+    await db.execute('UPDATE dialogues SET deleted_at = NULL WHERE id = ?', [dialogueId]);
   },
 };
