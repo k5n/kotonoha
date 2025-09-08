@@ -28,6 +28,13 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
   };
 }
 
+type NewDialogue = {
+  episodeId: number;
+  startTimeMs: number;
+  endTimeMs: number;
+  originalText: string;
+};
+
 export const dialogueRepository = {
   async getDialogueById(dialogueId: number): Promise<Dialogue | null> {
     const db = new Database(getDatabasePath());
@@ -46,20 +53,12 @@ export const dialogueRepository = {
     return rows.map(mapRowToDialogue);
   },
 
-  async bulkInsertDialogues(
-    episodeId: number,
-    dialogues: readonly Omit<
-      Dialogue,
-      'id' | 'episodeId' | 'translation' | 'explanation' | 'deleted_at'
-    >[]
-  ): Promise<void> {
+  async bulkInsertDialogues(episodeId: number, dialogues: readonly NewDialogue[]): Promise<void> {
     const db = new Database(getDatabasePath());
     const values = dialogues
       .map(
         (d) =>
-          `(${episodeId}, ${d.startTimeMs}, ${d.endTimeMs}, '${d.originalText.replace(/'/g, "''")}', ${
-            d.correctedText ? `'${d.correctedText.replace(/'/g, "''")}'` : 'NULL'
-          })`
+          `(${episodeId}, ${d.startTimeMs}, ${d.endTimeMs}, '${d.originalText.replace(/'/g, "''")}')`
       )
       .join(',');
 
