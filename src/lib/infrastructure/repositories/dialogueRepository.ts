@@ -11,6 +11,7 @@ type DialogueRow = {
   corrected_text: string | null;
   translation: string | null;
   explanation: string | null;
+  deleted_at: string | null;
 };
 
 function mapRowToDialogue(row: DialogueRow): Dialogue {
@@ -23,6 +24,7 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
     correctedText: row.corrected_text,
     translation: row.translation,
     explanation: row.explanation,
+    deleted_at: row.deleted_at,
   };
 }
 
@@ -46,7 +48,10 @@ export const dialogueRepository = {
 
   async bulkInsertDialogues(
     episodeId: number,
-    dialogues: readonly Omit<Dialogue, 'id' | 'episodeId' | 'translation' | 'explanation'>[]
+    dialogues: readonly Omit<
+      Dialogue,
+      'id' | 'episodeId' | 'translation' | 'explanation' | 'deleted_at'
+    >[]
   ): Promise<void> {
     const db = new Database(getDatabasePath());
     const values = dialogues
@@ -88,5 +93,16 @@ export const dialogueRepository = {
       correctedText,
       dialogueId,
     ]);
+  },
+
+  async softDeleteDialogue(dialogueId: number): Promise<void> {
+    const db = new Database(getDatabasePath());
+    const now = new Date().toISOString();
+    await db.execute('UPDATE dialogues SET deleted_at = ? WHERE id = ?', [now, dialogueId]);
+  },
+
+  async undoSoftDeleteDialogue(dialogueId: number): Promise<void> {
+    const db = new Database(getDatabasePath());
+    await db.execute('UPDATE dialogues SET deleted_at = NULL WHERE id = ?', [dialogueId]);
   },
 };

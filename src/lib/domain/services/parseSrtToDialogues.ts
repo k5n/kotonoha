@@ -65,6 +65,7 @@ export function parseSrtToDialogues(
       correctedText: null,
       translation: null,
       explanation: null,
+      deleted_at: null,
     });
   }
 

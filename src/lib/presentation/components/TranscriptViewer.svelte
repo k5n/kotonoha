@@ -2,7 +2,13 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import { Button, Textarea } from 'flowbite-svelte';
-  import { CheckOutline, CloseOutline, SunOutline } from 'flowbite-svelte-icons';
+  import {
+    CheckOutline,
+    CloseOutline,
+    RedoOutline,
+    SunOutline,
+    TrashBinOutline,
+  } from 'flowbite-svelte-icons';
 
   // --- Constants ---
   const SCROLL_DEBOUNCE_MS = 100; // スクロール処理のデバウンス時間
@@ -13,9 +19,12 @@
     dialogues: readonly Dialogue[];
     currentTime: number; // ミリ秒単位
     canMine: boolean; // マイニング可能かどうか
+    showDeleted: boolean; // 削除済みを表示するかどうか
     onSeek: (_time: number) => void;
     onMine: (_dialogue: Dialogue, _context: readonly Dialogue[]) => void;
     onSave: (details: { dialogueId: number; correctedText: string }) => void;
+    onDelete: (_dialogueId: number) => void;
+    onUndoDelete: (_dialogueId: number) => void;
     contextBefore?: number; // 前の件数
     contextAfter?: number; // 後ろの件数
   }
@@ -23,9 +32,12 @@
     dialogues,
     currentTime,
     canMine,
+    showDeleted,
     onSeek,
     onMine,
     onSave,
+    onDelete,
+    onUndoDelete,
     contextBefore = 2,
     contextAfter = 2,
   }: Props = $props();
@@ -42,12 +54,16 @@
   let containerEl: HTMLElement | undefined = $state();
   let itemEls: (HTMLElement | null)[] = [];
 
+  const displayedDialogues = $derived(
+    showDeleted ? dialogues : dialogues.filter((d) => d.deleted_at === null)
+  );
+
   // currentTimeが変更されたら、activeIndexとpreviousActiveIndexを更新し、該当要素までスクロールする$effect
   $effect(() => {
     //編集中は自動スクロールを無効
     if (editingDialogueId !== null) return;
 
-    const newActiveIndex = dialogues.findIndex(
+    const newActiveIndex = displayedDialogues.findIndex(
       (d) => currentTime >= d.startTimeMs && currentTime < d.endTimeMs
     );
 
@@ -81,11 +97,12 @@
 
   function getContext(index: number): readonly Dialogue[] {
     const start = Math.max(0, index - contextBefore);
-    const end = Math.min(dialogues.length, index + contextAfter + 1);
-    return dialogues.slice(start, end);
+    const end = Math.min(displayedDialogues.length, index + contextAfter + 1);
+    return displayedDialogues.slice(start, end);
   }
 
   function handleDblClick(dialogue: Dialogue) {
+    if (dialogue.deleted_at) return;
     editingDialogueId = dialogue.id;
     editText = dialogue.correctedText || dialogue.originalText;
     editingOriginalText = dialogue.originalText;
@@ -94,7 +111,7 @@
   function handleSave() {
     if (editingDialogueId === null) return;
 
-    const dialogue = dialogues.find((d) => d.id === editingDialogueId);
+    const dialogue = displayedDialogues.find((d) => d.id === editingDialogueId);
     if (!dialogue) return;
 
     onSave({
@@ -106,6 +123,12 @@
   }
 
   function handleCancel() {
+    editingDialogueId = null;
+  }
+
+  function handleDelete() {
+    if (editingDialogueId === null) return;
+    onDelete(editingDialogueId);
     editingDialogueId = null;
   }
 
@@ -122,26 +145,35 @@
   bind:this={containerEl}
   class="h-[50vh] space-y-1 overflow-y-auto scroll-smooth rounded-lg border bg-gray-50 p-4 lg:h-full dark:border-gray-700 dark:bg-gray-800"
 >
-  {#if dialogues.length > 0}
+  {#if displayedDialogues.length > 0}
     <!--
       上下の余白（50% - 1.25rem）は、アクティブな項目が中央に来るように調整するためのものです。
       1.25rem は、p-3（0.75rem）と rounded-lg の境界付近の余白を考慮したおおよその値です。
     -->
     <div class="h-[calc(50%-1.25rem)]"></div>
-    {#each dialogues as dialogue, index (dialogue.id)}
+    {#each displayedDialogues as dialogue, index (dialogue.id)}
       <div
         bind:this={itemEls[index]}
         class="flex items-center justify-between rounded-lg p-3 transition-all"
-        class:bg-primary-100={index === activeIndex && editingDialogueId === null}
-        class:dark:bg-primary-900={index === activeIndex && editingDialogueId === null}
+        class:bg-primary-100={index === activeIndex &&
+          editingDialogueId === null &&
+          !dialogue.deleted_at}
+        class:dark:bg-primary-900={index === activeIndex &&
+          editingDialogueId === null &&
+          !dialogue.deleted_at}
         class:bg-gray-200={index === previousActiveIndex &&
           index !== activeIndex &&
-          editingDialogueId === null}
+          editingDialogueId === null &&
+          !dialogue.deleted_at}
         class:dark:bg-gray-700={index === previousActiveIndex &&
           index !== activeIndex &&
-          editingDialogueId === null}
+          editingDialogueId === null &&
+          !dialogue.deleted_at}
         class:ring-2={editingDialogueId === dialogue.id}
         class:ring-primary-500={editingDialogueId === dialogue.id}
+        class:bg-red-100={!!dialogue.deleted_at}
+        class:dark:bg-red-900={!!dialogue.deleted_at}
+        class:dark:bg-opacity-50={!!dialogue.deleted_at}
       >
         {#if editingDialogueId === dialogue.id}
           <div class="flex w-full flex-col space-y-2">
@@ -156,33 +188,48 @@
               autofocus
               class="w-full"
             />
-            <div class="flex justify-end space-x-2">
-              <Button size="xs" color="alternative" onclick={handleCancel}>
-                <CloseOutline class="me-1 h-4 w-4" />
-                {t('common.cancel')}
+            <div class="flex items-center justify-between">
+              <Button size="xs" color="red" onclick={handleDelete}>
+                <TrashBinOutline class="me-1 h-4 w-4" />
+                {t('common.delete')}
               </Button>
-              <Button size="xs" onclick={handleSave}>
-                <CheckOutline class="me-1 h-4 w-4" />
-                {t('common.save')}
-              </Button>
+              <div class="flex space-x-2">
+                <Button size="xs" color="alternative" onclick={handleCancel}>
+                  <CloseOutline class="me-1 h-4 w-4" />
+                  {t('common.cancel')}
+                </Button>
+                <Button size="xs" onclick={handleSave}>
+                  <CheckOutline class="me-1 h-4 w-4" />
+                  {t('common.save')}
+                </Button>
+              </div>
             </div>
           </div>
         {:else}
           <div
             role="button"
             tabindex="0"
-            class="flex-1 cursor-pointer"
-            class:text-primary-800={index === activeIndex}
-            class:dark:text-primary-200={index === activeIndex}
-            onclick={() => onSeek(dialogue.startTimeMs)}
+            class="flex-1"
+            class:cursor-pointer={!dialogue.deleted_at}
+            class:text-primary-800={index === activeIndex && !dialogue.deleted_at}
+            class:dark:text-primary-200={index === activeIndex && !dialogue.deleted_at}
+            class:line-through={!!dialogue.deleted_at}
+            class:text-gray-500={!!dialogue.deleted_at}
+            onclick={() => !dialogue.deleted_at && onSeek(dialogue.startTimeMs)}
             ondblclick={() => handleDblClick(dialogue)}
-            onkeydown={(e) => e.key === 'Enter' && onSeek(dialogue.startTimeMs)}
+            onkeydown={(e) =>
+              e.key === 'Enter' && !dialogue.deleted_at && onSeek(dialogue.startTimeMs)}
           >
             {dialogue.correctedText || dialogue.originalText}
           </div>
 
           <div class="w-24 text-right">
-            {#if canMine && index === activeIndex}
+            {#if dialogue.deleted_at}
+              <Button size="xs" color="alternative" onclick={() => onUndoDelete(dialogue.id)}>
+                <RedoOutline class="me-1 h-4 w-4" />
+                {t('common.undo')}
+              </Button>
+            {:else if canMine && index === activeIndex}
               <Button size="xs" onclick={() => onMine(dialogue, getContext(index))}>
                 <SunOutline class="me-1 h-4 w-4" />
                 {t('components.transcriptViewer.mine')}

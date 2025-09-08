@@ -22,6 +22,7 @@ This is a test.
       correctedText: null,
       explanation: null,
       translation: null,
+      deleted_at: null,
     });
     expect(dialogues[1]).toEqual({
       id: 0,
@@ -32,6 +33,7 @@ This is a test.
       correctedText: null,
       explanation: null,
       translation: null,
+      deleted_at: null,
     });
     expect(warnings.length).toBe(0);
   });

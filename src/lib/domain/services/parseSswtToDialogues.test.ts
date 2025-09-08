@@ -15,6 +15,7 @@ describe('parseSswtToDialogues', () => {
       correctedText: null,
       translation: null,
       explanation: null,
+      deleted_at: null,
     });
     expect(warnings).toHaveLength(0);
   });

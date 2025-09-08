@@ -3,6 +3,8 @@ export const ja = {
     common: {
       save: '保存',
       cancel: 'キャンセル',
+      delete: '削除',
+      undo: '元に戻す',
     },
     appInfo: {
       title: '{{appName}}について',
@@ -81,10 +83,18 @@ export const ja = {
       playbackTime: '再生時間: {{minutes}}分 {{seconds}}秒',
       scriptTitle: 'スクリプト',
       sentenceCardsTitle: '作成したカード',
+      showDeleted: '削除済みを表示',
+      dialogueDeleted: 'セリフを削除しました。',
+      deleteConfirm: {
+        title: 'セリフの削除',
+        message: 'このセリフを削除しますか？この操作は元に戻すことができます。',
+      },
       errors: {
         analyzeFailed: '対話の分析中にエラーが発生しました。',
         createCardsFailed: 'カードの作成中にエラーが発生しました。',
         updateDialogueFailed: 'セリフの更新に失敗しました。',
+        deleteDialogueFailed: 'セリフの削除に失敗しました。',
+        undoDeleteDialogueFailed: 'セリフの削除の取り消しに失敗しました。',
         invalidEpisodeId: '無効なエピソードIDです。',
         episodeNotFound: 'エピソードが見つかりません。',
         fetchDetail: 'エピソード詳細の取得に失敗しました。',
