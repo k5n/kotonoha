@@ -209,13 +209,13 @@ erDiagram
 ### 2.1. `episode_groups` テーブル
 エピソードを任意のグループ（入れ子構造可）に分類する。
 
-| カラム名         | 型      | 説明                         |
-|------------------|---------|------------------------------|
-| `id`             | INTEGER | PRIMARY KEY, AUTOINCREMENT   |
-| `name`           | TEXT    | グループ名                   |
-| `display_order`  | INTEGER | グループの表示順序           |
-| `parent_group_id`| INTEGER | 親グループID（NULLでルート） |
-| `group_type`     | TEXT    | グループ種別: "album"（エピソード格納可）または "folder"（サブグループのみ格納可） |
+| カラム名         | 型      | NULL許容 | 説明                         |
+|------------------|---------|----------|------------------------------|
+| `id`             | INTEGER |          | PRIMARY KEY, AUTOINCREMENT   |
+| `name`           | TEXT    |          | グループ名                   |
+| `display_order`  | INTEGER |          | グループの表示順序           |
+| `parent_group_id`| INTEGER | ●        | 親グループID（NULLでルート） |
+| `group_type`     | TEXT    |          | グループ種別: "album"（エピソード格納可）または "folder"（サブグループのみ格納可） |
 
 - `parent_group_id`は自己参照外部キー。NULLの場合はルートグループ。
 - `group_type` でグループの種別を区別する。`album` はエピソードを格納でき、`folder` はサブグループのみ格納できる。
@@ -224,34 +224,34 @@ erDiagram
 ### 2.2. `episodes` テーブル
 エピソード（音声コンテンツとスクリプトのセット）を管理する。
 
-| カラム名        | 型          | 説明                               |
-|-----------------|-------------|------------------------------------|
-| `id`            | INTEGER     | PRIMARY KEY, AUTOINCREMENT         |
-| `episode_group_id` | INTEGER  | `episode_groups.id`への外部キー    |
-| `display_order` | INTEGER     | グループ内でのエピソードの表示順序 |
-| `title`         | TEXT        | エピソードのタイトル               |
-| `audio_path`    | TEXT        | 音声ファイルのパス             |
-| `script_path`   | TEXT        | スクリプトファイルのパス       |
-| `duration_seconds` | INTEGER  | 音声の再生時間（秒）               |
-| `learning_language` | TEXT    | 学習ターゲット言語 (例: 'English') |
-| `explanation_language` | TEXT  | 説明言語 (例: 'Japanese')        |
-| `created_at`    | TEXT        | 作成日時 (ISO 8601)                |
-| `updated_at`    | TEXT        | 更新日時 (ISO 8601)                |
+| カラム名        | 型          | NULL許容 | 説明                               |
+|-----------------|-------------|----------|------------------------------------|
+| `id`            | INTEGER     |          | PRIMARY KEY, AUTOINCREMENT         |
+| `episode_group_id` | INTEGER  |          | `episode_groups.id`への外部キー    |
+| `display_order` | INTEGER     |          | グループ内でのエピソードの表示順序 |
+| `title`         | TEXT        |          | エピソードのタイトル               |
+| `audio_path`    | TEXT        |          | 音声ファイルのパス             |
+| `script_path`   | TEXT        |          | スクリプトファイルのパス       |
+| `duration_seconds` | INTEGER  | ●        | 音声の再生時間（秒）               |
+| `learning_language` | TEXT    |          | 学習ターゲット言語 (例: 'English') |
+| `explanation_language` | TEXT  |          | 説明言語 (例: 'Japanese')        |
+| `created_at`    | TEXT        |          | 作成日時 (ISO 8601)                |
+| `updated_at`    | TEXT        |          | 更新日時 (ISO 8601)                |
 
 ### 2.3. `dialogues` テーブル
 スクリプト内の各セリフを管理する。
 
-| カラム名          | 型          | 説明                               |
-|-------------------|-------------|------------------------------------|
-| `id`              | INTEGER     | PRIMARY KEY, AUTOINCREMENT         |
-| `episode_id`      | INTEGER     | `episodes.id`への外部キー          |
-| `start_time_ms`   | INTEGER     | セリフの開始時間（ミリ秒）         |
-| `end_time_ms`     | INTEGER     | セリフの終了時間（ミリ秒）         |
-| `original_text`   | TEXT        | スクリプトから取り込んだ元のテキスト |
-| `corrected_text`  | TEXT        | ユーザーが修正した後のテキスト     |
-| `translation`     | TEXT        | LLMが生成した翻訳                  |
-| `explanation`     | TEXT        | LLMが生成した翻訳の解説            |
-| `deleted_at`      | TEXT        | 削除日時 (ISO 8601), NULLの場合は未削除 |
+| カラム名          | 型          | NULL許容 | 説明                               |
+|-------------------|-------------|----------|------------------------------------|
+| `id`              | INTEGER     |          | PRIMARY KEY, AUTOINCREMENT         |
+| `episode_id`      | INTEGER     |          | `episodes.id`への外部キー          |
+| `start_time_ms`   | INTEGER     |          | セリフの開始時間（ミリ秒）         |
+| `end_time_ms`     | INTEGER     |          | セリフの終了時間（ミリ秒）         |
+| `original_text`   | TEXT        |          | スクリプトから取り込んだ元のテキスト |
+| `corrected_text`  | TEXT        | ●        | ユーザーが修正した後のテキスト     |
+| `translation`     | TEXT        | ●        | LLMが生成した翻訳                  |
+| `explanation`     | TEXT        | ●        | LLMが生成した翻訳の解説            |
+| `deleted_at`      | TEXT        | ●        | 削除日時 (ISO 8601), NULLの場合は未削除 |
 
 ### 2.4. `sentence_cards` テーブル
 Sentence Miningによって作成されたカードを管理する。
@@ -262,17 +262,17 @@ Sentence Miningによって作成されたカードを管理する。
     - 例: `CREATE VIRTUAL TABLE sentence_cards USING fts5(expression);`
 - 単語の順序や部分列一致など、より高度な検索条件（例: "pick up [-]" のようなパターン）は、アプリケーション側でトークン化・フィルタリング処理を行う。
 
-| カラム名        | 型          | 説明                               |
-|-----------------|-------------|------------------------------------|
-| `id`            | INTEGER     | PRIMARY KEY, AUTOINCREMENT         |
-| `dialogue_id`   | INTEGER     | `dialogues.id`への外部キー         |
-| `part_of_speech`| TEXT        | 品詞                         |
-| `expression`    | TEXT        | 抽出対象の単語/イディオム          |
-| `sentence`      | TEXT        | 抽出対象を含むセンテンス全体（該当箇所を強調）       |
-| `contextual_definition`    | TEXT        | LLMによって生成された文脈上の意味    |
-| `core_meaning`    | TEXT        | LLMによって生成された核となる意味    |
-| `status`        | TEXT        | `active` (学習中), `suspended` (保留), `cache` (LLM解析結果のキャッシュ) などの状態 |
-| `created_at`    | TEXT        | 作成日時 (ISO 8601)                |
+| カラム名        | 型          | NULL許容 | 説明                               |
+|-----------------|-------------|----------|------------------------------------|
+| `id`            | INTEGER     |          | PRIMARY KEY, AUTOINCREMENT         |
+| `dialogue_id`   | INTEGER     |          | `dialogues.id`への外部キー         |
+| `part_of_speech`| TEXT        |          | 品詞                         |
+| `expression`    | TEXT        |          | 抽出対象の単語/イディオム          |
+| `sentence`      | TEXT        |          | 抽出対象を含むセンテンス全体（該当箇所を強調）       |
+| `contextual_definition`    | TEXT        |          | LLMによって生成された文脈上の意味    |
+| `core_meaning`    | TEXT        |          | LLMによって生成された核となる意味    |
+| `status`        | TEXT        |          | `active` (学習中), `suspended` (保留), `cache` (LLM解析結果のキャッシュ) などの状態 |
+| `created_at`    | TEXT        |          | 作成日時 (ISO 8601)                |
 
 ---
 
@@ -314,7 +314,32 @@ Sentence Miningによって作成されたカードを管理する。
 Rustで実装し、フロントエンドの`Infrastructure`レイヤーから呼び出される関数群。
 Tauriのプラグインを利用するなどしてフロントエンド側で実装可能と判断したものは、必ずしも Rust 側で実装しなくても良い。
 
-- `analyze_sentence_with_llm(learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
+#### LLM
+
+- `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
+  - センテンスを解析し、単語や表現の情報をLLMから取得する。
+  - `SentenceMiningResult` は `translation`, `explanation`, `items` を含む。
+
+#### Stronghold (Secure Storage)
+
+- `get_stronghold_password() -> Result<String, String>`
+  - OSのキーチェーンからStrongholdのパスワードを取得または生成して返す。
+
+#### Audio Playback
+
+- `open_audio(path: String, max_peaks: usize) -> Result<AudioInfo, String>`
+  - 音声ファイルを指定されたパスから開き、解析して波形データと再生時間を返す。
+  - `AudioInfo` は `duration`, `peaks` を含む。
+- `play_audio() -> Result<(), String>`
+  - `open_audio` で開かれた音声の再生を開始する。
+- `pause_audio() -> Result<(), String>`
+  - 音声の再生を一時停止する。
+- `resume_audio() -> Result<(), String>`
+  - 一時停止した音声の再生を再開する。
+- `stop_audio() -> Result<(), String>`
+  - 音声の再生を停止する。
+- `seek_audio(position_ms: u32) -> Result<(), String>`
+  - 音声の再生位置を指定された時間（ミリ秒）に移動する。
 
 ### 4.3. データフェッチ・状態管理戦略
 

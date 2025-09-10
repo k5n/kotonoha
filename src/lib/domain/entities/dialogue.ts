@@ -1,14 +1,20 @@
 /**
- * スクリプト内の個々のセリフを表すエンティティ。
+ * 新規作成時に必要なプロパティをまとめた型。
  */
-export type Dialogue = {
-  readonly id: number;
+export type NewDialogue = {
   readonly episodeId: number;
   readonly startTimeMs: number;
   readonly endTimeMs: number;
   readonly originalText: string;
+};
+
+/**
+ * スクリプト内の個々のセリフを表すエンティティ。
+ */
+export type Dialogue = NewDialogue & {
+  readonly id: number;
   readonly correctedText: string | null;
   readonly translation: string | null;
   readonly explanation: string | null;
-  readonly deleted_at: string | null;
+  readonly deletedAt: string | null;
 };

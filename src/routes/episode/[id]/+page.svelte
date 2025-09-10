@@ -51,7 +51,7 @@
   let isConfirmModalOpen = $state(false);
   let dialogueToDeleteId: number | null = $state(null);
 
-  const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deleted_at !== null) ?? false);
+  const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deletedAt !== null) ?? false);
 
   let unlisten: (() => void) | undefined;
 
