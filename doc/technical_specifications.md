@@ -314,7 +314,32 @@ Sentence Miningによって作成されたカードを管理する。
 Rustで実装し、フロントエンドの`Infrastructure`レイヤーから呼び出される関数群。
 Tauriのプラグインを利用するなどしてフロントエンド側で実装可能と判断したものは、必ずしも Rust 側で実装しなくても良い。
 
-- `analyze_sentence_with_llm(learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
+#### LLM
+
+- `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
+  - センテンスを解析し、単語や表現の情報をLLMから取得する。
+  - `SentenceMiningResult` は `translation`, `explanation`, `items` を含む。
+
+#### Stronghold (Secure Storage)
+
+- `get_stronghold_password() -> Result<String, String>`
+  - OSのキーチェーンからStrongholdのパスワードを取得または生成して返す。
+
+#### Audio Playback
+
+- `open_audio(path: String, max_peaks: usize) -> Result<AudioInfo, String>`
+  - 音声ファイルを指定されたパスから開き、解析して波形データと再生時間を返す。
+  - `AudioInfo` は `duration`, `peaks` を含む。
+- `play_audio() -> Result<(), String>`
+  - `open_audio` で開かれた音声の再生を開始する。
+- `pause_audio() -> Result<(), String>`
+  - 音声の再生を一時停止する。
+- `resume_audio() -> Result<(), String>`
+  - 一時停止した音声の再生を再開する。
+- `stop_audio() -> Result<(), String>`
+  - 音声の再生を停止する。
+- `seek_audio(position_ms: u32) -> Result<(), String>`
+  - 音声の再生位置を指定された時間（ミリ秒）に移動する。
 
 ### 4.3. データフェッチ・状態管理戦略
 
