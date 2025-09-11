@@ -54,10 +54,19 @@
   async function handleEpisodeAddSubmit(
     title: string,
     audioFile: File,
-    srtFile: File,
-    duration: number
+    scriptFile: File,
+    duration: number,
+    tsvConfig?: {
+      startTimeColumnIndex: number;
+      textColumnIndex: number;
+      endTimeColumnIndex?: number;
+    }
   ) {
-    debug(`title: ${title}, audio: ${audioFile.name}, script: ${srtFile.name}`);
+    debug(
+      `title: ${title}, audio: ${audioFile.name}, script: ${scriptFile.name}, tsvConfig: ${JSON.stringify(
+        tsvConfig
+      )}`
+    );
     const groupId = data.episodeGroup?.id;
     if (!groupId) {
       debug('No group ID found, cannot add episode');
@@ -69,8 +78,9 @@
       displayOrder: maxDisplayOrder + 1,
       title,
       audioFile,
-      scriptFile: srtFile,
+      scriptFile,
       durationSeconds: duration,
+      tsvConfig,
     });
     await invalidateAll();
     showEpisodeAdd = false;
