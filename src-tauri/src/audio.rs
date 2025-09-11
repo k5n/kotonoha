@@ -36,16 +36,25 @@ impl Default for AudioState {
 
 // Core audio operations (reusable functions)
 
-pub fn analyze_audio_file(
-    file_path: &std::path::Path,
-    max_peaks: usize,
-) -> Result<(AudioInfo, Vec<u8>), String> {
-    info!("analyze_audio_file: {:?}", file_path);
+fn open_audio_file(file_path: &std::path::Path) -> Result<Vec<u8>, String> {
+    info!("open_audio_file: {:?}", file_path);
 
     let file_bytes =
         fs::read(file_path).map_err(|e| format!("Failed to read audio file: {}", e))?;
 
-    let cursor = Cursor::new(file_bytes.clone());
+    Ok(file_bytes)
+}
+
+fn analyze_audio_file(file_bytes: Vec<u8>, max_peaks: usize) -> Result<AudioInfo, String> {
+    // NOTE: Cursorを作るのにはVec<u8>が必要なので、borrowではなく所有権を受け取る。
+    // 再生を邪魔しないように別途オーディオファイルを開いてデータを取得する想定なので問題ない。
+    info!(
+        "analyze_audio: {} bytes, max_peaks: {}",
+        file_bytes.len(),
+        max_peaks
+    );
+
+    let cursor = Cursor::new(file_bytes);
     let source = Decoder::try_from(BufReader::new(cursor))
         .map_err(|e| format!("Failed to decode audio from memory: {}", e))?;
 
@@ -83,10 +92,10 @@ pub fn analyze_audio_file(
         peaks,
     };
 
-    Ok((audio_info, file_bytes))
+    Ok(audio_info)
 }
 
-pub fn create_audio_playback(
+fn create_audio_playback(
     audio_data: &[u8],
     stream: Option<&OutputStream>,
 ) -> Result<(Option<OutputStream>, Sink), String> {
@@ -111,7 +120,7 @@ pub fn create_audio_playback(
     Ok((stream, sink))
 }
 
-pub fn seek_audio_forward(sink: &Sink, position_ms: u32) -> Result<(), String> {
+fn seek_audio_forward(sink: &Sink, position_ms: u32) -> Result<(), String> {
     info!("seek_audio_forward: {}", position_ms);
     let target_pos = Duration::from_millis(position_ms as u64);
     sink.try_seek(target_pos)
@@ -119,7 +128,7 @@ pub fn seek_audio_forward(sink: &Sink, position_ms: u32) -> Result<(), String> {
     Ok(())
 }
 
-pub fn seek_audio_backward_with_recreation(
+fn seek_audio_backward_with_recreation(
     audio_data: &[u8],
     stream: &OutputStream,
     position_ms: u32,
@@ -132,27 +141,113 @@ pub fn seek_audio_backward_with_recreation(
     Ok(new_sink)
 }
 
+fn start_playback_position_tracking(
+    app_handle: AppHandle,
+    sink_mutex: Arc<Mutex<Option<Sink>>>,
+    tracker_mutex: &Mutex<Option<thread::JoinHandle<()>>>,
+) -> Result<(), String> {
+    info!("start_playback_position_tracking");
+    let mut tracker_guard = tracker_mutex
+        .lock()
+        .map_err(|e| format!("Failed to lock tracker mutex: {}", e))?;
+
+    // Stop any existing tracker
+    if let Some(_handle) = tracker_guard.take() {
+        warn!("Stopping existing playback position tracker.");
+        // It's not straightforward to "stop" a thread from outside.
+        // For now, we'll just drop the handle, assuming the thread will eventually
+        // terminate if the sink is stopped or dropped.
+        // A more robust solution would involve a channel for signaling termination.
+    }
+
+    let app_handle_clone = app_handle.clone();
+
+    let mut emit_error_count = 0;
+    let handle = thread::spawn(move || {
+        loop {
+            let (should_break, current_pos_ms) = {
+                let sink_locked = sink_mutex.lock().unwrap();
+                if let Some(sink) = sink_locked.as_ref() {
+                    if sink.is_paused() || sink.empty() {
+                        info!("Playback paused or empty, stopping tracker thread.");
+                        (true, 0)
+                    } else {
+                        (false, sink.get_pos().as_millis() as u64)
+                    }
+                } else {
+                    info!("No sink available, stopping tracker thread.");
+                    (true, 0)
+                }
+            };
+            if should_break {
+                break;
+            }
+
+            if let Err(e) = app_handle_clone.emit("playback-position", current_pos_ms) {
+                error!("Failed to emit playback-position event: {}", e);
+                emit_error_count += 1;
+                if emit_error_count >= 5 {
+                    error!("Too many emit errors, stopping playback position tracker thread.");
+                    break;
+                }
+            }
+
+            thread::sleep(Duration::from_millis(POSITION_UPDATE_FREQUENCY));
+        }
+        info!("Playback position tracker thread terminated.");
+    });
+
+    *tracker_guard = Some(handle);
+    Ok(())
+}
+
+fn stop_playback_position_tracking(state: State<AudioState>) -> Result<(), String> {
+    info!("stop_playback_position_tracking");
+    let mut tracker_guard = state.playback_position_tracker.lock().unwrap();
+    if let Some(handle) = tracker_guard.take() {
+        // Attempt to join the thread. This will block until the thread finishes.
+        // In a real application, you might want to send a signal to the thread
+        // to allow it to terminate gracefully without blocking the main thread.
+        if let Err(e) = handle.join() {
+            error!("Failed to join playback position tracker thread: {:?}", e);
+        }
+    }
+    Ok(())
+}
+
 // Tauri command wrappers
 
 #[tauri::command]
-pub async fn open_audio(
-    app_handle: AppHandle,
-    path: String,
-    max_peaks: usize,
-) -> Result<AudioInfo, String> {
+pub async fn open_audio(app_handle: AppHandle, path: String) -> Result<(), String> {
     let full_path = app_handle
         .path()
         .resolve(&path, BaseDirectory::AppLocalData)
         .map_err(|e| format!("Failed to resolve path '{}': {}", path, e))?;
 
-    let (audio_info, file_bytes) = analyze_audio_file(&full_path, max_peaks)?;
+    let file_bytes = open_audio_file(&full_path)?;
 
     // Store audio data in state
     let state: State<AudioState> = app_handle.state();
     let mut audio_data_guard = state.audio_data.lock().unwrap();
     *audio_data_guard = Some(file_bytes);
+    info!("Audio data loaded and stored in state");
+    Ok(())
+}
 
-    Ok(audio_info)
+#[tauri::command]
+pub async fn analyze_audio(
+    app_handle: AppHandle,
+    path: String,
+    max_peaks: usize,
+) -> Result<AudioInfo, String> {
+    // NOTE: 再生を邪魔しないように別途オーディオファイルを開いてデータを取得する
+    let full_path = app_handle
+        .path()
+        .resolve(&path, BaseDirectory::AppLocalData)
+        .map_err(|e| format!("Failed to resolve path '{}': {}", path, e))?;
+    let file_bytes = open_audio_file(&full_path)?;
+
+    analyze_audio_file(file_bytes, max_peaks)
 }
 
 #[tauri::command]
@@ -305,79 +400,5 @@ pub fn seek_audio(
             .map_err(|e| format!("Failed to start playback position tracking: {}", e))?;
     }
 
-    Ok(())
-}
-
-pub fn start_playback_position_tracking(
-    app_handle: AppHandle,
-    sink_mutex: Arc<Mutex<Option<Sink>>>,
-    tracker_mutex: &Mutex<Option<thread::JoinHandle<()>>>,
-) -> Result<(), String> {
-    info!("start_playback_position_tracking");
-    let mut tracker_guard = tracker_mutex
-        .lock()
-        .map_err(|e| format!("Failed to lock tracker mutex: {}", e))?;
-
-    // Stop any existing tracker
-    if let Some(_handle) = tracker_guard.take() {
-        warn!("Stopping existing playback position tracker.");
-        // It's not straightforward to "stop" a thread from outside.
-        // For now, we'll just drop the handle, assuming the thread will eventually
-        // terminate if the sink is stopped or dropped.
-        // A more robust solution would involve a channel for signaling termination.
-    }
-
-    let app_handle_clone = app_handle.clone();
-
-    let mut emit_error_count = 0;
-    let handle = thread::spawn(move || {
-        loop {
-            let (should_break, current_pos_ms) = {
-                let sink_locked = sink_mutex.lock().unwrap();
-                if let Some(sink) = sink_locked.as_ref() {
-                    if sink.is_paused() || sink.empty() {
-                        info!("Playback paused or empty, stopping tracker thread.");
-                        (true, 0)
-                    } else {
-                        (false, sink.get_pos().as_millis() as u64)
-                    }
-                } else {
-                    info!("No sink available, stopping tracker thread.");
-                    (true, 0)
-                }
-            };
-            if should_break {
-                break;
-            }
-
-            if let Err(e) = app_handle_clone.emit("playback-position", current_pos_ms) {
-                error!("Failed to emit playback-position event: {}", e);
-                emit_error_count += 1;
-                if emit_error_count >= 5 {
-                    error!("Too many emit errors, stopping playback position tracker thread.");
-                    break;
-                }
-            }
-
-            thread::sleep(Duration::from_millis(POSITION_UPDATE_FREQUENCY));
-        }
-        info!("Playback position tracker thread terminated.");
-    });
-
-    *tracker_guard = Some(handle);
-    Ok(())
-}
-
-pub fn stop_playback_position_tracking(state: State<AudioState>) -> Result<(), String> {
-    info!("stop_playback_position_tracking");
-    let mut tracker_guard = state.playback_position_tracker.lock().unwrap();
-    if let Some(handle) = tracker_guard.take() {
-        // Attempt to join the thread. This will block until the thread finishes.
-        // In a real application, you might want to send a signal to the thread
-        // to allow it to terminate gracefully without blocking the main thread.
-        if let Err(e) = handle.join() {
-            error!("Failed to join playback position tracker thread: {:?}", e);
-        }
-    }
     Ok(())
 }

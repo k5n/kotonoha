@@ -327,8 +327,10 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 #### Audio Playback
 
-- `open_audio(path: String, max_peaks: usize) -> Result<AudioInfo, String>`
-  - 音声ファイルを指定されたパスから開き、解析して波形データと再生時間を返す。
+- `open_audio(path: String) -> Result<(), String>`
+  - 指定されたパスの音声ファイルを開き、アプリケーションの状態にロードする（再生準備のみ、解析は行わない）。
+- `analyze_audio(path: String, max_peaks: usize) -> Result<AudioInfo, String>`
+  - 指定されたパスの音声ファイルを解析し、波形データ（peaks）と再生時間（duration）を返す。
   - `AudioInfo` は `duration`, `peaks` を含む。
 - `play_audio() -> Result<(), String>`
   - `open_audio` で開かれた音声の再生を開始する。

@@ -1,4 +1,4 @@
-import { openAudio } from '$lib/application/usecases/controlAudio';
+import { analyzeAudio, openAudio } from '$lib/application/usecases/controlAudio';
 import { fetchEpisodeDetail } from '$lib/application/usecases/fetchEpisodeDetail';
 import { fetchSettings } from '$lib/application/usecases/fetchSettings';
 import { error } from '@tauri-apps/plugin-log';
@@ -16,8 +16,9 @@ export const load: PageLoad = async ({ params }) => {
     }
     const { isApiKeySet, settings } = await fetchSettings();
 
-    // Function to load audio data asynchronously. Caching is handled by the use case.
-    const audioInfoPromise = openAudio(result.episode.audioPath);
+    await openAudio(result.episode.audioPath);
+    // Function to analyze audio data asynchronously. Caching is handled by the use case.
+    const audioInfoPromise = analyzeAudio(result.episode.audioPath);
 
     return {
       episode: result.episode,

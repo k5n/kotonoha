@@ -8,13 +8,19 @@ import { error } from '@tauri-apps/plugin-log';
  */
 export const audioRepository = {
   /**
-   * 指定されたパスのオーディオを再生します。
+   * 指定されたパスのオーディオを開きます。
    * @param path - 再生するオーディオファイルのフルパス。
-   * @return 再生するオーディオの情報。
    */
-  async open(path: string): Promise<AudioInfo> {
-    const maxPeaks = 1000;
-    const audioInfo = await invoke<AudioInfo>('open_audio', { path, maxPeaks });
+  async open(path: string): Promise<void> {
+    await invoke<AudioInfo>('open_audio', { path });
+  },
+
+  /**
+   * オーディオを分析します。
+   * @return 分析結果の情報。
+   */
+  async analyze(path: string, maxPeaks: number = 1000): Promise<AudioInfo> {
+    const audioInfo = await invoke<AudioInfo>('analyze_audio', { path, maxPeaks });
     return audioInfo;
   },
 

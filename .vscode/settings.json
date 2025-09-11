@@ -52,6 +52,7 @@
     "TOEIC",
     "Unlisten",
     "usecases",
+    "usize",
     "Vitest"
   ],
   "todohighlight.isCaseSensitive": true,
