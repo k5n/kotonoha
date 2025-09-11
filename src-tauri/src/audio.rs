@@ -45,14 +45,16 @@ fn open_audio_file(file_path: &std::path::Path) -> Result<Vec<u8>, String> {
     Ok(file_bytes)
 }
 
-fn analyze_audio_file(file_bytes: &Vec<u8>, max_peaks: usize) -> Result<AudioInfo, String> {
+fn analyze_audio_file(file_bytes: Vec<u8>, max_peaks: usize) -> Result<AudioInfo, String> {
+    // NOTE: Cursorを作るのにはVec<u8>が必要なので、borrowではなく所有権を受け取る。
+    // 再生を邪魔しないように別途オーディオファイルを開いてデータを取得する想定なので問題ない。
     info!(
         "analyze_audio: {} bytes, max_peaks: {}",
         file_bytes.len(),
         max_peaks
     );
 
-    let cursor = Cursor::new(file_bytes.clone());
+    let cursor = Cursor::new(file_bytes);
     let source = Decoder::try_from(BufReader::new(cursor))
         .map_err(|e| format!("Failed to decode audio from memory: {}", e))?;
 
@@ -233,12 +235,17 @@ pub async fn open_audio(app_handle: AppHandle, path: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub async fn analyze_audio(app_handle: AppHandle, max_peaks: usize) -> Result<AudioInfo, String> {
-    let state: State<AudioState> = app_handle.state();
-    let audio_data_guard = state.audio_data.lock().unwrap();
-    let file_bytes = audio_data_guard
-        .as_ref()
-        .ok_or("Audio data not found in state. Call open_audio first.".to_string())?;
+pub async fn analyze_audio(
+    app_handle: AppHandle,
+    path: String,
+    max_peaks: usize,
+) -> Result<AudioInfo, String> {
+    // NOTE: 再生を邪魔しないように別途オーディオファイルを開いてデータを取得する
+    let full_path = app_handle
+        .path()
+        .resolve(&path, BaseDirectory::AppLocalData)
+        .map_err(|e| format!("Failed to resolve path '{}': {}", path, e))?;
+    let file_bytes = open_audio_file(&full_path)?;
 
     analyze_audio_file(file_bytes, max_peaks)
 }

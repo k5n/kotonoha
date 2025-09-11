@@ -11,7 +11,7 @@ export async function analyzeAudio(path: string): Promise<AudioInfo> {
   if (cachedAudioInfo) {
     return cachedAudioInfo;
   }
-  const audioInfo = await audioRepository.analyze();
+  const audioInfo = await audioRepository.analyze(path);
   audioInfoCacheStore.set(path, audioInfo);
   return audioInfo;
 }

@@ -12,17 +12,15 @@ export const audioRepository = {
    * @param path - 再生するオーディオファイルのフルパス。
    */
   async open(path: string): Promise<void> {
-    const maxPeaks = 1000;
-    await invoke<AudioInfo>('open_audio', { path, maxPeaks });
+    await invoke<AudioInfo>('open_audio', { path });
   },
 
   /**
    * オーディオを分析します。
    * @return 分析結果の情報。
    */
-  async analyze(): Promise<AudioInfo> {
-    const maxPeaks = 1000;
-    const audioInfo = await invoke<AudioInfo>('analyze_audio', { maxPeaks });
+  async analyze(path: string, maxPeaks: number = 1000): Promise<AudioInfo> {
+    const audioInfo = await invoke<AudioInfo>('analyze_audio', { path, maxPeaks });
     return audioInfo;
   },
 
