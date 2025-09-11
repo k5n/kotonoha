@@ -100,6 +100,41 @@ SSWT is a simple, original format designed for Kotonoha. Each line represents a 
 **Automatic Speech Recognition (ASR):**
 Kotonoha does not include built-in ASR functionality. If you only have audio files, please use our companion app [Kotonoha-ASR](https://github.com/k5n/kotonoha-asr) to generate SRT or SSWT subtitle files. Download releases from [here](https://github.com/k5n/kotonoha-asr/releases).
 
+### TSV (Tab-Separated Values)
+
+Kotonoha supports importing subtitles in a simple TSV (Tab-Separated Values) format.  
+Each row should contain at least a start time and the dialogue text. Optionally, you can include an end time column.
+
+**Supported columns:**
+
+- **Start Time** (required): The start time of the dialogue.
+  - Supported formats: `HH:MM:SS.mmm`, `MM:SS.mmm`, `SS.mmm`, or seconds (e.g., `2.5`, `4s`)
+- **End Time** (optional): The end time of the dialogue. If omitted, only the start time is used.
+- **Text** (required): The dialogue or subtitle text.
+
+**Example with start and end times:**
+
+```
+StartTime	EndTime	Text
+00:01.500	00:02.200	Hello world.
+00:02.500	00:04.000	This is a test.
+```
+
+**Example with only start time:**
+
+```
+Time	Subtitle
+2s	Hello world.
+1:08	This is a test.
+```
+
+**Notes:**
+
+- The first row is treated as a header and skipped during import.
+- Time columns accept flexible formats (see above).
+- If the end time is omitted, it will be set to `null` or the same as the start time, depending on context.
+- Rows with invalid or missing required fields will be skipped with a warning.
+
 ---
 
 ## 📄 License
