@@ -24,7 +24,7 @@ CREATE TABLE dialogues (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     episode_id INTEGER NOT NULL,
     start_time_ms INTEGER NOT NULL,
-    end_time_ms INTEGER NOT NULL,
+    end_time_ms INTEGER,
     original_text TEXT NOT NULL,
     corrected_text TEXT,
     translation TEXT,

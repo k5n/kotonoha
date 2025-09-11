@@ -4,7 +4,7 @@
 export type NewDialogue = {
   readonly episodeId: number;
   readonly startTimeMs: number;
-  readonly endTimeMs: number;
+  readonly endTimeMs: number | null;
   readonly originalText: string;
 };
 

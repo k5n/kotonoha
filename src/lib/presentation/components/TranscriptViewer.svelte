@@ -63,13 +63,26 @@
     //編集中は自動スクロールを無効
     if (editingDialogueId !== null) return;
 
-    const newActiveIndex = displayedDialogues.findIndex(
-      (d) => currentTime >= d.startTimeMs && currentTime < d.endTimeMs
-    );
+    const newActiveIndex = displayedDialogues.findIndex((d, i) => {
+      if (d.endTimeMs !== null) {
+        return currentTime >= d.startTimeMs && currentTime < d.endTimeMs;
+      }
+
+      const nextDialogue = displayedDialogues[i + 1];
+      if (nextDialogue) {
+        return currentTime >= d.startTimeMs && currentTime < nextDialogue.startTimeMs;
+      } else {
+        return currentTime >= d.startTimeMs;
+      }
+    });
 
     // activeIndexが実際に変更された場合のみ処理を実行
     if (newActiveIndex !== activeIndex) {
-      previousActiveIndex = activeIndex;
+      if (newActiveIndex === -1) {
+        previousActiveIndex = activeIndex;
+      } else {
+        previousActiveIndex = -1;
+      }
       activeIndex = newActiveIndex;
 
       // スクロール処理をデバウンス（連続した変更を抑制）
