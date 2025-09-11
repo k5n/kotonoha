@@ -246,7 +246,7 @@ erDiagram
 | `id`              | INTEGER     |          | PRIMARY KEY, AUTOINCREMENT         |
 | `episode_id`      | INTEGER     |          | `episodes.id`への外部キー          |
 | `start_time_ms`   | INTEGER     |          | セリフの開始時間（ミリ秒）         |
-| `end_time_ms`     | INTEGER     |          | セリフの終了時間（ミリ秒）         |
+| `end_time_ms`     | INTEGER     | ●        | セリフの終了時間（ミリ秒）         |
 | `original_text`   | TEXT        |          | スクリプトから取り込んだ元のテキスト |
 | `corrected_text`  | TEXT        | ●        | ユーザーが修正した後のテキスト     |
 | `translation`     | TEXT        | ●        | LLMが生成した翻訳                  |

@@ -63,9 +63,11 @@
     //編集中は自動スクロールを無効
     if (editingDialogueId !== null) return;
 
-    const newActiveIndex = displayedDialogues.findIndex(
-      (d) => currentTime >= d.startTimeMs && currentTime < d.endTimeMs
-    );
+    const newActiveIndex = displayedDialogues.findIndex((d, i) => {
+      const nextDialogue = displayedDialogues[i + 1];
+      const endTime = d.endTimeMs ?? nextDialogue?.startTimeMs ?? Infinity;
+      return currentTime >= d.startTimeMs && currentTime < endTime;
+    });
 
     // activeIndexが実際に変更された場合のみ処理を実行
     if (newActiveIndex !== activeIndex) {

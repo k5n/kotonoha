@@ -51,13 +51,13 @@ export const dialogueRepository = {
     const values = dialogues
       .map(
         (d) =>
-          `(${episodeId}, ${d.startTimeMs}, ${d.endTimeMs}, '${d.originalText.replace(/'/g, "''")}')`
+          `(${episodeId}, ${d.startTimeMs}, ${d.endTimeMs === null ? 'NULL' : d.endTimeMs}, '${d.originalText.replace(/'/g, "''")}')`
       )
       .join(',');
 
     if (values.length === 0) return;
 
-    const query = `INSERT INTO dialogues (episode_id, start_time_ms, end_time_ms, original_text, corrected_text) VALUES ${values}`;
+    const query = `INSERT INTO dialogues (episode_id, start_time_ms, end_time_ms, original_text) VALUES ${values}`;
     await db.execute(query);
   },
 
