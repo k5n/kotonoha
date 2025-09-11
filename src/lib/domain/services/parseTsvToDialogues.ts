@@ -109,7 +109,7 @@ export function parseTsvToDialogues(
           endTimeMs = parsedEndTime;
         }
       } else {
-        endTimeMs = startTimeMs;
+        endTimeMs = null;
       }
     } else {
       endTimeMs = null;

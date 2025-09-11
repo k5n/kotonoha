@@ -8,8 +8,5 @@ import { parseScriptPreview } from '$lib/domain/services/parseScriptPreview';
  */
 export async function previewScriptFile(file: File): Promise<ScriptPreview> {
   const content = await file.text();
-  // Note: In the future, we might support CSV, so we could determine the delimiter
-  // based on the file extension or content.
-  const delimiter = '	';
-  return parseScriptPreview(content, 5, delimiter);
+  return parseScriptPreview(content, 5);
 }
