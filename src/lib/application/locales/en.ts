@@ -135,7 +135,6 @@ export const en = {
         startTimeColumnLabel: 'Start Time Column',
         textColumnLabel: 'Text Column',
         endTimeColumnLabel: 'End Time Column (Optional)',
-        column: 'Column {{index}}',
         none: 'None',
         previewTable: {
           rowNumber: '#',

@@ -134,7 +134,6 @@ export const ja = {
         startTimeColumnLabel: '開始時間カラム',
         textColumnLabel: 'テキストカラム',
         endTimeColumnLabel: '終了時間カラム (任意)',
-        column: '{{index}}列目',
         none: 'なし',
         previewTable: {
           rowNumber: '行',

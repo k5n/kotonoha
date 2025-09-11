@@ -6,7 +6,6 @@
   import {
     Alert,
     Button,
-    Checkbox,
     Fileupload,
     Heading,
     Input,
@@ -47,7 +46,6 @@
   let errorMessage = $state('');
 
   let scriptPreview = $state<ScriptPreview | null>(null);
-  let hasHeader = $state(true);
   let tsvConfig = $state({
     startTimeColumnIndex: -1,
     textColumnIndex: -1,
@@ -57,7 +55,7 @@
   $effect(() => {
     const file = scriptFiles?.[0];
     if (file && file.name.toLowerCase().endsWith('.tsv')) {
-      previewScriptFile(file, hasHeader)
+      previewScriptFile(file)
         .then((preview) => {
           errorMessage = '';
           scriptPreview = preview;
@@ -73,14 +71,8 @@
   });
 
   let displayHeaders = $derived.by(() => {
-    if (!scriptPreview) return [];
-    if (scriptPreview.headers) {
-      return scriptPreview.headers;
-    }
-    const columnCount = scriptPreview.rows[0]?.length ?? 0;
-    return Array.from({ length: columnCount }, (_, i) =>
-      t('components.episodeAddModal.column', { index: i + 1 })
-    ) as readonly string[];
+    if (!scriptPreview || !scriptPreview.headers) return [];
+    return scriptPreview.headers;
   });
 
   async function handleSubmit() {
@@ -130,7 +122,6 @@
     scriptFiles = null;
     errorMessage = '';
     scriptPreview = null;
-    hasHeader = true;
     tsvConfig = {
       startTimeColumnIndex: -1,
       textColumnIndex: -1,
@@ -183,11 +174,6 @@
         <Heading tag="h3" class="mb-2 text-lg font-semibold">
           {t('components.episodeAddModal.tsvSettingsTitle')}
         </Heading>
-        <div class="mb-4">
-          <Checkbox bind:checked={hasHeader}>
-            {t('components.episodeAddModal.hasHeaderLabel')}
-          </Checkbox>
-        </div>
         <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <Label for="startTimeColumn" class="mb-2 block">
