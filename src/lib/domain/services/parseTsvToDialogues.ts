@@ -112,7 +112,7 @@ export function parseTsvToDialogues(
         endTimeMs = startTimeMs;
       }
     } else {
-      endTimeMs = startTimeMs;
+      endTimeMs = null;
     }
 
     const originalText = columns[textColumnIndex];

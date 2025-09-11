@@ -39,13 +39,13 @@ describe('parseTsvToDialogues', () => {
     expect(dialogues[0]).toEqual({
       episodeId: 1,
       startTimeMs: 3661100,
-      endTimeMs: 3661100,
+      endTimeMs: null,
       originalText: 'Long time format.',
     });
     expect(dialogues[1]).toEqual({
       episodeId: 1,
       startTimeMs: 65500,
-      endTimeMs: 65500,
+      endTimeMs: null,
       originalText: 'Short time format.',
     });
   });
@@ -112,7 +112,7 @@ My dialogue\t10.5`;
     expect(dialogues[0]).toEqual({
       episodeId: 1,
       startTimeMs: 10500,
-      endTimeMs: 10500,
+      endTimeMs: null,
       originalText: 'My dialogue',
     });
   });
