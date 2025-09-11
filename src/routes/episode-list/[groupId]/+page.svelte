@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
-  import { t } from '$lib/application/stores/i18n.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
@@ -62,28 +62,34 @@
       endTimeColumnIndex?: number;
     }
   ) {
-    debug(
-      `title: ${title}, audio: ${audioFile.name}, script: ${scriptFile.name}, tsvConfig: ${JSON.stringify(
-        tsvConfig
-      )}`
-    );
-    const groupId = data.episodeGroup?.id;
-    if (!groupId) {
-      debug('No group ID found, cannot add episode');
-      return;
+    try {
+      debug(
+        `title: ${title}, audio: ${audioFile.name}, script: ${scriptFile.name}, tsvConfig: ${JSON.stringify(
+          tsvConfig
+        )}`
+      );
+      const groupId = data.episodeGroup?.id;
+      if (!groupId) {
+        debug('No group ID found, cannot add episode');
+        return;
+      }
+      const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
+      await addNewEpisode({
+        episodeGroupId: groupId,
+        displayOrder: maxDisplayOrder + 1,
+        title,
+        audioFile,
+        scriptFile,
+        durationSeconds: duration,
+        tsvConfig,
+      });
+      await invalidateAll();
+      showEpisodeAdd = false;
+    } catch (e) {
+      error(`Failed to add new episode: ${e}`);
+      errorMessage = t('episodeListPage.errors.addEpisode');
+      showEpisodeAdd = false;
     }
-    const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
-    await addNewEpisode({
-      episodeGroupId: groupId,
-      displayOrder: maxDisplayOrder + 1,
-      title,
-      audioFile,
-      scriptFile,
-      durationSeconds: duration,
-      tsvConfig,
-    });
-    await invalidateAll();
-    showEpisodeAdd = false;
   }
 
   // === エピソード移動 ===
@@ -170,7 +176,8 @@
       <span class="font-medium">{t('episodeListPage.errorPrefix')}</span>
       {errorMessage}
     </Alert>
-  {:else if data.episodeGroup}
+  {/if}
+  {#if data.episodeGroup}
     <div class="mb-4 flex items-center justify-between">
       <div>
         <Heading tag="h1" class="text-3xl font-bold">{data.episodeGroup.name}</Heading>

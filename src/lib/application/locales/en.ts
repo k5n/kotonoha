@@ -71,6 +71,7 @@ export const en = {
         deleteEpisode: 'Failed to delete episode',
         updateName: 'Failed to update episode name',
         fetchEpisodes: 'Failed to fetch episodes.',
+        addEpisode: 'Failed to add new episode.',
       },
       confirmDelete: {
         title: 'Delete Episode',

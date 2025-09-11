@@ -71,6 +71,7 @@ export const ja = {
         deleteEpisode: 'エピソードの削除に失敗しました',
         updateName: 'エピソード名の更新に失敗しました',
         fetchEpisodes: 'エピソードの取得に失敗しました。',
+        addEpisode: '新しいエピソードの追加に失敗しました。',
       },
       confirmDelete: {
         title: 'エピソードの削除',
