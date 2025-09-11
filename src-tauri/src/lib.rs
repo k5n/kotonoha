@@ -9,7 +9,8 @@ use std::env;
 use tauri::Manager;
 
 use audio::{
-    open_audio, pause_audio, play_audio, resume_audio, seek_audio, stop_audio, AudioState,
+    analyze_audio, open_audio, pause_audio, play_audio, resume_audio, seek_audio, stop_audio,
+    AudioState,
 };
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
@@ -68,12 +69,13 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             analyze_sentence_with_llm,
             get_stronghold_password,
+            open_audio,
+            analyze_audio,
             play_audio,
             pause_audio,
             resume_audio,
             stop_audio,
             seek_audio,
-            open_audio,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

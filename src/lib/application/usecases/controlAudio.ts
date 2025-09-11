@@ -2,11 +2,16 @@ import { audioInfoCacheStore } from '$lib/application/stores/audioInfoCacheStore
 import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import { audioRepository } from '$lib/infrastructure/repositories/audioRepository';
 
-export async function openAudio(path: string): Promise<AudioInfo> {
-  if (audioInfoCacheStore.has(path)) {
-    return audioInfoCacheStore.get(path)!;
+export async function openAudio(path: string): Promise<void> {
+  await audioRepository.open(path);
+}
+
+export async function analyzeAudio(path: string): Promise<AudioInfo> {
+  const cachedAudioInfo = audioInfoCacheStore.get(path);
+  if (cachedAudioInfo) {
+    return cachedAudioInfo;
   }
-  const audioInfo = await audioRepository.open(path);
+  const audioInfo = await audioRepository.analyze();
   audioInfoCacheStore.set(path, audioInfo);
   return audioInfo;
 }
