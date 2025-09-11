@@ -40,5 +40,8 @@ export async function listenPlaybackPosition(
   callback: (positionMs: number) => void
 ): Promise<() => void> {
   const unlisten = await audioRepository.listenPlaybackPosition(callback);
-  return unlisten;
+  return () => {
+    audioInfoCacheStore.clear();
+    unlisten();
+  };
 }
