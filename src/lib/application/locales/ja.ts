@@ -106,6 +106,11 @@ export const ja = {
       audioPlayer: {
         notSupported: 'お使いのブラウザは audio タグをサポートしていません。',
       },
+      fileSelect: {
+        placeholder: 'ファイルを選択...',
+        audioFiles: '音声ファイル',
+        supportedSubtitleFiles: '対応字幕ファイル',
+      },
       breadcrumbs: {
         home: 'ホーム',
       },

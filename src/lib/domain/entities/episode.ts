@@ -7,7 +7,10 @@ export type Episode = {
   readonly displayOrder: number;
   readonly title: string;
   readonly audioPath: string;
-  readonly durationSeconds: number | null; // 音声の長さ（秒単位）。nullの場合は不明
+  /**
+   * durationSeconds は常に 0 です。将来的に削除予定。
+   */
+  readonly durationSeconds: number;
   readonly learningLanguage: string;
   readonly explanationLanguage: string;
   readonly createdAt: Date;

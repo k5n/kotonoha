@@ -99,6 +99,7 @@
       ]
     },
     "stronghold:default",
-    "store:default"
+    "store:default",
+    "dialog:default"
   ]
 }

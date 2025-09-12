@@ -2,11 +2,10 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import type { ScriptPreview } from '$lib/domain/entities/scriptPreview';
-  import { getAudioDuration } from '$lib/presentation/utils/getAudioDuration';
+  import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import {
     Alert,
     Button,
-    Fileupload,
     Heading,
     Input,
     Label,
@@ -32,17 +31,16 @@
     onClose: () => void;
     onSubmit: (
       _title: string,
-      _audioFile: File,
-      _scriptFile: File,
-      _duration: number,
+      _audioFilePath: string,
+      _scriptFilePath: string,
       _tsvConfig?: TsvConfig
     ) => void;
   };
   let { show, isSubmitting = false, onClose, onSubmit }: Props = $props();
 
   let title = $state('');
-  let audioFiles = $state<FileList | null>(null);
-  let scriptFiles = $state<FileList | null>(null);
+  let audioFilePath = $state<string | null>(null);
+  let scriptFilePath = $state<string | null>(null);
   let errorMessage = $state('');
 
   let scriptPreview = $state<ScriptPreview | null>(null);
@@ -53,9 +51,8 @@
   });
 
   $effect(() => {
-    const file = scriptFiles?.[0];
-    if (file && file.name.toLowerCase().endsWith('.tsv')) {
-      previewScriptFile(file)
+    if (scriptFilePath && scriptFilePath.toLowerCase().endsWith('.tsv')) {
+      previewScriptFile(scriptFilePath)
         .then((preview) => {
           errorMessage = '';
           scriptPreview = preview;
@@ -80,13 +77,11 @@
       errorMessage = t('components.episodeAddModal.errorTitleRequired');
       return;
     }
-    const audioFile = audioFiles?.[0];
-    if (!audioFile) {
+    if (!audioFilePath) {
       errorMessage = t('components.episodeAddModal.errorAudioFileRequired');
       return;
     }
-    const scriptFile = scriptFiles?.[0];
-    if (!scriptFile) {
+    if (!scriptFilePath) {
       errorMessage = t('components.episodeAddModal.errorScriptFileRequired');
       return;
     }
@@ -107,8 +102,8 @@
     }
 
     try {
-      const duration = await getAudioDuration(audioFile);
-      onSubmit(title, audioFile, scriptFile, duration, finalTsvConfig);
+      // onSubmitの引数はstring（ファイルパス）に合わせて修正が必要。ここではaudioFilePath, scriptFilePathを渡す。
+      onSubmit(title, audioFilePath, scriptFilePath, finalTsvConfig);
       resetForm();
     } catch (error) {
       errorMessage = t('components.episodeAddModal.errorAudioFileLoad');
@@ -118,8 +113,8 @@
 
   function resetForm() {
     title = '';
-    audioFiles = null;
-    scriptFiles = null;
+    audioFilePath = null;
+    scriptFilePath = null;
     errorMessage = '';
     scriptPreview = null;
     tsvConfig = {
@@ -137,8 +132,8 @@
   let isSubmitDisabled = $derived(
     isSubmitting ||
       !title.trim() ||
-      !audioFiles?.length ||
-      !scriptFiles?.length ||
+      !audioFilePath ||
+      !scriptFilePath ||
       (scriptPreview !== null &&
         (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1))
   );
@@ -156,17 +151,30 @@
         type="text"
       />
     </div>
+
     <div class="mb-4">
-      <Label class="mb-2 block" for="audioFile"
-        >{t('components.episodeAddModal.audioFileLabel')}</Label
-      >
-      <Fileupload accept="audio/*" bind:files={audioFiles} id="audioFile" />
+      <Label class="mb-2 block" for="audioFile">
+        {t('components.episodeAddModal.audioFileLabel')}
+      </Label>
+      <FileSelect
+        accept="audio/*"
+        onFileSelected={(file) => {
+          audioFilePath = file || null;
+        }}
+        id="audioFile"
+      />
     </div>
     <div class="mb-4">
-      <Label class="mb-2 block" for="scriptFile"
-        >{t('components.episodeAddModal.scriptFileLabel')}</Label
-      >
-      <Fileupload accept=".srt,.sswt,.tsv" bind:files={scriptFiles} id="scriptFile" />
+      <Label class="mb-2 block" for="scriptFile">
+        {t('components.episodeAddModal.scriptFileLabel')}
+      </Label>
+      <FileSelect
+        accept=".srt,.sswt,.tsv"
+        onFileSelected={(file) => {
+          scriptFilePath = file || null;
+        }}
+        id="scriptFile"
+      />
     </div>
 
     {#if scriptPreview && scriptPreview.rows.length > 0}

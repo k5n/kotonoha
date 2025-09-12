@@ -89,7 +89,6 @@ export const episodeRepository = {
     title: string;
     audioPath: string;
     scriptPath: string;
-    durationSeconds: number | null;
     learningLanguage: string;
     explanationLanguage: string;
   }): Promise<Episode> {
@@ -104,7 +103,7 @@ export const episodeRepository = {
         params.title,
         params.audioPath,
         params.scriptPath,
-        params.durationSeconds,
+        0, // duration_seconds is always 0
         params.learningLanguage,
         params.explanationLanguage,
         now,

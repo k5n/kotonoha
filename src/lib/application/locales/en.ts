@@ -107,6 +107,11 @@ export const en = {
       audioPlayer: {
         notSupported: 'Your browser does not support the audio tag.',
       },
+      fileSelect: {
+        placeholder: 'Select a file...',
+        audioFiles: 'Audio Files',
+        supportedSubtitleFiles: 'Supported Subtitle Files',
+      },
       breadcrumbs: {
         home: 'Home',
       },

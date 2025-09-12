@@ -6,7 +6,9 @@ use std::io::{BufReader, Cursor};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use tauri::{path::BaseDirectory, AppHandle, Emitter, Manager, State};
+use tauri::path::BaseDirectory;
+use tauri::{AppHandle, Runtime};
+use tauri::{Emitter, Manager, State};
 
 const POSITION_UPDATE_FREQUENCY: u64 = 200;
 
@@ -231,6 +233,28 @@ pub async fn open_audio(app_handle: AppHandle, path: String) -> Result<(), Strin
     let mut audio_data_guard = state.audio_data.lock().unwrap();
     *audio_data_guard = Some(file_bytes);
     info!("Audio data loaded and stored in state");
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn copy_audio_file<R: Runtime>(
+    app_handle: AppHandle<R>,
+    src: String,
+    dest: String,
+) -> Result<(), String> {
+    let dest_path = app_handle
+        .path()
+        .resolve(&dest, BaseDirectory::AppLocalData)
+        .map_err(|e| format!("Failed to resolve destination path: {e}"))?;
+
+    if let Some(parent) = dest_path.parent() {
+        if let Err(e) = std::fs::create_dir_all(parent) {
+            return Err(format!("Failed to create parent directory: {e}"));
+        }
+    }
+
+    std::fs::copy(&src, &dest_path).map_err(|e| format!("Failed to copy file: {e}"))?;
+
     Ok(())
 }
 
