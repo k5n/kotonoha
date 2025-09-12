@@ -91,6 +91,7 @@ graph LR
                     src_lib_presentation_components_EpisodeListTable_svelte["EpisodeListTable.svelte"]
                     src_lib_presentation_components_EpisodeMoveModal_svelte["EpisodeMoveModal.svelte"]
                     src_lib_presentation_components_EpisodeNameEditModal_svelte["EpisodeNameEditModal.svelte"]
+                    src_lib_presentation_components_FileSelect_svelte["FileSelect.svelte"]
                     src_lib_presentation_components_GroupAddModal_svelte["GroupAddModal.svelte"]
                     src_lib_presentation_components_GroupGrid_svelte["GroupGrid.svelte"]
                     src_lib_presentation_components_GroupMoveModal_svelte["GroupMoveModal.svelte"]
@@ -101,8 +102,10 @@ graph LR
                 end
                 subgraph "utils"
                     src_lib_presentation_utils_dateFormatter_ts["dateFormatter.ts"]
-                    src_lib_presentation_utils_getAudioDuration_ts["getAudioDuration.ts"]
                 end
+            end
+            subgraph "utils"
+                src_lib_utils_logging_ts["logging.ts"]
             end
         end
         subgraph "routes"
@@ -195,6 +198,7 @@ src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_domain_services_gro
 src_lib_application_usecases_moveEpisodeGroup_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_previewScriptFile_ts --> src_lib_domain_entities_scriptPreview_ts
 src_lib_application_usecases_previewScriptFile_ts --> src_lib_domain_services_parseScriptPreview_ts
+src_lib_application_usecases_previewScriptFile_ts --> src_lib_infrastructure_repositories_fileRepository_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_application_stores_i18n_svelte_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_domain_entities_settings_ts
 src_lib_application_usecases_saveSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
@@ -237,7 +241,7 @@ src_lib_presentation_components_ConfirmModal_svelte --> src_lib_application_stor
 src_lib_presentation_components_EpisodeAddModal_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_EpisodeAddModal_svelte --> src_lib_application_usecases_previewScriptFile_ts
 src_lib_presentation_components_EpisodeAddModal_svelte --> src_lib_domain_entities_scriptPreview_ts
-src_lib_presentation_components_EpisodeAddModal_svelte --> src_lib_presentation_utils_getAudioDuration_ts
+src_lib_presentation_components_EpisodeAddModal_svelte --> src_lib_presentation_components_FileSelect_svelte
 src_lib_presentation_components_EpisodeListTable_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_EpisodeListTable_svelte --> src_lib_domain_entities_episode_ts
 src_lib_presentation_components_EpisodeListTable_svelte --> src_lib_presentation_utils_dateFormatter_ts
@@ -245,6 +249,7 @@ src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_application_
 src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_domain_entities_episode_ts
 src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_lib_presentation_components_EpisodeNameEditModal_svelte --> src_lib_application_stores_i18n_svelte_ts
+src_lib_presentation_components_FileSelect_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_GroupAddModal_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_GroupAddModal_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_lib_presentation_components_GroupGrid_svelte --> src_lib_application_stores_i18n_svelte_ts
