@@ -9,17 +9,6 @@ import { fileRepository } from '$lib/infrastructure/repositories/fileRepository'
 import { error, info, warn } from '@tauri-apps/plugin-log';
 
 /**
- * パスからファイル名部分のみを抽出する（Node.jsのbasenameの代替）
- * @param path ファイルパス
- * @returns ファイル名
- */
-function basename(path: string): string {
-  // 区切り文字は / または \ のどちらにも対応
-  const segments = path.split(/[\\/]/).filter(Boolean);
-  return segments.length > 0 ? segments[segments.length - 1] : path;
-}
-
-/**
  * TSVファイルのカラム設定
  */
 type TsvConfig = {
@@ -52,14 +41,12 @@ async function generateUniqueEpisodeFilenames(
   let audioFilename: string;
   let scriptFilename: string;
   let uuid: string;
-  const audioFileName = basename(audioFilePath);
-  const scriptFileName = basename(scriptFilePath);
   do {
     const {
       audio,
       script,
       uuid: generatedUuid,
-    } = generateEpisodeFilenames(audioFileName, scriptFileName);
+    } = generateEpisodeFilenames(audioFilePath, scriptFilePath);
     audioFilename = audio;
     scriptFilename = script;
     uuid = generatedUuid;
