@@ -24,9 +24,8 @@ interface AddNewEpisodeParams {
   episodeGroupId: number;
   displayOrder: number;
   title: string;
-  audioFile: File;
-  scriptFile: File;
-  durationSeconds: number;
+  audioFilePath: string;
+  scriptFilePath: string;
   tsvConfig?: TsvConfig;
 }
 
@@ -34,8 +33,8 @@ interface AddNewEpisodeParams {
  * UUIDの衝突を避けて未使用のUUID・ファイル名を生成する
  */
 async function generateUniqueEpisodeFilenames(
-  audioFile: File,
-  scriptFile: File,
+  audioFilePath: string,
+  scriptFilePath: string,
   maxAttempts = 10
 ): Promise<{ audioFilename: string; scriptFilename: string; uuid: string }> {
   let attempts = 0;
@@ -47,7 +46,7 @@ async function generateUniqueEpisodeFilenames(
       audio,
       script,
       uuid: generatedUuid,
-    } = generateEpisodeFilenames(audioFile.name, scriptFile.name);
+    } = generateEpisodeFilenames(audioFilePath, scriptFilePath);
     audioFilename = audio;
     scriptFilename = script;
     uuid = generatedUuid;
@@ -68,28 +67,29 @@ async function generateUniqueEpisodeFilenames(
  */
 export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> {
   info(`Adding new episode with params: ${JSON.stringify(params)}`);
-  const { episodeGroupId, displayOrder, title, audioFile, scriptFile, durationSeconds, tsvConfig } =
-    params;
+  const { episodeGroupId, displayOrder, title, audioFilePath, scriptFilePath, tsvConfig } = params;
   const { audioFilename, scriptFilename, uuid } = await generateUniqueEpisodeFilenames(
-    audioFile,
-    scriptFile
+    audioFilePath,
+    scriptFilePath
   );
   try {
-    const audioPath = await fileRepository.saveAudioFile(audioFile, uuid, audioFilename);
-    const scriptPath = await fileRepository.saveScriptFile(scriptFile, uuid, scriptFilename);
+    // audioFilePath: string, scriptFilePath: string
+    const audioPath = await fileRepository.saveAudioFile(audioFilePath, uuid, audioFilename);
+    // scriptFilePathから内容を読み込む
+    const scriptContent = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
+    const scriptPath = await fileRepository.saveScriptFile(scriptContent, uuid, scriptFilename);
     const episode = await episodeRepository.addEpisode({
       episodeGroupId,
       displayOrder,
       title,
       audioPath,
       scriptPath,
-      durationSeconds,
       learningLanguage: 'English',
       explanationLanguage: 'Japanese',
     });
     try {
-      const scriptContent = await scriptFile.text();
-      const scriptExtension = scriptFile.name.split('.').pop()?.toLowerCase();
+      // scriptFilePathの拡張子を取得
+      const scriptExtension = scriptFilename.split('.').pop()?.toLowerCase();
 
       const supportedExtensions = ['srt', 'sswt', 'tsv'];
       if (scriptExtension === undefined || !supportedExtensions.includes(scriptExtension)) {

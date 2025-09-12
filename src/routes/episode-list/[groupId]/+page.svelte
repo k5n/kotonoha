@@ -53,9 +53,8 @@
 
   async function handleEpisodeAddSubmit(
     title: string,
-    audioFile: File,
-    scriptFile: File,
-    duration: number,
+    audioFilePath: string,
+    scriptFilePath: string,
     tsvConfig?: {
       startTimeColumnIndex: number;
       textColumnIndex: number;
@@ -64,7 +63,7 @@
   ) {
     try {
       debug(
-        `title: ${title}, audio: ${audioFile.name}, script: ${scriptFile.name}, tsvConfig: ${JSON.stringify(
+        `title: ${title}, audio: ${audioFilePath}, script: ${scriptFilePath}, tsvConfig: ${JSON.stringify(
           tsvConfig
         )}`
       );
@@ -78,9 +77,8 @@
         episodeGroupId: groupId,
         displayOrder: maxDisplayOrder + 1,
         title,
-        audioFile,
-        scriptFile,
-        durationSeconds: duration,
+        audioFilePath,
+        scriptFilePath,
         tsvConfig,
       });
       await invalidateAll();

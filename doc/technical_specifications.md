@@ -342,6 +342,13 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
   - 音声の再生を停止する。
 - `seek_audio(position_ms: u32) -> Result<(), String>`
   - 音声の再生位置を指定された時間（ミリ秒）に移動する。
+- `copy_audio_file(src_path: String, dest_path: String) -> Result<(), String>`
+  - 指定した音声ファイル（アプリ管理外の絶対パス）を別のパス（アプリ管理下の相対パス）にコピーする。
+
+#### Utility
+
+- `read_text_file(path: String) -> Result<String, String>`
+  - 指定したテキストファイルを読み込み、その内容を返す。
 
 ### 4.3. データフェッチ・状態管理戦略
 

@@ -36,6 +36,7 @@ rand = "0.9"
 google-ai-rs = { version = "0.1", features = ["serde"] } 
 tauri-plugin-store = "2"
 rodio = { version = "0.21.0", default-features = false, features = ["playback", "symphonia-all"] }
+tauri-plugin-dialog = "2"
 
 # https://github.com/tauri-apps/plugins-workspace/issues/2048#issuecomment-2923529183
 [profile.dev.package.scrypt]

@@ -5,12 +5,12 @@ mod migrations;
 mod stronghold;
 
 use dotenvy::from_filename;
-use std::env;
+use std::{env, fs};
 use tauri::Manager;
 
 use audio::{
-    analyze_audio, open_audio, pause_audio, play_audio, resume_audio, seek_audio, stop_audio,
-    AudioState,
+    analyze_audio, copy_audio_file, open_audio, pause_audio, play_audio, resume_audio, seek_audio,
+    stop_audio, AudioState,
 };
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
@@ -25,12 +25,18 @@ fn get_db_name() -> String {
     }
 }
 
+#[tauri::command]
+fn read_text_file(path: String) -> Result<String, String> {
+    fs::read_to_string(&path).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let db_name = get_db_name();
     let db_url = format!("sqlite:{}", db_name);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(AudioState::default())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
@@ -76,6 +82,8 @@ pub fn run() {
             resume_audio,
             stop_audio,
             seek_audio,
+            read_text_file,
+            copy_audio_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

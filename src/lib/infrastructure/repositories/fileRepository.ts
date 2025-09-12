@@ -1,10 +1,10 @@
+import { invoke } from '@tauri-apps/api/core';
 import {
   BaseDirectory,
   exists,
   mkdir,
   readTextFile,
   remove,
-  writeFile,
   writeTextFile,
 } from '@tauri-apps/plugin-fs';
 import { trace } from '@tauri-apps/plugin-log';
@@ -22,29 +22,34 @@ async function ensureDirExists(dirPath: string, baseDir: BaseDirectory): Promise
 
 export const fileRepository = {
   /**
+   * 絶対パスで指定されたテキストファイルの内容を読み出します。
+   * @param absolutePath ファイルの絶対パス
+   * @returns ファイル内容（文字列）
+   */
+  async readTextFileByAbsolutePath(absolutePath: string): Promise<string> {
+    return await invoke<string>('read_text_file', { path: absolutePath });
+  },
+
+  /**
    * 指定されたUUIDのディレクトリが `media/` 以下に存在するかどうかを確認します。
    * @param uuid 確認するUUID
    * @returns ディレクトリが存在すればtrue、しなければfalse
    */
-
   async uuidFileExists(uuid: string): Promise<boolean> {
     const dirPath = `${getMediaDir()}/${uuid}`;
     return await exists(dirPath, { baseDir: BaseDirectory.AppLocalData });
   },
 
-  async saveAudioFile(file: File, uuid: string, filename: string): Promise<string> {
+  async saveAudioFile(absoluteFilePath: string, uuid: string, filename: string): Promise<string> {
     const dir = `${getMediaDir()}/${uuid}/audios`;
-    await ensureDirExists(dir, BaseDirectory.AppLocalData);
-    const buffer = new Uint8Array(await file.arrayBuffer());
-    const path = `${dir}/${filename}`;
-    await writeFile(path, buffer, { baseDir: BaseDirectory.AppLocalData });
-    return path;
+    const appLocalDataRelativePath = `${dir}/${filename}`;
+    await invoke('copy_audio_file', { src: absoluteFilePath, dest: appLocalDataRelativePath });
+    return appLocalDataRelativePath;
   },
 
-  async saveScriptFile(file: File, uuid: string, filename: string): Promise<string> {
+  async saveScriptFile(text: string, uuid: string, filename: string): Promise<string> {
     const dir = `${getMediaDir()}/${uuid}`;
     await ensureDirExists(dir, BaseDirectory.AppLocalData);
-    const text = await file.text();
     const path = `${dir}/${filename}`;
     await writeTextFile(path, text, { baseDir: BaseDirectory.AppLocalData });
     return path;
