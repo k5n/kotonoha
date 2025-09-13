@@ -26,7 +26,13 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
   let { store, dialogues } = params;
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+    const target = event.target as HTMLElement;
+    if (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      target.isContentEditable
+    ) {
       return;
     }
 
