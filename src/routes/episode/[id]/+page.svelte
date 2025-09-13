@@ -47,11 +47,19 @@
   let canMine = $derived(data.isApiKeySet || false);
   let showDeleted = $state(false);
 
+  // --- Audio State ---
+  let isPlaying = $state(false);
+  let hasStarted = $state(false);
+
+  // --- Derived State ---
+  const filteredDialogues = $derived(
+    (data.dialogues ?? []).filter((d) => showDeleted || !d.deletedAt)
+  );
+  const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deletedAt !== null) ?? false);
+
   // Delete confirmation
   let isConfirmModalOpen = $state(false);
   let dialogueToDeleteId: number | null = $state(null);
-
-  const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deletedAt !== null) ?? false);
 
   let unlisten: (() => void) | undefined;
 
@@ -65,7 +73,7 @@
     if (unlisten) {
       unlisten();
     }
-    stopAudio();
+    handleStop();
   });
 
   function goBack() {
@@ -76,15 +84,116 @@
     }
   }
 
+  // --- Audio Handlers ---
   async function handlePlay() {
     const audioPath = data.episode?.audioPath;
     if (!audioPath) return;
     await playAudio();
+    isPlaying = true;
+    hasStarted = true;
+  }
+
+  async function handlePause() {
+    await pauseAudio();
+    isPlaying = false;
+  }
+
+  async function handleResume() {
+    await resumeAudio();
+    isPlaying = true;
   }
 
   function handleStop() {
     stopAudio();
     currentTime = 0;
+    isPlaying = false;
+    hasStarted = false;
+  }
+
+  // --- Shortcut Handlers ---
+  function findCurrentDialogueIndex(time: number): number {
+    if (filteredDialogues.length === 0) {
+      return -1;
+    }
+
+    let dialogueIndex = -1;
+    for (let i = 0; i < filteredDialogues.length; i++) {
+      if (filteredDialogues[i].startTimeMs <= time) {
+        dialogueIndex = i;
+      } else {
+        break;
+      }
+    }
+    return dialogueIndex;
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+
+    if (filteredDialogues.length === 0) return;
+
+    const currentDialogueIndex = findCurrentDialogueIndex(currentTime);
+
+    switch (event.key) {
+      case 'a': {
+        if (currentDialogueIndex > 0) {
+          const prevDialogue = filteredDialogues[currentDialogueIndex - 1];
+          seekAudio(prevDialogue.startTimeMs);
+        } else {
+          seekAudio(0);
+        }
+        break;
+      }
+      case 's': {
+        if (currentDialogueIndex !== -1) {
+          const currentDialogue = filteredDialogues[currentDialogueIndex];
+          seekAudio(currentDialogue.startTimeMs);
+        }
+        break;
+      }
+      case 'd': {
+        if (currentDialogueIndex < filteredDialogues.length - 1) {
+          const nextDialogue = filteredDialogues[currentDialogueIndex + 1];
+          seekAudio(nextDialogue.startTimeMs);
+        }
+        break;
+      }
+      case ' ': {
+        event.preventDefault();
+        if (isPlaying) {
+          handlePause();
+        } else {
+          if (hasStarted) {
+            handleResume();
+          } else {
+            handlePlay();
+          }
+        }
+        break;
+      }
+      case 'ArrowUp': {
+        event.preventDefault();
+        handlePause();
+        if (currentDialogueIndex > 0) {
+          const prevDialogue = filteredDialogues[currentDialogueIndex - 1];
+          seekAudio(prevDialogue.startTimeMs);
+        } else {
+          seekAudio(0);
+        }
+        break;
+      }
+      case 'ArrowDown': {
+        event.preventDefault();
+        handlePause();
+        if (currentDialogueIndex < filteredDialogues.length - 1) {
+          const nextDialogue = filteredDialogues[currentDialogueIndex + 1];
+          seekAudio(nextDialogue.startTimeMs);
+        }
+        break;
+      }
+    }
   }
 
   function handleCardClick(card: SentenceCard) {
@@ -178,6 +287,8 @@
   }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 <div class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col">
   <div>
     <Button color="light" class="mb-4" onclick={goBack}>
@@ -206,10 +317,11 @@
               peaks={audioInfo.peaks}
               {currentTime}
               duration={audioInfo.duration}
+              {isPlaying}
               onPlay={handlePlay}
-              onPause={pauseAudio}
+              onPause={handlePause}
               onSeek={seekAudio}
-              onResume={resumeAudio}
+              onResume={handleResume}
               onStop={handleStop}
             />
           {:catch}
@@ -231,10 +343,9 @@
             {/if}
           </div>
           <TranscriptViewer
-            dialogues={data.dialogues}
+            dialogues={filteredDialogues}
             {currentTime}
             {canMine}
-            {showDeleted}
             {contextBefore}
             {contextAfter}
             onSeek={seekAudio}

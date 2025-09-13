@@ -4,18 +4,27 @@
     peaks: number[]; // 波形データの配列 (0.0 - 1.0)
     currentTime: number;
     duration: number;
+    isPlaying: boolean;
     onPlay: () => void;
     onPause: () => void;
     onSeek: (_time: number) => void;
     onResume: () => void;
     onStop: () => void;
-    initialIsPlaying?: boolean; // 初期再生状態（オプション）
   };
 
-  let { peaks, currentTime, duration, onPlay, onPause, onSeek, onResume, onStop }: Props = $props();
+  let {
+    peaks,
+    currentTime,
+    duration,
+    isPlaying,
+    onPlay,
+    onPause,
+    onSeek,
+    onResume,
+    onStop,
+  }: Props = $props();
 
   // --- Internal State ---
-  let isPlaying = $state(false);
   let canvasWidth = $state(0);
   let canvasHeight = $state(0);
   let containerElement: HTMLDivElement;
@@ -73,20 +82,17 @@
   function handlePlayPause() {
     if (isPlaying) {
       onPause();
-      isPlaying = false;
     } else {
       if (currentTime > 0) {
         onResume();
       } else {
         onPlay();
       }
-      isPlaying = true;
     }
   }
 
   function handleStop() {
     onStop();
-    isPlaying = false;
   }
 
   // --- Seeking Logic ---
