@@ -172,7 +172,6 @@ erDiagram
         TEXT title
         TEXT audio_path
         TEXT script_path
-        INTEGER duration_seconds
         TEXT learning_language
         TEXT explanation_language
         TEXT created_at
@@ -232,7 +231,6 @@ erDiagram
 | `title`         | TEXT        |          | エピソードのタイトル               |
 | `audio_path`    | TEXT        |          | 音声ファイルのパス             |
 | `script_path`   | TEXT        |          | スクリプトファイルのパス       |
-| `duration_seconds` | INTEGER  | ●        | 音声の再生時間（秒）               |
 | `learning_language` | TEXT    |          | 学習ターゲット言語 (例: 'English') |
 | `explanation_language` | TEXT  |          | 説明言語 (例: 'Japanese')        |
 | `created_at`    | TEXT        |          | 作成日時 (ISO 8601)                |

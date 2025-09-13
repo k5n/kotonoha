@@ -8,7 +8,6 @@ type EpisodeRow = {
   display_order: number;
   title: string;
   audio_path: string;
-  duration_seconds: number;
   learning_language: string;
   explanation_language: string;
   created_at: string;
@@ -23,7 +22,6 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
     displayOrder: row.display_order,
     title: row.title,
     audioPath: row.audio_path,
-    durationSeconds: row.duration_seconds,
     learningLanguage: row.learning_language,
     explanationLanguage: row.explanation_language,
     createdAt: new Date(row.created_at),
@@ -95,15 +93,14 @@ export const episodeRepository = {
     const db = new Database(getDatabasePath());
     const now = new Date().toISOString();
     await db.execute(
-      `INSERT INTO episodes (episode_group_id, display_order, title, audio_path, script_path, duration_seconds, learning_language, explanation_language, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO episodes (episode_group_id, display_order, title, audio_path, script_path, learning_language, explanation_language, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         params.episodeGroupId,
         params.displayOrder,
         params.title,
         params.audioPath,
         params.scriptPath,
-        0, // duration_seconds is always 0
         params.learningLanguage,
         params.explanationLanguage,
         now,

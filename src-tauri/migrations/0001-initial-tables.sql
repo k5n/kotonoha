@@ -13,7 +13,6 @@ CREATE TABLE episodes (
     title TEXT NOT NULL,
     audio_path TEXT NOT NULL,
     script_path TEXT NOT NULL,
-    duration_seconds INTEGER,
     learning_language TEXT NOT NULL DEFAULT 'English',
     explanation_language TEXT NOT NULL DEFAULT 'Japanese',
     created_at TEXT NOT NULL,
