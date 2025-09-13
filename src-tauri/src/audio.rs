@@ -100,6 +100,7 @@ fn analyze_audio_file(file_bytes: Vec<u8>, max_peaks: usize) -> Result<AudioInfo
 fn create_audio_playback(
     audio_data: &[u8],
     stream: Option<&OutputStream>,
+    start_paused: bool,
 ) -> Result<(Option<OutputStream>, Sink), String> {
     info!("create_audio_playback");
 
@@ -116,6 +117,10 @@ fn create_audio_playback(
         let sink = Sink::connect_new(&stream.mixer());
         (Some(stream), sink)
     };
+
+    if start_paused {
+        sink.pause();
+    }
 
     sink.append(source);
 
@@ -134,10 +139,11 @@ fn seek_audio_backward_with_recreation(
     audio_data: &[u8],
     stream: &OutputStream,
     position_ms: u32,
+    start_paused: bool,
 ) -> Result<Sink, String> {
     info!("seek_audio_backward_with_recreation: {}", position_ms);
 
-    let (_, new_sink) = create_audio_playback(audio_data, Some(stream))?;
+    let (_, new_sink) = create_audio_playback(audio_data, Some(stream), start_paused)?;
     seek_audio_forward(&new_sink, position_ms)?;
 
     Ok(new_sink)
@@ -288,7 +294,7 @@ pub fn play_audio(app_handle: AppHandle, state: State<AudioState>) -> Result<(),
         .ok_or("Audio data not found in state. Call open_audio first.".to_string())?;
 
     // Play audio
-    let (stream, sink) = create_audio_playback(file_bytes, None)?;
+    let (stream, sink) = create_audio_playback(file_bytes, None, false)?;
 
     // Store stream and sink in state
     let mut stream_guard = state.stream.lock().unwrap();
@@ -363,10 +369,13 @@ pub fn seek_audio(
                     // Stop the old sink before replacing it.
                     sink.stop();
 
-                    let new_sink =
-                        seek_audio_backward_with_recreation(audio_data, stream, position_ms)?;
+                    let new_sink = seek_audio_backward_with_recreation(
+                        audio_data,
+                        stream,
+                        position_ms,
+                        is_paused,
+                    )?;
                     if is_paused {
-                        new_sink.pause();
                         app_handle
                             .emit("playback-position", position_ms)
                             .map_err(|e| {
@@ -405,9 +414,8 @@ pub fn seek_audio(
             .ok_or("Audio data not found in state. Call open_audio first.".to_string())?;
 
         // Play audio
-        let (stream, sink) = create_audio_playback(file_bytes, None)?;
+        let (stream, sink) = create_audio_playback(file_bytes, None, true)?;
         seek_audio_forward(&sink, position_ms)?;
-        sink.pause();
         app_handle
             .emit("playback-position", position_ms)
             .map_err(|e| format!("Failed to emit playback-position event: {}", e))?;
