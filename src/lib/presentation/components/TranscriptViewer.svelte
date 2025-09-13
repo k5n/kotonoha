@@ -19,7 +19,6 @@
     dialogues: readonly Dialogue[];
     currentTime: number; // ミリ秒単位
     canMine: boolean; // マイニング可能かどうか
-    showDeleted: boolean; // 削除済みを表示するかどうか
     onSeek: (_time: number) => void;
     onMine: (_dialogue: Dialogue, _context: readonly Dialogue[]) => void;
     onSave: (details: { dialogueId: number; correctedText: string }) => void;
@@ -32,7 +31,6 @@
     dialogues,
     currentTime,
     canMine,
-    showDeleted,
     onSeek,
     onMine,
     onSave,
@@ -54,21 +52,17 @@
   let containerEl: HTMLElement | undefined = $state();
   let itemEls: (HTMLElement | null)[] = [];
 
-  const displayedDialogues = $derived(
-    showDeleted ? dialogues : dialogues.filter((d) => d.deletedAt === null)
-  );
-
   // currentTimeが変更されたら、activeIndexとpreviousActiveIndexを更新し、該当要素までスクロールする$effect
   $effect(() => {
     //編集中は自動スクロールを無効
     if (editingDialogueId !== null) return;
 
-    const newActiveIndex = displayedDialogues.findIndex((d, i) => {
+    const newActiveIndex = dialogues.findIndex((d, i) => {
       if (d.endTimeMs !== null) {
         return currentTime >= d.startTimeMs && currentTime < d.endTimeMs;
       }
 
-      const nextDialogue = displayedDialogues[i + 1];
+      const nextDialogue = dialogues[i + 1];
       if (nextDialogue) {
         return currentTime >= d.startTimeMs && currentTime < nextDialogue.startTimeMs;
       } else {
@@ -110,8 +104,8 @@
 
   function getContext(index: number): readonly Dialogue[] {
     const start = Math.max(0, index - contextBefore);
-    const end = Math.min(displayedDialogues.length, index + contextAfter + 1);
-    return displayedDialogues.slice(start, end);
+    const end = Math.min(dialogues.length, index + contextAfter + 1);
+    return dialogues.slice(start, end);
   }
 
   function handleDblClick(dialogue: Dialogue) {
@@ -124,7 +118,7 @@
   function handleSave() {
     if (editingDialogueId === null) return;
 
-    const dialogue = displayedDialogues.find((d) => d.id === editingDialogueId);
+    const dialogue = dialogues.find((d) => d.id === editingDialogueId);
     if (!dialogue) return;
 
     onSave({
@@ -158,13 +152,13 @@
   bind:this={containerEl}
   class="h-[50vh] space-y-1 overflow-y-auto scroll-smooth rounded-lg border bg-gray-50 p-4 lg:h-full dark:border-gray-700 dark:bg-gray-800"
 >
-  {#if displayedDialogues.length > 0}
+  {#if dialogues.length > 0}
     <!--
       上下の余白（50% - 1.25rem）は、アクティブな項目が中央に来るように調整するためのものです。
       1.25rem は、p-3（0.75rem）と rounded-lg の境界付近の余白を考慮したおおよその値です。
     -->
     <div class="h-[calc(50%-1.25rem)]"></div>
-    {#each displayedDialogues as dialogue, index (dialogue.id)}
+    {#each dialogues as dialogue, index (dialogue.id)}
       <div
         bind:this={itemEls[index]}
         class="flex items-center justify-between rounded-lg p-3 transition-all"

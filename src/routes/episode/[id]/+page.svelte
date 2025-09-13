@@ -1,24 +1,11 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
+  import { audioPlayerStore } from '$lib/application/stores/audioPlayerStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { softDeleteDialogue } from '$lib/application/usecases/softDeleteDialogue';
-  import { undoSoftDeleteDialogue } from '$lib/application/usecases/undoSoftDeleteDialogue';
-  import { debug, error } from '@tauri-apps/plugin-log';
-  import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
-  import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
-  import { onDestroy, onMount } from 'svelte';
-  import type { PageProps } from './$types';
-
   import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
   import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
-  import {
-    listenPlaybackPosition,
-    pauseAudio,
-    playAudio,
-    resumeAudio,
-    seekAudio,
-    stopAudio,
-  } from '$lib/application/usecases/controlAudio';
+  import { softDeleteDialogue } from '$lib/application/usecases/softDeleteDialogue';
+  import { undoSoftDeleteDialogue } from '$lib/application/usecases/undoSoftDeleteDialogue';
   import { updateDialogue } from '$lib/application/usecases/updateDialogue';
   import type { Dialogue } from '$lib/domain/entities/dialogue';
   import type {
@@ -26,11 +13,17 @@
     SentenceAnalysisResult,
   } from '$lib/domain/entities/sentenceAnalysisResult';
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
+  import { keyboardShortcuts } from '$lib/presentation/actions/keyboardShortcuts';
   import AudioPlayer from '$lib/presentation/components/AudioPlayer.svelte';
   import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
   import SentenceCardList from '$lib/presentation/components/SentenceCardList.svelte';
   import SentenceMiningModal from '$lib/presentation/components/SentenceMiningModal.svelte';
   import TranscriptViewer from '$lib/presentation/components/TranscriptViewer.svelte';
+  import { debug, error } from '@tauri-apps/plugin-log';
+  import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
+  import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
+  import { onDestroy, onMount } from 'svelte';
+  import type { PageProps } from './$types';
 
   const contextBefore = 5; // コンテキストに含める注目セリフの前のセリフ件数
   const contextAfter = 3; // コンテキストに含める注目セリフの後のセリフ件数
@@ -38,7 +31,6 @@
   let { data }: PageProps = $props();
 
   // --- Component State ---
-  let currentTime = $state(0);
   let isModalOpen = $state(false);
   let miningTarget: Dialogue | null = $state(null);
   let analysisResult: SentenceAnalysisResult | null = $state(null);
@@ -47,25 +39,22 @@
   let canMine = $derived(data.isApiKeySet || false);
   let showDeleted = $state(false);
 
+  // --- Derived State ---
+  const filteredDialogues = $derived(
+    (data.dialogues ?? []).filter((d) => showDeleted || !d.deletedAt)
+  );
+  const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deletedAt !== null) ?? false);
+
   // Delete confirmation
   let isConfirmModalOpen = $state(false);
   let dialogueToDeleteId: number | null = $state(null);
 
-  const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deletedAt !== null) ?? false);
-
-  let unlisten: (() => void) | undefined;
-
-  onMount(async () => {
-    unlisten = await listenPlaybackPosition((positionMs) => {
-      currentTime = positionMs;
-    });
+  onMount(() => {
+    audioPlayerStore.init();
   });
 
   onDestroy(() => {
-    if (unlisten) {
-      unlisten();
-    }
-    stopAudio();
+    audioPlayerStore.destroy();
   });
 
   function goBack() {
@@ -76,21 +65,10 @@
     }
   }
 
-  async function handlePlay() {
-    const audioPath = data.episode?.audioPath;
-    if (!audioPath) return;
-    await playAudio();
-  }
-
-  function handleStop() {
-    stopAudio();
-    currentTime = 0;
-  }
-
   function handleCardClick(card: SentenceCard) {
     const dialogue = data.dialogues?.find((d) => d.id === card.dialogueId);
     if (dialogue) {
-      seekAudio(dialogue.startTimeMs);
+      audioPlayerStore.seek(dialogue.startTimeMs);
     } else {
       error(`Dialogue not found for sentence card: ${card.id}, dialogueId: ${card.dialogueId}`);
     }
@@ -178,7 +156,10 @@
   }
 </script>
 
-<div class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col">
+<div
+  use:keyboardShortcuts={{ store: audioPlayerStore, dialogues: filteredDialogues }}
+  class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col"
+>
   <div>
     <Button color="light" class="mb-4" onclick={goBack}>
       <ArrowLeftOutline class="me-2 h-5 w-5" />
@@ -204,13 +185,14 @@
           {:then audioInfo}
             <AudioPlayer
               peaks={audioInfo.peaks}
-              {currentTime}
+              currentTime={audioPlayerStore.currentTime}
               duration={audioInfo.duration}
-              onPlay={handlePlay}
-              onPause={pauseAudio}
-              onSeek={seekAudio}
-              onResume={resumeAudio}
-              onStop={handleStop}
+              isPlaying={audioPlayerStore.isPlaying}
+              onPlay={audioPlayerStore.play}
+              onPause={audioPlayerStore.pause}
+              onSeek={audioPlayerStore.seek}
+              onResume={audioPlayerStore.resume}
+              onStop={audioPlayerStore.stop}
             />
           {:catch}
             <Alert color="red">
@@ -231,13 +213,12 @@
             {/if}
           </div>
           <TranscriptViewer
-            dialogues={data.dialogues}
-            {currentTime}
+            dialogues={filteredDialogues}
+            currentTime={audioPlayerStore.currentTime}
             {canMine}
-            {showDeleted}
             {contextBefore}
             {contextAfter}
-            onSeek={seekAudio}
+            onSeek={audioPlayerStore.seek}
             onMine={openMiningModal}
             onSave={handleSaveDialogue}
             onDelete={handleDeleteRequest}

@@ -13,6 +13,7 @@ graph LR
                 subgraph "stores"
                     src_lib_application_stores_apiKeyStore_svelte_ts["apiKeyStore.svelte.ts"]
                     src_lib_application_stores_audioInfoCacheStore_svelte_ts["audioInfoCacheStore.svelte.ts"]
+                    src_lib_application_stores_audioPlayerStore_svelte_ts["audioPlayerStore.svelte.ts"]
                     src_lib_application_stores_groupPathStore_svelte_ts["groupPathStore.svelte.ts"]
                     src_lib_application_stores_i18n_svelte_ts["i18n.svelte.ts"]
                 end
@@ -83,6 +84,9 @@ graph LR
                 end
             end
             subgraph "presentation"
+                subgraph "actions"
+                    src_lib_presentation_actions_keyboardShortcuts_ts["keyboardShortcuts.ts"]
+                end
                 subgraph "components"
                     src_lib_presentation_components_AudioPlayer_svelte["AudioPlayer.svelte"]
                     src_lib_presentation_components_Breadcrumbs_svelte["Breadcrumbs.svelte"]
@@ -133,6 +137,7 @@ graph LR
             end
         end
 src_lib_application_stores_audioInfoCacheStore_svelte_ts --> src_lib_domain_entities_audioInfo_ts
+src_lib_application_stores_audioPlayerStore_svelte_ts --> src_lib_application_usecases_controlAudio_ts
 src_lib_application_stores_groupPathStore_svelte_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_stores_i18n_svelte_ts --> src_lib_application_locales_en_ts
 src_lib_application_stores_i18n_svelte_ts --> src_lib_application_locales_ja_ts
@@ -235,6 +240,8 @@ src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_settingsRepository_ts --> src_lib_domain_entities_settings_ts
+src_lib_presentation_actions_keyboardShortcuts_ts --> src_lib_application_stores_audioPlayerStore_svelte_ts
+src_lib_presentation_actions_keyboardShortcuts_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_Breadcrumbs_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_lib_presentation_components_ConfirmModal_svelte --> src_lib_application_stores_i18n_svelte_ts
@@ -300,16 +307,17 @@ src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_componen
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_EpisodeNameEditModal_svelte
 src_routes_episode_list__groupId___page_ts --> src_lib_application_usecases_fetchEpisodes_ts
 src_routes_episode_list__groupId___page_ts --> src_lib_domain_entities_episode_ts
+src_routes_episode__id___page_svelte --> src_lib_application_stores_audioPlayerStore_svelte_ts
 src_routes_episode__id___page_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_addSentenceCards_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_analyzeDialogueForMining_ts
-src_routes_episode__id___page_svelte --> src_lib_application_usecases_controlAudio_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_softDeleteDialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_undoSoftDeleteDialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_application_usecases_updateDialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_dialogue_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceCard_ts
+src_routes_episode__id___page_svelte --> src_lib_presentation_actions_keyboardShortcuts_ts
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_AudioPlayer_svelte
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_ConfirmModal_svelte
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_SentenceCardList_svelte
