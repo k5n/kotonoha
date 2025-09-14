@@ -26,16 +26,6 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
   let { store, dialogues } = params;
 
   function handleKeydown(event: KeyboardEvent) {
-    const target = event.target as HTMLElement;
-    if (
-      target instanceof HTMLInputElement ||
-      target instanceof HTMLTextAreaElement ||
-      target instanceof HTMLSelectElement ||
-      target.isContentEditable
-    ) {
-      return;
-    }
-
     if (dialogues.length === 0) return;
 
     const currentDialogueIndex = findCurrentDialogueIndex(store.currentTime, dialogues);
