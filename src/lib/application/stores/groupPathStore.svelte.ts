@@ -13,6 +13,11 @@ export const groupPathStore = {
     return path.length > 0 ? path[path.length - 1] : null;
   },
 
+  // 現在のURLパス
+  get url() {
+    return '/' + path.map((g) => g.id).join('/');
+  },
+
   // パスを一括セット
   setPath(newPath: readonly EpisodeGroup[]) {
     path = newPath;

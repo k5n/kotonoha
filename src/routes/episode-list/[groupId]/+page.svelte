@@ -41,7 +41,7 @@
   function handleBreadcrumbClick(targetIndex: number | null) {
     debug(`Breadcrumb clicked: targetIndex=${targetIndex}`);
     if (groupPathStore.popTo(targetIndex)) {
-      goto('/');
+      goto(groupPathStore.url);
     }
   }
 

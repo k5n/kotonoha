@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
-  import { t } from '$lib/application/stores/i18n.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
+  import { t } from '$lib/application/stores/i18n.svelte';
   import { addEpisodeGroup } from '$lib/application/usecases/addEpisodeGroup';
   import { deleteGroupRecursive } from '$lib/application/usecases/deleteGroupRecursive';
   import { fetchAvailableParentGroups } from '$lib/application/usecases/fetchAvailableParentGroups';
@@ -38,12 +38,6 @@
   let path = $derived(groupPathStore.path);
   let currentGroupType = $derived(groupPathStore.current?.groupType ?? 'folder');
 
-  // --- Functions ---
-  function transition() {
-    const pathStr = groupPathStore.path.map((g) => g.id).join('/');
-    goto(`/${pathStr}`);
-  }
-
   // --- Event Handlers ---
 
   // === ページ遷移 ===
@@ -53,13 +47,14 @@
     if (selectedGroup.groupType == 'album') {
       goto(`/episode-list/${selectedGroup.id}`);
     } else {
-      transition();
+      goto(groupPathStore.url);
     }
   }
 
   function handleBreadcrumbClick(targetIndex: number | null) {
-    groupPathStore.popTo(targetIndex);
-    transition();
+    if (groupPathStore.popTo(targetIndex)) {
+      goto(groupPathStore.url);
+    }
   }
 
   async function handleGroupOrderChange(items: readonly EpisodeGroup[]) {
