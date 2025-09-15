@@ -14,7 +14,7 @@
   debug(`Breadcrumbs: path=${JSON.stringify(path)}`);
 </script>
 
-<Breadcrumb aria-label="File explorer breadcrumb">
+<Breadcrumb aria-label="Breadcrumb">
   <BreadcrumbItem onclick={() => onNavigate(null)}>
     <HomeOutline class="me-2 h-4 w-4" />
     {t('components.breadcrumbs.home')}
