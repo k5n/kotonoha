@@ -43,7 +43,6 @@ CREATE TABLE sentence_cards (
     created_at TEXT NOT NULL,
     FOREIGN KEY(dialogue_id) REFERENCES dialogues(id)
 );
-CREATE VIRTUAL TABLE sentence_cards_fts USING fts5(expression);
 -- Default group (id=1, name='Default', parent_group_id=NULL, group_type='album')
 INSERT INTO episode_groups (id, name, display_order, parent_group_id, group_type)
 VALUES (1, 'Default', 0, NULL, 'album');
