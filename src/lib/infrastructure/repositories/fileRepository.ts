@@ -1,24 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import {
-  BaseDirectory,
-  exists,
-  mkdir,
-  readTextFile,
-  remove,
-  writeTextFile,
-} from '@tauri-apps/plugin-fs';
-import { trace } from '@tauri-apps/plugin-log';
+import { BaseDirectory, exists, remove } from '@tauri-apps/plugin-fs';
 import { getMediaDir } from '../config';
-
-/**
- * 指定されたディレクトリが存在しなければ再帰的に作成
- */
-async function ensureDirExists(dirPath: string, baseDir: BaseDirectory): Promise<void> {
-  if (!(await exists(dirPath, { baseDir }))) {
-    trace(`Directory does not exist, creating: ${dirPath}`);
-    await mkdir(dirPath, { recursive: true, baseDir });
-  }
-}
 
 export const fileRepository = {
   /**
@@ -41,22 +23,10 @@ export const fileRepository = {
   },
 
   async saveAudioFile(absoluteFilePath: string, uuid: string, filename: string): Promise<string> {
-    const dir = `${getMediaDir()}/${uuid}/audios`;
+    const dir = `${getMediaDir()}/${uuid}`;
     const appLocalDataRelativePath = `${dir}/${filename}`;
     await invoke('copy_audio_file', { src: absoluteFilePath, dest: appLocalDataRelativePath });
     return appLocalDataRelativePath;
-  },
-
-  async saveScriptFile(text: string, uuid: string, filename: string): Promise<string> {
-    const dir = `${getMediaDir()}/${uuid}`;
-    await ensureDirExists(dir, BaseDirectory.AppLocalData);
-    const path = `${dir}/${filename}`;
-    await writeTextFile(path, text, { baseDir: BaseDirectory.AppLocalData });
-    return path;
-  },
-
-  async readScriptFile(relativePath: string): Promise<string> {
-    return await readTextFile(relativePath, { baseDir: BaseDirectory.AppLocalData });
   },
 
   /**

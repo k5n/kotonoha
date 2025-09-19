@@ -6,7 +6,7 @@ export type Episode = {
   readonly episodeGroupId: number;
   readonly displayOrder: number;
   readonly title: string;
-  readonly audioPath: string;
+  readonly mediaPath: string;
 
   readonly learningLanguage: string;
   readonly explanationLanguage: string;

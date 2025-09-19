@@ -170,8 +170,7 @@ erDiagram
         INTEGER episode_group_id FK
         INTEGER display_order
         TEXT title
-        TEXT audio_path
-        TEXT script_path
+        TEXT media_path
         TEXT learning_language
         TEXT explanation_language
         TEXT created_at
@@ -229,8 +228,7 @@ erDiagram
 | `episode_group_id` | INTEGER  |          | `episode_groups.id`への外部キー    |
 | `display_order` | INTEGER     |          | グループ内でのエピソードの表示順序 |
 | `title`         | TEXT        |          | エピソードのタイトル               |
-| `audio_path`    | TEXT        |          | 音声ファイルのパス             |
-| `script_path`   | TEXT        |          | スクリプトファイルのパス       |
+| `media_path`    | TEXT        |          | メディアファイルのパス             |
 | `learning_language` | TEXT    |          | 学習ターゲット言語 (例: 'English') |
 | `explanation_language` | TEXT  |          | 説明言語 (例: 'Japanese')        |
 | `created_at`    | TEXT        |          | 作成日時 (ISO 8601)                |
@@ -364,22 +362,19 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 ## 5. ファイル管理仕様 (File Management Specification)
 
-本アプリケーションでは、ユーザーがアップロードした音声ファイルおよびスクリプト（SRTファイル）をアプリケーションの管理下にある特定のディレクトリに保存する。
+本アプリケーションでは、ユーザーがアップロードした音声ファイルをアプリケーションの管理下にある特定のディレクトリに保存する。
 データベースとファイルの整合性を保ち、管理を容易にするため、以下の仕様を定める。
 
 ### 5.1. ファイル保存場所 (Storage Location)
 
 - 各エピソードに関連するファイル群は、TauriのFile System プラグイン (`@tauri-apps/plugin-fs`) を利用し、`BaseDirectory.AppLocalData` を基準として、エピソード固有のUUIDを持つディレクトリ内にまとめて格納する。
-- **基準パス**: `media/{UUID}/`
-- **音声ファイル**: `media/{UUID}/audios/` ディレクトリ内に格納する。これは将来的にダイアログごとの音声ファイルなどを追加で格納するため。
-- **スクリプトファイル**: `media/{UUID}/` ディレクトリ直下に格納する。
+- **基準パス**: `media/{UUID}/` ディレクトリ内に格納する。
 
 ### 5.2. ファイル命名規則 (Naming Convention)
 
 - ファイル名は固定とする。
-  - **音声ファイルのパス例**: `media/{UUID}/audios/full.mp3`
-  - **スクリプトファイルのパス例**: `media/{UUID}/script.srt`
-- この`BaseDirectory.AppLocalData`からの**相対パス**を、データベースの `episodes` テーブルにある `audio_path` と `script_path` カラムにそれぞれ保存する。これにより、データベースレコードと実ファイルが一意に紐づけられる。
+  - **音声ファイルのパス例**: `media/{UUID}/full.mp3`
+- この`BaseDirectory.AppLocalData`からの**相対パス**を、データベースの `episodes` テーブルにある `media_path` カラムに保存する。これにより、データベースレコードと実ファイルが一意に紐づけられる。
 - UUIDの重複チェックは、新しいエピソードを追加する際に `media/{UUID}` ディレクトリが存在するかどうかで確認する。存在する場合は、新しいUUIDを再生成する。
 
 ### 5.3. エピソード削除時の処理

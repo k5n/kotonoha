@@ -16,9 +16,9 @@ export const load: PageLoad = async ({ params }) => {
     }
     const { isApiKeySet, settings } = await fetchSettings();
 
-    await openAudio(result.episode.audioPath);
+    await openAudio(result.episode.mediaPath);
     // Function to analyze audio data asynchronously. Caching is handled by the use case.
-    const audioInfoPromise = analyzeAudio(result.episode.audioPath);
+    const audioInfoPromise = analyzeAudio(result.episode.mediaPath);
 
     return {
       episode: result.episode,

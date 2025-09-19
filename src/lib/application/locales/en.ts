@@ -104,9 +104,6 @@ export const en = {
       },
     },
     components: {
-      audioPlayer: {
-        notSupported: 'Your browser does not support the audio tag.',
-      },
       fileSelect: {
         placeholder: 'Select a file...',
         audioFiles: 'Audio Files',

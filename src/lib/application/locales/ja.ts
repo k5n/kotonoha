@@ -103,9 +103,6 @@ export const ja = {
       },
     },
     components: {
-      audioPlayer: {
-        notSupported: 'お使いのブラウザは audio タグをサポートしていません。',
-      },
       fileSelect: {
         placeholder: 'ファイルを選択...',
         audioFiles: '音声ファイル',

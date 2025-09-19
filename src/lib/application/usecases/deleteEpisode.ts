@@ -11,16 +11,16 @@ import { error } from '@tauri-apps/plugin-log';
 export async function deleteEpisode(episode: {
   readonly id: number;
   readonly title: string;
-  readonly audioPath: string;
+  readonly mediaPath: string;
 }): Promise<void> {
   try {
-    // audioPath から uuid を抽出 (例: media/uuid/audio.mp3 -> uuid)
-    const uuid = episode.audioPath.split('/')[1];
+    // mediaPath から uuid を抽出 (例: media/uuid/full.mp3 -> uuid)
+    const uuid = episode.mediaPath.split('/')[1];
     if (uuid) {
       await fileRepository.deleteEpisodeData(uuid);
     } else {
       error(
-        `Could not determine UUID for episode (id=${episode.id}: ${episode.title}) from path ${episode.audioPath}`
+        `Could not determine UUID for episode (id=${episode.id}: ${episode.title}) from path ${episode.mediaPath}`
       );
     }
 

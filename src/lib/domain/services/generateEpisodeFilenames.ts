@@ -21,24 +21,24 @@ function getExtension(filename: string): string {
 }
 
 /**
- * 音声ファイル・字幕ファイルのファイルパスまたはファイル名を受け取り、
+ * 音声/動画ファイル・字幕ファイルのファイルパスまたはファイル名を受け取り、
  * UUID v4 を生成し、拡張子を付与した新しいファイル名を返します。
  *
- * @param audioPathOrName 元の音声ファイルパスまたはファイル名
+ * @param mediaPathOrName 元の音声/動画ファイルパスまたはファイル名
  * @param scriptPathOrName 元の字幕ファイルパスまたはファイル名
  * @returns 新しいファイル名とUUID
  */
 export function generateEpisodeFilenames(
-  audioPathOrName: string,
+  mediaPathOrName: string,
   scriptPathOrName: string
-): { readonly audio: string; readonly script: string; readonly uuid: string } {
+): { readonly media: string; readonly script: string; readonly uuid: string } {
   const uuid = uuidV4();
-  const audioFilename = basename(audioPathOrName);
+  const mediaFilename = basename(mediaPathOrName);
   const scriptFilename = basename(scriptPathOrName);
-  const audioExt = getExtension(audioFilename);
+  const mediaExt = getExtension(mediaFilename);
   const scriptExt = getExtension(scriptFilename);
   return {
-    audio: 'full' + audioExt,
+    media: 'full' + mediaExt,
     script: 'script' + scriptExt,
     uuid,
   };

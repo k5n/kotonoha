@@ -77,7 +77,7 @@
         episodeGroupId: groupId,
         displayOrder: maxDisplayOrder + 1,
         title,
-        audioFilePath,
+        mediaFilePath: audioFilePath,
         scriptFilePath,
         tsvConfig,
       });

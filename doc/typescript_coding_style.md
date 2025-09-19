@@ -93,7 +93,7 @@
     type Episode = {
       readonly id: number;
       readonly title: string;
-      readonly audioPath: string;
+      readonly mediaPath: string;
       readonly createdAt: Date;
     };
     ```
@@ -138,7 +138,7 @@
     }
     
     function formatEpisode(episode: Readonly<Episode>): string {
-      return `${episode.title} - ${episode.audioPath}`;
+      return `${episode.title} - ${episode.mediaPath}`;
     }
     ```
   - 関数内でのデータ変更を防ぎ、関数の純粋性を保ちます。
