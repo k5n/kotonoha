@@ -9,7 +9,8 @@
 
   let { data }: PageProps = $props();
 
-  let apiKeyInput = $state('');
+  let geminiApiKeyInput = $state('');
+  let youtubeApiKeyInput = $state('');
   let successMessage = $state('');
   let isSaving = $state(false);
 
@@ -42,8 +43,9 @@
     successMessage = '';
     isSaving = true;
     try {
-      await saveSettings(settings, apiKeyInput);
-      apiKeyInput = '';
+      await saveSettings(settings, geminiApiKeyInput, youtubeApiKeyInput);
+      geminiApiKeyInput = '';
+      youtubeApiKeyInput = '';
       successMessage = t('settings.notifications.saveSuccess');
       invalidateAll(); // Invalidate all data to refresh settings
     } catch (e) {
@@ -65,30 +67,54 @@
 
   {#if settings}
     <div class="mt-4">
-      {#if data.isApiKeySet}
+      {#if data.isGeminiApiKeySet}
         <Alert color="green" class="mb-4">
-          <span class="font-medium">{t('settings.apiKey.alreadySet')}</span>
-          {t('settings.apiKey.overwriteWarning')}
+          <span class="font-medium">{t('settings.gemini.alreadySet')}</span>
+          {t('settings.gemini.overwriteWarning')}
         </Alert>
       {:else}
         <Alert color="yellow" class="mb-4">
-          <span class="font-medium">{t('settings.apiKey.notSet')}</span>
-          {t('settings.apiKey.notSetWarning')}
+          <span class="font-medium">{t('settings.gemini.notSet')}</span>
+          {t('settings.gemini.notSetWarning')}
         </Alert>
       {/if}
     </div>
 
     <div class="mt-6">
-      <Label for="api-key" class="mb-2">{t('settings.apiKey.label')}</Label>
+      <Label for="gemini-api-key" class="mb-2">{t('settings.gemini.label')}</Label>
       <Input
         type="password"
-        id="api-key"
-        bind:value={apiKeyInput}
-        placeholder={t('settings.apiKey.placeholder')}
+        id="gemini-api-key"
+        bind:value={geminiApiKeyInput}
+        placeholder={t('settings.gemini.placeholder')}
       />
     </div>
 
+    <div class="mt-8 border-t pt-6">
+      {#if data.isYoutubeApiKeySet}
+        <Alert color="green" class="mb-4">
+          <span class="font-medium">{t('settings.youtube.alreadySet')}</span>
+          {t('settings.youtube.overwriteWarning')}
+        </Alert>
+      {:else}
+        <Alert color="yellow" class="mb-4">
+          <span class="font-medium">{t('settings.youtube.notSet')}</span>
+          {t('settings.youtube.notSetWarning')}
+        </Alert>
+      {/if}
+    </div>
+
     <div class="mt-6">
+      <Label for="youtube-api-key" class="mb-2">{t('settings.youtube.label')}</Label>
+      <Input
+        type="password"
+        id="youtube-api-key"
+        bind:value={youtubeApiKeyInput}
+        placeholder={t('settings.youtube.placeholder')}
+      />
+    </div>
+
+    <div class="mt-8 border-t pt-6">
       <Label for="language-select" class="mb-2">{t('settings.language.label')}</Label>
       <Select
         id="language-select"

@@ -14,7 +14,7 @@ export const load: PageLoad = async ({ params }) => {
     if (!result) {
       return { errorKey: 'episodeDetailPage.errors.episodeNotFound' };
     }
-    const { isApiKeySet, settings } = await fetchSettings();
+    const { isGeminiApiKeySet, settings } = await fetchSettings();
 
     await openAudio(result.episode.mediaPath);
     // Function to analyze audio data asynchronously. Caching is handled by the use case.
@@ -24,7 +24,7 @@ export const load: PageLoad = async ({ params }) => {
       episode: result.episode,
       dialogues: result.dialogues,
       sentenceCards: result.sentenceCards,
-      isApiKeySet: isApiKeySet,
+      isApiKeySet: isGeminiApiKeySet, // Use isGeminiApiKeySet for this page
       settings: settings,
       audioInfo: audioInfoPromise,
       errorKey: null,

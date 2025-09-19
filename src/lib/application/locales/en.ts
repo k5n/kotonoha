@@ -16,13 +16,21 @@ export const en = {
     settings: {
       title: 'Settings',
       backButton: 'Back',
-      apiKey: {
+      gemini: {
+        alreadySet: 'Gemini API Key is already set.',
+        overwriteWarning: 'If you enter a new key, the existing one will be overwritten.',
+        notSet: 'Gemini API Key is not set.',
+        notSetWarning: 'To use the AI-powered sentence analysis feature, please set an API key.',
         label: 'Gemini API Key',
-        placeholder: 'Enter API Key',
-        alreadySet: 'API key is already set.',
-        overwriteWarning: 'Saving a new key will overwrite the existing one.',
-        notSet: 'API key is not set.',
-        notSetWarning: 'API key is required to use the features.',
+        placeholder: 'Enter your Gemini API Key',
+      },
+      youtube: {
+        alreadySet: 'YouTube API Key is already set.',
+        overwriteWarning: 'If you enter a new key, the existing one will be overwritten.',
+        notSet: 'YouTube API Key is not set.',
+        notSetWarning: 'To use the feature to load content from YouTube, please set an API key.',
+        label: 'YouTube Data API Key',
+        placeholder: 'Enter your YouTube Data API Key',
       },
       saveButton: {
         label: 'Save',

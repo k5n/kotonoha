@@ -24,13 +24,13 @@ const PART_OF_SPEECH_OPTIONS: readonly string[] = [
 ];
 
 async function ensureApiKey(): Promise<string> {
-  const apiKey = apiKeyStore.value;
+  const apiKey = apiKeyStore.gemini.value;
   if (apiKey !== null) {
     return apiKey;
   }
-  const storedApiKey = await apiKeyRepository.getApiKey();
+  const storedApiKey = await apiKeyRepository.getGeminiApiKey();
   if (storedApiKey !== null) {
-    apiKeyStore.set(storedApiKey);
+    apiKeyStore.gemini.set(storedApiKey);
     return storedApiKey;
   }
   throw new Error('API key is not set');

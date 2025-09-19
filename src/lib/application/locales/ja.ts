@@ -16,13 +16,22 @@ export const ja = {
     settings: {
       title: '設定',
       backButton: '戻る',
-      apiKey: {
-        label: 'Gemini API Key',
-        placeholder: 'APIキーを入力',
-        alreadySet: 'APIキーは設定済みです。',
-        overwriteWarning: '新しいキーを保存すると上書きされます。',
-        notSet: 'APIキーは設定されていません。',
-        notSetWarning: '機能を利用するにはAPIキーの登録が必要です。',
+      gemini: {
+        alreadySet: 'Gemini APIキーは設定済みです。',
+        overwriteWarning: '新しいキーを入力すると、既存のキーは上書きされます。',
+        notSet: 'Gemini APIキーが設定されていません。',
+        notSetWarning: 'AIによる文章解析機能を利用するには、APIキーを設定してください。',
+        label: 'Gemini APIキー',
+        placeholder: 'Gemini APIキーを入力',
+      },
+      youtube: {
+        alreadySet: 'YouTube APIキーは設定済みです。',
+        overwriteWarning: '新しいキーを入力すると、既存のキーは上書きされます。',
+        notSet: 'YouTube APIキーが設定されていません。',
+        notSetWarning:
+          'YouTubeからコンテンツを読み込む機能を利用するには、APIキーを設定してください。',
+        label: 'YouTube Data APIキー',
+        placeholder: 'YouTube Data APIキーを入力',
       },
       saveButton: {
         label: '保存',
