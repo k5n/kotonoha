@@ -41,7 +41,7 @@ export const fileRepository = {
   },
 
   async saveAudioFile(absoluteFilePath: string, uuid: string, filename: string): Promise<string> {
-    const dir = `${getMediaDir()}/${uuid}/audios`;
+    const dir = `${getMediaDir()}/${uuid}`;
     const appLocalDataRelativePath = `${dir}/${filename}`;
     await invoke('copy_audio_file', { src: absoluteFilePath, dest: appLocalDataRelativePath });
     return appLocalDataRelativePath;

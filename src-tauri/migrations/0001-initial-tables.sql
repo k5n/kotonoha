@@ -11,7 +11,7 @@ CREATE TABLE episodes (
     episode_group_id INTEGER NOT NULL,
     display_order INTEGER NOT NULL,
     title TEXT NOT NULL,
-    audio_path TEXT NOT NULL,
+    media_path TEXT NOT NULL,
     script_path TEXT NOT NULL,
     learning_language TEXT NOT NULL DEFAULT 'English',
     explanation_language TEXT NOT NULL DEFAULT 'Japanese',

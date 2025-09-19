@@ -24,7 +24,7 @@ interface AddNewEpisodeParams {
   episodeGroupId: number;
   displayOrder: number;
   title: string;
-  audioFilePath: string;
+  mediaFilePath: string;
   scriptFilePath: string;
   tsvConfig?: TsvConfig;
 }
@@ -43,7 +43,7 @@ async function generateUniqueEpisodeFilenames(
   let uuid: string;
   do {
     const {
-      audio,
+      media: audio,
       script,
       uuid: generatedUuid,
     } = generateEpisodeFilenames(audioFilePath, scriptFilePath);
@@ -67,14 +67,21 @@ async function generateUniqueEpisodeFilenames(
  */
 export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> {
   info(`Adding new episode with params: ${JSON.stringify(params)}`);
-  const { episodeGroupId, displayOrder, title, audioFilePath, scriptFilePath, tsvConfig } = params;
+  const {
+    episodeGroupId,
+    displayOrder,
+    title,
+    mediaFilePath: audioFilePath,
+    scriptFilePath,
+    tsvConfig,
+  } = params;
   const { audioFilename, scriptFilename, uuid } = await generateUniqueEpisodeFilenames(
     audioFilePath,
     scriptFilePath
   );
   try {
-    // audioFilePath: string, scriptFilePath: string
-    const audioPath = await fileRepository.saveAudioFile(audioFilePath, uuid, audioFilename);
+    // mediaFilePath: string, scriptFilePath: string
+    const mediaPath = await fileRepository.saveAudioFile(audioFilePath, uuid, audioFilename);
     // scriptFilePathから内容を読み込む
     const scriptContent = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
     const scriptPath = await fileRepository.saveScriptFile(scriptContent, uuid, scriptFilename);
@@ -82,7 +89,7 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
       episodeGroupId,
       displayOrder,
       title,
-      audioPath,
+      mediaPath,
       scriptPath,
       learningLanguage: 'English',
       explanationLanguage: 'Japanese',

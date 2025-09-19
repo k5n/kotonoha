@@ -7,7 +7,7 @@ type EpisodeRow = {
   episode_group_id: number;
   display_order: number;
   title: string;
-  audio_path: string;
+  media_path: string;
   learning_language: string;
   explanation_language: string;
   created_at: string;
@@ -21,7 +21,7 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
     episodeGroupId: row.episode_group_id,
     displayOrder: row.display_order,
     title: row.title,
-    audioPath: row.audio_path,
+    mediaPath: row.media_path,
     learningLanguage: row.learning_language,
     explanationLanguage: row.explanation_language,
     createdAt: new Date(row.created_at),
@@ -53,23 +53,23 @@ export const episodeRepository = {
   /**
    * 複数のグループIDに所属するすべてのエピソードの基本情報を一括で取得する（削除処理用）
    * @param groupIds 取得対象のグループIDの配列
-   * @returns エピソードの基本情報（id, title, audioPath）の配列
+   * @returns エピソードの基本情報（id, title, mediaPath）の配列
    */
   async getPartialEpisodesByGroupIds(
     groupIds: readonly number[]
   ): Promise<
-    readonly { readonly id: number; readonly title: string; readonly audioPath: string }[]
+    readonly { readonly id: number; readonly title: string; readonly mediaPath: string }[]
   > {
     if (groupIds.length === 0) {
       return [];
     }
     const db = new Database(getDatabasePath());
     const placeholders = groupIds.map(() => '?').join(',');
-    const rows = await db.select<{ id: number; title: string; audio_path: string }[]>(
-      `SELECT id, title, audio_path FROM episodes WHERE episode_group_id IN (${placeholders})`,
+    const rows = await db.select<{ id: number; title: string; media_path: string }[]>(
+      `SELECT id, title, media_path FROM episodes WHERE episode_group_id IN (${placeholders})`,
       [...groupIds]
     );
-    return rows.map((row) => ({ id: row.id, title: row.title, audioPath: row.audio_path }));
+    return rows.map((row) => ({ id: row.id, title: row.title, mediaPath: row.media_path }));
   },
 
   async getEpisodeById(id: number): Promise<Episode | null> {
@@ -85,7 +85,7 @@ export const episodeRepository = {
     episodeGroupId: number;
     displayOrder: number;
     title: string;
-    audioPath: string;
+    mediaPath: string;
     scriptPath: string;
     learningLanguage: string;
     explanationLanguage: string;
@@ -93,13 +93,13 @@ export const episodeRepository = {
     const db = new Database(getDatabasePath());
     const now = new Date().toISOString();
     await db.execute(
-      `INSERT INTO episodes (episode_group_id, display_order, title, audio_path, script_path, learning_language, explanation_language, created_at, updated_at)
+      `INSERT INTO episodes (episode_group_id, display_order, title, media_path, script_path, learning_language, explanation_language, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         params.episodeGroupId,
         params.displayOrder,
         params.title,
-        params.audioPath,
+        params.mediaPath,
         params.scriptPath,
         params.learningLanguage,
         params.explanationLanguage,
