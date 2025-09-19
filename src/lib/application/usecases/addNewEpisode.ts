@@ -84,13 +84,11 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
     const mediaPath = await fileRepository.saveAudioFile(audioFilePath, uuid, audioFilename);
     // scriptFilePathから内容を読み込む
     const scriptContent = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
-    const scriptPath = await fileRepository.saveScriptFile(scriptContent, uuid, scriptFilename);
     const episode = await episodeRepository.addEpisode({
       episodeGroupId,
       displayOrder,
       title,
       mediaPath,
-      scriptPath,
       learningLanguage: 'English',
       explanationLanguage: 'Japanese',
     });

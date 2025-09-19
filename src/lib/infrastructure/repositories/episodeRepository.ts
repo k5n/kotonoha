@@ -86,21 +86,19 @@ export const episodeRepository = {
     displayOrder: number;
     title: string;
     mediaPath: string;
-    scriptPath: string;
     learningLanguage: string;
     explanationLanguage: string;
   }): Promise<Episode> {
     const db = new Database(getDatabasePath());
     const now = new Date().toISOString();
     await db.execute(
-      `INSERT INTO episodes (episode_group_id, display_order, title, media_path, script_path, learning_language, explanation_language, created_at, updated_at)
+      `INSERT INTO episodes (episode_group_id, display_order, title, media_path, learning_language, explanation_language, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         params.episodeGroupId,
         params.displayOrder,
         params.title,
         params.mediaPath,
-        params.scriptPath,
         params.learningLanguage,
         params.explanationLanguage,
         now,
