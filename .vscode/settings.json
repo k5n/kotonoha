@@ -50,11 +50,13 @@
     "tauri",
     "thisux",
     "timecode",
+    "timecodes",
     "TOEIC",
     "Unlisten",
     "usecases",
     "usize",
-    "Vitest"
+    "Vitest",
+    "WEBVTT"
   ],
   "todohighlight.isCaseSensitive": true,
   "todohighlight.include": [
