@@ -66,6 +66,7 @@ graph LR
                     src_lib_domain_services_parseSrtToDialogues_ts["parseSrtToDialogues.ts"]
                     src_lib_domain_services_parseSswtToDialogues_ts["parseSswtToDialogues.ts"]
                     src_lib_domain_services_parseTsvToDialogues_ts["parseTsvToDialogues.ts"]
+                    src_lib_domain_services_parseVttToDialogues_ts["parseVttToDialogues.ts"]
                 end
             end
             subgraph "infrastructure"
@@ -148,6 +149,7 @@ src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_genera
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseSrtToDialogues_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseSswtToDialogues_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseTsvToDialogues_ts
+src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseVttToDialogues_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_fileRepository_ts
@@ -226,6 +228,7 @@ src_lib_domain_services_parseScriptPreview_ts --> src_lib_domain_entities_script
 src_lib_domain_services_parseSrtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_domain_services_parseSswtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_domain_services_parseTsvToDialogues_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_domain_services_parseVttToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_appInfoRepository_ts --> src_lib_domain_entities_appInfo_ts
 src_lib_infrastructure_repositories_audioRepository_ts --> src_lib_domain_entities_audioInfo_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_dialogue_ts

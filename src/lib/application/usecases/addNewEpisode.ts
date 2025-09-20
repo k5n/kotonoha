@@ -3,6 +3,7 @@ import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFi
 import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
 import { parseSswtToDialogues } from '$lib/domain/services/parseSswtToDialogues';
 import { parseTsvToDialogues } from '$lib/domain/services/parseTsvToDialogues';
+import { parseVttToDialogues } from '$lib/domain/services/parseVttToDialogues';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
@@ -96,7 +97,7 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
       // scriptFilePathの拡張子を取得
       const scriptExtension = scriptFilename.split('.').pop()?.toLowerCase();
 
-      const supportedExtensions = ['srt', 'sswt', 'tsv'];
+      const supportedExtensions = ['srt', 'sswt', 'tsv', 'vtt'];
       if (scriptExtension === undefined || !supportedExtensions.includes(scriptExtension)) {
         throw new Error(`Unsupported script file type: ${scriptExtension}`);
       }
@@ -117,6 +118,9 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
           result = parseTsvToDialogues(scriptContent, episode.id, tsvConfig);
           break;
         }
+        case 'vtt':
+          result = parseVttToDialogues(scriptContent, episode.id);
+          break;
         default:
           // This part should not be reached due to the check above, but it's good for safety.
           throw new Error(`Parser not implemented for: ${scriptExtension}`);

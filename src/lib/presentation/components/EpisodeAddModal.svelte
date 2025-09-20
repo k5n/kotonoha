@@ -169,7 +169,7 @@
         {t('components.episodeAddModal.scriptFileLabel')}
       </Label>
       <FileSelect
-        accept=".srt,.sswt,.tsv"
+        accept=".srt,.sswt,.tsv,.vtt"
         onFileSelected={(file) => {
           scriptFilePath = file || null;
         }}
