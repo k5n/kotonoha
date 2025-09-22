@@ -36,6 +36,7 @@ pub fn run() {
     let db_url = format!("sqlite:{}", db_name);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(AudioState::default())
         .plugin(tauri_plugin_store::Builder::new().build())

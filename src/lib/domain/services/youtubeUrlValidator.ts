@@ -1,0 +1,61 @@
+/**
+ * YouTube URL format validation service
+ */
+export function isValidYoutubeUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') {
+    return false;
+  }
+
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) {
+    return false;
+  }
+
+  // YouTube URL patterns
+  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+  return youtubeRegex.test(trimmedUrl);
+}
+
+/**
+ * Extract video ID from YouTube URL
+ */
+export function extractYoutubeVideoId(url: string): string | null {
+  if (!isValidYoutubeUrl(url)) {
+    return null;
+  }
+
+  const trimmedUrl = url.trim();
+
+  // youtube.com/watch?v=VIDEO_ID
+  const watchMatch = trimmedUrl.match(/[?&]v=([^&#]+)/);
+  if (watchMatch && watchMatch[1]) {
+    return watchMatch[1];
+  }
+
+  // youtu.be/VIDEO_ID
+  const shortMatch = trimmedUrl.match(/youtu\.be\/([^?&#]+)/);
+  if (shortMatch && shortMatch[1]) {
+    return shortMatch[1];
+  }
+
+  // youtube.com/embed/VIDEO_ID
+  const embedMatch = trimmedUrl.match(/youtube\.com\/embed\/([^?&#]+)/);
+  if (embedMatch && embedMatch[1]) {
+    return embedMatch[1];
+  }
+
+  return null;
+}
+
+/**
+ * Normalize various YouTube URL forms to the canonical watch URL
+ * e.g. `https://www.youtube.com/embed/VIDEO_ID?si=...` -> `https://www.youtube.com/watch?v=VIDEO_ID`
+ * Returns `null` when the URL is not a valid YouTube URL or video ID cannot be extracted.
+ */
+export function normalizeYoutubeUrl(url: string): string | null {
+  const id = extractYoutubeVideoId(url);
+  if (!id) return null;
+
+  // Always return the canonical watch URL
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+}

@@ -5,6 +5,7 @@
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
+  import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
   import { updateEpisodeName } from '$lib/application/usecases/updateEpisodeName';
   import { updateEpisodesOrder } from '$lib/application/usecases/updateEpisodesOrder';
@@ -31,6 +32,7 @@
   let isSubmitting = $state(false);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
+  let newEpisodeTitle = $state('');
 
   // === ページ遷移 ===
 
@@ -48,7 +50,21 @@
   // === エピソード追加 ===
 
   function openEpisodeAddModal() {
+    newEpisodeTitle = '';
     showEpisodeAdd = true;
+  }
+
+  async function handleYoutubeUrlChange(url: string) {
+    if (url.trim()) {
+      try {
+        const metadata = await fetchYoutubeMetadata(url);
+        if (metadata?.title) {
+          newEpisodeTitle = metadata.title;
+        }
+      } catch (err) {
+        console.error('Failed to fetch YouTube title:', err);
+      }
+    }
   }
 
   async function handleEpisodeAddSubmit(
@@ -72,6 +88,7 @@
         debug('No group ID found, cannot add episode');
         return;
       }
+      isSubmitting = true;
       const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
       await addNewEpisode({
         episodeGroupId: groupId,
@@ -87,6 +104,7 @@
       error(`Failed to add new episode: ${e}`);
       errorMessage = t('episodeListPage.errors.addEpisode');
       showEpisodeAdd = false;
+      isSubmitting = false;
     }
   }
 
@@ -225,8 +243,11 @@
 
 <EpisodeAddModal
   show={showEpisodeAdd}
+  {isSubmitting}
+  bind:youtubeTitle={newEpisodeTitle}
   onClose={() => (showEpisodeAdd = false)}
   onSubmit={handleEpisodeAddSubmit}
+  onYoutubeUrlChange={handleYoutubeUrlChange}
 />
 
 <EpisodeMoveModal
