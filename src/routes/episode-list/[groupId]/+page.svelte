@@ -2,7 +2,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
+  import { addNewEpisode, addYoutubeEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
@@ -11,12 +11,14 @@
   import { updateEpisodesOrder } from '$lib/application/usecases/updateEpisodesOrder';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
+  import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
   import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
   import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
+  import type { EpisodeAddPayload } from '$lib/presentation/types/episodeAddPayload';
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ExclamationCircleOutline, FileOutline, PlusOutline } from 'flowbite-svelte-icons';
@@ -30,9 +32,12 @@
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
+  let youtubeMetadata = $state<YoutubeMetadata | null>(null);
+  let isYoutubeMetadataFetching = $state(false);
+  let youtubeErrorMessage = $state('');
+
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
-  let newEpisodeTitle = $state('');
 
   // === ページ遷移 ===
 
@@ -50,54 +55,58 @@
   // === エピソード追加 ===
 
   function openEpisodeAddModal() {
-    newEpisodeTitle = '';
+    youtubeMetadata = null;
     showEpisodeAdd = true;
   }
 
   async function handleYoutubeUrlChange(url: string) {
     if (url.trim()) {
       try {
+        isYoutubeMetadataFetching = true;
         const metadata = await fetchYoutubeMetadata(url);
-        if (metadata?.title) {
-          newEpisodeTitle = metadata.title;
-        }
+        youtubeMetadata = metadata;
       } catch (err) {
+        youtubeMetadata = null;
+        // TODO: 例外の型でメッセージを変更。メッセージ内容は国際化対応。それをダイアログに伝える。
+        youtubeErrorMessage = `${err}`;
         console.error('Failed to fetch YouTube title:', err);
+      } finally {
+        isYoutubeMetadataFetching = false;
       }
     }
   }
 
-  async function handleEpisodeAddSubmit(
-    title: string,
-    audioFilePath: string,
-    scriptFilePath: string,
-    tsvConfig?: {
-      startTimeColumnIndex: number;
-      textColumnIndex: number;
-      endTimeColumnIndex?: number;
-    }
-  ) {
+  async function handleEpisodeAddSubmit(payload: EpisodeAddPayload) {
     try {
-      debug(
-        `title: ${title}, audio: ${audioFilePath}, script: ${scriptFilePath}, tsvConfig: ${JSON.stringify(
-          tsvConfig
-        )}`
-      );
-      const groupId = data.episodeGroup?.id;
-      if (!groupId) {
+      debug(`Adding episode with payload: ${JSON.stringify(payload)}`);
+      const episodeGroupId = data.episodeGroup?.id;
+      if (!episodeGroupId) {
         debug('No group ID found, cannot add episode');
         return;
       }
       isSubmitting = true;
       const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
-      await addNewEpisode({
-        episodeGroupId: groupId,
-        displayOrder: maxDisplayOrder + 1,
-        title,
-        mediaFilePath: audioFilePath,
-        scriptFilePath,
-        tsvConfig,
-      });
+      const displayOrder = maxDisplayOrder + 1;
+
+      if (payload.source === 'file') {
+        await addNewEpisode({
+          episodeGroupId,
+          displayOrder,
+          title: payload.title,
+          mediaFilePath: payload.audioFilePath,
+          scriptFilePath: payload.scriptFilePath,
+          tsvConfig: payload.tsvConfig,
+        });
+      } else if (payload.source === 'youtube') {
+        await addYoutubeEpisode({
+          episodeGroupId,
+          displayOrder,
+          youtubeMetadata: payload.youtubeMetadata,
+        });
+      } else {
+        throw new Error(`Unknown payload source: ${JSON.stringify(payload)}`);
+      }
+
       await invalidateAll();
       showEpisodeAdd = false;
     } catch (e) {
@@ -244,7 +253,9 @@
 <EpisodeAddModal
   show={showEpisodeAdd}
   {isSubmitting}
-  bind:youtubeTitle={newEpisodeTitle}
+  {youtubeMetadata}
+  {isYoutubeMetadataFetching}
+  {youtubeErrorMessage}
   onClose={() => (showEpisodeAdd = false)}
   onSubmit={handleEpisodeAddSubmit}
   onYoutubeUrlChange={handleYoutubeUrlChange}

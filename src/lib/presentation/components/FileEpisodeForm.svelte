@@ -4,12 +4,8 @@
   import type { ScriptPreview } from '$lib/domain/entities/scriptPreview';
   import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
+  import type { FileEpisodeAddPayload, TsvConfig } from '$lib/presentation/types/episodeAddPayload';
   import { Button, Input, Label } from 'flowbite-svelte';
-
-  import {
-    buildTsvConfig,
-    validateFileEpisodeForm,
-  } from '$lib/presentation/utils/episodeFormValidator';
 
   type Props = {
     title: string;
@@ -29,13 +25,7 @@
       textColumnIndex: number;
       endTimeColumnIndex: number;
     }) => void;
-    onSubmit: (payload: {
-      source: 'file';
-      title: string;
-      audioFilePath: string;
-      scriptFilePath: string;
-      tsvConfig?: import('$lib/presentation/utils/episodeFormValidator').TsvConfig;
-    }) => Promise<void>;
+    onSubmit: (payload: FileEpisodeAddPayload) => Promise<void>;
     onCancel: () => void;
   };
 
@@ -75,19 +65,42 @@
     }
   });
 
+  function buildTsvConfig(tsvConfig: {
+    startTimeColumnIndex: number;
+    textColumnIndex: number;
+    endTimeColumnIndex: number;
+  }): TsvConfig | undefined {
+    if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
+      return undefined;
+    }
+    return {
+      startTimeColumnIndex: tsvConfig.startTimeColumnIndex,
+      textColumnIndex: tsvConfig.textColumnIndex,
+      ...(tsvConfig.endTimeColumnIndex !== -1 && {
+        endTimeColumnIndex: tsvConfig.endTimeColumnIndex,
+      }),
+    };
+  }
+
   async function handleSubmit() {
     localError = '';
-    const validationError = validateFileEpisodeForm({
-      title,
-      audioFilePath,
-      scriptFilePath,
-      scriptPreview,
-      tsvConfig,
-    });
-
-    if (validationError) {
-      localError = validationError;
+    if (!title.trim()) {
+      localError = t('components.episodeAddModal.errorTitleRequired');
       return;
+    }
+    if (!audioFilePath) {
+      localError = t('components.episodeAddModal.errorAudioFileRequired');
+      return;
+    }
+    if (!scriptFilePath) {
+      localError = t('components.episodeAddModal.errorScriptFileRequired');
+      return;
+    }
+    if (scriptPreview) {
+      if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
+        localError = t('components.episodeAddModal.errorTsvColumnRequired');
+        return;
+      }
     }
 
     const finalTsvConfig = buildTsvConfig(tsvConfig);
@@ -96,9 +109,9 @@
     try {
       await onSubmit({
         source: 'file',
-        title,
-        audioFilePath: audioFilePath!,
-        scriptFilePath: scriptFilePath!,
+        title: title.trim(),
+        audioFilePath: audioFilePath,
+        scriptFilePath: scriptFilePath,
         tsvConfig: finalTsvConfig,
       });
       // Parent (+page.svelte) will handle closing and showing global errors on failure
@@ -107,7 +120,6 @@
       // We'll rethrow so parent can catch if it wants, but also set a local error fallback.
       localError = t('components.episodeAddModal.errorAudioFileLoad');
       console.error(e);
-      throw e;
     } finally {
       submitting = false;
     }

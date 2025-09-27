@@ -1,12 +1,15 @@
-/**
- * 新規作成時に必要なプロパティをまとめた型。
- */
-export type NewDialogue = {
-  readonly episodeId: number;
+export type AtomicDialogue = {
   readonly startTimeMs: number;
   readonly endTimeMs: number | null;
   readonly originalText: string;
 };
+
+/*
+ * 新規作成時に必要なプロパティをまとめた型。
+ */
+export type NewDialogue = {
+  readonly episodeId: number;
+} & AtomicDialogue;
 
 /**
  * スクリプト内の個々のセリフを表すエンティティ。

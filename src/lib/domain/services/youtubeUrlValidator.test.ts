@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  extractYoutubeVideoId,
-  isValidYoutubeUrl,
-  normalizeYoutubeUrl,
-} from './youtubeUrlValidator';
+import { extractYoutubeVideoId, isValidYoutubeUrl } from './youtubeUrlValidator';
 
 describe('youtubeUrlValidator', () => {
   describe('isValidYoutubeUrl', () => {
@@ -130,28 +126,6 @@ describe('youtubeUrlValidator', () => {
       malformedUrls.forEach((url) => {
         expect(extractYoutubeVideoId(url)).toBeNull();
       });
-    });
-  });
-
-  describe('normalizeYoutubeUrl', () => {
-    it('normalizes embed URL to watch URL', () => {
-      const url = 'https://www.youtube.com/embed/QVPatbYvFmM?si=0n4O6dMplpnvrLNl';
-      expect(normalizeYoutubeUrl(url)).toBe('https://www.youtube.com/watch?v=QVPatbYvFmM');
-    });
-
-    it('normalizes short youtu.be URL', () => {
-      const url = 'https://youtu.be/QVPatbYvFmM';
-      expect(normalizeYoutubeUrl(url)).toBe('https://www.youtube.com/watch?v=QVPatbYvFmM');
-    });
-
-    it('returns null for non-youtube URL', () => {
-      const url = 'https://example.com/foo';
-      expect(normalizeYoutubeUrl(url)).toBeNull();
-    });
-
-    it('normalizes regular watch URL unchanged (canonicalized)', () => {
-      const url = 'https://www.youtube.com/watch?v=QVPatbYvFmM&ab_channel=Some';
-      expect(normalizeYoutubeUrl(url)).toBe('https://www.youtube.com/watch?v=QVPatbYvFmM');
     });
   });
 });

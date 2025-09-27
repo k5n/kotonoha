@@ -1,27 +1,48 @@
-import { isValidYoutubeUrl, normalizeYoutubeUrl } from '$lib/domain/services/youtubeUrlValidator';
-import {
-  youtubeRepository,
-  type YoutubeMetadata,
-} from '$lib/infrastructure/repositories/youtubeRepository';
+import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
+import { type YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
+import { extractYoutubeVideoId, isValidYoutubeUrl } from '$lib/domain/services/youtubeUrlValidator';
+import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
+import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
+import { error } from '@tauri-apps/plugin-log';
 
-/**
- * Fetch YouTube video metadata
- */
-export async function fetchYoutubeMetadata(url: string): Promise<YoutubeMetadata | null> {
+class YoutubeApiKeyNotSet extends Error {
+  constructor() {
+    super('YouTube Data API key is not set');
+  }
+}
+
+class InvalidYoutubeURL extends Error {
+  constructor() {
+    super('Invalid YouTube URL');
+  }
+}
+
+async function ensureApiKey(): Promise<string> {
+  const apiKey = apiKeyStore.youtube.value;
+  if (apiKey !== null) {
+    return apiKey;
+  }
+  const storedApiKey = await apiKeyRepository.getYoutubeApiKey();
+  if (storedApiKey !== null) {
+    apiKeyStore.youtube.set(storedApiKey);
+    return storedApiKey;
+  }
+  throw new YoutubeApiKeyNotSet();
+}
+
+export async function fetchYoutubeMetadata(url: string): Promise<YoutubeMetadata> {
+  const youtubeDataApiKey = await ensureApiKey();
+
   if (!isValidYoutubeUrl(url)) {
-    throw new Error('Invalid YouTube URL');
+    throw new InvalidYoutubeURL();
   }
 
-  // Normalize embed/short URLs to a canonical watch URL so YouTube oEmbed responds with metadata
-  const normalized = normalizeYoutubeUrl(url);
-  if (!normalized) {
-    throw new Error('Unable to normalize YouTube URL');
+  const videoId = extractYoutubeVideoId(url);
+  if (videoId === null) {
+    error(`Failed to get videoId: ${url}`);
+    throw new InvalidYoutubeURL();
   }
 
-  try {
-    return await youtubeRepository.fetchMetadata(normalized);
-  } catch (error) {
-    console.error('Failed to fetch YouTube metadata:', error);
-    return null;
-  }
+  const metadata = await youtubeRepository.fetchYoutubeMetadata(youtubeDataApiKey, videoId);
+  return metadata;
 }

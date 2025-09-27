@@ -1,27 +1,27 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
+  import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
   import FileEpisodeForm from '$lib/presentation/components/FileEpisodeForm.svelte';
   import YoutubeEpisodeForm from '$lib/presentation/components/YoutubeEpisodeForm.svelte';
-  import type { TsvConfig } from '$lib/presentation/utils/episodeFormValidator';
+  import type { EpisodeAddPayload } from '$lib/presentation/types/episodeAddPayload';
   import { Heading, Label, Modal, Radio } from 'flowbite-svelte';
 
   type Props = {
     show: boolean;
     isSubmitting: boolean;
-    youtubeTitle: string;
+    youtubeMetadata: YoutubeMetadata | null;
+    isYoutubeMetadataFetching: boolean;
+    youtubeErrorMessage: string;
     onClose: () => void;
-    onSubmit: (
-      _title: string,
-      _audioFilePath: string,
-      _scriptFilePath: string,
-      _tsvConfig?: TsvConfig
-    ) => void;
+    onSubmit: (payload: EpisodeAddPayload) => void;
     onYoutubeUrlChange?: (url: string) => void;
   };
   let {
     show,
     isSubmitting,
-    youtubeTitle = $bindable(''),
+    youtubeMetadata,
+    isYoutubeMetadataFetching,
+    youtubeErrorMessage,
     onClose,
     onSubmit,
     onYoutubeUrlChange,
@@ -50,7 +50,6 @@
     sourceType = 'file';
     youtubeUrl = '';
     fileEpisodeTitle = '';
-    youtubeTitle = '';
   }
 
   function handleClose() {
@@ -93,13 +92,7 @@
         onScriptFileChange={(path) => (scriptFilePath = path)}
         onTsvConfigChange={(config) => (tsvConfig = config)}
         onSubmit={async (payload) => {
-          // adapt payload to parent's positional onSubmit
-          await onSubmit(
-            payload.title,
-            payload.audioFilePath,
-            payload.scriptFilePath,
-            payload.tsvConfig
-          );
+          await onSubmit(payload);
         }}
         onCancel={handleClose}
       />
@@ -107,18 +100,17 @@
 
     {#if sourceType === 'youtube'}
       <YoutubeEpisodeForm
-        title={youtubeTitle}
         {youtubeUrl}
+        {youtubeMetadata}
+        {isYoutubeMetadataFetching}
         {isSubmitting}
-        onTitleChange={(newTitle) => (youtubeTitle = newTitle)}
+        errorMessage={youtubeErrorMessage}
         onYoutubeUrlChange={(url) => {
           youtubeUrl = url;
           onYoutubeUrlChange?.(url);
         }}
         onSubmit={async (payload) => {
-          // adapt payload to parent's positional onSubmit; use youtubeUrl path (parent expects audio/script args)
-          // For YouTube we call parent onSubmit with youtube URL as audioFilePath and empty script path.
-          await onSubmit(payload.title, payload.youtubeUrl, '', undefined);
+          await onSubmit(payload);
         }}
         onCancel={handleClose}
       />

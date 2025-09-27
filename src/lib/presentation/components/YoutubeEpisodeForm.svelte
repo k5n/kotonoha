@@ -1,53 +1,61 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { validateYoutubeEpisodeForm } from '$lib/presentation/utils/episodeFormValidator';
-  import { Button, Input, Label } from 'flowbite-svelte';
+  import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
+  import type { YoutubeEpisodeAddPayload } from '$lib/presentation/types/episodeAddPayload';
+  import { Button, Input, Label, Spinner } from 'flowbite-svelte';
 
   type Props = {
-    title: string;
     youtubeUrl: string;
+    youtubeMetadata: YoutubeMetadata | null;
+    isYoutubeMetadataFetching: boolean;
     isSubmitting: boolean;
-    onTitleChange: (title: string) => void;
+    errorMessage: string;
     onYoutubeUrlChange: (url: string) => void;
-    onSubmit: (payload: { source: 'youtube'; title: string; youtubeUrl: string }) => Promise<void>;
+    onSubmit: (payload: YoutubeEpisodeAddPayload) => Promise<void>;
     onCancel: () => void;
   };
 
   let {
-    title,
     youtubeUrl,
+    youtubeMetadata,
+    isYoutubeMetadataFetching,
     isSubmitting,
-    onTitleChange,
+    errorMessage,
     onYoutubeUrlChange,
     onSubmit,
     onCancel,
   }: Props = $props();
 
-  let localError = $state('');
   let submitting = $state(false);
+  let localErrorMessage = $derived(errorMessage);
+  let title = $derived(youtubeMetadata?.title || '');
 
   async function handleSubmit() {
-    localError = '';
-    const validationError = validateYoutubeEpisodeForm({ title, youtubeUrl });
-    if (validationError) {
-      localError = validationError;
+    if (submitting || isSubmitting || isYoutubeMetadataFetching || !youtubeMetadata) return;
+    localErrorMessage = '';
+    if (!title.trim()) {
+      localErrorMessage = t('components.episodeAddModal.errorTitleRequired');
+      return;
+    }
+    if (!youtubeUrl.trim()) {
+      localErrorMessage = t('components.episodeAddModal.errorYoutubeUrlRequired');
       return;
     }
 
     submitting = true;
     try {
-      await onSubmit({ source: 'youtube', title, youtubeUrl });
-    } catch (e) {
-      // Per user's instruction: close modal on onSubmit failure and let +page show error.
-      console.error(e);
-      throw e;
+      await onSubmit({
+        source: 'youtube',
+        youtubeMetadata: { ...youtubeMetadata, title: title.trim() },
+        youtubeUrl,
+      });
     } finally {
       submitting = false;
     }
   }
 
   function handleCancel() {
-    localError = '';
+    localErrorMessage = '';
     onCancel();
   }
 </script>
@@ -69,24 +77,51 @@
   <Label class="mb-2 block" for="title">{t('components.episodeAddModal.titleLabel')}</Label>
   <Input
     id="title"
+    disabled={isYoutubeMetadataFetching}
     placeholder={t('components.episodeAddModal.titlePlaceholder')}
     value={title}
-    oninput={(e) => onTitleChange((e.currentTarget as HTMLInputElement).value)}
+    oninput={(e) => {
+      title = (e.currentTarget as HTMLInputElement).value;
+    }}
     type="text"
   />
 </div>
 
-{#if localError}
+{#if isYoutubeMetadataFetching}
+  <div class="mb-4 flex justify-center">
+    <Spinner size="16" />
+  </div>
+{:else if youtubeMetadata}
   <div class="mb-4">
-    <div class="text-sm text-red-600">{localError}</div>
+    <iframe
+      class="mx-auto h-64 w-128"
+      src={youtubeMetadata.embedUrl}
+      title="YouTube video player"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+    ></iframe>
+  </div>
+{/if}
+
+{#if localErrorMessage}
+  <div class="mb-4">
+    <div class="text-sm text-red-600">{localErrorMessage}</div>
   </div>
 {/if}
 
 <div class="flex justify-end gap-2">
-  <Button color="gray" disabled={isSubmitting || submitting} onclick={handleCancel}>
+  <Button
+    color="gray"
+    disabled={isSubmitting || submitting || isYoutubeMetadataFetching}
+    onclick={handleCancel}
+  >
     {t('components.episodeAddModal.cancel')}
   </Button>
-  <Button onclick={handleSubmit} disabled={isSubmitting || submitting}>
+  <Button
+    onclick={handleSubmit}
+    disabled={isSubmitting || submitting || isYoutubeMetadataFetching || !youtubeMetadata}
+  >
     {isSubmitting || submitting
       ? t('components.episodeAddModal.submitting')
       : t('components.episodeAddModal.submit')}

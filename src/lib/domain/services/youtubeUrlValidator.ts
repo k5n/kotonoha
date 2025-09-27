@@ -46,16 +46,3 @@ export function extractYoutubeVideoId(url: string): string | null {
 
   return null;
 }
-
-/**
- * Normalize various YouTube URL forms to the canonical watch URL
- * e.g. `https://www.youtube.com/embed/VIDEO_ID?si=...` -> `https://www.youtube.com/watch?v=VIDEO_ID`
- * Returns `null` when the URL is not a valid YouTube URL or video ID cannot be extracted.
- */
-export function normalizeYoutubeUrl(url: string): string | null {
-  const id = extractYoutubeVideoId(url);
-  if (!id) return null;
-
-  // Always return the canonical watch URL
-  return `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
-}

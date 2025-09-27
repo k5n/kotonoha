@@ -1,12 +1,15 @@
 import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
 import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
 import { parseSswtToDialogues } from '$lib/domain/services/parseSswtToDialogues';
 import { parseTsvToDialogues } from '$lib/domain/services/parseTsvToDialogues';
 import { parseVttToDialogues } from '$lib/domain/services/parseVttToDialogues';
+import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
+import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
 import { error, info, warn } from '@tauri-apps/plugin-log';
 
 /**
@@ -143,5 +146,45 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
     error(`Failed to add new episode: ${err instanceof Error ? err.stack : err}`);
     await fileRepository.deleteEpisodeData(uuid);
     throw new Error('Failed to add new episode.');
+  }
+}
+
+interface AddNewYoutubeEpisodeParams {
+  episodeGroupId: number;
+  displayOrder: number;
+  youtubeMetadata: YoutubeMetadata;
+}
+
+export async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<void> {
+  info(`Adding new YouTube episode with params: ${JSON.stringify(params)}`);
+  const { episodeGroupId, displayOrder, youtubeMetadata } = params;
+  const { title, embedUrl, language, trackKind } = youtubeMetadata;
+
+  const videoId = extractYoutubeVideoId(embedUrl);
+  if (videoId === null) {
+    throw new Error(`Cannot extract video ID: ${embedUrl}`);
+  }
+  const subtitle = await youtubeRepository.fetchSubtitle({
+    videoId,
+    trackKind,
+    language,
+  });
+  const episode = await episodeRepository.addEpisode({
+    episodeGroupId,
+    displayOrder,
+    title,
+    mediaPath: embedUrl,
+    learningLanguage: 'English', // TODO: 字幕の言語を設定
+    explanationLanguage: 'Japanese',
+  });
+  try {
+    const dialogues = subtitle.map((dialogue) => ({
+      ...dialogue,
+      episodeId: episode.id,
+    }));
+    await dialogueRepository.bulkInsertDialogues(episode.id, dialogues);
+  } catch (err) {
+    episodeRepository.deleteEpisode(episode.id);
+    throw err;
   }
 }
