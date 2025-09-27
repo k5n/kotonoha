@@ -10,6 +10,7 @@ import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRep
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
+import { bcp47ToLanguageName } from '$lib/utils/language';
 import { error, info, warn } from '@tauri-apps/plugin-log';
 
 /**
@@ -164,6 +165,10 @@ export async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Pro
   if (videoId === null) {
     throw new Error(`Cannot extract video ID: ${embedUrl}`);
   }
+  const languageName = bcp47ToLanguageName(language);
+  if (languageName === undefined) {
+    throw new Error(`Unsupported language: ${language}`);
+  }
   const subtitle = await youtubeRepository.fetchSubtitle({
     videoId,
     trackKind,
@@ -174,7 +179,7 @@ export async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Pro
     displayOrder,
     title,
     mediaPath: embedUrl,
-    learningLanguage: 'English', // TODO: 字幕の言語を設定
+    learningLanguage: languageName,
     explanationLanguage: 'Japanese',
   });
   try {

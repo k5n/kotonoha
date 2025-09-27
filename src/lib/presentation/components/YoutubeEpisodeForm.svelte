@@ -2,7 +2,8 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
   import type { YoutubeEpisodeAddPayload } from '$lib/presentation/types/episodeAddPayload';
-  import { Button, Input, Label, Spinner } from 'flowbite-svelte';
+  import { bcp47ToTranslationKey } from '$lib/utils/language';
+  import { Button, Checkbox, Input, Label, Spinner } from 'flowbite-svelte';
 
   type Props = {
     youtubeUrl: string;
@@ -30,6 +31,19 @@
   let localErrorMessage = $derived(errorMessage);
   let title = $derived(youtubeMetadata?.title || '');
 
+  let isLanguageSupported = $derived(
+    !youtubeMetadata || bcp47ToTranslationKey(youtubeMetadata.language) !== undefined
+  );
+  let languageName = $derived.by(() => {
+    if (!youtubeMetadata) return '';
+    const languageKey = bcp47ToTranslationKey(youtubeMetadata.language);
+    return languageKey
+      ? t(languageKey)
+      : t('components.episodeAddModal.errorUnsupportedLanguage', {
+          language: youtubeMetadata.language,
+        });
+  });
+
   async function handleSubmit() {
     if (submitting || isSubmitting || isYoutubeMetadataFetching || !youtubeMetadata) return;
     localErrorMessage = '';
@@ -39,6 +53,12 @@
     }
     if (!youtubeUrl.trim()) {
       localErrorMessage = t('components.episodeAddModal.errorYoutubeUrlRequired');
+      return;
+    }
+    if (!isLanguageSupported) {
+      localErrorMessage = t('components.episodeAddModal.errorUnsupportedLanguage', {
+        language: youtubeMetadata.language,
+      });
       return;
     }
 
@@ -101,6 +121,26 @@
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
       allowfullscreen
     ></iframe>
+  </div>
+
+  <!-- Video metadata section -->
+  <div class="mb-4 space-y-3 rounded border border-gray-300 bg-gray-50 p-3">
+    <!-- Language display -->
+    <div>
+      <Label class="inline text-sm font-medium">
+        {t('components.episodeAddModal.videoLanguageLabel')}:
+      </Label>
+      <span class="ml-2 text-sm {isLanguageSupported ? 'text-gray-700' : 'text-red-600'}">
+        {languageName}
+      </span>
+    </div>
+
+    <!-- ASR checkbox (read-only) -->
+    <div>
+      <Checkbox checked={youtubeMetadata.trackKind === 'asr'} disabled>
+        {t('components.episodeAddModal.automaticSubtitlesLabel')}
+      </Checkbox>
+    </div>
   </div>
 {/if}
 
