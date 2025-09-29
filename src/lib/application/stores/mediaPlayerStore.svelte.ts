@@ -1,10 +1,17 @@
 const store = $state({
+  isReady: false,
   isPlaying: false,
   hasStarted: false,
   currentTime: 0,
 });
 
-export const playerStore = {
+export const mediaPlayerStore = {
+  get isReady() {
+    return store.isReady;
+  },
+  set isReady(ready: boolean) {
+    store.isReady = ready;
+  },
   get isPlaying() {
     return store.isPlaying;
   },

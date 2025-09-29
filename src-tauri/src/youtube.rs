@@ -201,6 +201,7 @@ pub async fn fetch_youtube_subtitle(
     Ok(dialogues)
 }
 
+// cSpell:ignore Patb TRIMQ
 #[cfg(test)]
 mod tests {
     use super::*;
