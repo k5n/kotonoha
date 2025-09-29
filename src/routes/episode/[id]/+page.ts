@@ -1,4 +1,4 @@
-import { analyzeAudio, openAudio } from '$lib/application/usecases/controlAudio';
+import { audioController } from '$lib/application/usecases/controlAudio';
 import { fetchEpisodeDetail } from '$lib/application/usecases/fetchEpisodeDetail';
 import { fetchSettings } from '$lib/application/usecases/fetchSettings';
 import { error } from '@tauri-apps/plugin-log';
@@ -16,9 +16,9 @@ export const load: PageLoad = async ({ params }) => {
     }
     const { isGeminiApiKeySet, settings } = await fetchSettings();
 
-    await openAudio(result.episode.mediaPath);
+    await audioController.open(result.episode.mediaPath);
     // Function to analyze audio data asynchronously. Caching is handled by the use case.
-    const audioInfoPromise = analyzeAudio(result.episode.mediaPath);
+    const audioInfoPromise = audioController.analyze(result.episode.mediaPath);
 
     return {
       episode: result.episode,

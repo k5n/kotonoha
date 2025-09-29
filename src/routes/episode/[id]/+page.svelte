@@ -1,9 +1,10 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
-  import { audioPlayerStore } from '$lib/application/stores/audioPlayerStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { playerStore } from '$lib/application/stores/playerStore.svelte';
   import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
   import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
+  import { audioController } from '$lib/application/usecases/controlAudio';
   import { softDeleteDialogue } from '$lib/application/usecases/softDeleteDialogue';
   import { undoSoftDeleteDialogue } from '$lib/application/usecases/undoSoftDeleteDialogue';
   import { updateDialogue } from '$lib/application/usecases/updateDialogue';
@@ -22,7 +23,7 @@
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import type { PageProps } from './$types';
 
   const contextBefore = 5; // コンテキストに含める注目セリフの前のセリフ件数
@@ -50,11 +51,12 @@
   let dialogueToDeleteId: number | null = $state(null);
 
   onMount(() => {
-    audioPlayerStore.init();
-  });
-
-  onDestroy(() => {
-    audioPlayerStore.destroy();
+    const unlistenPromise = audioController.listenPlaybackPosition();
+    return () => {
+      unlistenPromise.then((unlisten) => {
+        unlisten();
+      });
+    };
   });
 
   function goBack() {
@@ -68,7 +70,7 @@
   function handleCardClick(card: SentenceCard) {
     const dialogue = data.dialogues?.find((d) => d.id === card.dialogueId);
     if (dialogue) {
-      audioPlayerStore.seek(dialogue.startTimeMs);
+      audioController.seek(dialogue.startTimeMs);
     } else {
       error(`Dialogue not found for sentence card: ${card.id}, dialogueId: ${card.dialogueId}`);
     }
@@ -157,7 +159,16 @@
 </script>
 
 <div
-  use:keyboardShortcuts={{ store: audioPlayerStore, dialogues: filteredDialogues }}
+  use:keyboardShortcuts={{
+    isPlaying: playerStore.isPlaying,
+    hasStarted: playerStore.hasStarted,
+    currentTime: playerStore.currentTime,
+    onPause: audioController.pause,
+    onPlay: audioController.play,
+    onResume: audioController.resume,
+    onSeek: audioController.seek,
+    dialogues: filteredDialogues,
+  }}
   class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col"
 >
   <div>
@@ -185,14 +196,14 @@
           {:then audioInfo}
             <AudioPlayer
               peaks={audioInfo.peaks}
-              currentTime={audioPlayerStore.currentTime}
+              currentTime={playerStore.currentTime}
               duration={audioInfo.duration}
-              isPlaying={audioPlayerStore.isPlaying}
-              onPlay={audioPlayerStore.play}
-              onPause={audioPlayerStore.pause}
-              onSeek={audioPlayerStore.seek}
-              onResume={audioPlayerStore.resume}
-              onStop={audioPlayerStore.stop}
+              isPlaying={playerStore.isPlaying}
+              onPlay={audioController.play}
+              onPause={audioController.pause}
+              onSeek={audioController.seek}
+              onResume={audioController.resume}
+              onStop={audioController.stop}
             />
           {:catch}
             <Alert color="red">
@@ -214,11 +225,11 @@
           </div>
           <TranscriptViewer
             dialogues={filteredDialogues}
-            currentTime={audioPlayerStore.currentTime}
+            currentTime={playerStore.currentTime}
             {canMine}
             {contextBefore}
             {contextAfter}
-            onSeek={audioPlayerStore.seek}
+            onSeek={audioController.seek}
             onMine={openMiningModal}
             onSave={handleSaveDialogue}
             onDelete={handleDeleteRequest}

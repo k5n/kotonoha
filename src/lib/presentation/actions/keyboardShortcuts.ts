@@ -1,8 +1,13 @@
-import type { audioPlayerStore } from '$lib/application/stores/audioPlayerStore.svelte';
 import type { Dialogue } from '$lib/domain/entities/dialogue';
 
 interface KeyboardShortcutsParams {
-  store: typeof audioPlayerStore;
+  isPlaying: boolean;
+  hasStarted: boolean;
+  currentTime: number;
+  onPause: () => void;
+  onPlay: () => void;
+  onResume: () => void;
+  onSeek: (time: number) => void;
   dialogues: readonly Dialogue[];
 }
 
@@ -23,7 +28,7 @@ function findCurrentDialogueIndex(time: number, dialogues: readonly Dialogue[]):
 }
 
 export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsParams) {
-  let { store, dialogues } = params;
+  let { isPlaying, hasStarted, currentTime, onPause, onPlay, onResume, onSeek, dialogues } = params;
 
   function handleKeydown(event: KeyboardEvent) {
     const target = event.target as HTMLElement;
@@ -33,62 +38,62 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
 
     if (dialogues.length === 0) return;
 
-    const currentDialogueIndex = findCurrentDialogueIndex(store.currentTime, dialogues);
+    const currentDialogueIndex = findCurrentDialogueIndex(currentTime, dialogues);
 
     switch (event.key) {
       case 'a': {
         if (currentDialogueIndex > 0) {
           const prevDialogue = dialogues[currentDialogueIndex - 1];
-          store.seek(prevDialogue.startTimeMs);
+          onSeek(prevDialogue.startTimeMs);
         } else {
-          store.seek(0);
+          onSeek(0);
         }
         break;
       }
       case 's': {
         if (currentDialogueIndex !== -1) {
           const currentDialogue = dialogues[currentDialogueIndex];
-          store.seek(currentDialogue.startTimeMs);
+          onSeek(currentDialogue.startTimeMs);
         }
         break;
       }
       case 'd': {
         if (currentDialogueIndex < dialogues.length - 1) {
           const nextDialogue = dialogues[currentDialogueIndex + 1];
-          store.seek(nextDialogue.startTimeMs);
+          onSeek(nextDialogue.startTimeMs);
         }
         break;
       }
       case ' ': {
         event.preventDefault();
-        if (store.isPlaying) {
-          store.pause();
+        if (isPlaying) {
+          onPause();
         } else {
-          if (store.hasStarted) {
-            store.resume();
+          if (hasStarted) {
+            onResume();
           } else {
-            store.play();
+            onPlay();
           }
         }
         break;
       }
       case 'ArrowUp': {
         event.preventDefault();
-        store.pause();
+        onPause();
         if (currentDialogueIndex > 0) {
           const prevDialogue = dialogues[currentDialogueIndex - 1];
-          store.seek(prevDialogue.startTimeMs);
+          onSeek(prevDialogue.startTimeMs);
         } else {
-          store.seek(0);
+          onSeek(0);
         }
         break;
       }
       case 'ArrowDown': {
         event.preventDefault();
-        store.pause();
+        onPause();
         if (currentDialogueIndex < dialogues.length - 1) {
           const nextDialogue = dialogues[currentDialogueIndex + 1];
-          store.seek(nextDialogue.startTimeMs);
+          onSeek(nextDialogue.startTimeMs);
         }
         break;
       }
@@ -99,7 +104,13 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
 
   return {
     update(newParams: KeyboardShortcutsParams) {
-      store = newParams.store;
+      isPlaying = newParams.isPlaying;
+      hasStarted = newParams.hasStarted;
+      currentTime = newParams.currentTime;
+      onPause = newParams.onPause;
+      onPlay = newParams.onPlay;
+      onResume = newParams.onResume;
+      onSeek = newParams.onSeek;
       dialogues = newParams.dialogues;
     },
     destroy() {

@@ -1,12 +1,13 @@
 import { audioInfoCacheStore } from '$lib/application/stores/audioInfoCacheStore.svelte';
 import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import { audioRepository } from '$lib/infrastructure/repositories/audioRepository';
+import { playerStore } from '../stores/playerStore.svelte';
 
-export async function openAudio(path: string): Promise<void> {
+async function openAudio(path: string): Promise<void> {
   await audioRepository.open(path);
 }
 
-export async function analyzeAudio(path: string): Promise<AudioInfo> {
+async function analyzeAudio(path: string): Promise<AudioInfo> {
   const cachedAudioInfo = audioInfoCacheStore.get(path);
   if (cachedAudioInfo) {
     return cachedAudioInfo;
@@ -16,32 +17,48 @@ export async function analyzeAudio(path: string): Promise<AudioInfo> {
   return audioInfo;
 }
 
-export async function playAudio(): Promise<void> {
+async function playAudio(): Promise<void> {
   await audioRepository.play();
+  playerStore.play();
 }
 
-export async function stopAudio(): Promise<void> {
+async function stopAudio(): Promise<void> {
   await audioRepository.stop();
+  playerStore.stop();
 }
 
-export async function pauseAudio(): Promise<void> {
+async function pauseAudio(): Promise<void> {
   await audioRepository.pause();
+  playerStore.pause();
 }
 
-export async function resumeAudio(): Promise<void> {
+async function resumeAudio(): Promise<void> {
   await audioRepository.resume();
+  playerStore.resume();
 }
 
-export async function seekAudio(positionMs: number): Promise<void> {
+async function seekAudio(positionMs: number): Promise<void> {
   await audioRepository.seek(positionMs);
 }
 
-export async function listenPlaybackPosition(
-  callback: (positionMs: number) => void
-): Promise<() => void> {
-  const unlisten = await audioRepository.listenPlaybackPosition(callback);
+async function listenPlaybackPosition(): Promise<() => void> {
+  const unlisten = await audioRepository.listenPlaybackPosition((positionMs) => {
+    playerStore.currentTime = positionMs;
+  });
   return () => {
+    stopAudio();
     audioInfoCacheStore.clear();
     unlisten();
   };
 }
+
+export const audioController = {
+  open: openAudio,
+  analyze: analyzeAudio,
+  play: playAudio,
+  stop: stopAudio,
+  pause: pauseAudio,
+  resume: resumeAudio,
+  seek: seekAudio,
+  listenPlaybackPosition: listenPlaybackPosition,
+};
