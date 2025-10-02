@@ -19,5 +19,6 @@ export type Dialogue = NewDialogue & {
   readonly correctedText: string | null;
   readonly translation: string | null;
   readonly explanation: string | null;
+  readonly sentence: string | null;
   readonly deletedAt: string | null;
 };

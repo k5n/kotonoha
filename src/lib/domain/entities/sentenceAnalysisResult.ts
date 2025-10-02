@@ -11,6 +11,7 @@ export type SentenceAnalysisItem = {
 };
 
 export type SentenceAnalysisResult = {
+  sentence: string;
   translation: string;
   explanation: string;
   items: SentenceAnalysisItem[];

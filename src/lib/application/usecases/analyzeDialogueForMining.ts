@@ -52,6 +52,7 @@ export async function analyzeDialogueForMining(
     // ダイアログの翻訳と説明をキャッシュから取得
     const cachedDialogue = await dialogueRepository.getDialogueById(dialogue.id);
     return {
+      sentence: cachedDialogue?.sentence || '',
       translation: cachedDialogue?.translation || '',
       explanation: cachedDialogue?.explanation || '',
       items: cachedCards.map((card) => ({
@@ -86,7 +87,8 @@ export async function analyzeDialogueForMining(
   await dialogueRepository.updateDialogueAnalysis(
     dialogue.id,
     result.translation,
-    result.explanation
+    result.explanation,
+    result.sentence
   );
   await sentenceCardRepository.cacheAnalysisItems(dialogue.id, result.items);
 
@@ -94,6 +96,7 @@ export async function analyzeDialogueForMining(
   const newCachedCards = await sentenceCardRepository.getSentenceCardsByDialogueId(dialogue.id);
 
   return {
+    sentence: result.sentence,
     translation: result.translation,
     explanation: result.explanation,
     items: newCachedCards.map((card) => ({
