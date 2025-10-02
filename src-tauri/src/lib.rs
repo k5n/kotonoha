@@ -3,6 +3,7 @@ mod audio;
 mod llm;
 mod migrations;
 mod stronghold;
+mod youtube;
 
 use dotenvy::from_filename;
 use std::{env, fs};
@@ -15,6 +16,7 @@ use audio::{
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
 use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
+use youtube::fetch_youtube_subtitle;
 
 fn get_db_name() -> String {
     if cfg!(debug_assertions) {
@@ -36,6 +38,7 @@ pub fn run() {
     let db_url = format!("sqlite:{}", db_name);
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(AudioState::default())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -84,6 +87,7 @@ pub fn run() {
             seek_audio,
             read_text_file,
             copy_audio_file,
+            fetch_youtube_subtitle,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

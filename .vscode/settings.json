@@ -21,40 +21,49 @@
     "**/.cargo/git/checkouts/**/*.rs": true,
     "**/lib/rustlib/src/rust/library/**/*.rs": true
   },
-  "github.copilot.chat.codeGeneration.instructions": [
-    {
-      "file": "./doc/svelte_coding_rules.md"
-    }
-  ],
-  "github.copilot.chat.testGeneration.instructions": [
-    {
-      "file": "./doc/testing_rules.md"
-    }
-  ],
   "cSpell.words": [
     "Anki",
     "APPLOCALDATA",
     "AUTOINCREMENT",
+    "Chichewa",
+    "Dhivehi",
     "dotenvy",
     "flac",
     "flowbite",
     "hoverable",
     "kotonoha",
+    "Krio",
+    "Luxembourgish",
     "machineid",
+    "Manipuri",
+    "Meiteilon",
     "nsis",
+    "Nyanja",
+    "Odia",
+    "oembed",
+    "prost",
+    "renderable",
+    "reqwest",
     "rfind",
     "rodio",
     "serde",
+    "Sesotho",
+    "Shona",
+    "Sinhala",
     "SSWT",
     "sveltednd",
     "tauri",
     "thisux",
     "timecode",
+    "timecodes",
     "TOEIC",
     "Unlisten",
     "usecases",
     "usize",
-    "Vitest"
+    "Uyghur",
+    "Vitest",
+    "WEBVTT",
+    "youtu"
   ],
   "todohighlight.isCaseSensitive": true,
   "todohighlight.include": [

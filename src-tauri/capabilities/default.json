@@ -100,6 +100,13 @@
     },
     "stronghold:default",
     "store:default",
-    "dialog:default"
+    "dialog:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://www.youtube.com/oembed" },
+        { "url": "https://www.googleapis.com/youtube/v3/*" }
+      ]
+    }
   ]
 }

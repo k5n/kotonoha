@@ -11,8 +11,11 @@ Kotonoha is a desktop application for language learning, centered around AI-powe
 
 - **AI-Powered Sentence Mining**: Automatically extract key vocabulary and expressions from sentences using Google Gemini AI, with contextual explanations tailored to your learning needs.
 - **Smart Content Analysis**: Select any sentence and let AI identify important words, phrasal verbs, idioms, and collocations with detailed explanations.
-- **Episode Management**: Organize your learning materials (audio + transcripts) into groups and episodes for structured study.
-- **Interactive Transcript Viewer**: View synchronized transcripts with audio playback and click-to-analyze functionality.
+- **Multiple Content Sources**:
+  - Local audio + transcript file pairs with native audio player
+  - YouTube videos with embedded player and automatic subtitle extraction
+- **Episode Management**: Organize your learning materials into groups and episodes for structured study.
+- **Interactive Transcript Viewer**: View synchronized transcripts with media playback (local audio or embedded YouTube) and click-to-analyze functionality.
 - **Contextual Learning Cards**: Generate study cards with sentences, highlighted target expressions, and AI-generated explanations.
 
 ## 🗺️ Roadmap
@@ -22,7 +25,10 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 ### Near-term (v1.x)
 
 - **Cross-Platform Support**: Official installers and support for Windows and macOS.
-- **Audio-Synchronized Learning**: Listen to original audio while studying extracted vocabulary in context.
+- **Multiple Content Sources**:
+  - Audio-only import with ASR transcript generation
+  - Transcript-only import with TTS audio synthesis
+  - Real-time audio capture with live ASR transcription
 - **Card Management**:
   - Hide/suspend cards that you have already learned.
   - A toggle to show/hide suspended cards.
@@ -39,7 +45,8 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 
 ### Prerequisites
 
-- **Google Gemini API Key**: You'll need a Google Gemini API key to enable AI-powered sentence mining. You can obtain one from the [Google AI Studio](https://aistudio.google.com/).
+- **Google Gemini API Key**: Required for AI-powered sentence mining. You can obtain one from the [Google AI Studio](https://aistudio.google.com/).
+- **YouTube Data API Key** (optional): Required only if you plan to import YouTube videos. You can obtain one from the [Google Cloud Console](https://console.cloud.google.com/).
 - **For Linux users:** A secret service implementation (e.g., GNOME Keyring, KWallet) is required to securely store application credentials. Please ensure one is installed and configured on your system.
 
 ### Download
@@ -52,18 +59,26 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 
 1.  **Prepare Your Materials**:
 
-    - Kotonoha works with pairs of audio and transcript files.
-    - The audio can be in common formats like MP3, M4A, WAV, and OGG.
-    - The transcript can be in either **SRT (`.srt`) format** or our original **SSWT (`.sswt`) format**. If you only have audio files, you can use our companion app [Kotonoha-ASR](https://github.com/k5n/kotonoha-asr) to generate SRT or SSWT subtitle files. Download releases from [here](https://github.com/k5n/kotonoha-asr/releases). You can also use transcription tools like [Whisper](https://github.com/openai/whisper) to generate SRT files from your audio/video content. See below for details about the SSWT format.
+    Kotonoha supports two types of content sources:
+
+    - **Local Files**: Pairs of audio and transcript files.
+      - Audio formats: MP3, M4A, WAV, and OGG
+      - Transcript formats: SRT (`.srt`), SSWT (`.sswt`), TSV (`.tsv`), or VTT (`.vtt`)
+      - If you only have audio files, you can use our companion app [Kotonoha-ASR](https://github.com/k5n/kotonoha-asr) to generate SSWT subtitle files. Download releases from [here](https://github.com/k5n/kotonoha-asr/releases). You can also use transcription tools like [Whisper](https://github.com/openai/whisper) to generate SRT files from your audio/video content.
+    - **YouTube Videos**: Simply provide a YouTube URL and Kotonoha will automatically fetch the video metadata and available subtitles for you.
 
 2.  **Launch Kotonoha**: Start the application.
 
-3.  **Configure AI Settings**: On first launch, you'll need to set up your Google Gemini API key in the settings to enable AI-powered sentence mining.
+3.  **Configure API Settings**: On first launch, you'll need to configure API keys in the settings:
+    - **Google Gemini API Key** (required): For AI-powered sentence mining
+    - **YouTube Data API Key** (optional): Required only if you plan to import YouTube videos with automatic subtitle extraction
 
 4.  **Import Your Episode**:
 
     - Create an **Album** to store your episodes. You can also create Folders to organize your Albums, but episodes can only be added directly to an Album.
-    - Click the "Add Episode" button within an Album and select your audio and transcript file pair (SRT or SSWT).
+    - Click the "Add Episode" button within an Album and either:
+      - Select your local audio and transcript file pair, or
+      - Enter a YouTube URL to import video content with automatic subtitle extraction
 
 5.  **Start Studying**: Open an episode to view the synchronized transcript and begin your sentence mining session.
 
@@ -132,8 +147,7 @@ Time	Subtitle
 
 - The first row is treated as a header and skipped during import.
 - Time columns accept flexible formats (see above).
-- If the end time is omitted, it will be set to `null` or the same as the start time, depending on context.
-- Rows with invalid or missing required fields will be skipped with a warning.
+- Rows with invalid or missing required fields will be skipped.
 
 ---
 

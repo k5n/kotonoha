@@ -76,9 +76,12 @@
       class="border-s-4 border-gray-300 bg-gray-50 p-4 dark:border-gray-500 dark:bg-gray-800"
     >
       <p class="text-base leading-relaxed font-medium text-gray-900 dark:text-white">
-        {#if dialogue}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          {@html dialogue.correctedText || dialogue.originalText}
+        {#if analysisResult?.sentence}
+          <!-- Use LLM-generated sentence when available -->
+          {analysisResult.sentence}
+        {:else if dialogue}
+          <!-- Fallback to original dialogue text if no LLM sentence -->
+          {dialogue.correctedText || dialogue.originalText}
         {/if}
       </p>
     </blockquote>

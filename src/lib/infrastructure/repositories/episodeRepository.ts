@@ -93,7 +93,7 @@ export const episodeRepository = {
     const now = new Date().toISOString();
     await db.execute(
       `INSERT INTO episodes (episode_group_id, display_order, title, media_path, learning_language, explanation_language, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         params.episodeGroupId,
         params.displayOrder,

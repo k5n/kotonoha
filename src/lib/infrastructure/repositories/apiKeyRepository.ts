@@ -3,6 +3,7 @@ import { appDataDir } from '@tauri-apps/api/path';
 import { type Client, Stronghold } from '@tauri-apps/plugin-stronghold';
 
 const STRONGHOLD_KEY_GEMINI_API_KEY = 'gemini_api_key';
+const STRONGHOLD_KEY_YOUTUBE_API_KEY = 'youtube_api_key';
 
 async function initStronghold(): Promise<{
   stronghold: Stronghold;
@@ -28,20 +29,36 @@ async function initStronghold(): Promise<{
   }
 }
 
+async function saveKey(key: string, value: string): Promise<void> {
+  const { stronghold, client } = await initStronghold();
+  const data = Array.from(new TextEncoder().encode(value));
+  const store = client.getStore();
+  await store.insert(key, data);
+  await stronghold.save();
+}
+
+async function getKey(key: string): Promise<string | null> {
+  const { client } = await initStronghold();
+  const store = client.getStore();
+  const data = await store.get(key);
+  if (data == null) return null;
+  return new TextDecoder().decode(new Uint8Array(data));
+}
+
 export const apiKeyRepository = {
-  async saveApiKey(apiKey: string): Promise<void> {
-    const { stronghold, client } = await initStronghold();
-    const data = Array.from(new TextEncoder().encode(apiKey));
-    const store = client.getStore();
-    await store.insert(STRONGHOLD_KEY_GEMINI_API_KEY, data);
-    await stronghold.save();
+  async saveGeminiApiKey(apiKey: string): Promise<void> {
+    await saveKey(STRONGHOLD_KEY_GEMINI_API_KEY, apiKey);
   },
 
-  async getApiKey(): Promise<string | null> {
-    const { client } = await initStronghold();
-    const store = client.getStore();
-    const data = await store.get(STRONGHOLD_KEY_GEMINI_API_KEY);
-    if (data == null) return null;
-    return new TextDecoder().decode(new Uint8Array(data));
+  async getGeminiApiKey(): Promise<string | null> {
+    return await getKey(STRONGHOLD_KEY_GEMINI_API_KEY);
+  },
+
+  async saveYoutubeApiKey(apiKey: string): Promise<void> {
+    await saveKey(STRONGHOLD_KEY_YOUTUBE_API_KEY, apiKey);
+  },
+
+  async getYoutubeApiKey(): Promise<string | null> {
+    return await getKey(STRONGHOLD_KEY_YOUTUBE_API_KEY);
   },
 };

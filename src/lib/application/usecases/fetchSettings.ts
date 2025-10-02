@@ -3,18 +3,30 @@ import type { Settings } from '$lib/domain/entities/settings';
 import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 
-export async function fetchSettings(): Promise<{ isApiKeySet: boolean; settings: Settings }> {
+export async function fetchSettings(): Promise<{
+  isGeminiApiKeySet: boolean;
+  isYoutubeApiKeySet: boolean;
+  settings: Settings;
+}> {
   const currentSettings = await settingsRepository.getSettings();
 
-  if (apiKeyStore.value === null) {
-    const apiKey = await apiKeyRepository.getApiKey();
+  if (apiKeyStore.gemini.value === null) {
+    const apiKey = await apiKeyRepository.getGeminiApiKey();
     if (apiKey !== null) {
-      apiKeyStore.set(apiKey);
+      apiKeyStore.gemini.set(apiKey);
+    }
+  }
+
+  if (apiKeyStore.youtube.value === null) {
+    const apiKey = await apiKeyRepository.getYoutubeApiKey();
+    if (apiKey !== null) {
+      apiKeyStore.youtube.set(apiKey);
     }
   }
 
   return {
-    isApiKeySet: apiKeyStore.value !== null,
+    isGeminiApiKeySet: apiKeyStore.gemini.value !== null,
+    isYoutubeApiKeySet: apiKeyStore.youtube.value !== null,
     settings: currentSettings,
   };
 }

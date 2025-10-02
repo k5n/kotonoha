@@ -1,9 +1,10 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
-  import { audioPlayerStore } from '$lib/application/stores/audioPlayerStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelte';
   import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
   import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
+  import { PLAYER_DIV_ID } from '$lib/application/usecases/mediaPlayer/youtubePlayer';
   import { softDeleteDialogue } from '$lib/application/usecases/softDeleteDialogue';
   import { undoSoftDeleteDialogue } from '$lib/application/usecases/undoSoftDeleteDialogue';
   import { updateDialogue } from '$lib/application/usecases/updateDialogue';
@@ -22,7 +23,7 @@
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
-  import { onDestroy, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import type { PageProps } from './$types';
 
   const contextBefore = 5; // コンテキストに含める注目セリフの前のセリフ件数
@@ -39,22 +40,24 @@
   let canMine = $derived(data.isApiKeySet || false);
   let showDeleted = $state(false);
 
+  // Delete confirmation
+  let isConfirmModalOpen = $state(false);
+  let dialogueToDeleteId: number | null = $state(null);
+
   // --- Derived State ---
   const filteredDialogues = $derived(
     (data.dialogues ?? []).filter((d) => showDeleted || !d.deletedAt)
   );
   const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deletedAt !== null) ?? false);
-
-  // Delete confirmation
-  let isConfirmModalOpen = $state(false);
-  let dialogueToDeleteId: number | null = $state(null);
+  const mediaPlayer = $derived(data.mediaPlayer);
 
   onMount(() => {
-    audioPlayerStore.init();
-  });
-
-  onDestroy(() => {
-    audioPlayerStore.destroy();
+    const unlistenPromise = mediaPlayer?.listen();
+    return () => {
+      unlistenPromise?.then((unlisten) => {
+        unlisten();
+      });
+    };
   });
 
   function goBack() {
@@ -68,7 +71,7 @@
   function handleCardClick(card: SentenceCard) {
     const dialogue = data.dialogues?.find((d) => d.id === card.dialogueId);
     if (dialogue) {
-      audioPlayerStore.seek(dialogue.startTimeMs);
+      mediaPlayer?.seek(dialogue.startTimeMs);
     } else {
       error(`Dialogue not found for sentence card: ${card.id}, dialogueId: ${card.dialogueId}`);
     }
@@ -157,7 +160,10 @@
 </script>
 
 <div
-  use:keyboardShortcuts={{ store: audioPlayerStore, dialogues: filteredDialogues }}
+  use:keyboardShortcuts={{
+    mediaPlayer,
+    dialogues: filteredDialogues,
+  }}
   class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col"
 >
   <div>
@@ -178,29 +184,34 @@
       <div class="flex flex-col lg:col-span-2 lg:min-h-0">
         <div>
           <Heading tag="h1" class="mb-6 text-3xl font-bold">{data.episode.title}</Heading>
-          {#await data.audioInfo}
-            <div class="flex items-center justify-center py-8">
-              <Spinner size="8" />
-            </div>
-          {:then audioInfo}
-            <AudioPlayer
-              peaks={audioInfo.peaks}
-              currentTime={audioPlayerStore.currentTime}
-              duration={audioInfo.duration}
-              isPlaying={audioPlayerStore.isPlaying}
-              onPlay={audioPlayerStore.play}
-              onPause={audioPlayerStore.pause}
-              onSeek={audioPlayerStore.seek}
-              onResume={audioPlayerStore.resume}
-              onStop={audioPlayerStore.stop}
-            />
-          {:catch}
-            <Alert color="red">
-              <ExclamationCircleOutline class="h-5 w-5" />
-              <span class="font-medium">{t('episodeDetailPage.errorPrefix')}</span>
-              {t('episodeDetailPage.errors.audioLoadFailed')}
-            </Alert>
-          {/await}
+          {#if data.audioInfo}
+            {#await data.audioInfo}
+              <div class="flex items-center justify-center py-8">
+                <Spinner size="8" />
+              </div>
+            {:then audioInfo}
+              <AudioPlayer
+                peaks={audioInfo.peaks}
+                currentTime={mediaPlayerStore.currentTime}
+                duration={audioInfo.duration}
+                isPlaying={mediaPlayerStore.isPlaying}
+                onPlay={() => mediaPlayer?.play()}
+                onPause={() => mediaPlayer?.pause()}
+                onSeek={(time) => mediaPlayer?.seek(time)}
+                onResume={() => mediaPlayer?.resume()}
+                onStop={() => mediaPlayer?.stop()}
+              />
+            {:catch}
+              <Alert color="red">
+                <ExclamationCircleOutline class="h-5 w-5" />
+                <span class="font-medium">{t('episodeDetailPage.errorPrefix')}</span>
+                {t('episodeDetailPage.errors.audioLoadFailed')}
+              </Alert>
+            {/await}
+          {:else}
+            <!-- YouTube Player Container -->
+            <div id={PLAYER_DIV_ID} class="aspect-video h-full w-full"></div>
+          {/if}
         </div>
 
         <div class="mt-6 flex flex-col lg:min-h-0 lg:flex-1">
@@ -214,11 +225,11 @@
           </div>
           <TranscriptViewer
             dialogues={filteredDialogues}
-            currentTime={audioPlayerStore.currentTime}
+            currentTime={mediaPlayerStore.currentTime}
             {canMine}
             {contextBefore}
             {contextAfter}
-            onSeek={audioPlayerStore.seek}
+            onSeek={(time) => mediaPlayer?.seek(time)}
             onMine={openMiningModal}
             onSave={handleSaveDialogue}
             onDelete={handleDeleteRequest}

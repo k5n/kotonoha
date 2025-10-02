@@ -27,6 +27,7 @@ CREATE TABLE dialogues (
     corrected_text TEXT,
     translation TEXT,
     explanation TEXT,
+    sentence TEXT,
     deleted_at TEXT,
     FOREIGN KEY(episode_id) REFERENCES episodes(id)
 );

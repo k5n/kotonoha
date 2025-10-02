@@ -11,6 +11,7 @@ type DialogueRow = {
   corrected_text: string | null;
   translation: string | null;
   explanation: string | null;
+  sentence: string | null;
   deleted_at: string | null;
 };
 
@@ -24,6 +25,7 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
     correctedText: row.corrected_text,
     translation: row.translation,
     explanation: row.explanation,
+    sentence: row.sentence,
     deletedAt: row.deleted_at,
   };
 }
@@ -64,14 +66,14 @@ export const dialogueRepository = {
   async updateDialogueAnalysis(
     dialogueId: number,
     translation: string,
-    explanation: string
+    explanation: string,
+    sentence: string
   ): Promise<void> {
     const db = new Database(getDatabasePath());
-    await db.execute('UPDATE dialogues SET translation = ?, explanation = ? WHERE id = ?', [
-      translation,
-      explanation,
-      dialogueId,
-    ]);
+    await db.execute(
+      'UPDATE dialogues SET translation = ?, explanation = ?, sentence = ? WHERE id = ?',
+      [translation, explanation, sentence, dialogueId]
+    );
   },
 
   async deleteByEpisodeId(episodeId: number): Promise<void> {

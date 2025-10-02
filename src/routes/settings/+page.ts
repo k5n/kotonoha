@@ -5,10 +5,11 @@ import type { PageLoad } from './$types';
 
 export const load: PageLoad = async () => {
   try {
-    const { isApiKeySet, settings } = await fetchSettings();
+    const { isGeminiApiKeySet, isYoutubeApiKeySet, settings } = await fetchSettings();
     const appInfo = await fetchAppInfo();
     return {
-      isApiKeySet,
+      isGeminiApiKeySet,
+      isYoutubeApiKeySet,
       settings,
       appInfo,
       errorKey: null,
@@ -16,7 +17,8 @@ export const load: PageLoad = async () => {
   } catch (e) {
     error(`Failed to load API Key: ${e}`);
     return {
-      isApiKeySet: false,
+      isGeminiApiKeySet: false,
+      isYoutubeApiKeySet: false,
       settings: null,
       appInfo: null,
       errorKey: 'settings.notifications.loadError',

@@ -46,6 +46,7 @@ export default tsEslint.config(
       },
       globals: {
         ...globals.browser,
+        YT: 'readonly',
       },
     },
   },
