@@ -1,4 +1,4 @@
-// cSpell:words playsinline
+// cSpell:words playsinline disablekb modestbranding
 import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelte';
 import type { MediaPlayer } from '$lib/application/usecases/mediaPlayer/mediaPlayer';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
@@ -66,7 +66,13 @@ export class YoutubePlayer implements MediaPlayer {
       height: '100%',
       width: '100%',
       videoId: this.videoId,
-      playerVars: { playsinline: 1 },
+      playerVars: {
+        playsinline: 1,
+        cc_load_policy: 1,
+        disablekb: 1,
+        iv_load_policy: 3,
+        rel: 0,
+      },
       events: {
         onReady: () => {
           mediaPlayerStore.isReady = true;
