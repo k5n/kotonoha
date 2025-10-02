@@ -51,6 +51,9 @@ export class YoutubePlayer implements MediaPlayer {
 
   async seek(positionMs: number): Promise<void> {
     this.player?.seekTo(positionMs / 1000, true); // Convert ms to s
+    if (!mediaPlayerStore.isPlaying) {
+      mediaPlayerStore.currentTime = positionMs;
+    }
   }
 
   async listen(): Promise<() => void> {
