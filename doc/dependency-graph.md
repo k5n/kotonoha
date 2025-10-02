@@ -4,7 +4,6 @@
 
 ```mermaid
 graph LR
-        src_app_d_ts["app.d.ts"]
         subgraph "lib"
             subgraph "application"
                 subgraph "locales"
