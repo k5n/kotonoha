@@ -1,4 +1,5 @@
 import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 
 /**
  * Parses a time string in various formats (HH:MM:SS.ms, MM:SS.ms, SS.ms, with optional 's' suffix)
@@ -38,12 +39,6 @@ function parseTimeToMilliseconds(timeStr: string): number | null {
 
   return Math.round(totalSeconds * 1000);
 }
-
-type TsvConfig = {
-  readonly startTimeColumnIndex: number;
-  readonly textColumnIndex: number;
-  readonly endTimeColumnIndex?: number;
-};
 
 /**
  * Parses TSV content and converts it into an array of Dialogue objects.

@@ -70,6 +70,7 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 2.  **Launch Kotonoha**: Start the application.
 
 3.  **Configure API Settings**: On first launch, you'll need to configure API keys in the settings:
+
     - **Google Gemini API Key** (required): For AI-powered sentence mining
     - **YouTube Data API Key** (optional): Required only if you plan to import YouTube videos with automatic subtitle extraction
 
@@ -214,7 +215,7 @@ For a more detailed explanation of the architecture, please refer to [`doc/archi
 - `npm run lint`: Lints the codebase for errors.
 - `npm run check`: Run svelte-check to validate Svelte components.
 - `npm run format`: Formats the code.
-- `npm run generate:graph`: Generates a dependency graph diagram and saves it to [`doc/dependency-graph.md`](./doc/dependency-graph.md).
+- `npm run generate:graph`: Generates dependency graph diagrams and lists and saves them to [`doc/dependency-graph.md`](./doc/dependency-graph.md) and [`AGENTS.md`](./AGENTS.md).
 
 ### Database Usage
 
