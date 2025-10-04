@@ -218,7 +218,6 @@ erDiagram
 
 - `parent_group_id`は自己参照外部キー。NULLの場合はルートグループ。
 - `group_type` でグループの種別を区別する。`album` はエピソードを格納でき、`folder` はサブグループのみ格納できる。
-- 初期状態では`name`が"Default"かつ`parent_group_id`がNULLのグループが1つだけ存在し、`group_type`は`album`とする。
 
 ### 2.2. `episodes` テーブル
 エピソード（音声コンテンツとスクリプトのセット）を管理する。
