@@ -9,6 +9,43 @@ const srcDir = path.join(projectRoot, 'src');
 const docDir = path.join(projectRoot, 'doc');
 const dependencyGraphMd = path.join(docDir, 'dependency-graph.md');
 
+// --- Configuration: folders to include in folder-level dependency graph ---
+// These should be project-relative POSIX-style paths (no leading './')
+const TARGET_FOLDERS = [
+  'src/routes',
+  'src/lib/presentation/actions',
+  'src/lib/presentation/components',
+  'src/lib/presentation/types',
+  'src/lib/presentation/utils',
+  'src/lib/application/locales',
+  'src/lib/application/stores',
+  'src/lib/application/usecases',
+  'src/lib/domain/entities',
+  'src/lib/domain/services',
+  'src/lib/infrastructure/repositories',
+].map((p) => p.replace(/\\/g, '/'));
+
+function toPosix(p: string) {
+  return p.replace(/\\\\/g, '/');
+}
+
+// Given a normalized project-relative path (posix), return the owning target folder
+// from TARGET_FOLDERS using longest-prefix match. Returns null if none match.
+function getOwningTargetFolder(projectRelativePosixPath: string): string | null {
+  // Try longest match first
+  let bestMatch: string | null = null;
+  for (const candidate of TARGET_FOLDERS) {
+    const c = toPosix(candidate);
+    // Match only if path equals candidate or starts with candidate + '/'
+    if (projectRelativePosixPath === c || projectRelativePosixPath.startsWith(c + '/')) {
+      if (!bestMatch || c.length > bestMatch.length) {
+        bestMatch = c;
+      }
+    }
+  }
+  return bestMatch;
+}
+
 interface DependencyGraph {
   [sourcePath: string]: Set<string>;
 }
@@ -180,7 +217,39 @@ async function generateDependencyGraph() {
     graph[normalizedFilePath] = getDependencies(file);
   }
 
-  // --- Mermaid Graph Generation ---
+  // --- Folder-level dependency graph ---
+  // Build dependencies between each file's immediate parent folder
+  interface FolderGraph {
+    [folderPath: string]: Set<string>;
+  }
+
+  const folderGraph: FolderGraph = {};
+  const addFolderEdge = (from: string, to: string) => {
+    if (!folderGraph[from]) folderGraph[from] = new Set<string>();
+    folderGraph[from].add(to);
+  };
+
+  const getParentFolder = (p: string) => {
+    // Paths in `graph` are normalized to use forward slashes.
+    // Use posix dirname to be consistent across platforms.
+    return path.posix.dirname(p);
+  };
+
+  // Build folderGraph but map each file's parent folder to an owning TARGET_FOLDER.
+  for (const src of Object.keys(graph)) {
+    const srcFolder = getParentFolder(src);
+    const srcOwning = srcFolder ? getOwningTargetFolder(srcFolder) : null;
+    for (const tgt of graph[src]) {
+      const tgtFolder = getParentFolder(tgt);
+      const tgtOwning = tgtFolder ? getOwningTargetFolder(tgtFolder) : null;
+      // Only record inter-folder dependencies where both sides belong to a TARGET_FOLDER
+      if (srcOwning && tgtOwning && srcOwning !== tgtOwning) {
+        addFolderEdge(srcOwning, tgtOwning);
+      }
+    }
+  }
+
+  // --- Mermaid Graph Generation (file-level) ---
   let mermaidGraph = 'graph LR\n';
 
   // Helper to generate a valid Mermaid node ID
@@ -260,10 +329,146 @@ async function generateDependencyGraph() {
     }
   }
 
-  const fullMermaidContent = `# Src Dependency Graph\n\n\`src/\` 以下の各ファイルの import 依存関係を解析した結果グラフ。\n\n\`\`\`mermaid\n${mermaidGraph}\`\`\`\n`;
+  // Folder nodes/edges are produced later in a dedicated Mermaid block.
+
+  const fileMermaidBlock = `# Src Dependency Graph\n\n\`src/\` 以下の各ファイルの import 依存関係を解析した結果グラフ。\n\n\`\`\`mermaid\n${mermaidGraph}\`\`\`\n`;
+
+  // --- Mermaid Graph Generation (folder-level) ---
+  // Only include target folders that actually appear in the folderGraph
+  let mermaidFolderGraph = 'graph LR\n';
+  const allFoldersSet = new Set<string>();
+  for (const src of Object.keys(folderGraph)) {
+    allFoldersSet.add(src);
+    for (const t of folderGraph[src]) allFoldersSet.add(t);
+  }
+  const allFolders = Array.from(allFoldersSet).sort();
+
+  // Build a nested folder tree for involved target folders so we can emit subgraphs
+  const folderTree: FileNode = {};
+  for (const folder of allFolders) {
+    const parts = folder.split('/');
+    let current: FileNode = folderTree;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (i === parts.length - 1) {
+        if (!current.files) current.files = [];
+        current.files.push(folder);
+      } else {
+        if (!current[part]) current[part] = {};
+        current = current[part] as FileNode;
+      }
+    }
+  }
+
+  sortFileTree(folderTree);
+
+  // Recursively generate subgraphs for folders (mirrors file-level behaviour)
+  const generateFolderSubgraphs = (level: FileNode, currentPath: string, indent: string) => {
+    let subgraphContent = '';
+    for (const key of Object.keys(level).sort()) {
+      if (key === 'files') {
+        if (level.files) {
+          level.files.forEach((folderPath: string) => {
+            const folderName = path.posix.basename(folderPath);
+            const mermaidId = getNodeMermaidId(folderPath);
+            subgraphContent += `${indent}    ${mermaidId}["${folderName}"]\n`;
+          });
+        }
+      } else {
+        const nextLevel = level[key];
+        if (typeof nextLevel === 'object' && nextLevel !== null && !Array.isArray(nextLevel)) {
+          const inner = generateFolderSubgraphs(
+            nextLevel as FileNode,
+            path.posix.join(currentPath, key),
+            indent + '    '
+          );
+          if (inner) {
+            subgraphContent += `${indent}    subgraph "${key}"\n`;
+            subgraphContent += inner;
+            subgraphContent += `${indent}    end\n`;
+          }
+        }
+      }
+    }
+    return subgraphContent;
+  };
+
+  mermaidFolderGraph += generateFolderSubgraphs(folderTree, '', '    ');
+
+  // Add folder-level edges
+  for (const srcFolder of Object.keys(folderGraph).sort()) {
+    const targets = Array.from(folderGraph[srcFolder]).sort();
+    for (const tgtFolder of targets) {
+      mermaidFolderGraph += `    ${getNodeMermaidId(srcFolder)} --> ${getNodeMermaidId(tgtFolder)}\n`;
+    }
+  }
+
+  const folderMermaidBlock = `# Src Folder-level Dependency Graph\n\n\`src/\` 以下の各ディレクトリ間依存関係を解析した結果グラフ（親フォルダ単位）。\n\n\`\`\`mermaid\n${mermaidFolderGraph}\`\`\`\n`;
+
+  const fullMermaidContent = fileMermaidBlock + '\n' + folderMermaidBlock;
 
   fs.writeFileSync(dependencyGraphMd, fullMermaidContent, 'utf-8');
   console.log(`Dependency graph generated at ${dependencyGraphMd}`);
+
+  // --- Generate simplified Markdown list for AGENTS.md ---
+  try {
+    const simpleList = generateSimpleList(graph);
+    updateAgentsMd(simpleList);
+  } catch (err) {
+    console.error('Failed to update AGENTS.md with simplified dependency list:', err);
+  }
+}
+
+// Generate a simple sorted list of dependencies in the format:
+// src/... -> src/...
+function generateSimpleList(graph: DependencyGraph): string {
+  const lines: string[] = [];
+  const sources = Object.keys(graph).sort();
+  for (const src of sources) {
+    const targets = Array.from(graph[src]).sort();
+    for (const tgt of targets) {
+      // Only include targets that are within the graph (i.e., internal)
+      // and avoid self-dependencies
+      if (tgt && tgt !== src) {
+        lines.push(`- ${src} -> ${tgt}`);
+      }
+    }
+  }
+  // Deduplicate (in case multiple entries) while preserving order
+  return Array.from(new Set(lines)).join('\n');
+}
+
+// Replace content between <!-- DEP_GRAPH_START --> and <!-- DEP_GRAPH_END --> in AGENTS.md
+function updateAgentsMd(simpleList: string) {
+  const agentsPath = path.join(projectRoot, 'AGENTS.md');
+  if (!fs.existsSync(agentsPath)) {
+    console.error(`AGENTS.md not found at ${agentsPath}`);
+    return;
+  }
+
+  const text = fs.readFileSync(agentsPath, 'utf-8');
+  const startMarker = '<!-- DEP_GRAPH_START -->';
+  const endMarker = '<!-- DEP_GRAPH_END -->';
+
+  const startIdx = text.indexOf(startMarker);
+  const endIdx = text.indexOf(endMarker);
+
+  if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
+    console.error('DEP_GRAPH markers not found or malformed in AGENTS.md; skipping update.');
+    return;
+  }
+
+  const before = text.slice(0, startIdx + startMarker.length);
+  const after = text.slice(endIdx);
+
+  const newContent = `${before}\n\n${simpleList}\n\n${after}`;
+
+  try {
+    fs.writeFileSync(agentsPath, newContent, 'utf-8');
+    console.log(`AGENTS.md updated with simplified dependency list at markers.`);
+  } catch (err) {
+    console.error('Failed to write AGENTS.md:', err);
+  }
 }
 
 generateDependencyGraph().catch(console.error);

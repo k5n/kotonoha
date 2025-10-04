@@ -385,3 +385,56 @@ src_routes_settings__page_svelte --> src_lib_application_usecases_saveSettings_t
 src_routes_settings__page_ts --> src_lib_application_usecases_fetchAppInfo_ts
 src_routes_settings__page_ts --> src_lib_application_usecases_fetchSettings_ts
 ```
+
+# Src Folder-level Dependency Graph
+
+`src/` 以下の各ディレクトリ間依存関係を解析した結果グラフ（親フォルダ単位）。
+
+```mermaid
+graph LR
+        subgraph "src"
+            src_routes["routes"]
+            subgraph "lib"
+                subgraph "application"
+                    src_lib_application_locales["locales"]
+                    src_lib_application_stores["stores"]
+                    src_lib_application_usecases["usecases"]
+                end
+                subgraph "domain"
+                    src_lib_domain_entities["entities"]
+                    src_lib_domain_services["services"]
+                end
+                subgraph "infrastructure"
+                    src_lib_infrastructure_repositories["repositories"]
+                end
+                subgraph "presentation"
+                    src_lib_presentation_actions["actions"]
+                    src_lib_presentation_components["components"]
+                    src_lib_presentation_types["types"]
+                    src_lib_presentation_utils["utils"]
+                end
+            end
+        end
+    src_lib_application_stores --> src_lib_application_locales
+    src_lib_application_stores --> src_lib_domain_entities
+    src_lib_application_usecases --> src_lib_application_stores
+    src_lib_application_usecases --> src_lib_domain_entities
+    src_lib_application_usecases --> src_lib_domain_services
+    src_lib_application_usecases --> src_lib_infrastructure_repositories
+    src_lib_domain_services --> src_lib_domain_entities
+    src_lib_infrastructure_repositories --> src_lib_domain_entities
+    src_lib_presentation_actions --> src_lib_application_usecases
+    src_lib_presentation_actions --> src_lib_domain_entities
+    src_lib_presentation_components --> src_lib_application_stores
+    src_lib_presentation_components --> src_lib_application_usecases
+    src_lib_presentation_components --> src_lib_domain_entities
+    src_lib_presentation_components --> src_lib_presentation_types
+    src_lib_presentation_components --> src_lib_presentation_utils
+    src_lib_presentation_types --> src_lib_domain_entities
+    src_routes --> src_lib_application_stores
+    src_routes --> src_lib_application_usecases
+    src_routes --> src_lib_domain_entities
+    src_routes --> src_lib_presentation_actions
+    src_routes --> src_lib_presentation_components
+    src_routes --> src_lib_presentation_types
+```
