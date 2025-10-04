@@ -264,6 +264,66 @@ async function generateDependencyGraph() {
 
   fs.writeFileSync(dependencyGraphMd, fullMermaidContent, 'utf-8');
   console.log(`Dependency graph generated at ${dependencyGraphMd}`);
+
+  // --- Generate simplified Markdown list for AGENTS.md ---
+  try {
+    const simpleList = generateSimpleList(graph);
+    updateAgentsMd(simpleList);
+  } catch (err) {
+    console.error('Failed to update AGENTS.md with simplified dependency list:', err);
+  }
+}
+
+// Generate a simple sorted list of dependencies in the format:
+// src/... -> src/...
+function generateSimpleList(graph: DependencyGraph): string {
+  const lines: string[] = [];
+  const sources = Object.keys(graph).sort();
+  for (const src of sources) {
+    const targets = Array.from(graph[src]).sort();
+    for (const tgt of targets) {
+      // Only include targets that are within the graph (i.e., internal)
+      // and avoid self-dependencies
+      if (tgt && tgt !== src) {
+        lines.push(`- ${src} -> ${tgt}`);
+      }
+    }
+  }
+  // Deduplicate (in case multiple entries) while preserving order
+  return Array.from(new Set(lines)).join('\n');
+}
+
+// Replace content between <!-- DEP_GRAPH_START --> and <!-- DEP_GRAPH_END --> in AGENTS.md
+function updateAgentsMd(simpleList: string) {
+  const agentsPath = path.join(projectRoot, 'AGENTS.md');
+  if (!fs.existsSync(agentsPath)) {
+    console.error(`AGENTS.md not found at ${agentsPath}`);
+    return;
+  }
+
+  const text = fs.readFileSync(agentsPath, 'utf-8');
+  const startMarker = '<!-- DEP_GRAPH_START -->';
+  const endMarker = '<!-- DEP_GRAPH_END -->';
+
+  const startIdx = text.indexOf(startMarker);
+  const endIdx = text.indexOf(endMarker);
+
+  if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
+    console.error('DEP_GRAPH markers not found or malformed in AGENTS.md; skipping update.');
+    return;
+  }
+
+  const before = text.slice(0, startIdx + startMarker.length);
+  const after = text.slice(endIdx);
+
+  const newContent = `${before}\n\n${simpleList}\n\n${after}`;
+
+  try {
+    fs.writeFileSync(agentsPath, newContent, 'utf-8');
+    console.log(`AGENTS.md updated with simplified dependency list at markers.`);
+  } catch (err) {
+    console.error('Failed to write AGENTS.md:', err);
+  }
 }
 
 generateDependencyGraph().catch(console.error);
