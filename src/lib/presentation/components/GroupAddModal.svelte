@@ -41,11 +41,25 @@
     </div>
     <div class="mb-4">
       <Label>{t('components.groupAddModal.typeLabel')}</Label>
-      <div class="mt-2 flex gap-4">
-        <Radio id="type-folder" name="groupType" value="folder" bind:group={groupType} />
-        <Label for="type-folder">{t('components.groupAddModal.typeFolder')}</Label>
-        <Radio id="type-album" name="groupType" value="album" bind:group={groupType} />
-        <Label for="type-album">{t('components.groupAddModal.typeAlbum')}</Label>
+      <div class="mt-2 space-y-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <Radio id="type-folder" name="groupType" value="folder" bind:group={groupType} />
+            <Label for="type-folder">{t('components.groupAddModal.typeFolder')}</Label>
+          </div>
+          <p class="mt-1 ml-6 text-sm text-gray-600">
+            {t('components.groupAddModal.typeFolderDescription')}
+          </p>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <Radio id="type-album" name="groupType" value="album" bind:group={groupType} />
+            <Label for="type-album">{t('components.groupAddModal.typeAlbum')}</Label>
+          </div>
+          <p class="mt-1 ml-6 text-sm text-gray-600">
+            {t('components.groupAddModal.typeAlbumDescription')}
+          </p>
+        </div>
       </div>
     </div>
     {#if errorMessage}

@@ -305,6 +305,8 @@ export const ja = {
         typeLabel: 'グループ種別',
         typeFolder: 'フォルダ',
         typeAlbum: 'アルバム',
+        typeFolderDescription: '他のグループ（フォルダやアルバム）を格納して整理します。',
+        typeAlbumDescription: 'エピソードを格納して管理します。',
         errorNameRequired: 'グループ名を入力してください',
         cancel: 'キャンセル',
         submitting: '作成中...',

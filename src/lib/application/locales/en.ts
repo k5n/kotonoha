@@ -305,6 +305,8 @@ export const en = {
         typeLabel: 'Group Type',
         typeFolder: 'Folder',
         typeAlbum: 'Album',
+        typeFolderDescription: 'A container for organizing other groups (folders or albums)',
+        typeAlbumDescription: 'A collection for managing episodes',
         errorNameRequired: 'Please enter a group name.',
         cancel: 'Cancel',
         submitting: 'Creating...',
