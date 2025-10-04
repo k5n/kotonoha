@@ -311,10 +311,15 @@ export const ja = {
         submit: '作成',
       },
       groupGrid: {
-        rename: '名前を変更',
+        rename: '名前の変更',
         move: '移動',
         delete: '削除',
         noGroups: 'このフォルダーにはグループがありません。',
+        emptyState: {
+          title: 'グループがありません',
+          message: 'コンテンツを整理するために最初のグループを追加しましょう。',
+          addButton: '最初のグループを追加',
+        },
       },
       groupMoveModal: {
         title: 'グループの移動',

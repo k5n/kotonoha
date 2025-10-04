@@ -2,8 +2,14 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
-  import { Dropdown, DropdownItem } from 'flowbite-svelte';
-  import { DotsVerticalOutline, FolderOutline, ListOutline } from 'flowbite-svelte-icons';
+  import { Button, Dropdown, DropdownItem, Heading } from 'flowbite-svelte';
+  import {
+    DotsVerticalOutline,
+    FolderOutline,
+    FolderPlusOutline,
+    ListOutline,
+    PlusOutline,
+  } from 'flowbite-svelte-icons';
   import { flip } from 'svelte/animate';
 
   interface Props {
@@ -13,6 +19,7 @@
     onGroupMove: (_group: EpisodeGroup) => void;
     onGroupDelete: (_group: EpisodeGroup) => void;
     onOrderChange: (_items: readonly EpisodeGroup[]) => void;
+    onAddGroup: () => void;
   }
   let {
     groups,
@@ -20,7 +27,8 @@
     onGroupNameChange,
     onGroupMove,
     onGroupDelete,
-    onOrderChange = () => {},
+    onOrderChange,
+    onAddGroup,
   }: Props = $props();
 
   function handleChangeName(e: Event, group: EpisodeGroup) {
@@ -123,8 +131,16 @@
       </div>
     {/each}
   {:else}
-    <p class="col-span-full py-8 text-center text-gray-500">
-      {t('components.groupGrid.noGroups')}
-    </p>
+    <div class="col-span-full mt-8 rounded-lg border-2 border-dashed px-6 py-16 text-center">
+      <FolderPlusOutline class="mx-auto mb-4 h-12 w-12 text-gray-400" />
+      <Heading tag="h3" class="mb-2 text-xl font-semibold">
+        {t('components.groupGrid.emptyState.title')}
+      </Heading>
+      <p class="mb-4 text-gray-500">{t('components.groupGrid.emptyState.message')}</p>
+      <Button color="alternative" onclick={onAddGroup}>
+        <PlusOutline class="me-2 h-5 w-5" />
+        {t('components.groupGrid.emptyState.addButton')}
+      </Button>
+    </div>
   {/if}
 </div>

@@ -315,6 +315,11 @@ export const en = {
         move: 'Move',
         delete: 'Delete',
         noGroups: 'There are no groups in this folder.',
+        emptyState: {
+          title: 'No Groups',
+          message: "Let's add the first group to organize your content.",
+          addButton: 'Add First Group',
+        },
       },
       groupMoveModal: {
         title: 'Move Group',

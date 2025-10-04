@@ -214,6 +214,7 @@
       onGroupMove={handleMoveGroup}
       onGroupDelete={handleDeleteGroup}
       onOrderChange={handleGroupOrderChange}
+      onAddGroup={handleAddNewEpisode}
     />
   {/if}
 
