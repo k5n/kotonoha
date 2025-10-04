@@ -305,6 +305,8 @@ export const en = {
         typeLabel: 'Group Type',
         typeFolder: 'Folder',
         typeAlbum: 'Album',
+        typeFolderDescription: 'A container for organizing other groups (folders or albums)',
+        typeAlbumDescription: 'A collection for managing episodes',
         errorNameRequired: 'Please enter a group name.',
         cancel: 'Cancel',
         submitting: 'Creating...',
@@ -315,6 +317,11 @@ export const en = {
         move: 'Move',
         delete: 'Delete',
         noGroups: 'There are no groups in this folder.',
+        emptyState: {
+          title: 'No Groups',
+          message: "Let's add the first group to organize your content.",
+          addButton: 'Add First Group',
+        },
       },
       groupMoveModal: {
         title: 'Move Group',
