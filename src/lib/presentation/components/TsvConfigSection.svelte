@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import type { ScriptPreview } from '$lib/domain/entities/scriptPreview';
   import {
     Heading,
     Label,
@@ -13,36 +13,14 @@
     TableHeadCell,
   } from 'flowbite-svelte';
 
-  type Props = {
-    scriptPreview: ScriptPreview;
-    tsvConfig: {
-      startTimeColumnIndex: number;
-      textColumnIndex: number;
-      endTimeColumnIndex: number;
-    };
-    onTsvConfigChange: (config: {
-      startTimeColumnIndex: number;
-      textColumnIndex: number;
-      endTimeColumnIndex: number;
-    }) => void;
-  };
-
-  let { scriptPreview, tsvConfig, onTsvConfigChange }: Props = $props();
-
   let displayHeaders = $derived.by(() => {
+    const scriptPreview = episodeAddStore.scriptPreview;
     if (!scriptPreview || !scriptPreview.headers) return [];
     return scriptPreview.headers;
   });
-
-  function updateConfig(field: keyof typeof tsvConfig, value: number) {
-    onTsvConfigChange({
-      ...tsvConfig,
-      [field]: value,
-    });
-  }
 </script>
 
-{#if scriptPreview && scriptPreview.rows.length > 0}
+{#if episodeAddStore.scriptPreview && episodeAddStore.scriptPreview.rows.length > 0}
   <div class="mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
     <Heading tag="h3" class="mb-2 text-lg font-semibold">
       {t('components.episodeAddModal.tsvSettingsTitle')}
@@ -54,8 +32,9 @@
         </Label>
         <Select
           id="startTimeColumn"
-          value={tsvConfig.startTimeColumnIndex}
-          onchange={(e) => updateConfig('startTimeColumnIndex', parseInt(e.currentTarget.value))}
+          value={episodeAddStore.tsvConfig.startTimeColumnIndex}
+          onchange={(e) =>
+            episodeAddStore.updateConfig('startTimeColumnIndex', parseInt(e.currentTarget.value))}
           items={displayHeaders.map((header, i) => ({ value: i, name: header }))}
         />
       </div>
@@ -65,8 +44,9 @@
         </Label>
         <Select
           id="textColumn"
-          value={tsvConfig.textColumnIndex}
-          onchange={(e) => updateConfig('textColumnIndex', parseInt(e.currentTarget.value))}
+          value={episodeAddStore.tsvConfig.textColumnIndex}
+          onchange={(e) =>
+            episodeAddStore.updateConfig('textColumnIndex', parseInt(e.currentTarget.value))}
           items={displayHeaders.map((header, i) => ({ value: i, name: header }))}
         />
       </div>
@@ -76,8 +56,9 @@
         </Label>
         <Select
           id="endTimeColumn"
-          value={tsvConfig.endTimeColumnIndex}
-          onchange={(e) => updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
+          value={episodeAddStore.tsvConfig.endTimeColumnIndex}
+          onchange={(e) =>
+            episodeAddStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
           items={[
             { value: -1, name: t('components.episodeAddModal.none') },
             ...displayHeaders.map((header, i) => ({ value: i, name: header })),
@@ -96,7 +77,7 @@
           {/each}
         </TableHead>
         <TableBody>
-          {#each scriptPreview.rows as row, i (i)}
+          {#each episodeAddStore.scriptPreview.rows as row, i (i)}
             <TableBodyRow>
               <TableBodyCell>{i + 1}</TableBodyCell>
               {#each row as cell, j (j)}

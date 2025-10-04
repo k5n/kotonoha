@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
+  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { addNewEpisode, addYoutubeEpisode } from '$lib/application/usecases/addNewEpisode';
@@ -7,34 +8,29 @@
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
+  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import { updateEpisodeName } from '$lib/application/usecases/updateEpisodeName';
   import { updateEpisodesOrder } from '$lib/application/usecases/updateEpisodesOrder';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
-  import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
   import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
   import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
-  import type { EpisodeAddPayload } from '$lib/presentation/types/episodeAddPayload';
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ExclamationCircleOutline, FileOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
-  let showEpisodeAdd = $state(false);
   let showEpisodeMove = $state(false);
   let showEpisodeNameEdit = $state(false);
   let showDeleteConfirm = $state(false);
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
-  let youtubeMetadata = $state<YoutubeMetadata | null>(null);
-  let isYoutubeMetadataFetching = $state(false);
-  let youtubeErrorMessage = $state('');
 
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
@@ -54,37 +50,48 @@
 
   // === エピソード追加 ===
 
-  function openEpisodeAddModal() {
-    youtubeMetadata = null;
-    showEpisodeAdd = true;
-  }
-
-  async function handleYoutubeUrlChange(url: string) {
-    if (url.trim()) {
-      try {
-        isYoutubeMetadataFetching = true;
-        const metadata = await fetchYoutubeMetadata(url);
-        youtubeMetadata = metadata;
-      } catch (err) {
-        youtubeMetadata = null;
-        // TODO: 例外の型でメッセージを変更。メッセージ内容は国際化対応。それをダイアログに伝える。
-        youtubeErrorMessage = `${err}`;
-        console.error('Failed to fetch YouTube title:', err);
-      } finally {
-        isYoutubeMetadataFetching = false;
-      }
+  async function handleTsvFileSelected(filePath: string) {
+    try {
+      episodeAddStore.startScriptPreviewFetching();
+      const preview = await previewScriptFile(filePath);
+      episodeAddStore.completeScriptPreviewFetching(preview);
+    } catch (e) {
+      episodeAddStore.failedScriptPreviewFetching(t('components.episodeAddModal.errorTsvParse'));
+      console.error(e);
     }
   }
 
-  async function handleEpisodeAddSubmit(payload: EpisodeAddPayload) {
+  async function handleYoutubeUrlChanged(url: string) {
+    if (!url.trim()) {
+      episodeAddStore.completeYoutubeMetadataFetching(null);
+      return;
+    }
+
     try {
+      episodeAddStore.startYoutubeMetadataFetching();
+      const metadata = await fetchYoutubeMetadata(url);
+      episodeAddStore.completeYoutubeMetadataFetching(metadata);
+    } catch (err) {
+      episodeAddStore.failedYoutubeMetadataFetching(`${err}`);
+      console.error('Failed to fetch YouTube metadata:', err);
+    }
+  }
+
+  async function handleEpisodeAddSubmit() {
+    try {
+      const payload = episodeAddStore.buildPayload();
+      if (!payload) {
+        // This should not happen if validation passed, but just in case.
+        error('No valid payload to submit');
+        return;
+      }
       debug(`Adding episode with payload: ${JSON.stringify(payload)}`);
       const episodeGroupId = data.episodeGroup?.id;
       if (!episodeGroupId) {
         debug('No group ID found, cannot add episode');
         return;
       }
-      isSubmitting = true;
+      episodeAddStore.startSubmitting();
       const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
       const displayOrder = maxDisplayOrder + 1;
 
@@ -108,12 +115,11 @@
       }
 
       await invalidateAll();
-      showEpisodeAdd = false;
+      episodeAddStore.close();
     } catch (e) {
       error(`Failed to add new episode: ${e}`);
       errorMessage = t('episodeListPage.errors.addEpisode');
-      showEpisodeAdd = false;
-      isSubmitting = false;
+      episodeAddStore.close();
     }
   }
 
@@ -207,7 +213,7 @@
       <div>
         <Heading tag="h1" class="text-3xl font-bold">{data.episodeGroup.name}</Heading>
       </div>
-      <Button onclick={openEpisodeAddModal}>
+      <Button onclick={episodeAddStore.open}>
         <PlusOutline class="me-2 h-5 w-5" />
         {t('episodeListPage.addNewButton')}
       </Button>
@@ -224,7 +230,7 @@
           >{t('episodeListPage.emptyState.title')}</Heading
         >
         <p class="mb-4 text-gray-500">{t('episodeListPage.emptyState.message')}</p>
-        <Button color="alternative" onclick={openEpisodeAddModal}>
+        <Button color="alternative" onclick={episodeAddStore.open}>
           <PlusOutline class="me-2 h-5 w-5" />
           {t('episodeListPage.emptyState.addButton')}
         </Button>
@@ -251,14 +257,9 @@
 </div>
 
 <EpisodeAddModal
-  show={showEpisodeAdd}
-  {isSubmitting}
-  {youtubeMetadata}
-  {isYoutubeMetadataFetching}
-  {youtubeErrorMessage}
-  onClose={() => (showEpisodeAdd = false)}
+  onTsvFileSelected={handleTsvFileSelected}
+  onYoutubeUrlChanged={handleYoutubeUrlChanged}
   onSubmit={handleEpisodeAddSubmit}
-  onYoutubeUrlChange={handleYoutubeUrlChange}
 />
 
 <EpisodeMoveModal
