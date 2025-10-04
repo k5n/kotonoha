@@ -1,4 +1,7 @@
 {
+  "context": {
+    "filename": "AGENTS.md"
+  },
   "mcpServers": {
     "context7": {
       "command": "npx",
