@@ -7,19 +7,17 @@ export const llmRepository = {
     apiKey: string,
     learningLanguage: string,
     explanationLanguage: string,
-    partOfSpeechOptions: readonly string[],
     context: string,
     targetSentence: string
   ): Promise<SentenceAnalysisResult> {
     info(
-      `Analyzing sentence: ${targetSentence}, ${learningLanguage} => ${explanationLanguage}, partOfSpeech: [${partOfSpeechOptions.join(', ')}], context: ${context}`
+      `Analyzing sentence: ${targetSentence}, ${learningLanguage} => ${explanationLanguage}, context: ${context}`
     );
 
     const response = await invoke<SentenceAnalysisResult>('analyze_sentence_with_llm', {
       apiKey,
       learningLanguage,
       explanationLanguage,
-      partOfSpeechOptions,
       context,
       targetSentence,
     });

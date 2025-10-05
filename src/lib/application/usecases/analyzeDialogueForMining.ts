@@ -6,23 +6,6 @@ import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRep
 import { llmRepository } from '$lib/infrastructure/repositories/llmRepository';
 import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenceCardRepository';
 
-// とりあえず英語のみサポートするので定数
-const PART_OF_SPEECH_OPTIONS: readonly string[] = [
-  'Noun',
-  'Pronoun',
-  'Verb',
-  'Adjective',
-  'Adverb',
-  'Preposition',
-  'Conjunction',
-  'Interjection',
-  'Determiner',
-  'Phrasal Verb',
-  'Idiom',
-  'Collocation',
-  'Expression',
-];
-
 async function ensureApiKey(): Promise<string> {
   const apiKey = apiKeyStore.gemini.value;
   if (apiKey !== null) {
@@ -78,7 +61,6 @@ export async function analyzeDialogueForMining(
     apiKey,
     'English',
     'Japanese',
-    PART_OF_SPEECH_OPTIONS,
     contextSentences,
     targetSentence
   );
