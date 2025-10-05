@@ -1,14 +1,14 @@
 use log::{debug, error, info, warn};
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
 use serde::Serialize;
-use std::fs;
-use std::io::{BufReader, Cursor};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use tauri::path::BaseDirectory;
-use tauri::{AppHandle, Runtime};
-use tauri::{Emitter, Manager, State};
+use std::{
+    fs,
+    io::{BufReader, Cursor},
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
+use tauri::{path::BaseDirectory, AppHandle, Emitter, Manager, State};
 
 const POSITION_UPDATE_FREQUENCY: u64 = 200;
 
@@ -243,8 +243,8 @@ pub async fn open_audio(app_handle: AppHandle, path: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub async fn copy_audio_file<R: Runtime>(
-    app_handle: AppHandle<R>,
+pub async fn copy_audio_file(
+    app_handle: AppHandle,
     src: String,
     dest: String,
 ) -> Result<(), String> {

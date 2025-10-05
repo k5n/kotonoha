@@ -3,6 +3,7 @@ mod audio;
 mod llm;
 mod migrations;
 mod stronghold;
+mod tts;
 mod youtube;
 
 use dotenvy::from_filename;
@@ -16,6 +17,7 @@ use audio::{
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
 use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
+use tts::start_tts;
 use youtube::fetch_youtube_subtitle;
 
 fn get_db_name() -> String {
@@ -88,6 +90,7 @@ pub fn run() {
             read_text_file,
             copy_audio_file,
             fetch_youtube_subtitle,
+            start_tts,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

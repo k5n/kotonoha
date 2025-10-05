@@ -30,7 +30,6 @@ dotenvy = "0.15"
 tauri-plugin-fs = "2"
 tauri-plugin-stronghold = "2"
 rust-argon2 = "2.1"
-machineid-rs = "1.2"
 keyring = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service"] }
 rand = "0.9"
 google-ai-rs = { version = "0.1", features = ["serde"] } 
@@ -41,6 +40,9 @@ tauri-plugin-http = "2"
 reqwest = { version = "0.12.23", features = ["json"] }
 prost = "0.14"
 base64 = "0.22"
+piper-rs = "0.1.9"
+ort-sys = { version = "=2.0.0-rc.9", default-features = false }
+vorbis_rs = "0.5.5"
 
 # https://github.com/tauri-apps/plugins-workspace/issues/2048#issuecomment-2923529183
 [profile.dev.package.scrypt]
