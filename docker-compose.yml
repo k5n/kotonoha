@@ -1,7 +1,6 @@
 # This docker-compose file is intended for local development only, specifically for Linux users.
 # Release builds are handled by GitHub Actions workflows; do not use this configuration for production releases.
 
-version: '3.8'
 services:
   linux-build:
     build:
@@ -17,5 +16,6 @@ services:
     environment:
       - UID=${UID}
       - GID=${GID}
+      - LD_LIBRARY_PATH=/app/src-tauri/target/release
     user: '${UID}:${GID}'
     command: ['sh', '-c', 'npm install && npm run build']

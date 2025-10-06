@@ -3,7 +3,7 @@
 # This Dockerfile is intended for local development only, and should be used by developers working on Linux.
 # Release builds are performed by GitHub Actions workflows; do not use this container for production releases.
 #
-# cSpell:ignore noninteractive ignore libwebkit libappindicator librsvg patchelf libasound
+# cSpell:ignore noninteractive ignore libwebkit libappindicator librsvg patchelf libasound libespeak libpcaudio libsonic
 
 FROM ubuntu:jammy-20250730
 
@@ -13,6 +13,7 @@ RUN apt-get update && \
     apt-get install -y \
     curl \
     build-essential \
+    clang \
     libwebkit2gtk-4.1-dev \
     libappindicator3-dev \
     librsvg2-dev \
@@ -21,12 +22,15 @@ RUN apt-get update && \
     git \
     xdg-utils \
     file \
-    libasound2-dev
+    libssl-dev \
+    libasound2-dev \
+    libespeak-ng-dev \
+    libpcaudio-dev \
+    libsonic-dev
 
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get install -y nodejs
 RUN npm install -g @tauri-apps/cli
-
 
 ARG UID=1000
 ARG GID=1000
