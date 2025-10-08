@@ -153,10 +153,17 @@ export const ja = {
         saveError: '設定の保存に失敗しました。',
         loadError: '設定が読み込まれていません。',
       },
-      language: {
-        label: '言語',
+      uiLanguage: {
+        label: 'UI表示言語',
         english: '英語',
         japanese: '日本語',
+      },
+      learningTargetLanguages: {
+        label: '学習対象言語',
+        none: '未設定（全ての言語が対象）',
+        add: '言語を追加',
+        modalTitle: '学習対象言語を選択',
+        search: '言語を検索',
       },
     },
     groupPage: {

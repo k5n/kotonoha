@@ -1,6 +1,6 @@
 // cSpell:words Dhivehi Krio Luxembourgish Meiteilon Nyanja Odia Sesotho Shona Sinhala Uyghur
 
-const bcp47ToLanguageNameTable: { [key: string]: string } = {
+export const bcp47ToLanguageNameTable: { [key: string]: string } = {
   af: 'Afrikaans',
   sq: 'Albanian',
   am: 'Amharic',

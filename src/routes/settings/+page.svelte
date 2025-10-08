@@ -2,9 +2,21 @@
   import { invalidateAll } from '$app/navigation';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { saveSettings } from '$lib/application/usecases/saveSettings';
+  import { bcp47ToLanguageName, bcp47ToLanguageNameTable } from '$lib/utils/language';
   import { error } from '@tauri-apps/plugin-log';
-  import { Alert, Button, Input, Label, Select, Spinner } from 'flowbite-svelte';
-  import { ArrowLeftOutline } from 'flowbite-svelte-icons';
+  import {
+    Alert,
+    Badge,
+    Button,
+    Checkbox,
+    Input,
+    Label,
+    Modal,
+    Search,
+    Select,
+    Spinner,
+  } from 'flowbite-svelte';
+  import { ArrowLeftOutline, CloseCircleSolid } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
@@ -13,10 +25,29 @@
   let youtubeApiKeyInput = $state('');
   let successMessage = $state('');
   let isSaving = $state(false);
+  let showLanguageModal = $state(false);
+  let searchTerm = $state('');
 
-  let settings = $derived(data.settings);
+  let language = $state(data.settings?.language ?? 'en');
+  let learningTargetLanguages = $state(data.settings?.learningTargetLanguages ?? []);
+
   let appInfo = $derived(data.appInfo);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
+
+  const allLanguages = $derived(
+    Object.entries(bcp47ToLanguageNameTable).map(([code, name]) => ({
+      code,
+      name,
+      translatedName: t(`languages.${code}`),
+    }))
+  );
+
+  const filteredLanguages = $derived(
+    allLanguages.filter((lang) => {
+      const term = searchTerm.toLowerCase();
+      return lang.name.toLowerCase().includes(term) || lang.translatedName.toLowerCase().includes(term);
+    })
+  );
 
   function goBack() {
     if (history.length > 1) {
@@ -28,14 +59,30 @@
   }
 
   function handleLanguageChange(event: Event) {
-    if (settings != null) {
-      const target = event.target as HTMLSelectElement;
-      settings = { ...settings, language: target.value };
+    const target = event.target as HTMLSelectElement;
+    language = target.value;
+  }
+
+  function handleLanguageSelection(checked: boolean, code: string) {
+    if (checked) {
+      if (!learningTargetLanguages.includes(code)) {
+        learningTargetLanguages = [...learningTargetLanguages, code];
+      }
+    } else {
+      learningTargetLanguages = learningTargetLanguages.filter((lang) => lang !== code);
     }
   }
 
+  function removeLanguage(code: string) {
+    learningTargetLanguages = learningTargetLanguages.filter((lang) => lang !== code);
+  }
+
+  function isLanguageSelected(code: string): boolean {
+    return learningTargetLanguages.includes(code);
+  }
+
   async function handleSave() {
-    if (!settings) {
+    if (!data.settings) {
       errorMessage = t('settings.notifications.loadError');
       return;
     }
@@ -43,7 +90,12 @@
     successMessage = '';
     isSaving = true;
     try {
-      await saveSettings(settings, geminiApiKeyInput, youtubeApiKeyInput);
+      const newSettings = {
+        ...data.settings,
+        language,
+        learningTargetLanguages,
+      };
+      await saveSettings(newSettings, geminiApiKeyInput, youtubeApiKeyInput);
       geminiApiKeyInput = '';
       youtubeApiKeyInput = '';
       successMessage = t('settings.notifications.saveSuccess');
@@ -65,8 +117,9 @@
 
   <h1 class="text-xl font-bold">{t('settings.title')}</h1>
 
-  {#if settings}
-    <div class="mt-4">
+  {#if data.settings}
+    <div class="mt-6">
+      <Label for="gemini-api-key" class="mb-2">{t('settings.gemini.label')}</Label>
       {#if data.isGeminiApiKeySet}
         <Alert color="green" class="mb-4">
           <span class="font-medium">{t('settings.gemini.alreadySet')}</span>
@@ -78,10 +131,6 @@
           {t('settings.gemini.notSetWarning')}
         </Alert>
       {/if}
-    </div>
-
-    <div class="mt-6">
-      <Label for="gemini-api-key" class="mb-2">{t('settings.gemini.label')}</Label>
       <Input
         type="password"
         id="gemini-api-key"
@@ -90,7 +139,8 @@
       />
     </div>
 
-    <div class="mt-8 border-t pt-6">
+    <div class="mt-6">
+      <Label for="youtube-api-key" class="mb-2">{t('settings.youtube.label')}</Label>
       {#if data.isYoutubeApiKeySet}
         <Alert color="green" class="mb-4">
           <span class="font-medium">{t('settings.youtube.alreadySet')}</span>
@@ -102,10 +152,6 @@
           {t('settings.youtube.notSetWarning')}
         </Alert>
       {/if}
-    </div>
-
-    <div class="mt-6">
-      <Label for="youtube-api-key" class="mb-2">{t('settings.youtube.label')}</Label>
       <Input
         type="password"
         id="youtube-api-key"
@@ -114,20 +160,41 @@
       />
     </div>
 
-    <div class="mt-8 border-t pt-6">
-      <Label for="language-select" class="mb-2">{t('settings.language.label')}</Label>
+    <div class="mt-6">
+      <Label for="language-select" class="mb-2">{t('settings.uiLanguage.label')}</Label>
       <Select
         id="language-select"
-        value={settings.language}
+        value={language}
         onchange={handleLanguageChange}
         items={[
-          { value: 'en', name: t('settings.language.english') },
-          { value: 'ja', name: t('settings.language.japanese') },
+          { value: 'en', name: t('settings.uiLanguage.english') },
+          { value: 'ja', name: t('settings.uiLanguage.japanese') },
         ]}
       />
     </div>
 
     <div class="mt-6">
+      <Label class="mb-2">{t('settings.learningTargetLanguages.label')}</Label>
+      <div class="mb-2 flex flex-wrap gap-2">
+        {#if learningTargetLanguages.length > 0}
+          {#each learningTargetLanguages as langCode (langCode)}
+            <Badge large color="indigo" class="flex items-center gap-1 p-2">
+              {bcp47ToLanguageName(langCode) ?? langCode}
+              <button onclick={() => removeLanguage(langCode)} class="hover:text-gray-400">
+                <CloseCircleSolid class="h-4 w-4" />
+              </button>
+            </Badge>
+          {/each}
+        {:else}
+          <p class="text-sm text-gray-500">{t('settings.learningTargetLanguages.none')}</p>
+        {/if}
+      </div>
+      <Button size="sm" color="light" onclick={() => (showLanguageModal = true)}>
+        {t('settings.learningTargetLanguages.add')}
+      </Button>
+    </div>
+
+    <div class="mt-6 pt-6">
       <Button onclick={handleSave} disabled={isSaving}>
         {#if isSaving}
           <Spinner size="6" color="blue" class="me-2" />{t('settings.saveButton.saving')}
@@ -169,3 +236,25 @@
     </div>
   {/if}
 </div>
+
+<Modal bind:open={showLanguageModal} title={t('settings.learningTargetLanguages.modalTitle')}>
+  <div class="flex flex-col space-y-4">
+    <Search bind:value={searchTerm} placeholder={t('settings.learningTargetLanguages.search')} />
+    <div class="h-64 overflow-y-auto border">
+      {#each filteredLanguages as lang (lang.code)}
+        <label class="flex w-full items-center space-x-2 p-2 hover:bg-gray-100">
+          <Checkbox
+            checked={isLanguageSelected(lang.code)}
+            onchange={() => handleLanguageSelection(!isLanguageSelected(lang.code), lang.code)}
+          />
+          <span>
+            {lang.translatedName}
+            {#if lang.translatedName !== lang.name}
+              <span class="text-sm text-gray-500">({lang.name})</span>
+            {/if}
+          </span>
+        </label>
+      {/each}
+    </div>
+  </div>
+</Modal>

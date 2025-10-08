@@ -152,10 +152,17 @@ export const en = {
         saveError: 'Failed to save settings.',
         loadError: 'Settings are not loaded.',
       },
-      language: {
-        label: 'Language',
+      uiLanguage: {
+        label: 'User Interface Language',
         english: 'English',
         japanese: 'Japanese',
+      },
+      learningTargetLanguages: {
+        label: 'Learning Target Languages',
+        none: 'None (All languages are targeted)',
+        add: 'Add Language',
+        modalTitle: 'Select Learning Target Languages',
+        search: 'Search for a language',
       },
     },
     groupPage: {
