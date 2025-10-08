@@ -3,7 +3,7 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
-  import { Button, Input, Label } from 'flowbite-svelte';
+  import { Button, Checkbox, Input, Label } from 'flowbite-svelte';
 
   type Props = {
     onTsvFileSelected: (filePath: string) => void;
@@ -43,16 +43,18 @@
   />
 </div>
 
-<div class="mb-4">
-  <Label class="mb-2 block" for="audioFile">
-    {t('components.episodeAddModal.audioFileLabel')}
-  </Label>
-  <FileSelect
-    accept="audio/*"
-    onFileSelected={(file) => episodeAddStore.setAudioFilePath(file || null)}
-    id="audioFile"
-  />
-</div>
+{#if !episodeAddStore.shouldGenerateAudio}
+  <div class="mb-4">
+    <Label class="mb-2 block" for="audioFile">
+      {t('components.episodeAddModal.audioFileLabel')}
+    </Label>
+    <FileSelect
+      accept="audio/*"
+      onFileSelected={(file) => episodeAddStore.setAudioFilePath(file || null)}
+      id="audioFile"
+    />
+  </div>
+{/if}
 
 <div class="mb-4">
   <Label class="mb-2 block" for="scriptFile">
@@ -64,6 +66,15 @@
     id="scriptFile"
   />
 </div>
+
+{#if episodeAddStore.hasOnlyScriptFile}
+  <div class="mb-4">
+    <Label class="flex items-center gap-2">
+      <Checkbox bind:checked={episodeAddStore.shouldGenerateAudio} class="h-4 w-4" />
+      {t('components.episodeAddModal.generateAudioLabel')}
+    </Label>
+  </div>
+{/if}
 
 {#if episodeAddStore.scriptPreview}
   <TsvConfigSection />

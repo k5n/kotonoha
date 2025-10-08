@@ -40,6 +40,7 @@ const store = $state({
     title: '',
     audioFilePath: null as string | null,
     scriptFilePath: null as string | null,
+    shouldGenerateAudio: false,
     tsvConfig: {
       startTimeColumnIndex: -1,
       textColumnIndex: -1,
@@ -67,6 +68,7 @@ function reset() {
     title: '',
     audioFilePath: null,
     scriptFilePath: null,
+    shouldGenerateAudio: false,
     tsvConfig: {
       startTimeColumnIndex: -1,
       textColumnIndex: -1,
@@ -164,6 +166,15 @@ export const episodeAddStore = {
   },
   get isFetchingScriptPreview() {
     return store.fileForm.isFetchingScriptPreview;
+  },
+  get shouldGenerateAudio() {
+    return store.fileForm.shouldGenerateAudio;
+  },
+  set shouldGenerateAudio(value: boolean) {
+    store.fileForm.shouldGenerateAudio = value;
+  },
+  get hasOnlyScriptFile() {
+    return !!store.fileForm.scriptFilePath && !store.fileForm.audioFilePath;
   },
 
   // YouTube form getters
@@ -272,7 +283,7 @@ export const episodeAddStore = {
     if (!title.trim()) {
       return 'components.episodeAddModal.errorTitleRequired';
     }
-    if (!audioFilePath) {
+    if (!audioFilePath && !store.fileForm.shouldGenerateAudio) {
       return 'components.episodeAddModal.errorAudioFileRequired';
     }
     if (!scriptFilePath) {

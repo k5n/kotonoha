@@ -250,13 +250,15 @@ export const en = {
         videoLanguageLabel: 'Video Language',
         automaticSubtitlesLabel: 'Automatic Subtitles (ASR)',
         errorTitleRequired: 'Please enter a title.',
-        errorAudioFileRequired: 'Please select an audio file.',
+        errorAudioFileRequired:
+          'Please select an audio file or check the option to generate audio using TTS.',
         errorScriptFileRequired: 'Please select a script file.',
         errorYoutubeUrlRequired: 'Please enter a YouTube URL.',
         errorUnsupportedLanguage: 'This video language ({{language}}) is not supported.',
         errorAudioFileLoad: 'Failed to load audio file.',
         errorTsvParse: 'Failed to parse TSV file.',
         errorTsvColumnRequired: 'Please select the start time and text columns.',
+        generateAudioLabel: 'Generate audio using Text-to-Speech (TTS)',
         cancel: 'Cancel',
         submitting: 'Creating...',
         submit: 'Create',
@@ -365,6 +367,10 @@ export const en = {
         noScript: 'No script available.',
         original: 'Original',
       },
+    },
+    error: {
+      mustSelectAudioOrTts:
+        'Please select an audio file or check the option to generate audio using TTS.',
     },
   },
 };
