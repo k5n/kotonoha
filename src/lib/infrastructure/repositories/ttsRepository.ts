@@ -1,6 +1,79 @@
+import type {
+  TtsErrorPayload,
+  TtsFinishedPayload,
+  TtsProgressPayload,
+} from '$lib/domain/entities/ttsEvent';
+import type { FileInfo, Voice, Voices } from '$lib/domain/entities/voice';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import type { TtsErrorPayload, TtsFinishedPayload, TtsProgressPayload } from '$lib/domain/entities/ttsEvent';
+import { fetch } from '@tauri-apps/plugin-http';
+
+/**
+ * Contains information about a model file.
+ */
+type PiperFileInfo = {
+  readonly size_bytes: number;
+  readonly md5_digest: string;
+};
+
+/**
+ * Describes the language of a voice model.
+ */
+type PiperLanguage = {
+  readonly code: string;
+  readonly family: string;
+  readonly region: string;
+  readonly name_native: string;
+  readonly name_english: string;
+  readonly country_english: string;
+};
+
+/**
+ * Represents a single Piper voice model.
+ */
+type PiperVoice = {
+  readonly key: string;
+  readonly name: string;
+  readonly language: PiperLanguage;
+  readonly quality: 'low' | 'medium' | 'high' | 'x_low';
+  readonly num_speakers: number;
+  readonly speaker_id_map: Readonly<Record<string, number>>;
+  readonly files: Readonly<Record<string, PiperFileInfo>>;
+  readonly aliases: readonly string[];
+};
+
+/**
+ * Represents the entire collection of Piper voices, indexed by a unique key.
+ */
+type PiperVoices = Readonly<Record<string, PiperVoice>>;
+
+async function getAvailablePiperVoices(): Promise<PiperVoices> {
+  const response = await fetch(
+    'https://huggingface.co/rhasspy/piper-voices/resolve/main/voices.json'
+  );
+  const data = await response.json();
+  return data as PiperVoices;
+}
+
+function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
+  const baseUrl = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/';
+  const voices: Voice[] = Object.values(piperVoices).map((piperVoice) => {
+    const files: FileInfo[] = Object.entries(piperVoice.files).map(([filePath, fileInfo]) => ({
+      path: filePath,
+      bytes: fileInfo.size_bytes,
+      md5: fileInfo.md5_digest,
+    }));
+    return {
+      language: {
+        family: piperVoice.language.family,
+        region: piperVoice.language.region,
+      },
+      quality: piperVoice.quality,
+      files,
+    };
+  });
+  return { baseUrl, voices };
+}
 
 /**
  * Repository for calling Tauri's TTS commands.
@@ -48,5 +121,14 @@ export const ttsRepository = {
     return await listen<TtsErrorPayload>('tts-error', (event) => {
       callback(event.payload);
     });
+  },
+
+  /**
+   * Fetches the available Piper voices from the remote server.
+   * @returns Available voices.
+   */
+  async getAvailableVoices(): Promise<Voices> {
+    const piperVoices = await getAvailablePiperVoices();
+    return mapPiperVoicesToVoices(piperVoices);
   },
 };
