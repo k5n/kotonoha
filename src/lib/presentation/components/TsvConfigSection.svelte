@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore.svelte';
+  import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import {
     Heading,
@@ -14,13 +14,13 @@
   } from 'flowbite-svelte';
 
   let displayHeaders = $derived.by(() => {
-    const scriptPreview = fileEpisodeAddStore.scriptPreview;
+    const scriptPreview = tsvConfigStore.scriptPreview;
     if (!scriptPreview || !scriptPreview.headers) return [];
     return scriptPreview.headers;
   });
 </script>
 
-{#if fileEpisodeAddStore.scriptPreview && fileEpisodeAddStore.scriptPreview.rows.length > 0}
+{#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
   <div class="mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
     <Heading tag="h3" class="mb-2 text-lg font-semibold">
       {t('components.episodeAddModal.tsvSettingsTitle')}
@@ -32,12 +32,9 @@
         </Label>
         <Select
           id="startTimeColumn"
-          value={fileEpisodeAddStore.tsvConfig.startTimeColumnIndex}
+          value={tsvConfigStore.tsvConfig.startTimeColumnIndex}
           onchange={(e) =>
-            fileEpisodeAddStore.updateConfig(
-              'startTimeColumnIndex',
-              parseInt(e.currentTarget.value)
-            )}
+            tsvConfigStore.updateConfig('startTimeColumnIndex', parseInt(e.currentTarget.value))}
           items={displayHeaders.map((header, i) => ({ value: i, name: header }))}
         />
       </div>
@@ -47,9 +44,9 @@
         </Label>
         <Select
           id="textColumn"
-          value={fileEpisodeAddStore.tsvConfig.textColumnIndex}
+          value={tsvConfigStore.tsvConfig.textColumnIndex}
           onchange={(e) =>
-            fileEpisodeAddStore.updateConfig('textColumnIndex', parseInt(e.currentTarget.value))}
+            tsvConfigStore.updateConfig('textColumnIndex', parseInt(e.currentTarget.value))}
           items={displayHeaders.map((header, i) => ({ value: i, name: header }))}
         />
       </div>
@@ -59,9 +56,9 @@
         </Label>
         <Select
           id="endTimeColumn"
-          value={fileEpisodeAddStore.tsvConfig.endTimeColumnIndex}
+          value={tsvConfigStore.tsvConfig.endTimeColumnIndex}
           onchange={(e) =>
-            fileEpisodeAddStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
+            tsvConfigStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
           items={[
             { value: -1, name: t('components.episodeAddModal.none') },
             ...displayHeaders.map((header, i) => ({ value: i, name: header })),
@@ -80,7 +77,7 @@
           {/each}
         </TableHead>
         <TableBody>
-          {#each fileEpisodeAddStore.scriptPreview.rows as row, i (i)}
+          {#each tsvConfigStore.scriptPreview.rows as row, i (i)}
             <TableBodyRow>
               <TableBodyCell>{i + 1}</TableBodyCell>
               {#each row as cell, j (j)}

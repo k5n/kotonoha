@@ -12,8 +12,12 @@ graph LR
                 end
                 subgraph "stores"
                     subgraph "episodeAddStore"
+                        subgraph "fileEpisodeAddStore"
+                            src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts["fileEpisodeAddStore.svelte.ts"]
+                            src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts["tsvConfigStore.svelte.ts"]
+                            src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_ttsConfigStore_svelte_ts["ttsConfigStore.svelte.ts"]
+                        end
                         src_lib_application_stores_episodeAddStore_episodeAddStore_svelte_ts["episodeAddStore.svelte.ts"]
-                        src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts["fileEpisodeAddStore.svelte.ts"]
                         src_lib_application_stores_episodeAddStore_youtubeEpisodeAddStore_svelte_ts["youtubeEpisodeAddStore.svelte.ts"]
                     end
                     src_lib_application_stores_apiKeyStore_svelte_ts["apiKeyStore.svelte.ts"]
@@ -161,12 +165,15 @@ graph LR
             end
         end
 src_lib_application_stores_audioInfoCacheStore_svelte_ts --> src_lib_domain_entities_audioInfo_ts
-src_lib_application_stores_episodeAddStore_episodeAddStore_svelte_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts
+src_lib_application_stores_episodeAddStore_episodeAddStore_svelte_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts
 src_lib_application_stores_episodeAddStore_episodeAddStore_svelte_ts --> src_lib_application_stores_episodeAddStore_youtubeEpisodeAddStore_svelte_ts
-src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_application_stores_i18n_svelte_ts
-src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_domain_entities_scriptPreview_ts
-src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_domain_entities_tsvConfig_ts
-src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_domain_entities_voice_ts
+src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts
+src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_ttsConfigStore_svelte_ts
+src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_application_stores_i18n_svelte_ts
+src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_domain_entities_tsvConfig_ts
+src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts --> src_lib_domain_entities_scriptPreview_ts
+src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts --> src_lib_domain_entities_tsvConfig_ts
+src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_ttsConfigStore_svelte_ts --> src_lib_domain_entities_voice_ts
 src_lib_application_stores_episodeAddStore_youtubeEpisodeAddStore_svelte_ts --> src_lib_application_stores_i18n_svelte_ts
 src_lib_application_stores_episodeAddStore_youtubeEpisodeAddStore_svelte_ts --> src_lib_domain_entities_youtubeMetadata_ts
 src_lib_application_stores_episodeAddStore_youtubeEpisodeAddStore_svelte_ts --> src_lib_utils_language_ts
@@ -229,7 +236,7 @@ src_lib_application_usecases_fetchSettings_ts --> src_lib_application_stores_api
 src_lib_application_usecases_fetchSettings_ts --> src_lib_domain_entities_settings_ts
 src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
 src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
-src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts
+src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_domain_entities_voice_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_utils_language_ts
@@ -314,7 +321,7 @@ src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_domain_entit
 src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_lib_presentation_components_EpisodeNameEditModal_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_application_stores_episodeAddStore_episodeAddStore_svelte_ts
-src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts
+src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts
 src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_presentation_components_FileSelect_svelte
 src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_presentation_components_TsvConfigSection_svelte
@@ -337,9 +344,9 @@ src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_en
 src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_domain_entities_dialogue_ts
-src_lib_presentation_components_TsvConfigSection_svelte --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts
+src_lib_presentation_components_TsvConfigSection_svelte --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts
 src_lib_presentation_components_TsvConfigSection_svelte --> src_lib_application_stores_i18n_svelte_ts
-src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_svelte_ts
+src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_ttsConfigStore_svelte_ts
 src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_utils_language_ts
 src_lib_presentation_components_YoutubeEpisodeForm_svelte --> src_lib_application_stores_episodeAddStore_episodeAddStore_svelte_ts
@@ -418,7 +425,7 @@ src_routes_settings__page_ts --> src_lib_application_usecases_fetchSettings_ts
 
 # Src Folder-level Dependency Graph
 
-`src/` 以下の各ディレクトリ間依存関係を解析した結果グラフ（親フォルダ単位）。
+`src/` 以下の各ディレクトリ間依存関係を解析した結果グラフ。
 
 ```mermaid
 graph LR

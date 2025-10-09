@@ -403,7 +403,7 @@ async function generateDependencyGraph() {
     }
   }
 
-  const folderMermaidBlock = `# Src Folder-level Dependency Graph\n\n\`src/\` 以下の各ディレクトリ間依存関係を解析した結果グラフ（親フォルダ単位）。\n\n\`\`\`mermaid\n${mermaidFolderGraph}\`\`\`\n`;
+  const folderMermaidBlock = `# Src Folder-level Dependency Graph\n\n\`src/\` 以下の各ディレクトリ間依存関係を解析した結果グラフ。\n\n\`\`\`mermaid\n${mermaidFolderGraph}\`\`\`\n`;
 
   const fullMermaidContent = fileMermaidBlock + '\n' + folderMermaidBlock;
 

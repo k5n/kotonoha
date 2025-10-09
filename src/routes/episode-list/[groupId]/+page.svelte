@@ -53,11 +53,11 @@
 
   async function handleTsvFileSelected(filePath: string) {
     try {
-      episodeAddStore.file.startScriptPreviewFetching();
+      episodeAddStore.file.tsv.startScriptPreviewFetching();
       const preview = await previewScriptFile(filePath);
-      episodeAddStore.file.completeScriptPreviewFetching(preview);
+      episodeAddStore.file.tsv.completeScriptPreviewFetching(preview);
     } catch (e) {
-      episodeAddStore.file.failedScriptPreviewFetching(
+      episodeAddStore.file.tsv.failedScriptPreviewFetching(
         t('components.episodeAddModal.errorTsvParse')
       );
       console.error(e);
@@ -82,7 +82,7 @@
 
   async function handleTtsEnabled() {
     // Fetch TTS voices if not already cached
-    if (!episodeAddStore.file.ttsAvailableVoices && !episodeAddStore.file.isFetchingTtsVoices) {
+    if (!episodeAddStore.file.tts.availableVoices && !episodeAddStore.file.tts.isFetchingVoices) {
       try {
         await fetchTtsVoices();
       } catch (err) {
