@@ -98,11 +98,11 @@ graph TD
     subgraph Presentation
         components[components]:::cssComponents
         routes[routes]:::cssComponents
-        types[types]:::cssTypes
+        actions[actions]:::cssPure
     end
 
     subgraph Application
-        usecases[usecases]
+        usecases[usecases]:::cssPure
         stores[stores]
     end
 
@@ -112,7 +112,6 @@ graph TD
     end
 
     subgraph Infrastructure
-        contracts[contracts]:::cssTypes
         repositories[repositories]:::cssPure
     end
 
@@ -122,8 +121,12 @@ graph TD
     routes --> components
     routes ---> usecases
     routes ---> stores
-    routes --> types
-    components --> types
+    routes ---> actions
+    routes ---> entities
+    components --> actions
+    components ---> stores
+    components ---> entities
+    actions ---> entities
     usecases --> entities
     usecases --> stores
     usecases ---> services
@@ -131,22 +134,12 @@ graph TD
     stores ---> entities
     services ---> entities
     repositories ---> entities
-    repositories --> contracts
     repositories ---> ExternalSystems
 
     Components:::cssComponents
     PureTypeScript[Pure TypeScript Code]:::cssPure
     TypeDefinitions[Type Definitions]:::cssTypes
 ```
-
-#### NOTES
-
-- types/ ディレクトリは、複数コンポーネントで共有する表示用のデータ型を定義するために使用する。
-  - 各コンポーネントとその利用側だけで完結する型は、コンポーネント内で定義する。
-  - ほとんどの場合はコンポーネント内で定義すれば済むため、現時点では空だが、必要に応じて追加する。
-- contracts/ ディレクトリは、複数リポジトリで共通に利用する外部システムとの通信に使われるデータ型を定義する。
-  - 各リポジトリで完結する型は、リポジトリ内で定義する。
-  - ほとんどの場合はリポジトリ内で定義すれば済むため、現時点では空だが、必要に応じて追加する。
 
 ---
 
@@ -335,6 +328,11 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
   - 音声の再生位置を指定された時間（ミリ秒）に移動する。
 - `copy_audio_file(src_path: String, dest_path: String) -> Result<(), String>`
   - 指定した音声ファイル（アプリ管理外の絶対パス）を別のパス（アプリ管理下の相対パス）にコピーする。
+
+#### TTS (Text-to-Speech)
+
+- `start_tts(transcript: String, config_path: String, output_path: String) -> Result<(), String>`
+  - 指定された設定とテキストを使用してTTSを開始し、結果を指定された出力パスに保存する。
 
 #### Utility
 
