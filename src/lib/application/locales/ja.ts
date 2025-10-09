@@ -163,7 +163,6 @@ export const ja = {
         none: '未設定（全ての言語が対象）',
         add: '言語を追加',
         modalTitle: '学習対象言語を選択',
-        search: '言語を検索',
       },
     },
     groupPage: {
@@ -350,6 +349,9 @@ export const ja = {
         cancel: 'キャンセル',
         submitting: '保存中...',
         submit: '保存',
+      },
+      languageSelectionModal: {
+        search: '言語を検索',
       },
       sentenceCardList: {
         noCards: 'このエピソードにはセンテンスカードがありません。',

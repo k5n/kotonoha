@@ -1,6 +1,7 @@
 // cSpell:words Dhivehi Krio Luxembourgish Meiteilon Nyanja Odia Sesotho Shona Sinhala Uyghur
 
-export const bcp47ToLanguageNameTable: { [key: string]: string } = {
+// These languages are supported by Gemini
+const supportedPrimaryLanguageSubtags: { [key: string]: string } = {
   af: 'Afrikaans',
   sq: 'Albanian',
   am: 'Amharic',
@@ -224,9 +225,13 @@ const bcp47ToTranslationKeyTable: { [key: string]: string } = {
   zu: 'languages.zu',
 };
 
+export function getSupportedLanguages(): { code: string; name: string }[] {
+  return Object.entries(supportedPrimaryLanguageSubtags).map(([code, name]) => ({ code, name }));
+}
+
 export function bcp47ToLanguageName(bcp47: string): string | undefined {
   const key = bcp47.split('-')[0].toLowerCase();
-  return bcp47ToLanguageNameTable[key];
+  return supportedPrimaryLanguageSubtags[key];
 }
 
 export function bcp47ToTranslationKey(bcp47: string): string | undefined {

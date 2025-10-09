@@ -2,20 +2,10 @@
   import { invalidateAll } from '$app/navigation';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { saveSettings } from '$lib/application/usecases/saveSettings';
-  import { bcp47ToLanguageName, bcp47ToLanguageNameTable } from '$lib/utils/language';
+  import LanguageSelectionModal from '$lib/presentation/components/LanguageSelectionModal.svelte';
+  import { bcp47ToLanguageName } from '$lib/utils/language';
   import { error } from '@tauri-apps/plugin-log';
-  import {
-    Alert,
-    Badge,
-    Button,
-    Checkbox,
-    Input,
-    Label,
-    Modal,
-    Search,
-    Select,
-    Spinner,
-  } from 'flowbite-svelte';
+  import { Alert, Badge, Button, Input, Label, Select, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, CloseCircleSolid } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
 
@@ -26,28 +16,12 @@
   let successMessage = $state('');
   let isSaving = $state(false);
   let showLanguageModal = $state(false);
-  let searchTerm = $state('');
 
   let language = $state(data.settings?.language ?? 'en');
   let learningTargetLanguages = $state(data.settings?.learningTargetLanguages ?? []);
 
   let appInfo = $derived(data.appInfo);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
-
-  const allLanguages = $derived(
-    Object.entries(bcp47ToLanguageNameTable).map(([code, name]) => ({
-      code,
-      name,
-      translatedName: t(`languages.${code}`),
-    }))
-  );
-
-  const filteredLanguages = $derived(
-    allLanguages.filter((lang) => {
-      const term = searchTerm.toLowerCase();
-      return lang.name.toLowerCase().includes(term) || lang.translatedName.toLowerCase().includes(term);
-    })
-  );
 
   function goBack() {
     if (history.length > 1) {
@@ -63,7 +37,7 @@
     language = target.value;
   }
 
-  function handleLanguageSelection(checked: boolean, code: string) {
+  function handleLanguageSelection(code: string, checked: boolean) {
     if (checked) {
       if (!learningTargetLanguages.includes(code)) {
         learningTargetLanguages = [...learningTargetLanguages, code];
@@ -75,10 +49,6 @@
 
   function removeLanguage(code: string) {
     learningTargetLanguages = learningTargetLanguages.filter((lang) => lang !== code);
-  }
-
-  function isLanguageSelected(code: string): boolean {
-    return learningTargetLanguages.includes(code);
   }
 
   async function handleSave() {
@@ -237,24 +207,9 @@
   {/if}
 </div>
 
-<Modal bind:open={showLanguageModal} title={t('settings.learningTargetLanguages.modalTitle')}>
-  <div class="flex flex-col space-y-4">
-    <Search bind:value={searchTerm} placeholder={t('settings.learningTargetLanguages.search')} />
-    <div class="h-64 overflow-y-auto border">
-      {#each filteredLanguages as lang (lang.code)}
-        <label class="flex w-full items-center space-x-2 p-2 hover:bg-gray-100">
-          <Checkbox
-            checked={isLanguageSelected(lang.code)}
-            onchange={() => handleLanguageSelection(!isLanguageSelected(lang.code), lang.code)}
-          />
-          <span>
-            {lang.translatedName}
-            {#if lang.translatedName !== lang.name}
-              <span class="text-sm text-gray-500">({lang.name})</span>
-            {/if}
-          </span>
-        </label>
-      {/each}
-    </div>
-  </div>
-</Modal>
+<LanguageSelectionModal
+  show={showLanguageModal}
+  selectedLanguages={learningTargetLanguages}
+  onSelect={handleLanguageSelection}
+  onClose={() => (showLanguageModal = false)}
+/>

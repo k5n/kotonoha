@@ -162,7 +162,6 @@ export const en = {
         none: 'None (All languages are targeted)',
         add: 'Add Language',
         modalTitle: 'Select Learning Target Languages',
-        search: 'Search for a language',
       },
     },
     groupPage: {
@@ -350,6 +349,9 @@ export const en = {
         cancel: 'Cancel',
         submitting: 'Saving...',
         submit: 'Save',
+      },
+      languageSelectionModal: {
+        search: 'Search for a language',
       },
       sentenceCardList: {
         noCards: 'There are no Sentence Cards in this episode.',
