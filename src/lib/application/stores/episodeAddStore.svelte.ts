@@ -176,6 +176,9 @@ export const episodeAddStore = {
   get hasOnlyScriptFile() {
     return !!store.fileForm.scriptFilePath && !store.fileForm.audioFilePath;
   },
+  get isTxtScriptFile() {
+    return store.fileForm.scriptFilePath?.toLowerCase().endsWith('.txt') ?? false;
+  },
 
   // YouTube form getters
   get youtubeUrl() {

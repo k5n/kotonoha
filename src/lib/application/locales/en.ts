@@ -250,7 +250,7 @@ export const en = {
         sourceTypeFile: 'File',
         sourceTypeYoutube: 'YouTube',
         audioFileLabel: 'Audio File',
-        scriptFileLabel: 'Subtitle File (*.srt, *.sswt, *.tsv)',
+        scriptFileLabel: 'Subtitle File (*.srt, *.vtt, *.sswt, *.tsv, *.txt)',
         youtubeUrlLabel: 'YouTube URL',
         youtubeUrlPlaceholder: 'Enter a YouTube video URL',
         videoLanguageLabel: 'Video Language',

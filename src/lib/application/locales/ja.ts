@@ -250,7 +250,7 @@ export const ja = {
         sourceTypeFile: 'ファイル',
         sourceTypeYoutube: 'YouTube',
         audioFileLabel: '音声ファイル',
-        scriptFileLabel: '字幕ファイル (*.srt, *.sswt, *.tsv)',
+        scriptFileLabel: '字幕ファイル  (*.srt, *.vtt, *.sswt, *.tsv, *.txt)',
         youtubeUrlLabel: 'YouTube URL',
         youtubeUrlPlaceholder: 'YouTube動画のURLを入力',
         videoLanguageLabel: '動画の言語',

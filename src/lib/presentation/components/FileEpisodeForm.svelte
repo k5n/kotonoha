@@ -17,6 +17,7 @@
     if (filePath && filePath.toLowerCase().endsWith('.tsv')) {
       onTsvFileSelected(filePath);
     } else {
+      episodeAddStore.shouldGenerateAudio = episodeAddStore.isTxtScriptFile;
       episodeAddStore.completeScriptPreviewFetching(null);
     }
   }
@@ -61,7 +62,7 @@
     {t('components.episodeAddModal.scriptFileLabel')}
   </Label>
   <FileSelect
-    accept=".srt,.sswt,.tsv,.vtt"
+    accept=".srt,.sswt,.tsv,.vtt,.txt"
     onFileSelected={(file) => handleScriptFileChange(file || null)}
     id="scriptFile"
   />
@@ -70,7 +71,11 @@
 {#if episodeAddStore.hasOnlyScriptFile}
   <div class="mb-4">
     <Label class="flex items-center gap-2">
-      <Checkbox bind:checked={episodeAddStore.shouldGenerateAudio} class="h-4 w-4" />
+      <Checkbox
+        bind:checked={episodeAddStore.shouldGenerateAudio}
+        class="h-4 w-4"
+        disabled={episodeAddStore.isTxtScriptFile}
+      />
       {t('components.episodeAddModal.generateAudioLabel')}
     </Label>
   </div>
