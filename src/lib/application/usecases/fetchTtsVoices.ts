@@ -1,4 +1,4 @@
-import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
+import { fileEpisodeAddStore } from '$lib/application/stores/fileEpisodeAddStore.svelte';
 import type { Voice } from '$lib/domain/entities/voice';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import { getSupportedLanguages } from '$lib/utils/language';
@@ -9,20 +9,20 @@ import { getSupportedLanguages } from '$lib/utils/language';
  */
 export async function fetchTtsVoices(): Promise<void> {
   try {
-    episodeAddStore.startTtsVoicesFetching();
+    fileEpisodeAddStore.startTtsVoicesFetching();
     const voices = await ttsRepository.getAvailableVoices();
     const supportedLanguageCodes = getSupportedLanguages().map((lang) => lang.code);
     const filteredVoices: Voice[] = voices.voices.filter((voice) => {
       return supportedLanguageCodes.includes(voice.language.family);
     });
 
-    episodeAddStore.completeTtsVoicesFetching({
+    fileEpisodeAddStore.completeTtsVoicesFetching({
       baseUrl: voices.baseUrl,
       voices: filteredVoices,
     });
   } catch (error) {
     // FIXME: i18n
-    episodeAddStore.failedTtsVoicesFetching(
+    fileEpisodeAddStore.failedTtsVoicesFetching(
       error instanceof Error ? error.message : 'Failed to fetch TTS voices'
     );
   }

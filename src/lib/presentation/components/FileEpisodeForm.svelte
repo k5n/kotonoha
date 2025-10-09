@@ -1,5 +1,6 @@
 <script lang="ts">
   import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
+  import { fileEpisodeAddStore } from '$lib/application/stores/fileEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
@@ -16,35 +17,31 @@
 
   let disabled = $derived(
     episodeAddStore.isSubmitting ||
-      episodeAddStore.isFetchingScriptPreview ||
-      episodeAddStore.isFetchingTtsVoices
+      fileEpisodeAddStore.isFetchingScriptPreview ||
+      fileEpisodeAddStore.isFetchingTtsVoices
   );
 
   async function handleScriptFileChange(filePath: string | null) {
-    episodeAddStore.setScriptFilePath(filePath);
+    fileEpisodeAddStore.setScriptFilePath(filePath);
     if (filePath && filePath.toLowerCase().endsWith('.tsv')) {
       onTsvFileSelected(filePath);
     } else {
-      episodeAddStore.shouldGenerateAudio = episodeAddStore.isTxtScriptFile;
-      episodeAddStore.completeScriptPreviewFetching(null);
+      fileEpisodeAddStore.shouldGenerateAudio = fileEpisodeAddStore.isTxtScriptFile;
+      fileEpisodeAddStore.completeScriptPreviewFetching(null);
     }
   }
 
   function handleTtsCheckboxChange(checked: boolean) {
-    episodeAddStore.shouldGenerateAudio = checked;
+    fileEpisodeAddStore.shouldGenerateAudio = checked;
     if (checked) {
       onTtsEnabled();
     }
   }
 
   async function handleSubmit() {
-    const errorMessageKey = episodeAddStore.validateFileForm();
-    if (errorMessageKey) {
-      episodeAddStore.fileFormErrorMessage = t(errorMessageKey);
-      return;
+    if (fileEpisodeAddStore.validate()) {
+      onSubmit();
     }
-
-    onSubmit();
   }
 </script>
 
@@ -53,20 +50,20 @@
   <Input
     id="title"
     placeholder={t('components.episodeAddModal.titlePlaceholder')}
-    value={episodeAddStore.fileTitle}
-    oninput={(e) => (episodeAddStore.fileTitle = (e.currentTarget as HTMLInputElement).value)}
+    value={fileEpisodeAddStore.title}
+    oninput={(e) => (fileEpisodeAddStore.title = (e.currentTarget as HTMLInputElement).value)}
     type="text"
   />
 </div>
 
-{#if !episodeAddStore.shouldGenerateAudio}
+{#if !fileEpisodeAddStore.shouldGenerateAudio}
   <div class="mb-4">
     <Label class="mb-2 block" for="audioFile">
       {t('components.episodeAddModal.audioFileLabel')}
     </Label>
     <FileSelect
       accept="audio/*"
-      onFileSelected={(file) => episodeAddStore.setAudioFilePath(file || null)}
+      onFileSelected={(file) => fileEpisodeAddStore.setAudioFilePath(file || null)}
       id="audioFile"
     />
   </div>
@@ -83,31 +80,31 @@
   />
 </div>
 
-{#if episodeAddStore.hasOnlyScriptFile}
+{#if fileEpisodeAddStore.hasOnlyScriptFile}
   <div class="mb-4">
     <Label class="flex items-center gap-2">
       <Checkbox
-        checked={episodeAddStore.shouldGenerateAudio}
+        checked={fileEpisodeAddStore.shouldGenerateAudio}
         onchange={(e) => handleTtsCheckboxChange((e.currentTarget as HTMLInputElement).checked)}
         class="h-4 w-4"
-        disabled={episodeAddStore.isTxtScriptFile}
+        disabled={fileEpisodeAddStore.isTxtScriptFile}
       />
       {t('components.episodeAddModal.generateAudioLabel')}
     </Label>
   </div>
 
-  {#if episodeAddStore.shouldGenerateAudio}
+  {#if fileEpisodeAddStore.shouldGenerateAudio}
     <TtsConfigSection />
   {/if}
 {/if}
 
-{#if episodeAddStore.scriptPreview}
+{#if fileEpisodeAddStore.scriptPreview}
   <TsvConfigSection />
 {/if}
 
-{#if episodeAddStore.fileFormErrorMessage}
+{#if fileEpisodeAddStore.errorMessage}
   <div class="mb-4">
-    <div class="text-sm text-red-600">{episodeAddStore.fileFormErrorMessage}</div>
+    <div class="text-sm text-red-600">{fileEpisodeAddStore.errorMessage}</div>
   </div>
 {/if}
 

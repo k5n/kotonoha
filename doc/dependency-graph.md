@@ -14,9 +14,11 @@ graph LR
                     src_lib_application_stores_apiKeyStore_svelte_ts["apiKeyStore.svelte.ts"]
                     src_lib_application_stores_audioInfoCacheStore_svelte_ts["audioInfoCacheStore.svelte.ts"]
                     src_lib_application_stores_episodeAddStore_svelte_ts["episodeAddStore.svelte.ts"]
+                    src_lib_application_stores_fileEpisodeAddStore_svelte_ts["fileEpisodeAddStore.svelte.ts"]
                     src_lib_application_stores_groupPathStore_svelte_ts["groupPathStore.svelte.ts"]
                     src_lib_application_stores_i18n_svelte_ts["i18n.svelte.ts"]
                     src_lib_application_stores_mediaPlayerStore_svelte_ts["mediaPlayerStore.svelte.ts"]
+                    src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts["youtubeEpisodeAddStore.svelte.ts"]
                 end
                 subgraph "usecases"
                     src_lib_application_usecases_addEpisodeGroup_ts["addEpisodeGroup.ts"]
@@ -157,13 +159,18 @@ graph LR
             end
         end
 src_lib_application_stores_audioInfoCacheStore_svelte_ts --> src_lib_domain_entities_audioInfo_ts
-src_lib_application_stores_episodeAddStore_svelte_ts --> src_lib_domain_entities_scriptPreview_ts
-src_lib_application_stores_episodeAddStore_svelte_ts --> src_lib_domain_entities_tsvConfig_ts
-src_lib_application_stores_episodeAddStore_svelte_ts --> src_lib_domain_entities_voice_ts
-src_lib_application_stores_episodeAddStore_svelte_ts --> src_lib_domain_entities_youtubeMetadata_ts
+src_lib_application_stores_episodeAddStore_svelte_ts --> src_lib_application_stores_fileEpisodeAddStore_svelte_ts
+src_lib_application_stores_episodeAddStore_svelte_ts --> src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts
+src_lib_application_stores_fileEpisodeAddStore_svelte_ts --> src_lib_application_stores_i18n_svelte_ts
+src_lib_application_stores_fileEpisodeAddStore_svelte_ts --> src_lib_domain_entities_scriptPreview_ts
+src_lib_application_stores_fileEpisodeAddStore_svelte_ts --> src_lib_domain_entities_tsvConfig_ts
+src_lib_application_stores_fileEpisodeAddStore_svelte_ts --> src_lib_domain_entities_voice_ts
 src_lib_application_stores_groupPathStore_svelte_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_stores_i18n_svelte_ts --> src_lib_application_locales_en_ts
 src_lib_application_stores_i18n_svelte_ts --> src_lib_application_locales_ja_ts
+src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts --> src_lib_application_stores_i18n_svelte_ts
+src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts --> src_lib_domain_entities_youtubeMetadata_ts
+src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts --> src_lib_utils_language_ts
 src_lib_application_usecases_addEpisodeGroup_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_addEpisodeGroup_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_entities_dialogue_ts
@@ -220,7 +227,7 @@ src_lib_application_usecases_fetchSettings_ts --> src_lib_application_stores_api
 src_lib_application_usecases_fetchSettings_ts --> src_lib_domain_entities_settings_ts
 src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
 src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
-src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_application_stores_episodeAddStore_svelte_ts
+src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_application_stores_fileEpisodeAddStore_svelte_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_domain_entities_voice_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_utils_language_ts
@@ -305,6 +312,7 @@ src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_domain_entit
 src_lib_presentation_components_EpisodeMoveModal_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_lib_presentation_components_EpisodeNameEditModal_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_application_stores_episodeAddStore_svelte_ts
+src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_application_stores_fileEpisodeAddStore_svelte_ts
 src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_presentation_components_FileSelect_svelte
 src_lib_presentation_components_FileEpisodeForm_svelte --> src_lib_presentation_components_TsvConfigSection_svelte
@@ -327,13 +335,14 @@ src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_en
 src_lib_presentation_components_SentenceMiningModal_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
 src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_TranscriptViewer_svelte --> src_lib_domain_entities_dialogue_ts
-src_lib_presentation_components_TsvConfigSection_svelte --> src_lib_application_stores_episodeAddStore_svelte_ts
+src_lib_presentation_components_TsvConfigSection_svelte --> src_lib_application_stores_fileEpisodeAddStore_svelte_ts
 src_lib_presentation_components_TsvConfigSection_svelte --> src_lib_application_stores_i18n_svelte_ts
-src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_application_stores_episodeAddStore_svelte_ts
+src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_application_stores_fileEpisodeAddStore_svelte_ts
 src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_utils_language_ts
 src_lib_presentation_components_YoutubeEpisodeForm_svelte --> src_lib_application_stores_episodeAddStore_svelte_ts
 src_lib_presentation_components_YoutubeEpisodeForm_svelte --> src_lib_application_stores_i18n_svelte_ts
+src_lib_presentation_components_YoutubeEpisodeForm_svelte --> src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts
 src_lib_presentation_components_YoutubeEpisodeForm_svelte --> src_lib_utils_language_ts
 src_routes__layout_ts --> src_lib_application_usecases_initializeApplication_ts
 src_routes_____groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
@@ -353,8 +362,10 @@ src_routes_____groupId___page_svelte --> src_lib_presentation_components_GroupMo
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_GroupNameEditModal_svelte
 src_routes_____groupId___page_ts --> src_lib_application_usecases_fetchEpisodeGroups_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_episodeAddStore_svelte_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_fileEpisodeAddStore_svelte_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_i18n_svelte_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_addNewEpisode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_deleteEpisode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchAlbumGroups_ts

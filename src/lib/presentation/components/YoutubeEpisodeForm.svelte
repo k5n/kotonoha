@@ -1,6 +1,7 @@
 <script lang="ts">
   import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Checkbox, Input, Label, Spinner } from 'flowbite-svelte';
 
@@ -10,13 +11,8 @@
   };
   let { onSubmit, onYoutubeUrlChanged }: Props = $props();
 
-  let isLanguageSupported = $derived(() => {
-    const metadata = episodeAddStore.youtubeMetadata;
-    return !metadata || bcp47ToTranslationKey(metadata.language) !== undefined;
-  });
-
   let languageName = $derived.by(() => {
-    const metadata = episodeAddStore.youtubeMetadata;
+    const metadata = youtubeEpisodeAddStore.metadata;
     if (!metadata) return '';
     const languageKey = bcp47ToTranslationKey(metadata.language);
     return languageKey
@@ -27,28 +23,17 @@
   });
 
   async function handleSubmit() {
-    const youtubeMetadata = episodeAddStore.youtubeMetadata;
-    const isYoutubeMetadataFetching = episodeAddStore.isYoutubeMetadataFetching;
-    const isSubmitting = episodeAddStore.isSubmitting;
-
-    if (isSubmitting || isYoutubeMetadataFetching || !youtubeMetadata) return;
-
-    const errorMessageKey = episodeAddStore.validateYoutubeForm();
-    if (errorMessageKey) {
-      episodeAddStore.youtubeErrorMessage = t(errorMessageKey);
-      return;
-    }
-    if (!isLanguageSupported()) {
-      episodeAddStore.youtubeErrorMessage = t(
-        'components.episodeAddModal.errorUnsupportedLanguage',
-        {
-          language: youtubeMetadata.language,
-        }
-      );
+    if (
+      episodeAddStore.isSubmitting ||
+      youtubeEpisodeAddStore.isMetadataFetching ||
+      !youtubeEpisodeAddStore.metadata
+    ) {
       return;
     }
 
-    onSubmit();
+    if (youtubeEpisodeAddStore.validate()) {
+      onSubmit();
+    }
   }
 </script>
 
@@ -59,10 +44,10 @@
   <Input
     id="youtubeUrl"
     placeholder={t('components.episodeAddModal.youtubeUrlPlaceholder')}
-    value={episodeAddStore.youtubeUrl}
+    value={youtubeEpisodeAddStore.url}
     oninput={(e) => {
       const url = (e.currentTarget as HTMLInputElement).value;
-      episodeAddStore.youtubeUrl = url;
+      youtubeEpisodeAddStore.url = url;
       onYoutubeUrlChanged(url);
     }}
     type="url"
@@ -73,25 +58,25 @@
   <Label class="mb-2 block" for="title">{t('components.episodeAddModal.titleLabel')}</Label>
   <Input
     id="title"
-    disabled={episodeAddStore.isYoutubeMetadataFetching}
+    disabled={youtubeEpisodeAddStore.isMetadataFetching}
     placeholder={t('components.episodeAddModal.titlePlaceholder')}
-    value={episodeAddStore.youtubeMetadata?.title || ''}
+    value={youtubeEpisodeAddStore.metadata?.title || ''}
     oninput={(e) => {
-      episodeAddStore.changeYoutubeTitle((e.currentTarget as HTMLInputElement).value);
+      youtubeEpisodeAddStore.changeTitle((e.currentTarget as HTMLInputElement).value);
     }}
     type="text"
   />
 </div>
 
-{#if episodeAddStore.isYoutubeMetadataFetching}
+{#if youtubeEpisodeAddStore.isMetadataFetching}
   <div class="mb-4 flex justify-center">
     <Spinner size="16" />
   </div>
-{:else if episodeAddStore.youtubeMetadata}
+{:else if youtubeEpisodeAddStore.metadata}
   <div class="mb-4">
     <iframe
       class="mx-auto h-64 w-128"
-      src={episodeAddStore.youtubeMetadata.embedUrl}
+      src={youtubeEpisodeAddStore.metadata.embedUrl}
       title="YouTube video player"
       frameborder="0"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -106,24 +91,28 @@
       <Label class="inline text-sm font-medium">
         {t('components.episodeAddModal.videoLanguageLabel')}:
       </Label>
-      <span class="ml-2 text-sm {isLanguageSupported() ? 'text-gray-700' : 'text-red-600'}">
+      <span
+        class="ml-2 text-sm {youtubeEpisodeAddStore.isLanguageSupported
+          ? 'text-gray-700'
+          : 'text-red-600'}"
+      >
         {languageName}
       </span>
     </div>
 
     <!-- ASR checkbox (read-only) -->
     <div>
-      <Checkbox checked={episodeAddStore.youtubeMetadata.trackKind === 'asr'} disabled>
+      <Checkbox checked={youtubeEpisodeAddStore.metadata.trackKind === 'asr'} disabled>
         {t('components.episodeAddModal.automaticSubtitlesLabel')}
       </Checkbox>
     </div>
   </div>
 {/if}
 
-{#if episodeAddStore.youtubeErrorMessage}
+{#if youtubeEpisodeAddStore.errorMessage}
   <div class="mb-4">
     <div class="text-sm text-red-600">
-      {episodeAddStore.youtubeErrorMessage}
+      {youtubeEpisodeAddStore.errorMessage}
     </div>
   </div>
 {/if}
@@ -131,7 +120,7 @@
 <div class="flex justify-end gap-2">
   <Button
     color="gray"
-    disabled={episodeAddStore.isSubmitting || episodeAddStore.isYoutubeMetadataFetching}
+    disabled={episodeAddStore.isSubmitting || youtubeEpisodeAddStore.isMetadataFetching}
     onclick={episodeAddStore.close}
   >
     {t('components.episodeAddModal.cancel')}
@@ -139,8 +128,8 @@
   <Button
     onclick={handleSubmit}
     disabled={episodeAddStore.isSubmitting ||
-      episodeAddStore.isYoutubeMetadataFetching ||
-      !episodeAddStore.youtubeMetadata}
+      youtubeEpisodeAddStore.isMetadataFetching ||
+      !youtubeEpisodeAddStore.metadata}
   >
     {episodeAddStore.isSubmitting
       ? t('components.episodeAddModal.submitting')

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
+  import { fileEpisodeAddStore } from '$lib/application/stores/fileEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Label, Select } from 'flowbite-svelte';
 
   let ttsLanguageOptions = $derived(
-    episodeAddStore.ttsAvailableVoices?.voices
+    fileEpisodeAddStore.ttsAvailableVoices?.voices
       .map((voice) => voice.language)
       .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
       .map((lang) => ({
@@ -17,19 +17,19 @@
   let ttsQualityOptions = $derived(
     Array.from(
       new Set(
-        (episodeAddStore.ttsAvailableVoices?.voices || [])
-          .filter((voice) => voice.language.family === episodeAddStore.ttsSelectedLanguage)
+        (fileEpisodeAddStore.ttsAvailableVoices?.voices || [])
+          .filter((voice) => voice.language.family === fileEpisodeAddStore.ttsSelectedLanguage)
           .map((voice) => voice.quality)
       )
     ).map((quality) => ({ value: quality, name: quality }))
   );
 
   let ttsVoiceOptions = $derived(
-    (episodeAddStore.ttsAvailableVoices?.voices || [])
+    (fileEpisodeAddStore.ttsAvailableVoices?.voices || [])
       .filter(
         (voice) =>
-          voice.language.family === episodeAddStore.ttsSelectedLanguage &&
-          voice.quality === episodeAddStore.ttsSelectedQuality
+          voice.language.family === fileEpisodeAddStore.ttsSelectedLanguage &&
+          voice.quality === fileEpisodeAddStore.ttsSelectedQuality
       )
       .map((voice) => ({
         value: voice.name,
@@ -43,15 +43,15 @@
     {t('components.episodeAddModal.ttsConfigTitle')}
   </h4>
 
-  {#if episodeAddStore.isFetchingTtsVoices}
+  {#if fileEpisodeAddStore.isFetchingTtsVoices}
     <div class="text-sm text-gray-600 dark:text-gray-400">
       {t('components.episodeAddModal.loadingVoices')}
     </div>
-  {:else if episodeAddStore.ttsErrorMessage}
+  {:else if fileEpisodeAddStore.ttsErrorMessage}
     <div class="text-sm text-red-600">
-      {episodeAddStore.ttsErrorMessage}
+      {fileEpisodeAddStore.ttsErrorMessage}
     </div>
-  {:else if (episodeAddStore.ttsAvailableVoices?.voices || []).length > 0}
+  {:else if (fileEpisodeAddStore.ttsAvailableVoices?.voices || []).length > 0}
     <!-- Language Selection -->
     <div>
       <Label class="mb-2 block" for="tts-language">
@@ -60,9 +60,9 @@
       <Select
         id="tts-language"
         items={ttsLanguageOptions}
-        value={episodeAddStore.ttsSelectedLanguage}
+        value={fileEpisodeAddStore.ttsSelectedLanguage}
         onchange={(e) =>
-          (episodeAddStore.ttsSelectedLanguage = (e.currentTarget as HTMLSelectElement).value)}
+          (fileEpisodeAddStore.ttsSelectedLanguage = (e.currentTarget as HTMLSelectElement).value)}
       />
     </div>
 
@@ -75,9 +75,9 @@
         <Select
           id="tts-quality"
           items={ttsQualityOptions}
-          value={episodeAddStore.ttsSelectedQuality}
+          value={fileEpisodeAddStore.ttsSelectedQuality}
           onchange={(e) =>
-            (episodeAddStore.ttsSelectedQuality = (e.currentTarget as HTMLSelectElement).value)}
+            (fileEpisodeAddStore.ttsSelectedQuality = (e.currentTarget as HTMLSelectElement).value)}
         />
       </div>
 
@@ -90,9 +90,11 @@
           <Select
             id="tts-voice"
             items={ttsVoiceOptions}
-            value={episodeAddStore.ttsSelectedVoiceName}
+            value={fileEpisodeAddStore.ttsSelectedVoiceName}
             onchange={(e) =>
-              (episodeAddStore.ttsSelectedVoiceName = (e.currentTarget as HTMLSelectElement).value)}
+              (fileEpisodeAddStore.ttsSelectedVoiceName = (
+                e.currentTarget as HTMLSelectElement
+              ).value)}
           />
         </div>
       {/if}
