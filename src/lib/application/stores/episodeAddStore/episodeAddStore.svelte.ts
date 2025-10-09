@@ -1,7 +1,7 @@
-import type { FileEpisodeAddPayload } from '$lib/application/stores/fileEpisodeAddStore.svelte';
-import { fileEpisodeAddStore } from '$lib/application/stores/fileEpisodeAddStore.svelte';
-import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
-import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
+import type { FileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore.svelte';
+import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore.svelte';
+import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
+import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
 
 /**
  * エピソード追加ペイロードのユニオン型
@@ -65,4 +65,8 @@ export const episodeAddStore = {
     }
     return null;
   },
+
+  // Sub-stores
+  file: fileEpisodeAddStore,
+  youtube: youtubeEpisodeAddStore,
 };

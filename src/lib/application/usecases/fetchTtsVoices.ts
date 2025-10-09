@@ -1,4 +1,4 @@
-import { fileEpisodeAddStore } from '$lib/application/stores/fileEpisodeAddStore.svelte';
+import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore.svelte';
 import type { Voice } from '$lib/domain/entities/voice';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import { getSupportedLanguages } from '$lib/utils/language';

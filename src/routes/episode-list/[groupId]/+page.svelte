@@ -1,10 +1,8 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
-  import { fileEpisodeAddStore } from '$lib/application/stores/fileEpisodeAddStore.svelte';
+  import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { addNewEpisode, addYoutubeEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
@@ -55,11 +53,11 @@
 
   async function handleTsvFileSelected(filePath: string) {
     try {
-      fileEpisodeAddStore.startScriptPreviewFetching();
+      episodeAddStore.file.startScriptPreviewFetching();
       const preview = await previewScriptFile(filePath);
-      fileEpisodeAddStore.completeScriptPreviewFetching(preview);
+      episodeAddStore.file.completeScriptPreviewFetching(preview);
     } catch (e) {
-      fileEpisodeAddStore.failedScriptPreviewFetching(
+      episodeAddStore.file.failedScriptPreviewFetching(
         t('components.episodeAddModal.errorTsvParse')
       );
       console.error(e);
@@ -68,23 +66,23 @@
 
   async function handleYoutubeUrlChanged(url: string) {
     if (!url.trim()) {
-      youtubeEpisodeAddStore.completeMetadataFetching(null);
+      episodeAddStore.youtube.completeMetadataFetching(null);
       return;
     }
 
     try {
-      youtubeEpisodeAddStore.startMetadataFetching();
+      episodeAddStore.youtube.startMetadataFetching();
       const metadata = await fetchYoutubeMetadata(url);
-      youtubeEpisodeAddStore.completeMetadataFetching(metadata);
+      episodeAddStore.youtube.completeMetadataFetching(metadata);
     } catch (err) {
-      youtubeEpisodeAddStore.failedMetadataFetching(`${err}`);
+      episodeAddStore.youtube.failedMetadataFetching(`${err}`);
       console.error('Failed to fetch YouTube metadata:', err);
     }
   }
 
   async function handleTtsEnabled() {
     // Fetch TTS voices if not already cached
-    if (!fileEpisodeAddStore.ttsAvailableVoices && !fileEpisodeAddStore.isFetchingTtsVoices) {
+    if (!episodeAddStore.file.ttsAvailableVoices && !episodeAddStore.file.isFetchingTtsVoices) {
       try {
         await fetchTtsVoices();
       } catch (err) {

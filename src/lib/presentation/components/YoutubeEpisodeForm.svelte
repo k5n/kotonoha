@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
+  import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
+  import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Checkbox, Input, Label, Spinner } from 'flowbite-svelte';
 

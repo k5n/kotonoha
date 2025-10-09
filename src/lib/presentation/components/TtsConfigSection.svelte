@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fileEpisodeAddStore } from '$lib/application/stores/fileEpisodeAddStore.svelte';
+  import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Label, Select } from 'flowbite-svelte';

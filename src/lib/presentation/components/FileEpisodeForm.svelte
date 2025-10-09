@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
-  import { fileEpisodeAddStore } from '$lib/application/stores/fileEpisodeAddStore.svelte';
+  import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
+  import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
