@@ -3,6 +3,7 @@
 //   "baseUrl": "https://huggingface.co/rhasspy/piper-voices/resolve/main/",
 //   "voices": [
 //     {
+//       "name": "john",
 //       "language": {
 //         "family": "en",
 //         "region": "US"
@@ -31,6 +32,7 @@ export type Language = {
 };
 
 export type Voice = {
+  readonly name: string;
   readonly language: Language;
   readonly quality: string;
   readonly files: readonly FileInfo[];

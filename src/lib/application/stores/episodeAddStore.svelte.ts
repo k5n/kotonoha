@@ -1,5 +1,6 @@
 import type { ScriptPreview } from '$lib/domain/entities/scriptPreview';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
+import type { Voices } from '$lib/domain/entities/voice';
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 
 /**
@@ -11,6 +12,9 @@ export type FileEpisodeAddPayload = {
   readonly audioFilePath: string;
   readonly scriptFilePath: string;
   readonly tsvConfig?: TsvConfig;
+  readonly ttsLanguage?: string;
+  readonly ttsVoiceName?: string;
+  readonly ttsQuality?: string;
 };
 
 /**
@@ -51,6 +55,16 @@ const store = $state({
     errorMessage: '',
   },
 
+  // TTS form state
+  ttsForm: {
+    availableVoices: null as Voices | null,
+    isFetchingVoices: false,
+    selectedLanguage: 'en',
+    selectedVoiceName: '',
+    selectedQuality: 'high',
+    errorMessage: '',
+  },
+
   // YouTube form state
   youtubeForm: {
     url: '',
@@ -84,6 +98,14 @@ function reset() {
     isFetching: false,
     errorMessage: '',
   };
+  store.ttsForm = {
+    availableVoices: null,
+    isFetchingVoices: false,
+    selectedLanguage: 'en',
+    selectedVoiceName: '',
+    selectedQuality: 'medium',
+    errorMessage: '',
+  };
 }
 
 function buildFilePayload(): EpisodeAddPayload | null {
@@ -107,13 +129,25 @@ function buildFilePayload(): EpisodeAddPayload | null {
         }
       : undefined;
 
-  return {
+  const payload: FileEpisodeAddPayload = {
     source: 'file',
     title: store.fileForm.title.trim(),
     audioFilePath: store.fileForm.audioFilePath,
     scriptFilePath: store.fileForm.scriptFilePath,
     tsvConfig: finalTsvConfig,
   };
+
+  // Add TTS configuration if audio generation is enabled
+  if (store.fileForm.shouldGenerateAudio) {
+    return {
+      ...payload,
+      ttsLanguage: store.ttsForm.selectedLanguage,
+      ttsVoiceName: store.ttsForm.selectedVoiceName || undefined,
+      ttsQuality: store.ttsForm.selectedQuality,
+    };
+  }
+
+  return payload;
 }
 
 function buildYoutubePayload(): EpisodeAddPayload | null {
@@ -205,6 +239,51 @@ export const episodeAddStore = {
     store.youtubeForm.errorMessage = message;
   },
 
+  // TTS form getters and setters
+  get ttsAvailableVoices() {
+    return store.ttsForm.availableVoices;
+  },
+  get isFetchingTtsVoices() {
+    return store.ttsForm.isFetchingVoices;
+  },
+  get ttsSelectedLanguage() {
+    return store.ttsForm.selectedLanguage;
+  },
+  set ttsSelectedLanguage(language: string) {
+    store.ttsForm.selectedLanguage = language;
+    // Reset quality and voice name when language changes
+    const voices = store.ttsForm.availableVoices?.voices || [];
+    const languageVoices = voices.filter((v) => v.language.family === language);
+    const availableQualities = Array.from(new Set(languageVoices.map((v) => v.quality)));
+    store.ttsForm.selectedQuality = availableQualities[0];
+    const qualityVoices = languageVoices.filter((v) => v.quality === store.ttsForm.selectedQuality);
+    store.ttsForm.selectedVoiceName = qualityVoices[0]?.name || '';
+  },
+  get ttsSelectedVoiceName() {
+    return store.ttsForm.selectedVoiceName;
+  },
+  set ttsSelectedVoiceName(voiceName: string) {
+    store.ttsForm.selectedVoiceName = voiceName;
+  },
+  get ttsSelectedQuality() {
+    return store.ttsForm.selectedQuality;
+  },
+  set ttsSelectedQuality(quality: string) {
+    store.ttsForm.selectedQuality = quality;
+    // Reset voice name when quality changes
+    const voices = store.ttsForm.availableVoices?.voices || [];
+    const qualityVoices = voices.filter(
+      (v) => v.language.family === store.ttsForm.selectedLanguage && v.quality === quality
+    );
+    store.ttsForm.selectedVoiceName = qualityVoices[0]?.name || '';
+  },
+  get ttsErrorMessage() {
+    return store.ttsForm.errorMessage;
+  },
+  set ttsErrorMessage(message: string) {
+    store.ttsForm.errorMessage = message;
+  },
+
   // Modal actions
   open() {
     store.show = true;
@@ -275,6 +354,42 @@ export const episodeAddStore = {
     store.youtubeForm.errorMessage = errorMessage;
     store.youtubeForm.metadata = null;
     store.youtubeForm.isFetching = false;
+  },
+
+  // TTS form actions
+  startTtsVoicesFetching() {
+    store.ttsForm.isFetchingVoices = true;
+    store.ttsForm.errorMessage = '';
+  },
+
+  completeTtsVoicesFetching(voices: Voices) {
+    store.ttsForm.availableVoices = voices;
+    store.ttsForm.isFetchingVoices = false;
+
+    // Set default quality and voice name if not already set
+    if (!store.ttsForm.selectedVoiceName && voices.voices.length > 0) {
+      const defaultLanguageVoices = voices.voices.filter(
+        (v) => v.language.family === store.ttsForm.selectedLanguage
+      );
+      const availableQualities = Array.from(new Set(defaultLanguageVoices.map((v) => v.quality)));
+      if (
+        !store.ttsForm.selectedQuality ||
+        !availableQualities.includes(store.ttsForm.selectedQuality)
+      ) {
+        store.ttsForm.selectedQuality = availableQualities[0] || 'high';
+      }
+      const qualityVoices = defaultLanguageVoices.filter(
+        (v) => v.quality === store.ttsForm.selectedQuality
+      );
+      store.ttsForm.selectedVoiceName =
+        qualityVoices[0]?.name || defaultLanguageVoices[0]?.name || '';
+    }
+  },
+
+  failedTtsVoicesFetching(errorMessage: string) {
+    store.ttsForm.errorMessage = errorMessage;
+    store.ttsForm.availableVoices = null;
+    store.ttsForm.isFetchingVoices = false;
   },
 
   validateFileForm(): string {

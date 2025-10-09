@@ -6,6 +6,7 @@
   import { addNewEpisode, addYoutubeEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
+  import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
   import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
@@ -74,6 +75,17 @@
     } catch (err) {
       episodeAddStore.failedYoutubeMetadataFetching(`${err}`);
       console.error('Failed to fetch YouTube metadata:', err);
+    }
+  }
+
+  async function handleTtsEnabled() {
+    // Fetch TTS voices if not already cached
+    if (!episodeAddStore.ttsAvailableVoices && !episodeAddStore.isFetchingTtsVoices) {
+      try {
+        await fetchTtsVoices();
+      } catch (err) {
+        console.error('Failed to fetch TTS voices:', err);
+      }
     }
   }
 
@@ -260,6 +272,7 @@
   onTsvFileSelected={handleTsvFileSelected}
   onYoutubeUrlChanged={handleYoutubeUrlChanged}
   onSubmit={handleEpisodeAddSubmit}
+  onTtsEnabled={handleTtsEnabled}
 />
 
 <EpisodeMoveModal

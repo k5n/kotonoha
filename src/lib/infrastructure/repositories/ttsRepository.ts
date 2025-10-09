@@ -64,6 +64,7 @@ function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
       md5: fileInfo.md5_digest,
     }));
     return {
+      name: piperVoice.name,
       language: {
         family: piperVoice.language.family,
         region: piperVoice.language.region,

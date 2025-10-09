@@ -225,7 +225,7 @@ const bcp47ToTranslationKeyTable: { [key: string]: string } = {
   zu: 'languages.zu',
 };
 
-export function getSupportedLanguages(): { code: string; name: string }[] {
+export function getSupportedLanguages(): readonly { code: string; name: string }[] {
   return Object.entries(supportedPrimaryLanguageSubtags).map(([code, name]) => ({ code, name }));
 }
 
