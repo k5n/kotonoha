@@ -8,6 +8,8 @@ const store = $state({
   selectedQuality: '',
   selectedSpeakerId: 0,
   errorMessage: '',
+  audioElement: null as HTMLAudioElement | null,
+  isPlayingSample: false,
 });
 
 export const ttsConfigStore = {
@@ -32,6 +34,8 @@ export const ttsConfigStore = {
     const qualityVoices = languageVoices.filter((v) => v.quality === store.selectedQuality);
     store.selectedVoiceName = qualityVoices[0]?.name || '';
     store.selectedSpeakerId = 0;
+    // Stop any playing sample
+    ttsConfigStore.stopSample();
   },
 
   get selectedVoiceName() {
@@ -49,6 +53,8 @@ export const ttsConfigStore = {
         store.selectedSpeakerId = 0;
       }
     }
+    // Stop any playing sample
+    ttsConfigStore.stopSample();
   },
 
   get selectedQuality() {
@@ -63,6 +69,8 @@ export const ttsConfigStore = {
     );
     store.selectedVoiceName = qualityVoices[0]?.name || '';
     store.selectedSpeakerId = 0;
+    // Stop any playing sample
+    ttsConfigStore.stopSample();
   },
 
   get selectedSpeakerId() {
@@ -70,6 +78,8 @@ export const ttsConfigStore = {
   },
   set selectedSpeakerId(id: number) {
     store.selectedSpeakerId = id;
+    // Stop any playing sample
+    ttsConfigStore.stopSample();
   },
 
   get availableSpeakers() {
@@ -78,9 +88,16 @@ export const ttsConfigStore = {
     );
     if (!currentVoice) return [];
     if (currentVoice.speakers.length === 0) {
-      return [{ id: 0, name: currentVoice.name }];
+      return [{ id: 0, name: currentVoice.name, sampleUrl: currentVoice.files[0]?.url || '' }];
     }
     return currentVoice.speakers;
+  },
+
+  get currentSpeaker() {
+    return (
+      ttsConfigStore.availableSpeakers.find((speaker) => speaker.id === store.selectedSpeakerId) ||
+      null
+    );
   },
 
   get errorMessage() {
@@ -88,6 +105,35 @@ export const ttsConfigStore = {
   },
   set errorMessage(message: string) {
     store.errorMessage = message;
+  },
+
+  get isPlayingSample() {
+    return store.isPlayingSample;
+  },
+
+  playSample(url: string) {
+    if (store.audioElement) {
+      store.audioElement.pause();
+    }
+    store.audioElement = new Audio(url);
+    store.audioElement.volume = 0.8;
+    store.audioElement.addEventListener('ended', () => {
+      store.isPlayingSample = false;
+    });
+    store.audioElement.addEventListener('error', () => {
+      store.errorMessage = '再生エラー';
+      store.isPlayingSample = false;
+    });
+    store.audioElement.play();
+    store.isPlayingSample = true;
+  },
+
+  stopSample() {
+    if (store.audioElement) {
+      store.audioElement.pause();
+      store.audioElement = null;
+    }
+    store.isPlayingSample = false;
   },
 
   startVoicesFetching() {
@@ -131,5 +177,7 @@ export const ttsConfigStore = {
     store.selectedQuality = '';
     store.selectedSpeakerId = 0;
     store.errorMessage = '';
+    store.audioElement = null;
+    store.isPlayingSample = false;
   },
 };

@@ -59,13 +59,15 @@ function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
   const baseUrl = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/';
   const voices: Voice[] = Object.values(piperVoices).map((piperVoice) => {
     const files: FileInfo[] = Object.entries(piperVoice.files).map(([filePath, fileInfo]) => ({
-      path: filePath,
+      url: baseUrl + filePath,
       bytes: fileInfo.size_bytes,
       md5: fileInfo.md5_digest,
     }));
+    const voiceBaseUrl = files[0]?.url.replace(/\/[^/]+$/, '/');
     const speakers: Speaker[] = Object.entries(piperVoice.speaker_id_map).map(([name, id]) => ({
       name,
       id,
+      sampleUrl: `${voiceBaseUrl}samples/speaker_${id}.mp3`,
     }));
     return {
       name: piperVoice.name,
@@ -75,7 +77,10 @@ function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
       },
       quality: piperVoice.quality,
       files,
-      speakers: speakers.length > 0 ? speakers : [{ id: 0, name: piperVoice.name }],
+      speakers:
+        speakers.length > 0
+          ? speakers
+          : [{ id: 0, name: piperVoice.name, sampleUrl: `${voiceBaseUrl}samples/speaker_0.mp3` }],
     };
   });
   return { baseUrl, voices };

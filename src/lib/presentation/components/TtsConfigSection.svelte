@@ -2,7 +2,7 @@
   import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
-  import { Label, Select } from 'flowbite-svelte';
+  import { Button, Label, Select } from 'flowbite-svelte';
 
   let ttsLanguageOptions = $derived(
     ttsConfigStore.availableVoices?.voices
@@ -43,6 +43,17 @@
       name: speaker.name,
     }))
   );
+
+  function handlePlaySample() {
+    const currentSpeaker = ttsConfigStore.currentSpeaker;
+    if (currentSpeaker?.sampleUrl) {
+      if (ttsConfigStore.isPlayingSample) {
+        ttsConfigStore.stopSample();
+      } else {
+        ttsConfigStore.playSample(currentSpeaker.sampleUrl);
+      }
+    }
+  }
 </script>
 
 <div class="mb-4 space-y-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
@@ -118,6 +129,24 @@
                   (e.currentTarget as HTMLSelectElement).value
                 ))}
             />
+          </div>
+        {/if}
+
+        <!-- Sample Playback -->
+        {#if ttsConfigStore.currentSpeaker?.sampleUrl}
+          <div>
+            <Button
+              onclick={handlePlaySample}
+              color="light"
+              size="sm"
+              disabled={!ttsConfigStore.currentSpeaker?.sampleUrl}
+            >
+              {#if ttsConfigStore.isPlayingSample}
+                ⏹️ {t('components.ttsConfigSection.stopSample')}
+              {:else}
+                ▶️ {t('components.ttsConfigSection.playSample')}
+              {/if}
+            </Button>
           </div>
         {/if}
       {/if}

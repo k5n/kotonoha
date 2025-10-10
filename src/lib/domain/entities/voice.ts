@@ -11,12 +11,18 @@
 //       "quality": "medium",
 //       "files": [
 //         {
-//           "path": "en/en_US/john/medium/en_US-john-medium.onnx",
+//           "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/john/medium/en_US-john-medium.onnx",
 //           "bytes": 63531379,
 //           "md5": "70480857f21f2560f3a232722023b36d"
 //         }
 //       ],
-//       "speakers": []
+//       "speakers": [
+//         {
+//           "id": 0,
+//           "name": "john",
+//           "sampleUrl": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/john/medium/samples/speaker_0.mp3"
+//         }
+//       ]
 //     }
 //   ]
 // }
@@ -24,10 +30,11 @@
 export type Speaker = {
   readonly id: number;
   readonly name: string;
+  readonly sampleUrl: string;
 };
 
 export type FileInfo = {
-  readonly path: string;
+  readonly url: string;
   readonly bytes: number;
   readonly md5: string;
 };

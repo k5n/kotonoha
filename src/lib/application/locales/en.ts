@@ -292,6 +292,8 @@ export const en = {
         ttsVoiceLabel: 'Voice',
         ttsQualityLabel: 'Quality',
         ttsSpeakerLabel: 'Speaker',
+        playSample: 'Play Sample',
+        stopSample: 'Stop',
       },
       episodeListTable: {
         title: 'Title',

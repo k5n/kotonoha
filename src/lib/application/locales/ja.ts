@@ -292,6 +292,8 @@ export const ja = {
         ttsVoiceLabel: '音声',
         ttsQualityLabel: '音質',
         ttsSpeakerLabel: '話者',
+        playSample: 'サンプル再生',
+        stopSample: '停止',
       },
       episodeListTable: {
         title: 'タイトル',
