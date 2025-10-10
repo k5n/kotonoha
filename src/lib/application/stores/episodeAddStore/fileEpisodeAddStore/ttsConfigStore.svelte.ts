@@ -80,7 +80,9 @@ function setSelectedQuality(quality: string) {
   const qualityVoices = voices.filter(
     (v) => v.language.family === selectedLanguage && v.quality === quality
   );
-  setSelectedVoiceName(qualityVoices[0]?.name || '');
+  // If the current selectedVoiceName exists in qualityVoices, keep it; otherwise, set the first one
+  const matchingVoice = qualityVoices.find((v) => v.name === selectedVoiceName);
+  setSelectedVoiceName(matchingVoice?.name || qualityVoices[0]?.name || '');
 }
 
 function setSelectedVoiceName(voiceName: string) {
