@@ -17,70 +17,71 @@ export type FileEpisodeAddPayload = {
   readonly ttsQuality?: string;
 };
 
-const store = $state({
-  title: '',
-  audioFilePath: null as string | null,
-  scriptFilePath: null as string | null,
-  shouldGenerateAudio: false,
-  errorMessage: '',
-});
+let title = $state('');
+let audioFilePath = $state<string | null>(null);
+let scriptFilePath = $state<string | null>(null);
+let shouldGenerateAudio = $state(false);
+let errorMessage = $state('');
+
+const hasOnlyScriptFile = $derived(!!scriptFilePath && !audioFilePath);
+const isTxtScriptFile = $derived(scriptFilePath?.toLowerCase().endsWith('.txt') ?? false);
 
 export const fileEpisodeAddStore = {
   get title() {
-    return store.title;
+    return title;
   },
-  set title(title: string) {
-    store.title = title;
+  set title(value: string) {
+    title = value;
   },
 
   get errorMessage() {
-    return store.errorMessage;
+    return errorMessage;
   },
 
   get shouldGenerateAudio() {
-    return store.shouldGenerateAudio;
+    return shouldGenerateAudio;
   },
   set shouldGenerateAudio(value: boolean) {
-    store.shouldGenerateAudio = value;
+    shouldGenerateAudio = value;
   },
 
   get hasOnlyScriptFile() {
-    return !!store.scriptFilePath && !store.audioFilePath;
+    return hasOnlyScriptFile;
   },
 
   get isTxtScriptFile() {
-    return store.scriptFilePath?.toLowerCase().endsWith('.txt') ?? false;
+    return isTxtScriptFile;
   },
 
   setAudioFilePath(path: string | null) {
-    store.audioFilePath = path;
+    audioFilePath = path;
   },
 
   setScriptFilePath(path: string | null) {
-    store.scriptFilePath = path;
+    scriptFilePath = path;
   },
 
   validate(): boolean {
-    const title = store.title.trim();
-    const audioFilePath = store.audioFilePath;
-    const scriptFilePath = store.scriptFilePath;
+    const titleValue = title.trim();
+    const audioFilePathValue = audioFilePath;
+    const scriptFilePathValue = scriptFilePath;
     const scriptPreview = tsvConfigStore.scriptPreview;
     const tsvConfig = tsvConfigStore.tsvConfig;
-    if (!title.trim()) {
-      store.errorMessage = t('components.episodeAddModal.errorTitleRequired');
+    if (!titleValue.trim()) {
+      errorMessage = t('components.episodeAddModal.errorTitleRequired');
       return false;
     }
-    if (!audioFilePath && !store.shouldGenerateAudio) {
-      store.errorMessage = t('components.episodeAddModal.errorAudioFileRequired');
+    if (!audioFilePathValue && !shouldGenerateAudio) {
+      errorMessage = t('components.episodeAddModal.errorAudioFileRequired');
       return false;
     }
-    if (!scriptFilePath) {
-      store.errorMessage = t('components.episodeAddModal.errorScriptFileRequired');
+    if (!scriptFilePathValue) {
+      errorMessage = t('components.episodeAddModal.errorScriptFileRequired');
       return false;
     }
     if (scriptPreview) {
       if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
-        store.errorMessage = t('components.episodeAddModal.errorTsvColumnRequired');
+        errorMessage = t('components.episodeAddModal.errorTsvColumnRequired');
         return false;
       }
     }
@@ -88,7 +89,7 @@ export const fileEpisodeAddStore = {
   },
 
   buildPayload(): FileEpisodeAddPayload | null {
-    if (!store.title.trim() || !store.audioFilePath || !store.scriptFilePath) {
+    if (!title.trim() || !audioFilePath || !scriptFilePath) {
       return null;
     }
 
@@ -106,14 +107,14 @@ export const fileEpisodeAddStore = {
 
     const payload: FileEpisodeAddPayload = {
       source: 'file',
-      title: store.title.trim(),
-      audioFilePath: store.audioFilePath,
-      scriptFilePath: store.scriptFilePath,
+      title: title.trim(),
+      audioFilePath: audioFilePath,
+      scriptFilePath: scriptFilePath,
       tsvConfig: finalTsvConfig,
     };
 
     // Add TTS configuration if audio generation is enabled
-    if (store.shouldGenerateAudio) {
+    if (shouldGenerateAudio) {
       return {
         ...payload,
         ttsLanguage: ttsConfigStore.selectedLanguage,
@@ -126,11 +127,11 @@ export const fileEpisodeAddStore = {
   },
 
   reset() {
-    store.title = '';
-    store.audioFilePath = null;
-    store.scriptFilePath = null;
-    store.shouldGenerateAudio = false;
-    store.errorMessage = '';
+    title = '';
+    audioFilePath = null;
+    scriptFilePath = null;
+    shouldGenerateAudio = false;
+    errorMessage = '';
     tsvConfigStore.reset();
     ttsConfigStore.reset();
   },

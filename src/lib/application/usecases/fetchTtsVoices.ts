@@ -9,6 +9,7 @@ import { getSupportedLanguages } from '$lib/utils/language';
  * and updates the episode add store with the results.
  */
 export async function fetchTtsVoices(): Promise<void> {
+  console.time('fetchTtsVoices');
   try {
     fileEpisodeAddStore.tts.startVoicesFetching();
     const voices = await ttsRepository.getAvailableVoices();
@@ -41,4 +42,5 @@ export async function fetchTtsVoices(): Promise<void> {
       error instanceof Error ? error.message : 'Failed to fetch TTS voices'
     );
   }
+  console.timeEnd('fetchTtsVoices');
 }

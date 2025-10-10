@@ -1,65 +1,63 @@
 import type { ScriptPreview } from '$lib/domain/entities/scriptPreview';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 
-const store = $state({
-  tsvConfig: {
-    startTimeColumnIndex: -1,
-    textColumnIndex: -1,
-    endTimeColumnIndex: -1,
-  } as TsvConfig,
-  isFetchingScriptPreview: false,
-  scriptPreview: null as ScriptPreview | null,
-  errorMessage: '',
-});
+let tsvConfig = $state({
+  startTimeColumnIndex: -1,
+  textColumnIndex: -1,
+  endTimeColumnIndex: -1,
+} as TsvConfig);
+let isFetchingScriptPreview = $state(false);
+let scriptPreview = $state(null as ScriptPreview | null);
+let errorMessage = $state('');
 
 export const tsvConfigStore = {
   get tsvConfig() {
-    return store.tsvConfig;
+    return tsvConfig;
   },
 
   get errorMessage() {
-    return store.errorMessage;
+    return errorMessage;
   },
 
   get scriptPreview() {
-    return store.scriptPreview;
+    return scriptPreview;
   },
 
   get isFetchingScriptPreview() {
-    return store.isFetchingScriptPreview;
+    return isFetchingScriptPreview;
   },
 
   updateConfig(field: keyof TsvConfig, value: number) {
-    store.tsvConfig = {
-      ...store.tsvConfig,
+    tsvConfig = {
+      ...tsvConfig,
       [field]: value,
     };
   },
 
   startScriptPreviewFetching() {
-    store.isFetchingScriptPreview = true;
-    store.errorMessage = '';
+    isFetchingScriptPreview = true;
+    errorMessage = '';
   },
 
   completeScriptPreviewFetching(preview: ScriptPreview | null) {
-    store.scriptPreview = preview;
-    store.isFetchingScriptPreview = false;
+    scriptPreview = preview;
+    isFetchingScriptPreview = false;
   },
 
-  failedScriptPreviewFetching(errorMessage: string) {
-    store.errorMessage = errorMessage;
-    store.scriptPreview = null;
-    store.isFetchingScriptPreview = false;
+  failedScriptPreviewFetching(msg: string) {
+    errorMessage = msg;
+    scriptPreview = null;
+    isFetchingScriptPreview = false;
   },
 
   reset() {
-    store.tsvConfig = {
+    tsvConfig = {
       startTimeColumnIndex: -1,
       textColumnIndex: -1,
       endTimeColumnIndex: -1,
     };
-    store.scriptPreview = null;
-    store.isFetchingScriptPreview = false;
-    store.errorMessage = '';
+    scriptPreview = null;
+    isFetchingScriptPreview = false;
+    errorMessage = '';
   },
 };

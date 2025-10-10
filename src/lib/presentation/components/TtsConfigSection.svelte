@@ -19,7 +19,6 @@
   <h4 class="text-sm font-medium text-gray-900 dark:text-white">
     {t('components.ttsConfigSection.ttsConfigTitle')}
   </h4>
-
   {#if ttsConfigStore.isFetchingVoices}
     <div class="text-sm text-gray-600 dark:text-gray-400">
       {t('components.ttsConfigSection.loadingVoices')}
@@ -37,9 +36,7 @@
       <Select
         id="tts-language"
         items={ttsConfigStore.languageOptions}
-        value={ttsConfigStore.selectedLanguage}
-        onchange={(e) =>
-          (ttsConfigStore.selectedLanguage = (e.currentTarget as HTMLSelectElement).value)}
+        bind:value={ttsConfigStore.selectedLanguage}
       />
     </div>
 
@@ -52,9 +49,7 @@
         <Select
           id="tts-quality"
           items={ttsConfigStore.qualityOptions}
-          value={ttsConfigStore.selectedQuality}
-          onchange={(e) =>
-            (ttsConfigStore.selectedQuality = (e.currentTarget as HTMLSelectElement).value)}
+          bind:value={ttsConfigStore.selectedQuality}
         />
       </div>
 
@@ -67,9 +62,7 @@
           <Select
             id="tts-voice"
             items={ttsConfigStore.voiceOptions}
-            value={ttsConfigStore.selectedVoiceName}
-            onchange={(e) =>
-              (ttsConfigStore.selectedVoiceName = (e.currentTarget as HTMLSelectElement).value)}
+            bind:value={ttsConfigStore.selectedVoiceName}
           />
         </div>
 
@@ -82,11 +75,7 @@
             <Select
               id="tts-speaker"
               items={ttsConfigStore.speakerOptions}
-              value={ttsConfigStore.selectedSpeakerId.toString()}
-              onchange={(e) =>
-                (ttsConfigStore.selectedSpeakerId = parseInt(
-                  (e.currentTarget as HTMLSelectElement).value
-                ))}
+              bind:value={ttsConfigStore.selectedSpeakerId}
             />
           </div>
         {/if}

@@ -81,6 +81,7 @@
   }
 
   async function handleTtsEnabled() {
+    console.time('handleTtsEnabled');
     // Fetch TTS voices if not already cached
     if (!episodeAddStore.file.tts.availableVoices && !episodeAddStore.file.tts.isFetchingVoices) {
       try {
@@ -89,6 +90,7 @@
         console.error('Failed to fetch TTS voices:', err);
       }
     }
+    console.timeEnd('handleTtsEnabled');
   }
 
   async function handleEpisodeAddSubmit() {

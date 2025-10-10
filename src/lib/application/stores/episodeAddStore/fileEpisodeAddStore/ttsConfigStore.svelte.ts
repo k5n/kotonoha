@@ -2,236 +2,252 @@ import { t } from '$lib/application/stores/i18n.svelte';
 import type { Voices } from '$lib/domain/entities/voice';
 import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
 
-type TtsOption = { value: string; name: string };
+let availableVoices = $state(null as Voices | null);
+let learningTargetVoices = $state(null as Voices | null);
+let isFetchingVoices = $state(false);
+let selectedLanguage = $state('en');
+let selectedVoiceName = $state('');
+let selectedQuality = $state('');
+let selectedSpeakerId = $state(0);
+let errorMessage = $state('');
+let audioElement = $state(null as HTMLAudioElement | null);
+let isPlayingSample = $state(false);
 
-const store = $state({
-  availableVoices: null as Voices | null,
-  learningTargetVoices: null as Voices | null,
-  isFetchingVoices: false,
-  selectedLanguage: 'en',
-  selectedVoiceName: '',
-  selectedQuality: '',
-  selectedSpeakerId: 0,
-  errorMessage: '',
-  audioElement: null as HTMLAudioElement | null,
-  isPlayingSample: false,
+const availableSpeakers = $derived.by(() => {
+  const currentVoice = learningTargetVoices?.voices.find((v) => v.name === selectedVoiceName);
+  if (!currentVoice) return [];
+  if (currentVoice.speakers.length === 0) {
+    return [{ id: 0, name: currentVoice.name, sampleUrl: currentVoice.files[0]?.url || '' }];
+  }
+  return currentVoice.speakers;
 });
+
+const languageOptions = $derived(
+  learningTargetVoices?.voices
+    .map((voice) => voice.language)
+    .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
+    .map((lang) => ({
+      value: lang.family,
+      name: `${t(bcp47ToTranslationKey(lang.family)!)} (${bcp47ToLanguageName(lang.family)})`,
+    })) || []
+);
+
+const qualityOptions = $derived(
+  Array.from(
+    new Set(
+      (learningTargetVoices?.voices || [])
+        .filter((voice) => voice.language.family === selectedLanguage)
+        .map((voice) => voice.quality)
+    )
+  ).map((quality) => ({ value: quality, name: quality }))
+);
+
+const voiceOptions = $derived(
+  (learningTargetVoices?.voices || [])
+    .filter(
+      (voice) => voice.language.family === selectedLanguage && voice.quality === selectedQuality
+    )
+    .map((voice) => ({
+      value: voice.name,
+      name: `${voice.name} (${voice.language.region})`,
+    })) || []
+);
+
+const speakerOptions = $derived(
+  availableSpeakers.map((speaker) => ({
+    value: speaker.id.toString(),
+    name: speaker.name,
+  }))
+);
+
+const currentSpeaker = $derived(
+  availableSpeakers.find((speaker) => speaker.id === selectedSpeakerId) || null
+);
+
+function setSelectedLanguage(language: string) {
+  selectedLanguage = language;
+  // Reset quality and voice name when language changes
+  const voices = learningTargetVoices?.voices || [];
+  const languageVoices = voices.filter((v) => v.language.family === language);
+  const availableQualities = Array.from(new Set(languageVoices.map((v) => v.quality)));
+  setSelectedQuality(availableQualities[0] || '');
+}
+
+function setSelectedQuality(quality: string) {
+  selectedQuality = quality;
+  // Reset voice name when quality changes
+  const voices = learningTargetVoices?.voices || [];
+  const qualityVoices = voices.filter(
+    (v) => v.language.family === selectedLanguage && v.quality === quality
+  );
+  setSelectedVoiceName(qualityVoices[0]?.name || '');
+}
+
+function setSelectedVoiceName(voiceName: string) {
+  const voices = learningTargetVoices?.voices || [];
+  const voice = voices.find((v) => v.name === voiceName);
+  if (voice) {
+    selectedVoiceName = voiceName;
+    const speakers = voice.speakers.length === 0 ? [{ id: 0, name: voice.name }] : voice.speakers;
+    if (speakers.length === 1) {
+      selectedSpeakerId = speakers[0].id;
+    } else {
+      selectedSpeakerId = 0;
+    }
+  }
+  // Stop any playing sample
+  ttsConfigStore.stopSample();
+}
 
 export const ttsConfigStore = {
   get availableVoices() {
-    return store.availableVoices;
+    return availableVoices;
   },
 
   get learningTargetVoices() {
-    return store.learningTargetVoices;
+    return learningTargetVoices;
   },
 
   get isFetchingVoices() {
-    return store.isFetchingVoices;
+    return isFetchingVoices;
   },
 
   get selectedLanguage() {
-    return store.selectedLanguage;
+    return selectedLanguage;
   },
   set selectedLanguage(language: string) {
-    store.selectedLanguage = language;
-    // Reset quality and voice name when language changes
-    const voices = store.learningTargetVoices?.voices || [];
-    const languageVoices = voices.filter((v) => v.language.family === language);
-    const availableQualities = Array.from(new Set(languageVoices.map((v) => v.quality)));
-    store.selectedQuality = availableQualities[0] || '';
-    const qualityVoices = languageVoices.filter((v) => v.quality === store.selectedQuality);
-    store.selectedVoiceName = qualityVoices[0]?.name || '';
-    store.selectedSpeakerId = 0;
-    // Stop any playing sample
-    ttsConfigStore.stopSample();
+    setSelectedLanguage(language);
   },
 
   get selectedVoiceName() {
-    return store.selectedVoiceName;
+    return selectedVoiceName;
   },
   set selectedVoiceName(voiceName: string) {
-    const voices = store.learningTargetVoices?.voices || [];
-    const voice = voices.find((v) => v.name === voiceName);
-    if (voice) {
-      store.selectedVoiceName = voiceName;
-      const speakers = voice.speakers.length === 0 ? [{ id: 0, name: voice.name }] : voice.speakers;
-      if (speakers.length === 1) {
-        store.selectedSpeakerId = speakers[0].id;
-      } else {
-        store.selectedSpeakerId = 0;
-      }
-    }
-    // Stop any playing sample
-    ttsConfigStore.stopSample();
+    setSelectedVoiceName(voiceName);
   },
 
   get selectedQuality() {
-    return store.selectedQuality;
+    return selectedQuality;
   },
   set selectedQuality(quality: string) {
-    store.selectedQuality = quality;
-    // Reset voice name when quality changes
-    const voices = store.learningTargetVoices?.voices || [];
-    const qualityVoices = voices.filter(
-      (v) => v.language.family === store.selectedLanguage && v.quality === quality
-    );
-    store.selectedVoiceName = qualityVoices[0]?.name || '';
-    store.selectedSpeakerId = 0;
-    // Stop any playing sample
-    ttsConfigStore.stopSample();
+    setSelectedQuality(quality);
   },
 
   get selectedSpeakerId() {
-    return store.selectedSpeakerId;
+    return selectedSpeakerId.toString();
   },
-  set selectedSpeakerId(id: number) {
-    store.selectedSpeakerId = id;
+  set selectedSpeakerId(id: string) {
+    selectedSpeakerId = parseInt(id);
     // Stop any playing sample
     ttsConfigStore.stopSample();
   },
 
   get availableSpeakers() {
-    const currentVoice = store.learningTargetVoices?.voices.find(
-      (v) => v.name === store.selectedVoiceName
-    );
-    if (!currentVoice) return [];
-    if (currentVoice.speakers.length === 0) {
-      return [{ id: 0, name: currentVoice.name, sampleUrl: currentVoice.files[0]?.url || '' }];
-    }
-    return currentVoice.speakers;
+    return availableSpeakers;
   },
 
-  get languageOptions(): TtsOption[] {
-    return (
-      store.learningTargetVoices?.voices
-        .map((voice) => voice.language)
-        .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
-        .map((lang) => ({
-          value: lang.family,
-          name: `${t(bcp47ToTranslationKey(lang.family)!)} (${bcp47ToLanguageName(lang.family)})`,
-        })) || []
-    );
+  get languageOptions() {
+    return languageOptions;
   },
 
-  get qualityOptions(): TtsOption[] {
-    return Array.from(
-      new Set(
-        (store.learningTargetVoices?.voices || [])
-          .filter((voice) => voice.language.family === store.selectedLanguage)
-          .map((voice) => voice.quality)
-      )
-    ).map((quality) => ({ value: quality, name: quality }));
+  get qualityOptions() {
+    return qualityOptions;
   },
 
-  get voiceOptions(): TtsOption[] {
-    return (store.learningTargetVoices?.voices || [])
-      .filter(
-        (voice) =>
-          voice.language.family === store.selectedLanguage &&
-          voice.quality === store.selectedQuality
-      )
-      .map((voice) => ({
-        value: voice.name,
-        name: `${voice.name} (${voice.language.region})`,
-      }));
+  get voiceOptions() {
+    return voiceOptions;
   },
 
-  get speakerOptions(): TtsOption[] {
-    return ttsConfigStore.availableSpeakers.map((speaker) => ({
-      value: speaker.id.toString(),
-      name: speaker.name,
-    }));
+  get speakerOptions() {
+    return speakerOptions;
   },
 
   get currentSpeaker() {
-    return (
-      ttsConfigStore.availableSpeakers.find((speaker) => speaker.id === store.selectedSpeakerId) ||
-      null
-    );
+    return currentSpeaker;
   },
 
   get errorMessage() {
-    return store.errorMessage;
+    return errorMessage;
   },
   set errorMessage(message: string) {
-    store.errorMessage = message;
+    errorMessage = message;
   },
 
   get isPlayingSample() {
-    return store.isPlayingSample;
+    return isPlayingSample;
   },
 
   playSample(url: string) {
-    if (store.audioElement) {
-      store.audioElement.pause();
+    if (audioElement) {
+      audioElement.pause();
     }
-    store.audioElement = new Audio(url);
-    store.audioElement.volume = 0.8;
-    store.audioElement.addEventListener('ended', () => {
-      store.isPlayingSample = false;
+    audioElement = new Audio(url);
+    audioElement.volume = 0.8;
+    audioElement.addEventListener('ended', () => {
+      isPlayingSample = false;
     });
-    store.audioElement.addEventListener('error', () => {
-      store.errorMessage = '再生エラー';
-      store.isPlayingSample = false;
+    audioElement.addEventListener('error', () => {
+      errorMessage = '再生エラー';
+      isPlayingSample = false;
     });
-    store.audioElement.play();
-    store.isPlayingSample = true;
+    audioElement.play();
+    isPlayingSample = true;
   },
 
   stopSample() {
-    if (store.audioElement) {
-      store.audioElement.pause();
-      store.audioElement = null;
+    if (audioElement) {
+      audioElement.pause();
+      audioElement = null;
     }
-    store.isPlayingSample = false;
+    isPlayingSample = false;
   },
 
   startVoicesFetching() {
-    store.isFetchingVoices = true;
-    store.errorMessage = '';
+    console.time('TTS voices fetched');
+    isFetchingVoices = true;
+    errorMessage = '';
   },
 
-  completeVoicesFetching(availableVoices: Voices, learningTargetVoices: Voices) {
-    store.availableVoices = availableVoices;
-    store.learningTargetVoices = learningTargetVoices;
-    store.isFetchingVoices = false;
+  completeVoicesFetching(availableVoicesParam: Voices, learningTargetVoicesParam: Voices) {
+    availableVoices = availableVoicesParam;
+    learningTargetVoices = learningTargetVoicesParam;
+    selectedLanguage = learningTargetVoicesParam.voices[0]?.language.family || 'en';
 
     // Set default quality and voice name if not already set
-    if (!store.selectedVoiceName && learningTargetVoices.voices.length > 0) {
-      const defaultLanguageVoices = learningTargetVoices.voices.filter(
-        (v) => v.language.family === store.selectedLanguage
+    if (!selectedVoiceName && learningTargetVoicesParam.voices.length > 0) {
+      const defaultLanguageVoices = learningTargetVoicesParam.voices.filter(
+        (v) => v.language.family === selectedLanguage
       );
       const availableQualities = Array.from(new Set(defaultLanguageVoices.map((v) => v.quality)));
-      if (!store.selectedQuality || !availableQualities.includes(store.selectedQuality)) {
-        store.selectedQuality = availableQualities[0] || '';
+      if (!selectedQuality || !availableQualities.includes(selectedQuality)) {
+        selectedQuality = availableQualities[0] || '';
       }
-      const qualityVoices = defaultLanguageVoices.filter(
-        (v) => v.quality === store.selectedQuality
-      );
-      store.selectedVoiceName = qualityVoices[0]?.name || defaultLanguageVoices[0]?.name || '';
+      const qualityVoices = defaultLanguageVoices.filter((v) => v.quality === selectedQuality);
+      selectedVoiceName = qualityVoices[0]?.name || defaultLanguageVoices[0]?.name || '';
     }
 
-    store.selectedSpeakerId = 0;
+    isFetchingVoices = false;
+
+    console.timeEnd('TTS voices fetched');
   },
 
-  failedVoicesFetching(errorMessage: string) {
-    store.errorMessage = errorMessage;
-    store.availableVoices = null;
-    store.learningTargetVoices = null;
-    store.isFetchingVoices = false;
+  failedVoicesFetching(errorMessageParam: string) {
+    errorMessage = errorMessageParam;
+    availableVoices = null;
+    learningTargetVoices = null;
+    isFetchingVoices = false;
   },
 
   reset() {
-    store.availableVoices = null;
-    store.learningTargetVoices = null;
-    store.isFetchingVoices = false;
-    store.selectedLanguage = 'en';
-    store.selectedVoiceName = '';
-    store.selectedQuality = '';
-    store.selectedSpeakerId = 0;
-    store.errorMessage = '';
-    store.audioElement = null;
-    store.isPlayingSample = false;
+    availableVoices = null;
+    learningTargetVoices = null;
+    isFetchingVoices = false;
+    selectedLanguage = 'en';
+    selectedVoiceName = '';
+    selectedQuality = '';
+    selectedSpeakerId = 0;
+    errorMessage = '';
+    audioElement = null;
+    isPlayingSample = false;
   },
 };
