@@ -2,7 +2,7 @@ import { t } from '$lib/application/stores/i18n.svelte';
 import type { DefaultVoices, Voice, Voices } from '$lib/domain/entities/voice';
 import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
 
-let availableVoices = $state(null as Voices | null);
+let allVoices = $state(null as Voices | null);
 let learningTargetVoices = $state(null as Voices | null);
 let defaultVoices = $state({} as DefaultVoices);
 let isFetchingVoices = $state(false);
@@ -14,15 +14,6 @@ let errorMessage = $state('');
 let audioElement = $state(null as HTMLAudioElement | null);
 let isPlayingSample = $state(false);
 
-const availableSpeakers = $derived.by(() => {
-  const currentVoice = learningTargetVoices?.voices.find((v) => v.name === selectedVoiceName);
-  if (!currentVoice) return [];
-  if (currentVoice.speakers.length === 0) {
-    return [{ id: 0, name: currentVoice.name, sampleUrl: currentVoice.files[0]?.url || '' }];
-  }
-  return currentVoice.speakers;
-});
-
 const languageOptions = $derived(
   learningTargetVoices?.voices
     .map((voice) => voice.language)
@@ -33,26 +24,34 @@ const languageOptions = $derived(
     })) || []
 );
 
-const availableQualities = $derived.by(() => {
-  const voices = learningTargetVoices?.voices || [];
-  const languageVoices = voices.filter((v) => v.language.family === selectedLanguage);
-  return Array.from(new Set(languageVoices.map((v) => v.quality)));
-});
+const selectedLanguageVoices = $derived(
+  learningTargetVoices?.voices.filter((voice) => voice.language.family === selectedLanguage) || []
+);
+
+const availableQualities = $derived(
+  Array.from(new Set(selectedLanguageVoices.map((v) => v.quality)))
+);
 
 const qualityOptions = $derived(
   availableQualities.map((quality) => ({ value: quality, name: quality }))
 );
 
-const voiceOptions = $derived(
-  (learningTargetVoices?.voices || [])
-    .filter(
-      (voice) => voice.language.family === selectedLanguage && voice.quality === selectedQuality
-    )
-    .map((voice) => ({
-      value: voice.name,
-      name: `${voice.name} (${voice.language.region})`,
-    })) || []
+const selectedLanguageQualityVoices = $derived(
+  selectedLanguageVoices.filter((voice) => voice.quality === selectedQuality) || []
 );
+
+const voiceOptions = $derived(
+  selectedLanguageQualityVoices.map((voice) => ({
+    value: voice.name,
+    name: `${voice.name} (${voice.language.region})`,
+  })) || []
+);
+
+const currentVoice = $derived(
+  selectedLanguageQualityVoices.find((voice) => voice.name === selectedVoiceName) || null
+);
+
+const availableSpeakers = $derived(currentVoice ? resolveSpeakers(currentVoice) : []);
 
 const speakerOptions = $derived(
   availableSpeakers.map((speaker) => ({
@@ -77,6 +76,13 @@ function resolveSpeakers(voice: Voice) {
   return voice.speakers.length === 0 ? [{ id: 0, name: voice.name }] : voice.speakers;
 }
 
+/**
+ * Choose a voice and speaker based on preferences and available options
+ * @param qualityVoices Voices filtered by selected quality and language
+ * @param preferName Preferred voice name (optional)
+ * @param preferSpeaker Preferred speaker ID (optional)
+ * @returns Selected voice name and speaker ID
+ */
 function chooseVoiceAndSpeaker(
   qualityVoices: readonly Voice[],
   preferName?: string,
@@ -94,6 +100,11 @@ function chooseVoiceAndSpeaker(
   return { voiceName: chosenVoice.name, speakerId: 0 };
 }
 
+/**
+ * Select default voice configuration based on language and available voices
+ * @param language BCP-47 language primary code
+ * @returns VoiceConfig or null if no suitable default found
+ */
 function selectDefaultVoiceConfig(language: string): VoiceConfig | null {
   const defaultForLang = defaultVoices[language];
 
@@ -140,27 +151,19 @@ function setSelectedLanguage(language: string) {
 
 function setSelectedQuality(quality: string) {
   selectedQuality = quality;
-  // Reset voice name when quality changes
-  const voices = learningTargetVoices?.voices || [];
-  const qualityVoices = voices.filter(
-    (v) => v.language.family === selectedLanguage && v.quality === quality
-  );
+  const qualityVoices = selectedLanguageQualityVoices;
   // If the current selectedVoiceName exists in qualityVoices, keep it; otherwise, set the first one
   const matchingVoice = qualityVoices.find((v) => v.name === selectedVoiceName);
   setSelectedVoiceName(matchingVoice?.name || qualityVoices[0]?.name || '');
 }
 
 function setSelectedVoiceName(voiceName: string) {
-  const voices = learningTargetVoices?.voices || [];
-  const voice = voices.find((v) => v.name === voiceName);
-  if (voice) {
-    selectedVoiceName = voiceName;
-    const speakers = resolveSpeakers(voice);
-    if (speakers.length === 1) {
-      setSelectedSpeakerId(speakers[0].id);
-    } else {
-      setSelectedSpeakerId(0);
-    }
+  selectedVoiceName = voiceName;
+  const speakers = availableSpeakers;
+  if (speakers.length === 1) {
+    setSelectedSpeakerId(speakers[0].id);
+  } else {
+    setSelectedSpeakerId(0);
   }
 }
 
@@ -171,8 +174,8 @@ function setSelectedSpeakerId(id: number) {
 }
 
 export const ttsConfigStore = {
-  get availableVoices() {
-    return availableVoices;
+  get allVoices() {
+    return allVoices;
   },
 
   get learningTargetVoices() {
@@ -272,48 +275,31 @@ export const ttsConfigStore = {
   },
 
   startVoicesFetching() {
-    console.time('TTS voices fetched');
     isFetchingVoices = true;
     errorMessage = '';
   },
 
   completeVoicesFetching(
-    availableVoicesParam: Voices,
+    allVoicesParam: Voices,
     learningTargetVoicesParam: Voices,
     defaultVoicesParam: DefaultVoices
   ) {
-    availableVoices = availableVoicesParam;
+    allVoices = allVoicesParam;
     learningTargetVoices = learningTargetVoicesParam;
     defaultVoices = defaultVoicesParam;
-    selectedLanguage = learningTargetVoicesParam.voices[0]?.language.family || 'en';
-
-    // Set default quality and voice name if not already set
-    if (!selectedVoiceName && learningTargetVoicesParam.voices.length > 0) {
-      const defaultLanguageVoices = learningTargetVoicesParam.voices.filter(
-        (v) => v.language.family === selectedLanguage
-      );
-      const availableQualities = Array.from(new Set(defaultLanguageVoices.map((v) => v.quality)));
-      if (!selectedQuality || !availableQualities.includes(selectedQuality)) {
-        selectedQuality = availableQualities[0] || '';
-      }
-      const qualityVoices = defaultLanguageVoices.filter((v) => v.quality === selectedQuality);
-      selectedVoiceName = qualityVoices[0]?.name || defaultLanguageVoices[0]?.name || '';
-    }
-
+    setSelectedLanguage(learningTargetVoicesParam.voices[0]?.language.family || 'en');
     isFetchingVoices = false;
-
-    console.timeEnd('TTS voices fetched');
   },
 
   failedVoicesFetching(errorMessageParam: string) {
     errorMessage = errorMessageParam;
-    availableVoices = null;
+    allVoices = null;
     learningTargetVoices = null;
     isFetchingVoices = false;
   },
 
   reset() {
-    availableVoices = null;
+    allVoices = null;
     learningTargetVoices = null;
     isFetchingVoices = false;
     selectedLanguage = 'en';

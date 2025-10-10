@@ -18,6 +18,13 @@
     if (!scriptPreview || !scriptPreview.headers) return [];
     return scriptPreview.headers;
   });
+
+  let columnOptions = $derived(displayHeaders.map((header, i) => ({ value: i, name: header })));
+
+  let endTimeColumnOptions = $derived([
+    { value: -1, name: t('components.tsvConfigSection.none') },
+    ...columnOptions,
+  ]);
 </script>
 
 {#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
@@ -35,7 +42,7 @@
           value={tsvConfigStore.tsvConfig.startTimeColumnIndex}
           onchange={(e) =>
             tsvConfigStore.updateConfig('startTimeColumnIndex', parseInt(e.currentTarget.value))}
-          items={displayHeaders.map((header, i) => ({ value: i, name: header }))}
+          items={columnOptions}
         />
       </div>
       <div>
@@ -47,7 +54,7 @@
           value={tsvConfigStore.tsvConfig.textColumnIndex}
           onchange={(e) =>
             tsvConfigStore.updateConfig('textColumnIndex', parseInt(e.currentTarget.value))}
-          items={displayHeaders.map((header, i) => ({ value: i, name: header }))}
+          items={columnOptions}
         />
       </div>
       <div>
@@ -59,10 +66,7 @@
           value={tsvConfigStore.tsvConfig.endTimeColumnIndex}
           onchange={(e) =>
             tsvConfigStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
-          items={[
-            { value: -1, name: t('components.tsvConfigSection.none') },
-            ...displayHeaders.map((header, i) => ({ value: i, name: header })),
-          ]}
+          items={endTimeColumnOptions}
         />
       </div>
     </div>
