@@ -23,12 +23,12 @@
 {#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
   <div class="mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
     <Heading tag="h3" class="mb-2 text-lg font-semibold">
-      {t('components.episodeAddModal.tsvSettingsTitle')}
+      {t('components.tsvConfigSection.tsvSettingsTitle')}
     </Heading>
     <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
       <div>
         <Label for="startTimeColumn" class="mb-2 block">
-          {t('components.episodeAddModal.startTimeColumnLabel')} *
+          {t('components.tsvConfigSection.startTimeColumnLabel')} *
         </Label>
         <Select
           id="startTimeColumn"
@@ -40,7 +40,7 @@
       </div>
       <div>
         <Label for="textColumn" class="mb-2 block">
-          {t('components.episodeAddModal.textColumnLabel')} *
+          {t('components.tsvConfigSection.textColumnLabel')} *
         </Label>
         <Select
           id="textColumn"
@@ -52,7 +52,7 @@
       </div>
       <div>
         <Label for="endTimeColumn" class="mb-2 block">
-          {t('components.episodeAddModal.endTimeColumnLabel')}
+          {t('components.tsvConfigSection.endTimeColumnLabel')}
         </Label>
         <Select
           id="endTimeColumn"
@@ -60,7 +60,7 @@
           onchange={(e) =>
             tsvConfigStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
           items={[
-            { value: -1, name: t('components.episodeAddModal.none') },
+            { value: -1, name: t('components.tsvConfigSection.none') },
             ...displayHeaders.map((header, i) => ({ value: i, name: header })),
           ]}
         />
@@ -70,7 +70,7 @@
       <Table>
         <TableHead>
           <TableHeadCell>
-            {t('components.episodeAddModal.previewTable.rowNumber')}
+            {t('components.tsvConfigSection.previewTable.rowNumber')}
           </TableHeadCell>
           {#each displayHeaders as header, i (i)}
             <TableHeadCell>{header}</TableHeadCell>

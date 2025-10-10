@@ -47,12 +47,12 @@
 
 <div class="mb-4 space-y-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
   <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-    {t('components.episodeAddModal.ttsConfigTitle')}
+    {t('components.ttsConfigSection.ttsConfigTitle')}
   </h4>
 
   {#if ttsConfigStore.isFetchingVoices}
     <div class="text-sm text-gray-600 dark:text-gray-400">
-      {t('components.episodeAddModal.loadingVoices')}
+      {t('components.ttsConfigSection.loadingVoices')}
     </div>
   {:else if ttsConfigStore.errorMessage}
     <div class="text-sm text-red-600">
@@ -62,7 +62,7 @@
     <!-- Language Selection -->
     <div>
       <Label class="mb-2 block" for="tts-language">
-        {t('components.episodeAddModal.ttsLanguageLabel')}
+        {t('components.ttsConfigSection.ttsLanguageLabel')}
       </Label>
       <Select
         id="tts-language"
@@ -77,7 +77,7 @@
     {#if ttsQualityOptions.length > 0}
       <div>
         <Label class="mb-2 block" for="tts-quality">
-          {t('components.episodeAddModal.ttsQualityLabel')}
+          {t('components.ttsConfigSection.ttsQualityLabel')}
         </Label>
         <Select
           id="tts-quality"
@@ -92,7 +92,7 @@
       {#if ttsVoiceOptions.length > 0}
         <div>
           <Label class="mb-2 block" for="tts-voice">
-            {t('components.episodeAddModal.ttsVoiceLabel')}
+            {t('components.ttsConfigSection.ttsVoiceLabel')}
           </Label>
           <Select
             id="tts-voice"
@@ -107,7 +107,7 @@
         {#if ttsConfigStore.availableSpeakers.length > 1}
           <div>
             <Label class="mb-2 block" for="tts-speaker">
-              {t('components.episodeAddModal.ttsSpeakerLabel')}
+              {t('components.ttsConfigSection.ttsSpeakerLabel')}
             </Label>
             <Select
               id="tts-speaker"

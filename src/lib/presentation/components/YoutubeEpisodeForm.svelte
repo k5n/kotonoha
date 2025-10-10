@@ -17,7 +17,7 @@
     const languageKey = bcp47ToTranslationKey(metadata.language);
     return languageKey
       ? t(languageKey)
-      : t('components.episodeAddModal.errorUnsupportedLanguage', {
+      : t('components.youtubeEpisodeForm.errorUnsupportedLanguage', {
           language: metadata.language,
         });
   });
@@ -39,11 +39,11 @@
 
 <div class="mb-4">
   <Label class="mb-2 block" for="youtubeUrl"
-    >{t('components.episodeAddModal.youtubeUrlLabel')}</Label
+    >{t('components.youtubeEpisodeForm.youtubeUrlLabel')}</Label
   >
   <Input
     id="youtubeUrl"
-    placeholder={t('components.episodeAddModal.youtubeUrlPlaceholder')}
+    placeholder={t('components.youtubeEpisodeForm.youtubeUrlPlaceholder')}
     value={youtubeEpisodeAddStore.url}
     oninput={(e) => {
       const url = (e.currentTarget as HTMLInputElement).value;
@@ -55,11 +55,11 @@
 </div>
 
 <div class="mb-4">
-  <Label class="mb-2 block" for="title">{t('components.episodeAddModal.titleLabel')}</Label>
+  <Label class="mb-2 block" for="title">{t('components.youtubeEpisodeForm.titleLabel')}</Label>
   <Input
     id="title"
     disabled={youtubeEpisodeAddStore.isMetadataFetching}
-    placeholder={t('components.episodeAddModal.titlePlaceholder')}
+    placeholder={t('components.youtubeEpisodeForm.titlePlaceholder')}
     value={youtubeEpisodeAddStore.metadata?.title || ''}
     oninput={(e) => {
       youtubeEpisodeAddStore.changeTitle((e.currentTarget as HTMLInputElement).value);
@@ -89,7 +89,7 @@
     <!-- Language display -->
     <div>
       <Label class="inline text-sm font-medium">
-        {t('components.episodeAddModal.videoLanguageLabel')}:
+        {t('components.youtubeEpisodeForm.videoLanguageLabel')}:
       </Label>
       <span
         class="ml-2 text-sm {youtubeEpisodeAddStore.isLanguageSupported
@@ -103,7 +103,7 @@
     <!-- ASR checkbox (read-only) -->
     <div>
       <Checkbox checked={youtubeEpisodeAddStore.metadata.trackKind === 'asr'} disabled>
-        {t('components.episodeAddModal.automaticSubtitlesLabel')}
+        {t('components.youtubeEpisodeForm.automaticSubtitlesLabel')}
       </Checkbox>
     </div>
   </div>

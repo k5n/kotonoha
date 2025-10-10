@@ -46,10 +46,10 @@
 </script>
 
 <div class="mb-4">
-  <Label class="mb-2 block" for="title">{t('components.episodeAddModal.titleLabel')}</Label>
+  <Label class="mb-2 block" for="title">{t('components.fileEpisodeForm.titleLabel')}</Label>
   <Input
     id="title"
-    placeholder={t('components.episodeAddModal.titlePlaceholder')}
+    placeholder={t('components.fileEpisodeForm.titlePlaceholder')}
     value={fileEpisodeAddStore.title}
     oninput={(e) => (fileEpisodeAddStore.title = (e.currentTarget as HTMLInputElement).value)}
     type="text"
@@ -59,7 +59,7 @@
 {#if !fileEpisodeAddStore.shouldGenerateAudio}
   <div class="mb-4">
     <Label class="mb-2 block" for="audioFile">
-      {t('components.episodeAddModal.audioFileLabel')}
+      {t('components.fileEpisodeForm.audioFileLabel')}
     </Label>
     <FileSelect
       accept="audio/*"
@@ -71,7 +71,7 @@
 
 <div class="mb-4">
   <Label class="mb-2 block" for="scriptFile">
-    {t('components.episodeAddModal.scriptFileLabel')}
+    {t('components.fileEpisodeForm.scriptFileLabel')}
   </Label>
   <FileSelect
     accept=".srt,.sswt,.tsv,.vtt,.txt"
@@ -89,7 +89,7 @@
         class="h-4 w-4"
         disabled={fileEpisodeAddStore.isTxtScriptFile}
       />
-      {t('components.episodeAddModal.generateAudioLabel')}
+      {t('components.fileEpisodeForm.generateAudioLabel')}
     </Label>
   </div>
 
