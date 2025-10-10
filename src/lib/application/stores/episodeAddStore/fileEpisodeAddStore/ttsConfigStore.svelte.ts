@@ -6,6 +6,7 @@ const store = $state({
   selectedLanguage: 'en',
   selectedVoiceName: '',
   selectedQuality: '',
+  selectedSpeakerId: 0,
   errorMessage: '',
 });
 
@@ -30,13 +31,24 @@ export const ttsConfigStore = {
     store.selectedQuality = availableQualities[0] || '';
     const qualityVoices = languageVoices.filter((v) => v.quality === store.selectedQuality);
     store.selectedVoiceName = qualityVoices[0]?.name || '';
+    store.selectedSpeakerId = 0;
   },
 
   get selectedVoiceName() {
     return store.selectedVoiceName;
   },
   set selectedVoiceName(voiceName: string) {
-    store.selectedVoiceName = voiceName;
+    const voices = store.availableVoices?.voices || [];
+    const voice = voices.find((v) => v.name === voiceName);
+    if (voice) {
+      store.selectedVoiceName = voiceName;
+      const speakers = voice.speakers.length === 0 ? [{ id: 0, name: voice.name }] : voice.speakers;
+      if (speakers.length === 1) {
+        store.selectedSpeakerId = speakers[0].id;
+      } else {
+        store.selectedSpeakerId = 0;
+      }
+    }
   },
 
   get selectedQuality() {
@@ -50,6 +62,25 @@ export const ttsConfigStore = {
       (v) => v.language.family === store.selectedLanguage && v.quality === quality
     );
     store.selectedVoiceName = qualityVoices[0]?.name || '';
+    store.selectedSpeakerId = 0;
+  },
+
+  get selectedSpeakerId() {
+    return store.selectedSpeakerId;
+  },
+  set selectedSpeakerId(id: number) {
+    store.selectedSpeakerId = id;
+  },
+
+  get availableSpeakers() {
+    const currentVoice = store.availableVoices?.voices.find(
+      (v) => v.name === store.selectedVoiceName
+    );
+    if (!currentVoice) return [];
+    if (currentVoice.speakers.length === 0) {
+      return [{ id: 0, name: currentVoice.name }];
+    }
+    return currentVoice.speakers;
   },
 
   get errorMessage() {
@@ -82,6 +113,8 @@ export const ttsConfigStore = {
       );
       store.selectedVoiceName = qualityVoices[0]?.name || defaultLanguageVoices[0]?.name || '';
     }
+
+    store.selectedSpeakerId = 0;
   },
 
   failedVoicesFetching(errorMessage: string) {
@@ -96,6 +129,7 @@ export const ttsConfigStore = {
     store.selectedLanguage = 'en';
     store.selectedVoiceName = '';
     store.selectedQuality = '';
+    store.selectedSpeakerId = 0;
     store.errorMessage = '';
   },
 };

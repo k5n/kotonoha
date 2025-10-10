@@ -3,7 +3,7 @@ import type {
   TtsFinishedPayload,
   TtsProgressPayload,
 } from '$lib/domain/entities/ttsEvent';
-import type { FileInfo, Voice, Voices } from '$lib/domain/entities/voice';
+import type { FileInfo, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -63,6 +63,10 @@ function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
       bytes: fileInfo.size_bytes,
       md5: fileInfo.md5_digest,
     }));
+    const speakers: Speaker[] = Object.entries(piperVoice.speaker_id_map).map(([name, id]) => ({
+      name,
+      id,
+    }));
     return {
       name: piperVoice.name,
       language: {
@@ -71,6 +75,7 @@ function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
       },
       quality: piperVoice.quality,
       files,
+      speakers: speakers.length > 0 ? speakers : [{ id: 0, name: piperVoice.name }],
     };
   });
   return { baseUrl, voices };

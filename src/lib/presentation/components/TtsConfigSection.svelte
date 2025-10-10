@@ -36,6 +36,13 @@
         name: `${voice.name} (${voice.language.region})`,
       }))
   );
+
+  let ttsSpeakerOptions = $derived(
+    ttsConfigStore.availableSpeakers.map((speaker) => ({
+      value: speaker.id.toString(),
+      name: speaker.name,
+    }))
+  );
 </script>
 
 <div class="mb-4 space-y-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
@@ -95,6 +102,24 @@
               (ttsConfigStore.selectedVoiceName = (e.currentTarget as HTMLSelectElement).value)}
           />
         </div>
+
+        <!-- Speaker Selection -->
+        {#if ttsConfigStore.availableSpeakers.length > 1}
+          <div>
+            <Label class="mb-2 block" for="tts-speaker">
+              {t('components.episodeAddModal.ttsSpeakerLabel')}
+            </Label>
+            <Select
+              id="tts-speaker"
+              items={ttsSpeakerOptions}
+              value={ttsConfigStore.selectedSpeakerId.toString()}
+              onchange={(e) =>
+                (ttsConfigStore.selectedSpeakerId = parseInt(
+                  (e.currentTarget as HTMLSelectElement).value
+                ))}
+            />
+          </div>
+        {/if}
       {/if}
     {/if}
   {/if}

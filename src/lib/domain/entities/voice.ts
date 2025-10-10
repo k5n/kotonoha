@@ -15,10 +15,16 @@
 //           "bytes": 63531379,
 //           "md5": "70480857f21f2560f3a232722023b36d"
 //         }
-//       ]
+//       ],
+//       "speakers": []
 //     }
 //   ]
 // }
+
+export type Speaker = {
+  readonly id: number;
+  readonly name: string;
+};
 
 export type FileInfo = {
   readonly path: string;
@@ -36,6 +42,7 @@ export type Voice = {
   readonly language: Language;
   readonly quality: string;
   readonly files: readonly FileInfo[];
+  readonly speakers: readonly Speaker[];
 };
 
 export type Voices = {

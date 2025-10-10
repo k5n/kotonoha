@@ -270,6 +270,7 @@ export const ja = {
         ttsLanguageLabel: '言語',
         ttsVoiceLabel: '音声',
         ttsQualityLabel: '音質',
+        ttsSpeakerLabel: '話者',
         cancel: 'キャンセル',
         submitting: '作成中...',
         submit: '作成',

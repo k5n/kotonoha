@@ -270,6 +270,7 @@ export const en = {
         ttsLanguageLabel: 'Language',
         ttsVoiceLabel: 'Voice',
         ttsQualityLabel: 'Quality',
+        ttsSpeakerLabel: 'Speaker',
         cancel: 'Cancel',
         submitting: 'Creating...',
         submit: 'Create',
