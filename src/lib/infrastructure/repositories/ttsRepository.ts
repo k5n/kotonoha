@@ -3,7 +3,7 @@ import type {
   TtsFinishedPayload,
   TtsProgressPayload,
 } from '$lib/domain/entities/ttsEvent';
-import type { FileInfo, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
+import type { DefaultVoices, FileInfo, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -86,6 +86,24 @@ function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
   return { baseUrl, voices };
 }
 
+// cSpell:ignore gwryw_gogleddol thorsten siwis chitwan
+const defaultVoices: DefaultVoices = {
+  ar: { quality: 'medium' },
+  ca: { quality: 'medium' },
+  cs: { quality: 'medium' },
+  cy: { quality: 'medium', name: 'gwryw_gogleddol' },
+  de: { quality: 'medium', name: 'thorsten' },
+  en: { quality: 'medium', name: 'ryan' },
+  es: { quality: 'medium' },
+  fa: { quality: 'medium' },
+  fi: { quality: 'medium' },
+  fr: { quality: 'medium', name: 'siwis' },
+  it: { quality: 'medium' },
+  kk: { quality: 'high' },
+  ne: { quality: 'medium', name: 'chitwan' },
+  nl: { quality: 'medium' },
+};
+
 /**
  * Repository for calling Tauri's TTS commands.
  */
@@ -141,5 +159,13 @@ export const ttsRepository = {
   async getAvailableVoices(): Promise<Voices> {
     const piperVoices = await getAvailablePiperVoices();
     return mapPiperVoicesToVoices(piperVoices);
+  },
+
+  /**
+   * Gets the default voices configuration.
+   * @returns Default voices mapping.
+   */
+  getDefaultVoices(): DefaultVoices {
+    return defaultVoices;
   },
 };

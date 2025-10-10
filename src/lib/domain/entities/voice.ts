@@ -56,3 +56,6 @@ export type Voices = {
   readonly baseUrl: string;
   readonly voices: readonly Voice[];
 };
+
+export type DefaultVoice = { quality: string; name?: string; speaker?: number };
+export type DefaultVoices = Partial<Record<string, DefaultVoice>>;

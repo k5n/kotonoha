@@ -12,11 +12,14 @@ export async function fetchTtsVoices(): Promise<void> {
   console.time('fetchTtsVoices');
   try {
     fileEpisodeAddStore.tts.startVoicesFetching();
+
     const voices = await ttsRepository.getAvailableVoices();
     const supportedLanguageCodes = getSupportedLanguages().map((lang) => lang.code);
     const filteredVoices: Voice[] = voices.voices.filter((voice) => {
       return supportedLanguageCodes.includes(voice.language.family);
     });
+
+    const defaultVoices = ttsRepository.getDefaultVoices();
 
     const settings = await settingsRepository.getSettings();
     const learningTargetVoices: Voice[] =
@@ -34,7 +37,8 @@ export async function fetchTtsVoices(): Promise<void> {
       {
         baseUrl: voices.baseUrl,
         voices: learningTargetVoices,
-      }
+      },
+      defaultVoices
     );
   } catch (error) {
     // FIXME: i18n
