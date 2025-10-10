@@ -28,7 +28,7 @@
     <div class="text-sm text-red-600">
       {ttsConfigStore.errorMessage}
     </div>
-  {:else if (ttsConfigStore.availableVoices?.voices || []).length > 0}
+  {:else if (ttsConfigStore.learningTargetVoices?.voices || []).length > 0}
     <!-- Language Selection -->
     <div>
       <Label class="mb-2 block" for="tts-language">

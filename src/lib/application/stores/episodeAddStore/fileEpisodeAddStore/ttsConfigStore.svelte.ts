@@ -6,6 +6,7 @@ type TtsOption = { value: string; name: string };
 
 const store = $state({
   availableVoices: null as Voices | null,
+  learningTargetVoices: null as Voices | null,
   isFetchingVoices: false,
   selectedLanguage: 'en',
   selectedVoiceName: '',
@@ -21,6 +22,10 @@ export const ttsConfigStore = {
     return store.availableVoices;
   },
 
+  get learningTargetVoices() {
+    return store.learningTargetVoices;
+  },
+
   get isFetchingVoices() {
     return store.isFetchingVoices;
   },
@@ -31,7 +36,7 @@ export const ttsConfigStore = {
   set selectedLanguage(language: string) {
     store.selectedLanguage = language;
     // Reset quality and voice name when language changes
-    const voices = store.availableVoices?.voices || [];
+    const voices = store.learningTargetVoices?.voices || [];
     const languageVoices = voices.filter((v) => v.language.family === language);
     const availableQualities = Array.from(new Set(languageVoices.map((v) => v.quality)));
     store.selectedQuality = availableQualities[0] || '';
@@ -46,7 +51,7 @@ export const ttsConfigStore = {
     return store.selectedVoiceName;
   },
   set selectedVoiceName(voiceName: string) {
-    const voices = store.availableVoices?.voices || [];
+    const voices = store.learningTargetVoices?.voices || [];
     const voice = voices.find((v) => v.name === voiceName);
     if (voice) {
       store.selectedVoiceName = voiceName;
@@ -67,7 +72,7 @@ export const ttsConfigStore = {
   set selectedQuality(quality: string) {
     store.selectedQuality = quality;
     // Reset voice name when quality changes
-    const voices = store.availableVoices?.voices || [];
+    const voices = store.learningTargetVoices?.voices || [];
     const qualityVoices = voices.filter(
       (v) => v.language.family === store.selectedLanguage && v.quality === quality
     );
@@ -87,7 +92,7 @@ export const ttsConfigStore = {
   },
 
   get availableSpeakers() {
-    const currentVoice = store.availableVoices?.voices.find(
+    const currentVoice = store.learningTargetVoices?.voices.find(
       (v) => v.name === store.selectedVoiceName
     );
     if (!currentVoice) return [];
@@ -99,12 +104,12 @@ export const ttsConfigStore = {
 
   get languageOptions(): TtsOption[] {
     return (
-      store.availableVoices?.voices
+      store.learningTargetVoices?.voices
         .map((voice) => voice.language)
         .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
         .map((lang) => ({
           value: lang.family,
-          name: `${t(bcp47ToLanguageName(lang.family)!)} (${bcp47ToTranslationKey(lang.family)})`,
+          name: `${t(bcp47ToTranslationKey(lang.family)!)} (${bcp47ToLanguageName(lang.family)})`,
         })) || []
     );
   },
@@ -112,7 +117,7 @@ export const ttsConfigStore = {
   get qualityOptions(): TtsOption[] {
     return Array.from(
       new Set(
-        (store.availableVoices?.voices || [])
+        (store.learningTargetVoices?.voices || [])
           .filter((voice) => voice.language.family === store.selectedLanguage)
           .map((voice) => voice.quality)
       )
@@ -120,7 +125,7 @@ export const ttsConfigStore = {
   },
 
   get voiceOptions(): TtsOption[] {
-    return (store.availableVoices?.voices || [])
+    return (store.learningTargetVoices?.voices || [])
       .filter(
         (voice) =>
           voice.language.family === store.selectedLanguage &&
@@ -187,13 +192,14 @@ export const ttsConfigStore = {
     store.errorMessage = '';
   },
 
-  completeVoicesFetching(voices: Voices) {
-    store.availableVoices = voices;
+  completeVoicesFetching(availableVoices: Voices, learningTargetVoices: Voices) {
+    store.availableVoices = availableVoices;
+    store.learningTargetVoices = learningTargetVoices;
     store.isFetchingVoices = false;
 
     // Set default quality and voice name if not already set
-    if (!store.selectedVoiceName && voices.voices.length > 0) {
-      const defaultLanguageVoices = voices.voices.filter(
+    if (!store.selectedVoiceName && learningTargetVoices.voices.length > 0) {
+      const defaultLanguageVoices = learningTargetVoices.voices.filter(
         (v) => v.language.family === store.selectedLanguage
       );
       const availableQualities = Array.from(new Set(defaultLanguageVoices.map((v) => v.quality)));
@@ -212,11 +218,13 @@ export const ttsConfigStore = {
   failedVoicesFetching(errorMessage: string) {
     store.errorMessage = errorMessage;
     store.availableVoices = null;
+    store.learningTargetVoices = null;
     store.isFetchingVoices = false;
   },
 
   reset() {
     store.availableVoices = null;
+    store.learningTargetVoices = null;
     store.isFetchingVoices = false;
     store.selectedLanguage = 'en';
     store.selectedVoiceName = '';
