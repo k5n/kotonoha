@@ -1,48 +1,7 @@
 <script lang="ts">
   import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Label, Select } from 'flowbite-svelte';
-
-  let ttsLanguageOptions = $derived(
-    ttsConfigStore.availableVoices?.voices
-      .map((voice) => voice.language)
-      .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
-      .map((lang) => ({
-        value: lang.family,
-        name: `${t(bcp47ToTranslationKey(lang.family)!)} (${bcp47ToLanguageName(lang.family)})`,
-      })) || []
-  );
-
-  let ttsQualityOptions = $derived(
-    Array.from(
-      new Set(
-        (ttsConfigStore.availableVoices?.voices || [])
-          .filter((voice) => voice.language.family === ttsConfigStore.selectedLanguage)
-          .map((voice) => voice.quality)
-      )
-    ).map((quality) => ({ value: quality, name: quality }))
-  );
-
-  let ttsVoiceOptions = $derived(
-    (ttsConfigStore.availableVoices?.voices || [])
-      .filter(
-        (voice) =>
-          voice.language.family === ttsConfigStore.selectedLanguage &&
-          voice.quality === ttsConfigStore.selectedQuality
-      )
-      .map((voice) => ({
-        value: voice.name,
-        name: `${voice.name} (${voice.language.region})`,
-      }))
-  );
-
-  let ttsSpeakerOptions = $derived(
-    ttsConfigStore.availableSpeakers.map((speaker) => ({
-      value: speaker.id.toString(),
-      name: speaker.name,
-    }))
-  );
 
   function handlePlaySample() {
     const currentSpeaker = ttsConfigStore.currentSpeaker;
@@ -77,7 +36,7 @@
       </Label>
       <Select
         id="tts-language"
-        items={ttsLanguageOptions}
+        items={ttsConfigStore.languageOptions}
         value={ttsConfigStore.selectedLanguage}
         onchange={(e) =>
           (ttsConfigStore.selectedLanguage = (e.currentTarget as HTMLSelectElement).value)}
@@ -85,14 +44,14 @@
     </div>
 
     <!-- Quality Selection -->
-    {#if ttsQualityOptions.length > 0}
+    {#if ttsConfigStore.qualityOptions.length > 0}
       <div>
         <Label class="mb-2 block" for="tts-quality">
           {t('components.ttsConfigSection.ttsQualityLabel')}
         </Label>
         <Select
           id="tts-quality"
-          items={ttsQualityOptions}
+          items={ttsConfigStore.qualityOptions}
           value={ttsConfigStore.selectedQuality}
           onchange={(e) =>
             (ttsConfigStore.selectedQuality = (e.currentTarget as HTMLSelectElement).value)}
@@ -100,14 +59,14 @@
       </div>
 
       <!-- Voice Name Selection -->
-      {#if ttsVoiceOptions.length > 0}
+      {#if ttsConfigStore.voiceOptions.length > 0}
         <div>
           <Label class="mb-2 block" for="tts-voice">
             {t('components.ttsConfigSection.ttsVoiceLabel')}
           </Label>
           <Select
             id="tts-voice"
-            items={ttsVoiceOptions}
+            items={ttsConfigStore.voiceOptions}
             value={ttsConfigStore.selectedVoiceName}
             onchange={(e) =>
               (ttsConfigStore.selectedVoiceName = (e.currentTarget as HTMLSelectElement).value)}
@@ -122,7 +81,7 @@
             </Label>
             <Select
               id="tts-speaker"
-              items={ttsSpeakerOptions}
+              items={ttsConfigStore.speakerOptions}
               value={ttsConfigStore.selectedSpeakerId.toString()}
               onchange={(e) =>
                 (ttsConfigStore.selectedSpeakerId = parseInt(

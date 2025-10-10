@@ -1,4 +1,8 @@
+import { t } from '$lib/application/stores/i18n.svelte';
 import type { Voices } from '$lib/domain/entities/voice';
+import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
+
+type TtsOption = { value: string; name: string };
 
 const store = $state({
   availableVoices: null as Voices | null,
@@ -91,6 +95,48 @@ export const ttsConfigStore = {
       return [{ id: 0, name: currentVoice.name, sampleUrl: currentVoice.files[0]?.url || '' }];
     }
     return currentVoice.speakers;
+  },
+
+  get languageOptions(): TtsOption[] {
+    return (
+      store.availableVoices?.voices
+        .map((voice) => voice.language)
+        .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
+        .map((lang) => ({
+          value: lang.family,
+          name: `${t(bcp47ToLanguageName(lang.family)!)} (${bcp47ToTranslationKey(lang.family)})`,
+        })) || []
+    );
+  },
+
+  get qualityOptions(): TtsOption[] {
+    return Array.from(
+      new Set(
+        (store.availableVoices?.voices || [])
+          .filter((voice) => voice.language.family === store.selectedLanguage)
+          .map((voice) => voice.quality)
+      )
+    ).map((quality) => ({ value: quality, name: quality }));
+  },
+
+  get voiceOptions(): TtsOption[] {
+    return (store.availableVoices?.voices || [])
+      .filter(
+        (voice) =>
+          voice.language.family === store.selectedLanguage &&
+          voice.quality === store.selectedQuality
+      )
+      .map((voice) => ({
+        value: voice.name,
+        name: `${voice.name} (${voice.language.region})`,
+      }));
+  },
+
+  get speakerOptions(): TtsOption[] {
+    return ttsConfigStore.availableSpeakers.map((speaker) => ({
+      value: speaker.id.toString(),
+      name: speaker.name,
+    }));
   },
 
   get currentSpeaker() {
