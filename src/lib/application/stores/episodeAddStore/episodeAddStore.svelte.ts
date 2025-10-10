@@ -8,19 +8,14 @@ import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/
  */
 export type EpisodeAddPayload = FileEpisodeAddPayload | YoutubeEpisodeAddPayload;
 
-const store = $state({
-  // Modal state
-  show: false,
-  isSubmitting: false,
-
-  // Form type
-  sourceType: 'file' as 'file' | 'youtube',
-});
+let show = $state(false);
+let isSubmitting = $state(false);
+let sourceType = $state('file' as 'file' | 'youtube');
 
 // Reset all form state
 function reset() {
-  store.sourceType = 'file';
-  store.isSubmitting = false;
+  sourceType = 'file';
+  isSubmitting = false;
   fileEpisodeAddStore.reset();
   youtubeEpisodeAddStore.reset();
 }
@@ -28,39 +23,39 @@ function reset() {
 export const episodeAddStore = {
   // Modal state getters
   get show() {
-    return store.show;
+    return show;
   },
   get isSubmitting() {
-    return store.isSubmitting;
+    return isSubmitting;
   },
 
   // Form type property
   get sourceType() {
-    return store.sourceType;
+    return sourceType;
   },
   set sourceType(type: 'file' | 'youtube') {
-    store.sourceType = type;
+    sourceType = type;
   },
 
   // Modal actions
   open() {
-    store.show = true;
+    show = true;
   },
 
   close() {
     reset();
-    store.show = false;
+    show = false;
   },
 
   startSubmitting() {
-    store.isSubmitting = true;
+    isSubmitting = true;
   },
 
   // Build payload for submission
   buildPayload(): EpisodeAddPayload | null {
-    if (store.sourceType === 'file') {
+    if (sourceType === 'file') {
       return fileEpisodeAddStore.buildPayload();
-    } else if (store.sourceType === 'youtube') {
+    } else if (sourceType === 'youtube') {
       return youtubeEpisodeAddStore.buildPayload();
     }
     return null;

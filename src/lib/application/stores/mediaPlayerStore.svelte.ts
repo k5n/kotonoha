@@ -1,42 +1,47 @@
-const store = $state({
-  isReady: false,
-  isPlaying: false,
-  hasStarted: false,
-  currentTime: 0,
-});
+let isReady = $state(false);
+let isPlaying = $state(false);
+let hasStarted = $state(false);
+let currentTime = $state(0);
 
 export const mediaPlayerStore = {
   get isReady() {
-    return store.isReady;
+    return isReady;
   },
   set isReady(ready: boolean) {
-    store.isReady = ready;
+    isReady = ready;
   },
+
   get isPlaying() {
-    return store.isPlaying;
+    return isPlaying;
   },
+
   get hasStarted() {
-    return store.hasStarted;
+    return hasStarted;
   },
+
   get currentTime() {
-    return store.currentTime;
+    return currentTime;
   },
   set currentTime(time: number) {
-    store.currentTime = time;
+    currentTime = time;
   },
+
   async play() {
-    store.isPlaying = true;
-    store.hasStarted = true;
+    isPlaying = true;
+    hasStarted = true;
   },
+
   async pause() {
-    store.isPlaying = false;
+    isPlaying = false;
   },
+
   async resume() {
-    store.isPlaying = true;
+    isPlaying = true;
   },
+
   stop() {
-    store.currentTime = 0;
-    store.isPlaying = false;
-    store.hasStarted = false;
+    currentTime = 0;
+    isPlaying = false;
+    hasStarted = false;
   },
 };

@@ -11,86 +11,83 @@ export type YoutubeEpisodeAddPayload = {
   readonly url: string;
 };
 
-const store = $state({
-  url: '',
-  metadata: null as YoutubeMetadata | null,
-  isFetching: false,
-  errorMessage: '',
-});
+let url = $state('');
+let metadata = $state<YoutubeMetadata | null>(null);
+let isFetching = $state(false);
+let errorMessage = $state('');
 
-function isLanguageSupported() {
-  const metadata = store.metadata;
-  return metadata && bcp47ToTranslationKey(metadata.language) !== undefined;
-}
+const isLanguageSupported = $derived(
+  metadata && bcp47ToTranslationKey(metadata.language) !== undefined
+);
 
 export const youtubeEpisodeAddStore = {
   get url() {
-    return store.url;
+    return url;
   },
-  set url(url: string) {
-    store.url = url;
+  set url(value: string) {
+    url = value;
     // Clear metadata and error when URL changes
-    if (!url.trim()) {
-      store.metadata = null;
-      store.errorMessage = '';
+    if (!value.trim()) {
+      metadata = null;
+      errorMessage = '';
     }
   },
 
   get metadata() {
-    return store.metadata;
+    return metadata;
   },
 
   get isMetadataFetching() {
-    return store.isFetching;
+    return isFetching;
   },
 
   get errorMessage() {
-    return store.errorMessage;
+    return errorMessage;
   },
 
   get isLanguageSupported() {
-    return isLanguageSupported();
+    return isLanguageSupported;
   },
 
   changeTitle(title: string) {
-    if (store.metadata) {
-      store.metadata = {
-        ...store.metadata,
+    if (metadata) {
+      metadata = {
+        ...metadata,
         title: title,
       };
     }
   },
 
   startMetadataFetching() {
-    store.isFetching = true;
-    store.errorMessage = '';
+    isFetching = true;
+    errorMessage = '';
   },
 
-  completeMetadataFetching(metadata: YoutubeMetadata | null) {
-    store.metadata = metadata;
-    store.isFetching = false;
+  completeMetadataFetching(newMetadata: YoutubeMetadata | null) {
+    metadata = newMetadata;
+    isFetching = false;
   },
 
-  failedMetadataFetching(errorMessage: string) {
-    store.errorMessage = errorMessage;
-    store.metadata = null;
-    store.isFetching = false;
+  failedMetadataFetching(message: string) {
+    errorMessage = message;
+    metadata = null;
+    isFetching = false;
   },
 
   validate(): boolean {
-    const title = store.metadata?.title?.trim() || '';
-    const url = store.url.trim();
+    const title = metadata?.title?.trim() || '';
+    const currentUrl = url.trim();
     if (!title) {
-      store.errorMessage = t('components.episodeAddModal.errorTitleRequired');
+      errorMessage = t('components.episodeAddModal.errorTitleRequired');
       return false;
     }
-    if (!url) {
-      store.errorMessage = t('components.episodeAddModal.errorYoutubeUrlRequired');
+    if (!currentUrl) {
+      errorMessage = t('components.episodeAddModal.errorYoutubeUrlRequired');
       return false;
     }
-    if (!isLanguageSupported()) {
-      store.errorMessage = t('components.episodeAddModal.errorUnsupportedLanguage', {
-        language: store.metadata?.language || '',
+    if (!isLanguageSupported) {
+      errorMessage = t('components.episodeAddModal.errorUnsupportedLanguage', {
+        language: metadata?.language || '',
       });
       return false;
     }
@@ -98,21 +95,21 @@ export const youtubeEpisodeAddStore = {
   },
 
   buildPayload(): YoutubeEpisodeAddPayload | null {
-    if (!store.url.trim() || !store.metadata) {
+    if (!url.trim() || !metadata) {
       return null;
     }
 
     return {
       source: 'youtube',
-      metadata: store.metadata,
-      url: store.url,
+      metadata: metadata,
+      url: url,
     };
   },
 
   reset() {
-    store.url = '';
-    store.metadata = null;
-    store.isFetching = false;
-    store.errorMessage = '';
+    url = '';
+    metadata = null;
+    isFetching = false;
+    errorMessage = '';
   },
 };
