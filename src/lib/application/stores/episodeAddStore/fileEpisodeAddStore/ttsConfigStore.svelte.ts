@@ -1,5 +1,5 @@
 import { t } from '$lib/application/stores/i18n.svelte';
-import type { DefaultVoices, Voice, Voices } from '$lib/domain/entities/voice';
+import type { DefaultVoices, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
 import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
 
 let allVoices = $state(null as Voices | null);
@@ -72,8 +72,10 @@ type VoiceConfig = {
 };
 
 // Pure helper functions for voice selection logic
-function resolveSpeakers(voice: Voice) {
-  return voice.speakers.length === 0 ? [{ id: 0, name: voice.name }] : voice.speakers;
+function resolveSpeakers(voice: Voice): readonly Speaker[] {
+  return voice.speakers.length === 0
+    ? [{ id: 0, name: voice.name, sampleUrl: '' }]
+    : voice.speakers;
 }
 
 /**
