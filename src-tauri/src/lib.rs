@@ -1,5 +1,6 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod audio;
+mod language_detection;
 mod llm;
 mod migrations;
 mod stronghold;
@@ -14,6 +15,7 @@ use audio::{
     analyze_audio, copy_audio_file, open_audio, pause_audio, play_audio, resume_audio, seek_audio,
     stop_audio, AudioState,
 };
+use language_detection::detect_language_from_text;
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
 use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
@@ -91,6 +93,7 @@ pub fn run() {
             copy_audio_file,
             fetch_youtube_subtitle,
             start_tts,
+            detect_language_from_text
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -334,6 +334,11 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 - `start_tts(transcript: String, config_path: String, output_path: String) -> Result<(), String>`
   - 指定された設定とテキストを使用してTTSを開始し、結果を指定された出力パスに保存する。
 
+#### Language Detection
+
+- `detect_language_from_text(text: String) -> Option<String>`
+  - 入力テキストの言語をBCP-47形式で返す。検出できない場合は`None`を返す。
+
 #### Utility
 
 - `read_text_file(path: String) -> Result<String, String>`

@@ -1,4 +1,4 @@
-// cSpell:words Dhivehi Krio Luxembourgish Meiteilon Nyanja Odia Sesotho Shona Sinhala Uyghur
+// cSpell:words Dhivehi Krio Luxembourgish Meiteilon Nyanja Odia Sesotho Shona Sinhala Uyghur Bokmal
 
 // These languages are supported by Gemini
 const supportedPrimaryLanguageSubtags: { [key: string]: string } = {
@@ -38,7 +38,7 @@ const supportedPrimaryLanguageSubtags: { [key: string]: string } = {
   ht: 'Haitian Creole',
   ha: 'Hausa',
   haw: 'Hawaiian',
-  iw: 'Hebrew',
+  he: 'Hebrew',
   hi: 'Hindi',
   hmn: 'Hmong',
   hu: 'Hungarian',
@@ -150,7 +150,7 @@ const bcp47ToTranslationKeyTable: { [key: string]: string } = {
   ht: 'languages.ht',
   ha: 'languages.ha',
   haw: 'languages.haw',
-  iw: 'languages.iw',
+  he: 'languages.iw',
   hi: 'languages.hi',
   hmn: 'languages.hmn',
   hu: 'languages.hu',
@@ -229,12 +229,22 @@ export function getSupportedLanguages(): readonly { code: string; name: string }
   return Object.entries(supportedPrimaryLanguageSubtags).map(([code, name]) => ({ code, name }));
 }
 
-export function bcp47ToLanguageName(bcp47: string): string | undefined {
+function normalizeBcp47(bcp47: string): string {
   const key = bcp47.split('-')[0].toLowerCase();
+  if (key === 'iw') {
+    return 'he'; // Hebrew
+  } else if (key === 'nb' || key === 'nn') {
+    return 'no'; // Norwegian (Bokmal and Nynorsk are treated as Norwegian)
+  }
+  return key;
+}
+
+export function bcp47ToLanguageName(bcp47: string): string | undefined {
+  const key = normalizeBcp47(bcp47);
   return supportedPrimaryLanguageSubtags[key];
 }
 
 export function bcp47ToTranslationKey(bcp47: string): string | undefined {
-  const key = bcp47.split('-')[0].toLowerCase();
+  const key = normalizeBcp47(bcp47);
   return bcp47ToTranslationKeyTable[key];
 }

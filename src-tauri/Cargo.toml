@@ -44,6 +44,7 @@ piper-rs = "0.1.9"
 ort-sys = { version = "=2.0.0-rc.9", default-features = false }
 vorbis_rs = "0.5.5"
 sherpa-rs = { git = "https://github.com/k5n/sherpa-rs", branch = "timestamp-support-parakeet-tdt-0.6b-v2", features = ["download-binaries"] }
+lingua = "1.7.2"
 
 # https://github.com/tauri-apps/plugins-workspace/issues/2048#issuecomment-2923529183
 [profile.dev.package.scrypt]

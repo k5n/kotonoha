@@ -15,9 +15,11 @@ Kotonoha is a desktop application that helps language learners transform audio/v
   - One notable exception: the domain/entities package is intentionally referenced by all other layers. While the architecture enforces one-way dependencies between Presentation, Application, Domain, and Infrastructure, domain entities represent the canonical data models and business concepts that must be shared project-wide. To avoid cyclic dependencies, entities must remain pure — contain no side effects, framework-specific imports, or dependencies on higher layers
   - Rationale: This structure keeps UI concerns separate from business rules and infrastructure details, makes domain logic highly testable, and allows the Rust/Tauri backend to evolve independently of the frontend UI.
 - Key Tauri commands
-  - `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> SentenceMiningResult`
-  - `get_stronghold_password() -> Result<String, String>`
+  - LLM: `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> SentenceMiningResult`
+  - Stronghold: `get_stronghold_password() -> Result<String, String>`
   - Audio commands: `open_audio(path: String)`, `analyze_audio(path: String, max_peaks: usize) -> AudioInfo(duration, peaks)`, `play_audio()`, `pause_audio()`, `resume_audio()`, `stop_audio()`, `seek_audio(position_ms: u32)`, `copy_audio_file(src_path: String, dest_path: String)`
+  - TTS command: `start_tts(transcript: String, config_path: String, output_path: String) -> Result<(), String>`
+  - Language Detection command: `detect_language_from_text(text: String) -> Option<String>`
   - Utility: `read_text_file(path: String) -> Result<String, String>`
 - Database overview
   - Tables:
