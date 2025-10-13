@@ -25,6 +25,7 @@ let errorMessage = $state('');
 
 const hasOnlyScriptFile = $derived(!!scriptFilePath && !audioFilePath);
 const isTxtScriptFile = $derived(scriptFilePath?.toLowerCase().endsWith('.txt') ?? false);
+const extension = $derived(scriptFilePath?.split('.').pop()?.toLowerCase() ?? null);
 
 export const fileEpisodeAddStore = {
   get title() {
@@ -45,8 +46,10 @@ export const fileEpisodeAddStore = {
     shouldGenerateAudio = value;
   },
 
-  get hasOnlyScriptFile() {
-    return hasOnlyScriptFile;
+  get shouldShowTtsSection() {
+    return (
+      hasOnlyScriptFile && (extension !== 'tsv' || tsvConfigStore.tsvConfig.textColumnIndex >= 0)
+    );
   },
 
   get isTxtScriptFile() {

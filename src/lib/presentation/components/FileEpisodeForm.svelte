@@ -79,7 +79,11 @@
   />
 </div>
 
-{#if fileEpisodeAddStore.hasOnlyScriptFile}
+{#if fileEpisodeAddStore.tsv.scriptPreview}
+  <TsvConfigSection />
+{/if}
+
+{#if fileEpisodeAddStore.shouldShowTtsSection}
   <div class="mb-4">
     <Label class="flex items-center gap-2">
       <Checkbox
@@ -95,10 +99,6 @@
   {#if fileEpisodeAddStore.shouldGenerateAudio}
     <TtsConfigSection />
   {/if}
-{/if}
-
-{#if fileEpisodeAddStore.tsv.scriptPreview}
-  <TsvConfigSection />
 {/if}
 
 {#if fileEpisodeAddStore.errorMessage}
