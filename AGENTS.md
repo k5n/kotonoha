@@ -56,7 +56,6 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts -> src/lib/domain/entities/voice.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts -> src/lib/utils/language.ts
-- src/lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte.ts -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte.ts -> src/lib/domain/entities/youtubeMetadata.ts
 - src/lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte.ts -> src/lib/utils/language.ts
 - src/lib/application/stores/groupPathStore.svelte.ts -> src/lib/domain/entities/episodeGroup.ts
@@ -126,7 +125,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/ttsRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/utils/language.ts
 - src/lib/application/usecases/fetchYoutubeMetadata.ts -> src/lib/application/stores/apiKeyStore.svelte.ts
-- src/lib/application/usecases/fetchYoutubeMetadata.ts -> src/lib/domain/entities/youtubeMetadata.ts
+- src/lib/application/usecases/fetchYoutubeMetadata.ts -> src/lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte.ts
 - src/lib/application/usecases/fetchYoutubeMetadata.ts -> src/lib/domain/services/youtubeUrlValidator.ts
 - src/lib/application/usecases/fetchYoutubeMetadata.ts -> src/lib/infrastructure/repositories/apiKeyRepository.ts
 - src/lib/application/usecases/fetchYoutubeMetadata.ts -> src/lib/infrastructure/repositories/youtubeRepository.ts

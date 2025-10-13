@@ -270,7 +270,10 @@ export const ja = {
         videoLanguageLabel: '動画の言語',
         automaticSubtitlesLabel: '自動字幕 (ASR)',
         errorYoutubeUrlRequired: 'YouTubeのURLを入力してください。',
-        errorUnsupportedLanguage: 'この動画の言語 ({{language}}) はサポートされていません。',
+        errorUnsupportedLanguage: 'この動画の言語はサポートされていません。',
+        errorApiKeyNotSet: 'YouTube Data APIキーが設定されていません。',
+        errorInvalidUrl: '無効なYouTube URLです。',
+        errorFetchFailed: 'YouTubeメタデータの取得に失敗しました。',
       },
       tsvConfigSection: {
         tsvSettingsTitle: 'TSVカラム設定',

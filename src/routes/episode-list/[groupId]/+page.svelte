@@ -51,22 +51,6 @@
 
   // === エピソード追加 ===
 
-  async function handleYoutubeUrlChanged(url: string) {
-    if (!url.trim()) {
-      episodeAddStore.youtube.completeMetadataFetching(null);
-      return;
-    }
-
-    try {
-      episodeAddStore.youtube.startMetadataFetching();
-      const metadata = await fetchYoutubeMetadata(url);
-      episodeAddStore.youtube.completeMetadataFetching(metadata);
-    } catch (err) {
-      episodeAddStore.youtube.failedMetadataFetching(`${err}`);
-      console.error('Failed to fetch YouTube metadata:', err);
-    }
-  }
-
   async function handleEpisodeAddSubmit() {
     try {
       const payload = episodeAddStore.buildPayload();
@@ -248,7 +232,7 @@
 
 <EpisodeAddModal
   onTsvFileSelected={previewScriptFile}
-  onYoutubeUrlChanged={handleYoutubeUrlChanged}
+  onYoutubeUrlChanged={fetchYoutubeMetadata}
   onSubmit={handleEpisodeAddSubmit}
   onTtsEnabled={fetchTtsVoices}
 />

@@ -270,7 +270,10 @@ export const en = {
         videoLanguageLabel: 'Video Language',
         automaticSubtitlesLabel: 'Automatic Subtitles (ASR)',
         errorYoutubeUrlRequired: 'Please enter a YouTube URL.',
-        errorUnsupportedLanguage: 'This video language ({{language}}) is not supported.',
+        errorUnsupportedLanguage: 'This video language is not supported.',
+        errorApiKeyNotSet: 'YouTube Data API key is not set.',
+        errorInvalidUrl: 'Invalid YouTube URL.',
+        errorFetchFailed: 'Failed to fetch YouTube metadata.',
       },
       tsvConfigSection: {
         tsvSettingsTitle: 'TSV Column Settings',

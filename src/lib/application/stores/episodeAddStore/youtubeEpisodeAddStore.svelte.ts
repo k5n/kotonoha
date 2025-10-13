@@ -1,4 +1,3 @@
-import { t } from '$lib/application/stores/i18n.svelte';
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { bcp47ToTranslationKey } from '$lib/utils/language';
 
@@ -14,7 +13,7 @@ export type YoutubeEpisodeAddPayload = {
 let url = $state('');
 let metadata = $state<YoutubeMetadata | null>(null);
 let isFetching = $state(false);
-let errorMessage = $state('');
+let errorMessageKey = $state('');
 
 const isLanguageSupported = $derived(
   metadata && bcp47ToTranslationKey(metadata.language) !== undefined
@@ -29,7 +28,7 @@ export const youtubeEpisodeAddStore = {
     // Clear metadata and error when URL changes
     if (!value.trim()) {
       metadata = null;
-      errorMessage = '';
+      errorMessageKey = '';
     }
   },
 
@@ -41,8 +40,8 @@ export const youtubeEpisodeAddStore = {
     return isFetching;
   },
 
-  get errorMessage() {
-    return errorMessage;
+  get errorMessageKey() {
+    return errorMessageKey;
   },
 
   get isLanguageSupported() {
@@ -60,7 +59,7 @@ export const youtubeEpisodeAddStore = {
 
   startMetadataFetching() {
     isFetching = true;
-    errorMessage = '';
+    errorMessageKey = '';
   },
 
   completeMetadataFetching(newMetadata: YoutubeMetadata | null) {
@@ -68,8 +67,8 @@ export const youtubeEpisodeAddStore = {
     isFetching = false;
   },
 
-  failedMetadataFetching(message: string) {
-    errorMessage = message;
+  failedMetadataFetching(key: string) {
+    errorMessageKey = key;
     metadata = null;
     isFetching = false;
   },
@@ -78,17 +77,15 @@ export const youtubeEpisodeAddStore = {
     const title = metadata?.title?.trim() || '';
     const currentUrl = url.trim();
     if (!title) {
-      errorMessage = t('components.episodeAddModal.errorTitleRequired');
+      errorMessageKey = 'components.episodeAddModal.errorTitleRequired';
       return false;
     }
     if (!currentUrl) {
-      errorMessage = t('components.episodeAddModal.errorYoutubeUrlRequired');
+      errorMessageKey = 'components.episodeAddModal.errorYoutubeUrlRequired';
       return false;
     }
     if (!isLanguageSupported) {
-      errorMessage = t('components.episodeAddModal.errorUnsupportedLanguage', {
-        language: metadata?.language || '',
-      });
+      errorMessageKey = 'components.episodeAddModal.errorUnsupportedLanguage';
       return false;
     }
     return true;
@@ -110,6 +107,6 @@ export const youtubeEpisodeAddStore = {
     url = '';
     metadata = null;
     isFetching = false;
-    errorMessage = '';
+    errorMessageKey = '';
   },
 };

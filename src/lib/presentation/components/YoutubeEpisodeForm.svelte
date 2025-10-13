@@ -109,10 +109,10 @@
   </div>
 {/if}
 
-{#if youtubeEpisodeAddStore.errorMessage}
+{#if youtubeEpisodeAddStore.errorMessageKey}
   <div class="mb-4">
     <div class="text-sm text-red-600">
-      {youtubeEpisodeAddStore.errorMessage}
+      {t(youtubeEpisodeAddStore.errorMessageKey)}
     </div>
   </div>
 {/if}
