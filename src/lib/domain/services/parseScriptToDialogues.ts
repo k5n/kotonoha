@@ -1,17 +1,9 @@
 import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
 import { parseSswtToDialogues } from '$lib/domain/services/parseSswtToDialogues';
 import { parseTsvToDialogues } from '$lib/domain/services/parseTsvToDialogues';
 import { parseVttToDialogues } from '$lib/domain/services/parseVttToDialogues';
-
-/**
- * TSVファイルのカラム設定
- */
-export type TsvConfig = {
-  readonly startTimeColumnIndex: number;
-  readonly textColumnIndex: number;
-  readonly endTimeColumnIndex?: number;
-};
 
 /**
  * スクリプトファイルの内容を拡張子に基づいてダイアログにパースする

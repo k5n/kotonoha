@@ -1,5 +1,6 @@
+import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import { describe, expect, it, vi } from 'vitest';
-import { parseScriptToDialogues, type TsvConfig } from './parseScriptToDialogues';
+import { parseScriptToDialogues } from './parseScriptToDialogues';
 
 // Mock the individual parse functions
 vi.mock('./parseSrtToDialogues', () => ({

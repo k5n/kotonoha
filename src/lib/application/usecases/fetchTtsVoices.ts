@@ -1,5 +1,8 @@
 import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
+import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
+import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import type { Voice } from '$lib/domain/entities/voice';
+import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { languageDetectionRepository } from '$lib/infrastructure/repositories/languageDetectionRepository';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
@@ -9,11 +12,23 @@ import { error, info } from '@tauri-apps/plugin-log';
 
 const MAX_TEXT_LENGTH = 1000;
 
-async function detectLanguage(filePath: string): Promise<string | null> {
+function parseScript(fullText: string, extension: string, tsvConfig: TsvConfig): string {
+  const { dialogues } = parseScriptToDialogues(fullText, extension!, 0, tsvConfig);
+  return dialogues.map((d) => d.originalText).join('\n');
+}
+
+async function detectLanguage(filePath: string, tsvConfig: TsvConfig): Promise<string | null> {
+  const extension = filePath.split('.').pop()?.toLowerCase();
+  if (!extension) {
+    return null;
+  }
+
   const fullText = await fileRepository.readTextFileByAbsolutePath(filePath);
-  // TODO: タイムスタンプ付きフォーマットにも対応する。テキスト部分だけ利用。
-  const text = fullText.substring(0, MAX_TEXT_LENGTH);
-  return languageDetectionRepository.detectLanguage(text);
+
+  const text = extension === 'txt' ? fullText : parseScript(fullText, extension, tsvConfig);
+
+  const truncatedText = text.substring(0, MAX_TEXT_LENGTH);
+  return languageDetectionRepository.detectLanguage(truncatedText);
 }
 
 /**
@@ -41,7 +56,7 @@ export async function fetchTtsVoices(): Promise<void> {
     fileEpisodeAddStore.tts.startVoicesFetching();
 
     const [detectedLanguage, voices] = await Promise.all([
-      detectLanguage(scriptFilePath),
+      detectLanguage(scriptFilePath, tsvConfigStore.tsvConfig),
       ttsRepository.getAvailableVoices(),
     ]);
     const supportedLanguageCodes = getSupportedLanguages().map((lang) => lang.code);

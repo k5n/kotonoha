@@ -64,6 +64,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/stores/i18n.svelte.ts -> src/lib/application/locales/ja.ts
 - src/lib/application/usecases/addEpisodeGroup.ts -> src/lib/domain/entities/episodeGroup.ts
 - src/lib/application/usecases/addEpisodeGroup.ts -> src/lib/infrastructure/repositories/episodeGroupRepository.ts
+- src/lib/application/usecases/addNewEpisode.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/application/usecases/addNewEpisode.ts -> src/lib/domain/entities/youtubeMetadata.ts
 - src/lib/application/usecases/addNewEpisode.ts -> src/lib/domain/services/generateEpisodeFilenames.ts
 - src/lib/application/usecases/addNewEpisode.ts -> src/lib/domain/services/parseScriptToDialogues.ts
@@ -115,7 +116,10 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/fetchSettings.ts -> src/lib/infrastructure/repositories/apiKeyRepository.ts
 - src/lib/application/usecases/fetchSettings.ts -> src/lib/infrastructure/repositories/settingsRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts
+- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts
+- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/domain/entities/voice.ts
+- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/domain/services/parseScriptToDialogues.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/fileRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/languageDetectionRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/settingsRepository.ts
@@ -163,6 +167,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/domain/services/groupTreeHelper.ts -> src/lib/domain/entities/episodeGroup.ts
 - src/lib/domain/services/parseScriptPreview.ts -> src/lib/domain/entities/scriptPreview.ts
 - src/lib/domain/services/parseScriptToDialogues.ts -> src/lib/domain/entities/dialogue.ts
+- src/lib/domain/services/parseScriptToDialogues.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/domain/services/parseScriptToDialogues.ts -> src/lib/domain/services/parseSrtToDialogues.ts
 - src/lib/domain/services/parseScriptToDialogues.ts -> src/lib/domain/services/parseSswtToDialogues.ts
 - src/lib/domain/services/parseScriptToDialogues.ts -> src/lib/domain/services/parseTsvToDialogues.ts

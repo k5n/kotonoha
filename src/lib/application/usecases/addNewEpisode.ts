@@ -1,9 +1,7 @@
+import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
-import {
-  parseScriptToDialogues,
-  type TsvConfig,
-} from '$lib/domain/services/parseScriptToDialogues';
+import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
