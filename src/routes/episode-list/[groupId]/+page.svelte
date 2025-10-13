@@ -3,7 +3,7 @@
   import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { addNewEpisode, addYoutubeEpisode } from '$lib/application/usecases/addNewEpisode';
+  import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
@@ -53,47 +53,17 @@
 
   async function handleEpisodeAddSubmit() {
     try {
-      const payload = episodeAddStore.buildPayload();
-      if (!payload) {
-        // This should not happen if validation passed, but just in case.
-        error('No valid payload to submit');
-        return;
-      }
-      debug(`Adding episode with payload: ${JSON.stringify(payload)}`);
       const episodeGroupId = data.episodeGroup?.id;
       if (!episodeGroupId) {
-        debug('No group ID found, cannot add episode');
+        error('No group ID found, cannot add episode (this should not happen)');
         return;
       }
-      episodeAddStore.startSubmitting();
-      const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
-      const displayOrder = maxDisplayOrder + 1;
 
-      if (payload.source === 'file') {
-        await addNewEpisode({
-          episodeGroupId,
-          displayOrder,
-          title: payload.title,
-          mediaFilePath: payload.audioFilePath,
-          scriptFilePath: payload.scriptFilePath,
-          tsvConfig: payload.tsvConfig,
-        });
-      } else if (payload.source === 'youtube') {
-        await addYoutubeEpisode({
-          episodeGroupId,
-          displayOrder,
-          youtubeMetadata: payload.metadata,
-        });
-      } else {
-        throw new Error(`Unknown payload source: ${JSON.stringify(payload)}`);
-      }
-
+      await addNewEpisode(episodeGroupId, episodes);
       await invalidateAll();
-      episodeAddStore.close();
     } catch (e) {
       error(`Failed to add new episode: ${e}`);
       errorMessage = t('episodeListPage.errors.addEpisode');
-      episodeAddStore.close();
     }
   }
 
