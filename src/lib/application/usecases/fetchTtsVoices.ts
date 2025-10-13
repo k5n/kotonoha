@@ -40,10 +40,10 @@ export async function fetchTtsVoices(): Promise<void> {
   try {
     fileEpisodeAddStore.tts.startVoicesFetching();
 
-    // FIXME: detectLanguage と getAvailableVoices を並列化
-    const detectedLanguage = await detectLanguage(scriptFilePath);
-
-    const voices = await ttsRepository.getAvailableVoices();
+    const [detectedLanguage, voices] = await Promise.all([
+      detectLanguage(scriptFilePath),
+      ttsRepository.getAvailableVoices(),
+    ]);
     const supportedLanguageCodes = getSupportedLanguages().map((lang) => lang.code);
     const filteredVoices: Voice[] = voices.voices.filter((voice) => {
       return supportedLanguageCodes.includes(voice.language.family);

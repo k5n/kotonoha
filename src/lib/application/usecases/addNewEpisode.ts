@@ -1,10 +1,9 @@
-import type { NewDialogue } from '$lib/domain/entities/dialogue';
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
-import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
-import { parseSswtToDialogues } from '$lib/domain/services/parseSswtToDialogues';
-import { parseTsvToDialogues } from '$lib/domain/services/parseTsvToDialogues';
-import { parseVttToDialogues } from '$lib/domain/services/parseVttToDialogues';
+import {
+  parseScriptToDialogues,
+  type TsvConfig,
+} from '$lib/domain/services/parseScriptToDialogues';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
@@ -12,15 +11,6 @@ import { fileRepository } from '$lib/infrastructure/repositories/fileRepository'
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
 import { bcp47ToLanguageName } from '$lib/utils/language';
 import { error, info, warn } from '@tauri-apps/plugin-log';
-
-/**
- * TSVファイルのカラム設定
- */
-type TsvConfig = {
-  readonly startTimeColumnIndex: number;
-  readonly textColumnIndex: number;
-  readonly endTimeColumnIndex?: number;
-};
 
 /**
  * 新しいエピソードを追加するためのパラメータ
@@ -101,34 +91,11 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
       // scriptFilePathの拡張子を取得
       const scriptExtension = scriptFilename.split('.').pop()?.toLowerCase();
 
-      const supportedExtensions = ['srt', 'sswt', 'tsv', 'vtt'];
-      if (scriptExtension === undefined || !supportedExtensions.includes(scriptExtension)) {
-        throw new Error(`Unsupported script file type: ${scriptExtension}`);
+      if (scriptExtension === undefined) {
+        throw new Error('Script file extension is undefined');
       }
 
-      let result: { dialogues: readonly NewDialogue[]; warnings: readonly string[] };
-
-      switch (scriptExtension) {
-        case 'srt':
-          result = parseSrtToDialogues(scriptContent, episode.id);
-          break;
-        case 'sswt':
-          result = parseSswtToDialogues(scriptContent, episode.id);
-          break;
-        case 'tsv': {
-          if (tsvConfig === undefined) {
-            throw new Error('TSV config is required for TSV script files.');
-          }
-          result = parseTsvToDialogues(scriptContent, episode.id, tsvConfig);
-          break;
-        }
-        case 'vtt':
-          result = parseVttToDialogues(scriptContent, episode.id);
-          break;
-        default:
-          // This part should not be reached due to the check above, but it's good for safety.
-          throw new Error(`Parser not implemented for: ${scriptExtension}`);
-      }
+      const result = parseScriptToDialogues(scriptContent, scriptExtension, episode.id, tsvConfig);
 
       const dialogues = result.dialogues;
       const warnings = result.warnings;

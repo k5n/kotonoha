@@ -82,6 +82,7 @@ graph LR
                     src_lib_domain_services_generateEpisodeFilenames_ts["generateEpisodeFilenames.ts"]
                     src_lib_domain_services_groupTreeHelper_ts["groupTreeHelper.ts"]
                     src_lib_domain_services_parseScriptPreview_ts["parseScriptPreview.ts"]
+                    src_lib_domain_services_parseScriptToDialogues_ts["parseScriptToDialogues.ts"]
                     src_lib_domain_services_parseSrtToDialogues_ts["parseSrtToDialogues.ts"]
                     src_lib_domain_services_parseSswtToDialogues_ts["parseSswtToDialogues.ts"]
                     src_lib_domain_services_parseTsvToDialogues_ts["parseTsvToDialogues.ts"]
@@ -185,13 +186,9 @@ src_lib_application_stores_i18n_svelte_ts --> src_lib_application_locales_en_ts
 src_lib_application_stores_i18n_svelte_ts --> src_lib_application_locales_ja_ts
 src_lib_application_usecases_addEpisodeGroup_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_addEpisodeGroup_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
-src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_entities_youtubeMetadata_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_generateEpisodeFilenames_ts
-src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseSrtToDialogues_ts
-src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseSswtToDialogues_ts
-src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseTsvToDialogues_ts
-src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseVttToDialogues_ts
+src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseScriptToDialogues_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_youtubeUrlValidator_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
 src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
@@ -287,6 +284,11 @@ src_lib_domain_entities_sentenceAnalysisResult_ts --> src_lib_domain_entities_se
 src_lib_domain_services_buildEpisodeGroupTree_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_groupTreeHelper_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_parseScriptPreview_ts --> src_lib_domain_entities_scriptPreview_ts
+src_lib_domain_services_parseScriptToDialogues_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_domain_services_parseScriptToDialogues_ts --> src_lib_domain_services_parseSrtToDialogues_ts
+src_lib_domain_services_parseScriptToDialogues_ts --> src_lib_domain_services_parseSswtToDialogues_ts
+src_lib_domain_services_parseScriptToDialogues_ts --> src_lib_domain_services_parseTsvToDialogues_ts
+src_lib_domain_services_parseScriptToDialogues_ts --> src_lib_domain_services_parseVttToDialogues_ts
 src_lib_domain_services_parseSrtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_domain_services_parseSswtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_domain_services_parseTsvToDialogues_ts --> src_lib_domain_entities_dialogue_ts
