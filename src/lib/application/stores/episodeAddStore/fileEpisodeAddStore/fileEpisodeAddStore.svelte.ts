@@ -57,7 +57,10 @@ export const fileEpisodeAddStore = {
     audioFilePath = path;
   },
 
-  setScriptFilePath(path: string | null) {
+  get scriptFilePath() {
+    return scriptFilePath;
+  },
+  set scriptFilePath(path: string | null) {
     scriptFilePath = path;
   },
 
@@ -72,7 +75,7 @@ export const fileEpisodeAddStore = {
       return false;
     }
     if (!audioFilePathValue && !shouldGenerateAudio) {
-      errorMessage = t('components.episodeAddModal.errorAudioFileRequired');
+      errorMessage = t('components.episodeAddModal.errorAudioRequired');
       return false;
     }
     if (!scriptFilePathValue) {

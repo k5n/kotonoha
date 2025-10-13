@@ -80,19 +80,6 @@
     }
   }
 
-  async function handleTtsEnabled() {
-    console.time('handleTtsEnabled');
-    // Fetch TTS voices if not already cached
-    if (!episodeAddStore.file.tts.availableVoices && !episodeAddStore.file.tts.isFetchingVoices) {
-      try {
-        await fetchTtsVoices();
-      } catch (err) {
-        console.error('Failed to fetch TTS voices:', err);
-      }
-    }
-    console.timeEnd('handleTtsEnabled');
-  }
-
   async function handleEpisodeAddSubmit() {
     try {
       const payload = episodeAddStore.buildPayload();
@@ -276,7 +263,7 @@
   onTsvFileSelected={handleTsvFileSelected}
   onYoutubeUrlChanged={handleYoutubeUrlChanged}
   onSubmit={handleEpisodeAddSubmit}
-  onTtsEnabled={handleTtsEnabled}
+  onTtsEnabled={fetchTtsVoices}
 />
 
 <EpisodeMoveModal

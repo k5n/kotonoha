@@ -4,12 +4,12 @@
   import { Button, Label, Select } from 'flowbite-svelte';
 
   function handlePlaySample() {
-    const currentSpeaker = ttsConfigStore.currentSpeaker;
-    if (currentSpeaker?.sampleUrl) {
+    const sampleUrl = ttsConfigStore.sampleUrl;
+    if (sampleUrl) {
       if (ttsConfigStore.isPlayingSample) {
         ttsConfigStore.stopSample();
       } else {
-        ttsConfigStore.playSample(currentSpeaker.sampleUrl);
+        ttsConfigStore.playSample(sampleUrl);
       }
     }
   }
@@ -28,6 +28,12 @@
       {ttsConfigStore.errorMessage}
     </div>
   {:else if (ttsConfigStore.learningTargetVoices?.voices || []).length > 0}
+    {#if ttsConfigStore.warningMessage}
+      <div class="text-sm text-yellow-600">
+        {ttsConfigStore.warningMessage}
+      </div>
+    {/if}
+
     <!-- Language Selection -->
     <div>
       <Label class="mb-2 block" for="tts-language">
@@ -67,7 +73,7 @@
         </div>
 
         <!-- Speaker Selection -->
-        {#if ttsConfigStore.availableSpeakers.length > 1}
+        {#if ttsConfigStore.speakerOptions.length > 1}
           <div>
             <Label class="mb-2 block" for="tts-speaker">
               {t('components.ttsConfigSection.ttsSpeakerLabel')}
@@ -81,14 +87,9 @@
         {/if}
 
         <!-- Sample Playback -->
-        {#if ttsConfigStore.currentSpeaker?.sampleUrl}
+        {#if ttsConfigStore.sampleUrl}
           <div>
-            <Button
-              onclick={handlePlaySample}
-              color="light"
-              size="sm"
-              disabled={!ttsConfigStore.currentSpeaker?.sampleUrl}
-            >
+            <Button onclick={handlePlaySample} color="light" size="sm">
               {#if ttsConfigStore.isPlayingSample}
                 ⏹️ {t('components.ttsConfigSection.stopSample')}
               {:else}

@@ -22,12 +22,11 @@
   );
 
   async function handleScriptFileChange(filePath: string | null) {
-    fileEpisodeAddStore.setScriptFilePath(filePath);
+    fileEpisodeAddStore.scriptFilePath = filePath;
     if (filePath && filePath.toLowerCase().endsWith('.tsv')) {
       onTsvFileSelected(filePath);
-    } else {
-      fileEpisodeAddStore.shouldGenerateAudio = fileEpisodeAddStore.isTxtScriptFile;
-      fileEpisodeAddStore.tsv.completeScriptPreviewFetching(null);
+    } else if (fileEpisodeAddStore.isTxtScriptFile) {
+      handleTtsCheckboxChange(true);
     }
   }
 

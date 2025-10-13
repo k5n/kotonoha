@@ -258,7 +258,7 @@ export const ja = {
         scriptFileLabel: '字幕ファイル  (*.srt, *.vtt, *.sswt, *.tsv, *.txt)',
         generateAudioLabel: 'Text-to-Speech (TTS) で音声を生成する',
         errorTitleRequired: 'タイトルを入力してください',
-        errorAudioFileRequired:
+        errorAudioRequired:
           '音声ファイルを選択するか、TTSで音声を生成するオプションをチェックしてください。',
         errorScriptFileRequired: 'スクリプトファイルを選択してください',
       },
@@ -294,6 +294,10 @@ export const ja = {
         ttsSpeakerLabel: '話者',
         playSample: 'サンプル再生',
         stopSample: '停止',
+        ttsLanguageNotInTargets:
+          '言語は{{detectedLanguage}}と判定されましたが、学習対象言語に含まれていません。',
+        ttsLanguageNotSupported:
+          '言語は{{detectedLanguage}}と判定されましたが、TTSではサポートされていません。',
       },
       episodeListTable: {
         title: 'タイトル',

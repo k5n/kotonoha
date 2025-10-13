@@ -120,6 +120,8 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/fetchSettings.ts -> src/lib/infrastructure/repositories/settingsRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/domain/entities/voice.ts
+- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/fileRepository.ts
+- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/languageDetectionRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/settingsRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/ttsRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/utils/language.ts
@@ -185,6 +187,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/infrastructure/repositories/settingsRepository.ts -> src/lib/domain/entities/settings.ts
 - src/lib/infrastructure/repositories/ttsRepository.ts -> src/lib/domain/entities/ttsEvent.ts
 - src/lib/infrastructure/repositories/ttsRepository.ts -> src/lib/domain/entities/voice.ts
+- src/lib/infrastructure/repositories/ttsRepository.ts -> src/lib/utils/language.ts
 - src/lib/infrastructure/repositories/youtubeRepository.ts -> src/lib/domain/entities/dialogue.ts
 - src/lib/infrastructure/repositories/youtubeRepository.ts -> src/lib/domain/entities/youtubeMetadata.ts
 - src/lib/presentation/actions/keyboardShortcuts.ts -> src/lib/application/usecases/mediaPlayer/mediaPlayer.ts

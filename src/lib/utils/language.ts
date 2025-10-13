@@ -229,7 +229,7 @@ export function getSupportedLanguages(): readonly { code: string; name: string }
   return Object.entries(supportedPrimaryLanguageSubtags).map(([code, name]) => ({ code, name }));
 }
 
-function normalizeBcp47(bcp47: string): string {
+export function normalizeBcp47(bcp47: string): string {
   const key = bcp47.split('-')[0].toLowerCase();
   if (key === 'iw') {
     return 'he'; // Hebrew

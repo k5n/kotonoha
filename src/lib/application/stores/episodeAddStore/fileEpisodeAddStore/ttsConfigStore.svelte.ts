@@ -2,20 +2,24 @@ import { t } from '$lib/application/stores/i18n.svelte';
 import type { DefaultVoices, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
 import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
 
-let allVoices = $state(null as Voices | null);
-let learningTargetVoices = $state(null as Voices | null);
-let defaultVoices = $state({} as DefaultVoices);
-let isFetchingVoices = $state(false);
+let fetchedParams = $state({
+  allVoices: null as Voices | null,
+  learningTargetVoices: null as Voices | null,
+  defaultVoices: {} as DefaultVoices,
+  detectedLanguage: null as string | null,
+  isFetchingVoices: false,
+});
 let selectedLanguage = $state('en');
 let selectedQuality = $state('');
 let selectedVoiceName = $state('');
 let selectedSpeakerId = $state(0);
 let errorMessage = $state('');
+let warningMessage = $state('');
 let audioElement = $state(null as HTMLAudioElement | null);
 let isPlayingSample = $state(false);
 
 const languageOptions = $derived(
-  learningTargetVoices?.voices
+  fetchedParams.learningTargetVoices?.voices
     .map((voice) => voice.language)
     .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
     .map((lang) => ({
@@ -25,7 +29,9 @@ const languageOptions = $derived(
 );
 
 const selectedLanguageVoices = $derived(
-  learningTargetVoices?.voices.filter((voice) => voice.language.family === selectedLanguage) || []
+  fetchedParams.learningTargetVoices?.voices.filter(
+    (voice) => voice.language.family === selectedLanguage
+  ) || []
 );
 
 const availableQualities = $derived(
@@ -108,13 +114,13 @@ function chooseVoiceAndSpeaker(
  * @returns VoiceConfig or null if no suitable default found
  */
 function selectDefaultVoiceConfig(language: string): VoiceConfig | null {
-  const defaultForLang = defaultVoices[language];
+  const defaultForLang = fetchedParams.defaultVoices[language];
 
   if (!defaultForLang || !availableQualities.includes(defaultForLang.quality)) {
     return null;
   }
 
-  const voices = learningTargetVoices?.voices || [];
+  const voices = fetchedParams.learningTargetVoices?.voices || [];
   const qualityVoices = voices.filter(
     (v) => v.language.family === language && v.quality === defaultForLang.quality
   );
@@ -175,17 +181,27 @@ function setSelectedSpeakerId(id: number) {
   ttsConfigStore.stopSample();
 }
 
+function resetFetchedParams() {
+  fetchedParams = {
+    allVoices: null,
+    learningTargetVoices: null,
+    defaultVoices: {},
+    detectedLanguage: null,
+    isFetchingVoices: false,
+  };
+}
+
 export const ttsConfigStore = {
   get allVoices() {
-    return allVoices;
+    return fetchedParams.allVoices;
   },
 
   get learningTargetVoices() {
-    return learningTargetVoices;
+    return fetchedParams.learningTargetVoices;
   },
 
   get isFetchingVoices() {
-    return isFetchingVoices;
+    return fetchedParams.isFetchingVoices;
   },
 
   get selectedLanguage() {
@@ -216,8 +232,8 @@ export const ttsConfigStore = {
     setSelectedSpeakerId(parseInt(id));
   },
 
-  get availableSpeakers() {
-    return availableSpeakers;
+  get sampleUrl() {
+    return currentSpeaker?.sampleUrl || null;
   },
 
   get languageOptions() {
@@ -236,15 +252,15 @@ export const ttsConfigStore = {
     return speakerOptions;
   },
 
-  get currentSpeaker() {
-    return currentSpeaker;
-  },
-
   get errorMessage() {
     return errorMessage;
   },
   set errorMessage(message: string) {
     errorMessage = message;
+  },
+
+  get warningMessage() {
+    return warningMessage;
   },
 
   get isPlayingSample() {
@@ -277,38 +293,78 @@ export const ttsConfigStore = {
   },
 
   startVoicesFetching() {
-    isFetchingVoices = true;
+    fetchedParams.isFetchingVoices = true;
     errorMessage = '';
+    warningMessage = '';
   },
 
-  completeVoicesFetching(
-    allVoicesParam: Voices,
-    learningTargetVoicesParam: Voices,
-    defaultVoicesParam: DefaultVoices
-  ) {
-    allVoices = allVoicesParam;
-    learningTargetVoices = learningTargetVoicesParam;
-    defaultVoices = defaultVoicesParam;
-    setSelectedLanguage(learningTargetVoicesParam.voices[0]?.language.family || 'en');
-    isFetchingVoices = false;
+  completeVoicesFetching({
+    allVoices,
+    learningTargetVoices,
+    defaultVoices,
+    detectedLanguage,
+  }: {
+    allVoices: Voices;
+    learningTargetVoices: Voices;
+    defaultVoices: DefaultVoices;
+    detectedLanguage: string | null;
+  }) {
+    fetchedParams = {
+      allVoices,
+      learningTargetVoices,
+      defaultVoices,
+      detectedLanguage,
+      isFetchingVoices: false,
+    };
+
+    // Check if detected language exists in learning target voices
+    const availableLanguages = allVoices.voices.map((voice) => voice.language.family);
+    const learningTargetLanguages = learningTargetVoices.voices.map(
+      (voice) => voice.language.family
+    );
+    const fallbackLanguage = learningTargetVoices.voices[0]?.language.family || 'en';
+
+    if (!detectedLanguage) {
+      setSelectedLanguage(fallbackLanguage);
+      return;
+    }
+
+    if (learningTargetLanguages.includes(detectedLanguage)) {
+      setSelectedLanguage(detectedLanguage);
+      return;
+    }
+
+    setSelectedLanguage(fallbackLanguage);
+    const translationKey = bcp47ToTranslationKey(detectedLanguage);
+    const detectedLanguageName = translationKey
+      ? t(translationKey)
+      : bcp47ToLanguageName(detectedLanguage) || detectedLanguage;
+
+    if (availableLanguages.includes(detectedLanguage)) {
+      warningMessage = t('components.ttsConfigSection.ttsLanguageNotInTargets', {
+        detectedLanguage: detectedLanguageName,
+      });
+    } else {
+      setSelectedLanguage(fallbackLanguage);
+      warningMessage = t('components.ttsConfigSection.ttsLanguageNotSupported', {
+        detectedLanguage: detectedLanguageName,
+      });
+    }
   },
 
   failedVoicesFetching(errorMessageParam: string) {
     errorMessage = errorMessageParam;
-    allVoices = null;
-    learningTargetVoices = null;
-    isFetchingVoices = false;
+    resetFetchedParams();
   },
 
   reset() {
-    allVoices = null;
-    learningTargetVoices = null;
-    isFetchingVoices = false;
+    resetFetchedParams();
     selectedLanguage = 'en';
     selectedVoiceName = '';
     selectedQuality = '';
     selectedSpeakerId = 0;
     errorMessage = '';
+    warningMessage = '';
     audioElement = null;
     isPlayingSample = false;
   },

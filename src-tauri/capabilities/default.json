@@ -106,7 +106,7 @@
       "allow": [
         { "url": "https://www.youtube.com/oembed" },
         { "url": "https://www.googleapis.com/youtube/v3/*" },
-        { "url": "https://huggingface.co/rhasspy/piper-voices/*" }
+        { "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/*" }
       ]
     }
   ]

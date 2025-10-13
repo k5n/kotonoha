@@ -4,6 +4,7 @@ import type {
   TtsProgressPayload,
 } from '$lib/domain/entities/ttsEvent';
 import type { DefaultVoices, FileInfo, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
+import { normalizeBcp47 } from '$lib/utils/language';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -72,7 +73,7 @@ function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
     return {
       name: piperVoice.name,
       language: {
-        family: piperVoice.language.family,
+        family: normalizeBcp47(piperVoice.language.family),
         region: piperVoice.language.region,
       },
       quality: piperVoice.quality,

@@ -258,7 +258,7 @@ export const en = {
         scriptFileLabel: 'Subtitle File (*.srt, *.vtt, *.sswt, *.tsv, *.txt)',
         generateAudioLabel: 'Generate audio using Text-to-Speech (TTS)',
         errorTitleRequired: 'Please enter a title.',
-        errorAudioFileRequired:
+        errorAudioRequired:
           'Please select an audio file or check the option to generate audio using TTS.',
         errorScriptFileRequired: 'Please select a script file.',
       },
@@ -294,6 +294,10 @@ export const en = {
         ttsSpeakerLabel: 'Speaker',
         playSample: 'Play Sample',
         stopSample: 'Stop',
+        ttsLanguageNotInTargets:
+          'Language was detected as {{detectedLanguage}}, but it is not included in the learning target languages.',
+        ttsLanguageNotSupported:
+          'Language was detected as {{detectedLanguage}}, but it is not supported by TTS.',
       },
       episodeListTable: {
         title: 'Title',
@@ -393,10 +397,6 @@ export const en = {
         noScript: 'No script available.',
         original: 'Original',
       },
-    },
-    error: {
-      mustSelectAudioOrTts:
-        'Please select an audio file or check the option to generate audio using TTS.',
     },
   },
 };

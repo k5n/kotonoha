@@ -99,6 +99,7 @@ graph LR
                     src_lib_infrastructure_repositories_episodeGroupRepository_ts["episodeGroupRepository.ts"]
                     src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository.ts"]
                     src_lib_infrastructure_repositories_fileRepository_ts["fileRepository.ts"]
+                    src_lib_infrastructure_repositories_languageDetectionRepository_ts["languageDetectionRepository.ts"]
                     src_lib_infrastructure_repositories_llmRepository_ts["llmRepository.ts"]
                     src_lib_infrastructure_repositories_sentenceCardRepository_ts["sentenceCardRepository.ts"]
                     src_lib_infrastructure_repositories_settingsRepository_ts["settingsRepository.ts"]
@@ -240,6 +241,8 @@ src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_reposit
 src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_domain_entities_voice_ts
+src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_fileRepository_ts
+src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_languageDetectionRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_utils_language_ts
@@ -305,6 +308,7 @@ src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_infras
 src_lib_infrastructure_repositories_settingsRepository_ts --> src_lib_domain_entities_settings_ts
 src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_ttsEvent_ts
 src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_voice_ts
+src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_utils_language_ts
 src_lib_infrastructure_repositories_youtubeRepository_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_youtubeRepository_ts --> src_lib_domain_entities_youtubeMetadata_ts
 src_lib_presentation_actions_keyboardShortcuts_ts --> src_lib_application_usecases_mediaPlayer_mediaPlayer_ts
