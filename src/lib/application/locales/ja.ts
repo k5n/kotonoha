@@ -286,18 +286,21 @@ export const ja = {
         errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
       },
       ttsConfigSection: {
-        ttsConfigTitle: 'Text-to-Speech 設定',
+        configTitle: 'Text-to-Speech 設定',
         loadingVoices: '利用可能な音声を読み込み中...',
-        ttsLanguageLabel: '言語',
-        ttsVoiceLabel: '音声',
-        ttsQualityLabel: '音質',
-        ttsSpeakerLabel: '話者',
+        languageLabel: '言語',
+        voiceLabel: '音声',
+        qualityLabel: '音質',
+        speakerLabel: '話者',
         playSample: 'サンプル再生',
         stopSample: '停止',
-        ttsLanguageNotInTargets:
+        languageNotInTargets:
           '言語は{{detectedLanguage}}と判定されましたが、学習対象言語に含まれていません。',
-        ttsLanguageNotSupported:
+        languageNotSupported:
           '言語は{{detectedLanguage}}と判定されましたが、TTSではサポートされていません。',
+        failedToLoad: 'TTS音声の読み込みに失敗しました。',
+        noVoices: '利用可能なTTS音声がありません。',
+        playbackError: '再生エラー',
       },
       episodeListTable: {
         title: 'タイトル',

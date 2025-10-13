@@ -286,18 +286,21 @@ export const en = {
         errorTsvColumnRequired: 'Please select the start time and text columns.',
       },
       ttsConfigSection: {
-        ttsConfigTitle: 'Text-to-Speech Configuration',
+        configTitle: 'Text-to-Speech Configuration',
         loadingVoices: 'Loading available voices...',
-        ttsLanguageLabel: 'Language',
-        ttsVoiceLabel: 'Voice',
-        ttsQualityLabel: 'Quality',
-        ttsSpeakerLabel: 'Speaker',
+        languageLabel: 'Language',
+        voiceLabel: 'Voice',
+        qualityLabel: 'Quality',
+        speakerLabel: 'Speaker',
         playSample: 'Play Sample',
         stopSample: 'Stop',
-        ttsLanguageNotInTargets:
+        languageNotInTargets:
           'Language was detected as {{detectedLanguage}}, but it is not included in the learning target languages.',
-        ttsLanguageNotSupported:
+        languageNotSupported:
           'Language was detected as {{detectedLanguage}}, but it is not supported by TTS.',
+        failedToLoad: 'Failed to load TTS voices.',
+        noVoices: 'No available TTS voices.',
+        playbackError: 'Playback Error',
       },
       episodeListTable: {
         title: 'Title',

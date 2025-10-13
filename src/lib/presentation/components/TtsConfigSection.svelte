@@ -17,7 +17,7 @@
 
 <div class="mb-4 space-y-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
   <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-    {t('components.ttsConfigSection.ttsConfigTitle')}
+    {t('components.ttsConfigSection.configTitle')}
   </h4>
   {#if ttsConfigStore.isFetchingVoices}
     <div class="text-sm text-gray-600 dark:text-gray-400">
@@ -37,7 +37,7 @@
     <!-- Language Selection -->
     <div>
       <Label class="mb-2 block" for="tts-language">
-        {t('components.ttsConfigSection.ttsLanguageLabel')}
+        {t('components.ttsConfigSection.languageLabel')}
       </Label>
       <Select
         id="tts-language"
@@ -50,7 +50,7 @@
     {#if ttsConfigStore.qualityOptions.length > 0}
       <div>
         <Label class="mb-2 block" for="tts-quality">
-          {t('components.ttsConfigSection.ttsQualityLabel')}
+          {t('components.ttsConfigSection.qualityLabel')}
         </Label>
         <Select
           id="tts-quality"
@@ -63,7 +63,7 @@
       {#if ttsConfigStore.voiceOptions.length > 0}
         <div>
           <Label class="mb-2 block" for="tts-voice">
-            {t('components.ttsConfigSection.ttsVoiceLabel')}
+            {t('components.ttsConfigSection.voiceLabel')}
           </Label>
           <Select
             id="tts-voice"
@@ -76,7 +76,7 @@
         {#if ttsConfigStore.speakerOptions.length > 1}
           <div>
             <Label class="mb-2 block" for="tts-speaker">
-              {t('components.ttsConfigSection.ttsSpeakerLabel')}
+              {t('components.ttsConfigSection.speakerLabel')}
             </Label>
             <Select
               id="tts-speaker"

@@ -5,7 +5,7 @@ import { languageDetectionRepository } from '$lib/infrastructure/repositories/la
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import { getSupportedLanguages } from '$lib/utils/language';
-import { info } from '@tauri-apps/plugin-log';
+import { error, info } from '@tauri-apps/plugin-log';
 
 const MAX_TEXT_LENGTH = 1000;
 
@@ -74,11 +74,9 @@ export async function fetchTtsVoices(): Promise<void> {
     info(
       `Fetched ${filteredVoices.length} TTS voices, ${learningTargetVoices.length} match voices for learning target languages and detected language is ${detectedLanguage}.`
     );
-  } catch (error) {
-    // FIXME: i18n
-    fileEpisodeAddStore.tts.failedVoicesFetching(
-      error instanceof Error ? error.message : 'Failed to fetch TTS voices'
-    );
+  } catch (err) {
+    error(`Failed to fetch TTS voices: ${err}`);
+    fileEpisodeAddStore.tts.failedVoicesFetching('components.ttsConfigSection.failedToLoad');
   }
   console.timeEnd('fetchTtsVoices');
 }

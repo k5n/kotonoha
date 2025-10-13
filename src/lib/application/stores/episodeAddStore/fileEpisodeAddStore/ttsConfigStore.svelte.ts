@@ -255,9 +255,6 @@ export const ttsConfigStore = {
   get errorMessage() {
     return errorMessage;
   },
-  set errorMessage(message: string) {
-    errorMessage = message;
-  },
 
   get warningMessage() {
     return warningMessage;
@@ -277,7 +274,7 @@ export const ttsConfigStore = {
       isPlayingSample = false;
     });
     audioElement.addEventListener('error', () => {
-      errorMessage = '再生エラー';
+      errorMessage = t('components.ttsConfigSection.playbackError');
       isPlayingSample = false;
     });
     audioElement.play();
@@ -309,6 +306,18 @@ export const ttsConfigStore = {
     defaultVoices: DefaultVoices;
     detectedLanguage: string | null;
   }) {
+    // Check if detected language exists in learning target voices
+    const availableLanguages = allVoices.voices.map((voice) => voice.language.family);
+    const learningTargetLanguages = learningTargetVoices.voices.map(
+      (voice) => voice.language.family
+    );
+    const fallbackLanguage = learningTargetVoices.voices[0]?.language.family;
+    if (fallbackLanguage === undefined) {
+      errorMessage = t('components.ttsConfigSection.noVoices');
+      resetFetchedParams();
+      return;
+    }
+
     fetchedParams = {
       allVoices,
       learningTargetVoices,
@@ -316,13 +325,6 @@ export const ttsConfigStore = {
       detectedLanguage,
       isFetchingVoices: false,
     };
-
-    // Check if detected language exists in learning target voices
-    const availableLanguages = allVoices.voices.map((voice) => voice.language.family);
-    const learningTargetLanguages = learningTargetVoices.voices.map(
-      (voice) => voice.language.family
-    );
-    const fallbackLanguage = learningTargetVoices.voices[0]?.language.family || 'en';
 
     if (!detectedLanguage) {
       setSelectedLanguage(fallbackLanguage);
@@ -341,19 +343,19 @@ export const ttsConfigStore = {
       : bcp47ToLanguageName(detectedLanguage) || detectedLanguage;
 
     if (availableLanguages.includes(detectedLanguage)) {
-      warningMessage = t('components.ttsConfigSection.ttsLanguageNotInTargets', {
+      warningMessage = t('components.ttsConfigSection.languageNotInTargets', {
         detectedLanguage: detectedLanguageName,
       });
     } else {
       setSelectedLanguage(fallbackLanguage);
-      warningMessage = t('components.ttsConfigSection.ttsLanguageNotSupported', {
+      warningMessage = t('components.ttsConfigSection.languageNotSupported', {
         detectedLanguage: detectedLanguageName,
       });
     }
   },
 
-  failedVoicesFetching(errorMessageParam: string) {
-    errorMessage = errorMessageParam;
+  failedVoicesFetching(errorMessageKey: string) {
+    errorMessage = t(errorMessageKey);
     resetFetchedParams();
   },
 
