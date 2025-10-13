@@ -8,15 +8,15 @@ let tsvConfig = $state({
 } as TsvConfig);
 let isFetchingScriptPreview = $state(false);
 let scriptPreview = $state(null as ScriptPreview | null);
-let errorMessage = $state('');
+let errorMessageKey = $state('');
 
 export const tsvConfigStore = {
   get tsvConfig() {
     return tsvConfig;
   },
 
-  get errorMessage() {
-    return errorMessage;
+  get errorMessageKey() {
+    return errorMessageKey;
   },
 
   get scriptPreview() {
@@ -36,7 +36,7 @@ export const tsvConfigStore = {
 
   startScriptPreviewFetching() {
     isFetchingScriptPreview = true;
-    errorMessage = '';
+    errorMessageKey = '';
   },
 
   completeScriptPreviewFetching(preview: ScriptPreview | null) {
@@ -44,8 +44,8 @@ export const tsvConfigStore = {
     isFetchingScriptPreview = false;
   },
 
-  failedScriptPreviewFetching(msg: string) {
-    errorMessage = msg;
+  failedScriptPreviewFetching(errorKey: string) {
+    errorMessageKey = errorKey;
     scriptPreview = null;
     isFetchingScriptPreview = false;
   },
@@ -58,6 +58,6 @@ export const tsvConfigStore = {
     };
     scriptPreview = null;
     isFetchingScriptPreview = false;
-    errorMessage = '';
+    errorMessageKey = '';
   },
 };

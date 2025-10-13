@@ -8,9 +8,9 @@
   import { Button, Checkbox, Input, Label } from 'flowbite-svelte';
 
   type Props = {
-    onTsvFileSelected: (filePath: string) => void;
-    onSubmit: () => void;
-    onTtsEnabled: () => void;
+    onTsvFileSelected: (filePath: string) => Promise<void>;
+    onSubmit: () => Promise<void>;
+    onTtsEnabled: () => Promise<void>;
   };
 
   let { onTsvFileSelected, onSubmit, onTtsEnabled }: Props = $props();
@@ -24,7 +24,7 @@
   async function handleScriptFileChange(filePath: string | null) {
     fileEpisodeAddStore.scriptFilePath = filePath;
     if (filePath && filePath.toLowerCase().endsWith('.tsv')) {
-      onTsvFileSelected(filePath);
+      await onTsvFileSelected(filePath);
     } else if (fileEpisodeAddStore.isTxtScriptFile) {
       handleTtsCheckboxChange(true);
     }

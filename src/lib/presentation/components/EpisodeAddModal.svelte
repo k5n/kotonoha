@@ -6,10 +6,10 @@
   import { Heading, Label, Modal, Radio } from 'flowbite-svelte';
 
   type Props = {
-    onSubmit: () => void;
-    onTsvFileSelected: (filePath: string) => void;
-    onYoutubeUrlChanged: (url: string) => void;
-    onTtsEnabled: () => void;
+    onSubmit: () => Promise<void>;
+    onTsvFileSelected: (filePath: string) => Promise<void>;
+    onYoutubeUrlChanged: (url: string) => Promise<void>;
+    onTtsEnabled: () => Promise<void>;
   };
   let { onSubmit, onTsvFileSelected, onYoutubeUrlChanged, onTtsEnabled }: Props = $props();
 </script>

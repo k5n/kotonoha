@@ -51,19 +51,6 @@
 
   // === エピソード追加 ===
 
-  async function handleTsvFileSelected(filePath: string) {
-    try {
-      episodeAddStore.file.tsv.startScriptPreviewFetching();
-      const preview = await previewScriptFile(filePath);
-      episodeAddStore.file.tsv.completeScriptPreviewFetching(preview);
-    } catch (e) {
-      episodeAddStore.file.tsv.failedScriptPreviewFetching(
-        t('components.episodeAddModal.errorTsvParse')
-      );
-      console.error(e);
-    }
-  }
-
   async function handleYoutubeUrlChanged(url: string) {
     if (!url.trim()) {
       episodeAddStore.youtube.completeMetadataFetching(null);
@@ -260,7 +247,7 @@
 </div>
 
 <EpisodeAddModal
-  onTsvFileSelected={handleTsvFileSelected}
+  onTsvFileSelected={previewScriptFile}
   onYoutubeUrlChanged={handleYoutubeUrlChanged}
   onSubmit={handleEpisodeAddSubmit}
   onTtsEnabled={fetchTtsVoices}

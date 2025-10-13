@@ -29,6 +29,9 @@
 
 {#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
   <div class="mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+    {#if tsvConfigStore.errorMessageKey}
+      <div class="mb-4 text-sm text-red-600">{t(tsvConfigStore.errorMessageKey)}</div>
+    {/if}
     <Heading tag="h3" class="mb-2 text-lg font-semibold">
       {t('components.tsvConfigSection.tsvSettingsTitle')}
     </Heading>

@@ -6,8 +6,8 @@
   import { Button, Checkbox, Input, Label, Spinner } from 'flowbite-svelte';
 
   type Props = {
-    onSubmit: () => void;
-    onYoutubeUrlChanged: (url: string) => void;
+    onSubmit: () => Promise<void>;
+    onYoutubeUrlChanged: (url: string) => Promise<void>;
   };
   let { onSubmit, onYoutubeUrlChanged }: Props = $props();
 
