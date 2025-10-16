@@ -18,6 +18,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
   - LLM: `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> SentenceMiningResult`
   - Stronghold: `get_stronghold_password() -> Result<String, String>`
   - Audio commands: `open_audio(path: String)`, `analyze_audio(path: String, max_peaks: usize) -> AudioInfo(duration, peaks)`, `play_audio()`, `pause_audio()`, `resume_audio()`, `stop_audio()`, `seek_audio(position_ms: u32)`, `copy_audio_file(src_path: String, dest_path: String)`
+  - Download command: `download_file_with_progress(url: String, file_path: String) -> Result<(), String>`
   - TTS command: `start_tts(transcript: String, config_path: String, output_path: String) -> Result<(), String>`
   - Language Detection command: `detect_language_from_text(text: String) -> Option<String>`
   - Utility: `read_text_file(path: String) -> Result<String, String>`

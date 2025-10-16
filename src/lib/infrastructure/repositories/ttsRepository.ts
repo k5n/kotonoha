@@ -7,7 +7,9 @@ import type { DefaultVoices, FileInfo, Speaker, Voice, Voices } from '$lib/domai
 import { normalizeBcp47 } from '$lib/utils/language';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import * as fs from '@tauri-apps/plugin-fs';
 import { fetch } from '@tauri-apps/plugin-http';
+import { error } from '@tauri-apps/plugin-log';
 
 /**
  * Contains information about a model file.
@@ -106,6 +108,16 @@ const defaultVoices: DefaultVoices = {
 };
 
 /**
+ * Payload for download progress events.
+ */
+type DownloadProgressPayload = {
+  readonly fileName: string;
+  readonly progress: number;
+  readonly downloaded: number;
+  readonly total: number;
+};
+
+/**
  * Repository for calling Tauri's TTS commands.
  */
 export const ttsRepository = {
@@ -168,5 +180,60 @@ export const ttsRepository = {
    */
   getDefaultVoices(): DefaultVoices {
     return defaultVoices;
+  },
+
+  async isModelDownloaded(fileInfo: FileInfo, baseUrl: string): Promise<boolean> {
+    if (!fileInfo.url.startsWith(baseUrl)) {
+      throw new Error('Invalid fileInfo.url: does not start with baseUrl');
+    }
+    const relativePath = fileInfo.url.replace(baseUrl, '');
+    const checkPath = `models/${relativePath}`;
+    return await fs.exists(checkPath, { baseDir: fs.BaseDirectory.AppLocalData });
+  },
+
+  /**
+   * Downloads a single model file with progress tracking.
+   * Downloads to a temporary file first, then renames on success.
+   * @param fileInfo - The file information to download.
+   * @param baseUrl - The base URL to calculate the relative path.
+   */
+  async downloadModel(fileInfo: FileInfo, baseUrl: string): Promise<void> {
+    if (!fileInfo.url.startsWith(baseUrl)) {
+      throw new Error('Invalid fileInfo.url: does not start with baseUrl');
+    }
+    const relativePath = fileInfo.url.replace(baseUrl, '');
+    const tempPath = `models/${relativePath}.tmp`;
+    const finalPath = `models/${relativePath}`;
+
+    try {
+      await invoke('download_file_with_progress', { url: fileInfo.url, filePath: tempPath });
+      await fs.rename(tempPath, finalPath, {
+        oldPathBaseDir: fs.BaseDirectory.AppLocalData,
+        newPathBaseDir: fs.BaseDirectory.AppLocalData,
+      });
+    } catch (err) {
+      error(`Error downloading model file (${fileInfo.url}): ${err}`);
+      // Clean up temporary file on failure
+      try {
+        await fs.remove(tempPath, { baseDir: fs.BaseDirectory.AppLocalData });
+      } catch (_removeError) {
+        error(`Failed to remove temp file: ${tempPath}`);
+        // Ignore cleanup errors
+      }
+      throw err;
+    }
+  },
+
+  /**
+   * Listens for download progress updates.
+   * @param callback - A function to be called when a progress event is received.
+   * @returns A function to stop listening.
+   */
+  async listenDownloadProgress(
+    callback: (payload: DownloadProgressPayload) => void
+  ): Promise<UnlistenFn> {
+    return await listen<DownloadProgressPayload>('download_progress', (event) => {
+      callback(event.payload);
+    });
   },
 };

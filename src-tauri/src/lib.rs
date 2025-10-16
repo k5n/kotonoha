@@ -1,5 +1,6 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod audio;
+mod download;
 mod language_detection;
 mod llm;
 mod migrations;
@@ -15,6 +16,7 @@ use audio::{
     analyze_audio, copy_audio_file, open_audio, pause_audio, play_audio, resume_audio, seek_audio,
     stop_audio, AudioState,
 };
+use download::download_file_with_progress;
 use language_detection::detect_language_from_text;
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
@@ -93,7 +95,8 @@ pub fn run() {
             copy_audio_file,
             fetch_youtube_subtitle,
             start_tts,
-            detect_language_from_text
+            detect_language_from_text,
+            download_file_with_progress,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

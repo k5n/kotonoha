@@ -329,6 +329,11 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 - `copy_audio_file(src_path: String, dest_path: String) -> Result<(), String>`
   - 指定した音声ファイル（アプリ管理外の絶対パス）を別のパス（アプリ管理下の相対パス）にコピーする。
 
+#### Download
+
+- `download_file_with_progress(url: String, file_path: String) -> Result<(), String>`
+  - 指定されたURLからファイルをダウンロードし、指定されたパスに保存する。進捗状況をフロントエンドに通知する。
+
 #### TTS (Text-to-Speech)
 
 - `start_tts(transcript: String, config_path: String, output_path: String) -> Result<(), String>`

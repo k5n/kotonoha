@@ -37,7 +37,7 @@ tauri-plugin-store = "2"
 rodio = { version = "0.21.0", default-features = false, features = ["playback", "symphonia-all"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-http = "2"
-reqwest = { version = "0.12.23", features = ["json"] }
+reqwest = { version = "0.12.23", features = ["json", "stream"] }
 prost = "0.14"
 base64 = "0.22"
 piper-rs = "0.1.9"
@@ -45,6 +45,7 @@ ort-sys = { version = "=2.0.0-rc.9", default-features = false }
 vorbis_rs = "0.5.5"
 sherpa-rs = { git = "https://github.com/k5n/sherpa-rs", branch = "timestamp-support-parakeet-tdt-0.6b-v2", features = ["download-binaries"] }
 lingua = "1.7.2"
+futures-util = "0.3.31"
 
 # https://github.com/tauri-apps/plugins-workspace/issues/2048#issuecomment-2923529183
 [profile.dev.package.scrypt]
