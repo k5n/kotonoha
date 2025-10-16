@@ -331,8 +331,10 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 #### Download
 
-- `download_file_with_progress(url: String, file_path: String) -> Result<(), String>`
+- `download_file_with_progress(url: String, file_path: String, download_id: String) -> Result<(), String>`
   - 指定されたURLからファイルをダウンロードし、指定されたパスに保存する。進捗状況をフロントエンドに通知する。
+- `cancel_download(download_id: String) -> Result<(), String>`
+  - 指定されたダウンロードIDのダウンロードをキャンセルする。
 
 #### TTS (Text-to-Speech)
 

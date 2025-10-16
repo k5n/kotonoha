@@ -81,11 +81,13 @@ function calculateTotalProgress(
 async function executeDownloads(
   downloadTasks: readonly FileInfo[],
   baseUrl: string,
-  downloader: (file: FileInfo, baseUrl: string) => Promise<void>
+  downloader: (file: FileInfo, baseUrl: string, downloadId: string) => Promise<void>
 ): Promise<void> {
   const downloadPromises = downloadTasks.map(async (file) => {
     try {
-      await downloader(file, baseUrl);
+      const downloadId = file.url;
+      ttsDownloadStore.setDownloadId(downloadId);
+      await downloader(file, baseUrl, downloadId);
     } catch (error) {
       throw new TtsDownloadError(`Failed to download ${file.url}: ${error}`, 'download');
     }
@@ -138,6 +140,7 @@ export async function downloadTtsModel(): Promise<void> {
     );
 
     ttsDownloadStore.updateProgress({
+      downloadId: '',
       fileName: `${fileProgress.size}/${downloadTasks.length} files`,
       progress: overallProgress,
       downloaded: totalDownloaded,

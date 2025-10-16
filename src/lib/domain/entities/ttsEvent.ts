@@ -26,6 +26,7 @@ export type TtsErrorPayload = {
  * Progress information for TTS model download.
  */
 export type DownloadProgress = {
+  readonly downloadId: string;
   readonly fileName: string;
   readonly progress: number; // 0-100
   readonly downloaded: number; // bytes

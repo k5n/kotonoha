@@ -3358,6 +3358,7 @@ dependencies = [
  "tauri-plugin-sql",
  "tauri-plugin-store",
  "tauri-plugin-stronghold",
+ "tokio-util",
  "vorbis_rs",
 ]
 

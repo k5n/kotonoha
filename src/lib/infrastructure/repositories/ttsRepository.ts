@@ -189,8 +189,9 @@ export const ttsRepository = {
    * Downloads to a temporary file first, then renames on success.
    * @param fileInfo - The file information to download.
    * @param baseUrl - The base URL to calculate the relative path.
+   * @param downloadId - The download ID for cancellation.
    */
-  async downloadModel(fileInfo: FileInfo, baseUrl: string): Promise<void> {
+  async downloadModel(fileInfo: FileInfo, baseUrl: string, downloadId: string): Promise<void> {
     if (!fileInfo.url.startsWith(baseUrl)) {
       throw new Error('Invalid fileInfo.url: does not start with baseUrl');
     }
@@ -199,7 +200,11 @@ export const ttsRepository = {
     const finalPath = `models/${relativePath}`;
 
     try {
-      await invoke('download_file_with_progress', { url: fileInfo.url, filePath: tempPath });
+      await invoke('download_file_with_progress', {
+        url: fileInfo.url,
+        filePath: tempPath,
+        downloadId,
+      });
       await fs.rename(tempPath, finalPath, {
         oldPathBaseDir: fs.BaseDirectory.AppLocalData,
         newPathBaseDir: fs.BaseDirectory.AppLocalData,
