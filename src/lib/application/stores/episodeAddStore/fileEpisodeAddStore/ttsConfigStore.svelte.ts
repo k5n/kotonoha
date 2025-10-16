@@ -218,6 +218,10 @@ export const ttsConfigStore = {
     setSelectedVoiceName(voiceName);
   },
 
+  get selectedVoice() {
+    return currentVoice;
+  },
+
   get selectedQuality() {
     return selectedQuality;
   },

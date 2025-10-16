@@ -74,20 +74,20 @@ export const fileEpisodeAddStore = {
     const scriptPreview = tsvConfigStore.scriptPreview;
     const tsvConfig = tsvConfigStore.tsvConfig;
     if (!titleValue.trim()) {
-      errorMessage = t('components.episodeAddModal.errorTitleRequired');
+      errorMessage = t('components.fileEpisodeForm.errorTitleRequired');
       return false;
     }
     if (!audioFilePathValue && !shouldGenerateAudio) {
-      errorMessage = t('components.episodeAddModal.errorAudioRequired');
+      errorMessage = t('components.fileEpisodeForm.errorAudioRequired');
       return false;
     }
     if (!scriptFilePathValue) {
-      errorMessage = t('components.episodeAddModal.errorScriptFileRequired');
+      errorMessage = t('components.fileEpisodeForm.errorScriptFileRequired');
       return false;
     }
     if (scriptPreview) {
       if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
-        errorMessage = t('components.episodeAddModal.errorTsvColumnRequired');
+        errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
         return false;
       }
     }

@@ -1,4 +1,5 @@
 import type {
+  DownloadProgress,
   TtsErrorPayload,
   TtsFinishedPayload,
   TtsProgressPayload,
@@ -61,11 +62,13 @@ async function getAvailablePiperVoices(): Promise<PiperVoices> {
 function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
   const baseUrl = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/';
   const voices: Voice[] = Object.values(piperVoices).map((piperVoice) => {
-    const files: FileInfo[] = Object.entries(piperVoice.files).map(([filePath, fileInfo]) => ({
-      url: baseUrl + filePath,
-      bytes: fileInfo.size_bytes,
-      md5: fileInfo.md5_digest,
-    }));
+    const files: FileInfo[] = Object.entries(piperVoice.files)
+      .filter(([filePath, _fileInfo]) => filePath.endsWith('.onnx') || filePath.endsWith('.json'))
+      .map(([filePath, fileInfo]) => ({
+        url: baseUrl + filePath,
+        bytes: fileInfo.size_bytes,
+        md5: fileInfo.md5_digest,
+      }));
     const voiceBaseUrl = files[0]?.url.replace(/\/[^/]+$/, '/');
     const speakers: Speaker[] = Object.entries(piperVoice.speaker_id_map).map(([name, id]) => ({
       name,
@@ -105,16 +108,6 @@ const defaultVoices: DefaultVoices = {
   kk: { quality: 'high' },
   ne: { quality: 'medium', name: 'chitwan' },
   nl: { quality: 'medium' },
-};
-
-/**
- * Payload for download progress events.
- */
-type DownloadProgressPayload = {
-  readonly fileName: string;
-  readonly progress: number;
-  readonly downloaded: number;
-  readonly total: number;
 };
 
 /**
@@ -229,10 +222,8 @@ export const ttsRepository = {
    * @param callback - A function to be called when a progress event is received.
    * @returns A function to stop listening.
    */
-  async listenDownloadProgress(
-    callback: (payload: DownloadProgressPayload) => void
-  ): Promise<UnlistenFn> {
-    return await listen<DownloadProgressPayload>('download_progress', (event) => {
+  async listenDownloadProgress(callback: (payload: DownloadProgress) => void): Promise<UnlistenFn> {
+    return await listen<DownloadProgress>('download_progress', (event) => {
       callback(event.payload);
     });
   },

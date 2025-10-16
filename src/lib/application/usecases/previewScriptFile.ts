@@ -14,7 +14,7 @@ export async function previewScriptFile(filePath: string): Promise<void> {
     episodeAddStore.file.tsv.completeScriptPreviewFetching(preview);
   } catch (e) {
     episodeAddStore.file.tsv.failedScriptPreviewFetching(
-      'components.episodeAddModal.errorTsvParse'
+      'components.fileEpisodeForm.errorTsvParse'
     );
     throw e;
   }

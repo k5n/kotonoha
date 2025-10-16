@@ -2,6 +2,7 @@ use futures_util::StreamExt;
 use reqwest;
 use std::fs::File;
 use std::io::Write;
+use std::time::Instant;
 use tauri::{AppHandle, Emitter, Manager};
 
 #[derive(Clone, serde::Serialize)]
@@ -51,6 +52,7 @@ pub async fn download_file_with_progress(
 
     let mut downloaded = 0u64;
     let mut stream = response.bytes_stream();
+    let mut last_notification = Instant::now();
 
     while let Some(chunk) = stream.next().await {
         let chunk = chunk.map_err(|e| format!("Failed to read chunk: {}", e))?;
@@ -60,8 +62,10 @@ pub async fn download_file_with_progress(
 
         downloaded += chunk.len() as u64;
 
-        // 進捗を報告（1MBごとまたは完了時）
-        if downloaded % (1024 * 1024) == 0 || downloaded == total_size {
+        // 進捗を報告
+        if last_notification.elapsed() >= std::time::Duration::from_millis(200)
+            || downloaded == total_size
+        {
             let progress = if total_size > 0 {
                 (downloaded as f64 / total_size as f64 * 100.0) as u32
             } else {
@@ -83,6 +87,7 @@ pub async fn download_file_with_progress(
                     },
                 )
                 .unwrap();
+            last_notification = Instant::now();
         }
     }
 

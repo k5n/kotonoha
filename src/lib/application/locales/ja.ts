@@ -261,6 +261,8 @@ export const ja = {
         errorAudioRequired:
           '音声ファイルを選択するか、TTSで音声を生成するオプションをチェックしてください。',
         errorScriptFileRequired: 'スクリプトファイルを選択してください',
+        errorTsvParse: 'TSVファイルの解析に失敗しました。',
+        errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
       },
       youtubeEpisodeForm: {
         youtubeUrlLabel: 'YouTube URL',
@@ -285,8 +287,6 @@ export const ja = {
         previewTable: {
           rowNumber: '行',
         },
-        errorTsvParse: 'TSVファイルの解析に失敗しました。',
-        errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
       },
       ttsConfigSection: {
         configTitle: 'Text-to-Speech 設定',
@@ -402,6 +402,12 @@ export const ja = {
         mine: 'Mine',
         noScript: 'スクリプトがありません。',
         original: '原文',
+      },
+      ttsModelDownloadModal: {
+        title: 'TTSモデルをダウンロード中',
+        downloadingFile: 'ダウンロード中のファイル',
+        pleaseWait: 'モデルをダウンロード中です。しばらくお待ちください...',
+        cancel: 'キャンセル',
       },
     },
   },

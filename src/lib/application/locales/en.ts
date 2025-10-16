@@ -261,6 +261,8 @@ export const en = {
         errorAudioRequired:
           'Please select an audio file or check the option to generate audio using TTS.',
         errorScriptFileRequired: 'Please select a script file.',
+        errorTsvParse: 'Failed to parse TSV file.',
+        errorTsvColumnRequired: 'Please select the start time and text columns.',
       },
       youtubeEpisodeForm: {
         youtubeUrlLabel: 'YouTube URL',
@@ -285,8 +287,6 @@ export const en = {
         previewTable: {
           rowNumber: '#',
         },
-        errorTsvParse: 'Failed to parse TSV file.',
-        errorTsvColumnRequired: 'Please select the start time and text columns.',
       },
       ttsConfigSection: {
         configTitle: 'Text-to-Speech Configuration',
@@ -402,6 +402,12 @@ export const en = {
         mine: 'Mine',
         noScript: 'No script available.',
         original: 'Original',
+      },
+      ttsModelDownloadModal: {
+        title: 'Downloading TTS Model',
+        downloadingFile: 'Downloading file',
+        pleaseWait: 'Please wait while the model is being downloaded...',
+        cancel: 'Cancel',
       },
     },
   },

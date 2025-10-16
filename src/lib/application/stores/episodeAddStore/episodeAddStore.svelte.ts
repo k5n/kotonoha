@@ -2,6 +2,7 @@ import type { FileEpisodeAddPayload } from '$lib/application/stores/episodeAddSt
 import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
 import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
 import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
+import { ttsDownloadStore } from './ttsDownloadStore.svelte';
 
 /**
  * エピソード追加ペイロードのユニオン型
@@ -18,12 +19,13 @@ function reset() {
   isSubmitting = false;
   fileEpisodeAddStore.reset();
   youtubeEpisodeAddStore.reset();
+  ttsDownloadStore.reset();
 }
 
 export const episodeAddStore = {
   // Modal state getters
   get show() {
-    return show;
+    return show && !ttsDownloadStore.showModal;
   },
   get isSubmitting() {
     return isSubmitting;
@@ -59,6 +61,12 @@ export const episodeAddStore = {
       return youtubeEpisodeAddStore.buildPayload();
     }
     return null;
+  },
+
+  // Check if TTS is required
+  isTtsRequired(): boolean {
+    if (sourceType !== 'file') return false;
+    return fileEpisodeAddStore.shouldGenerateAudio;
   },
 
   // Sub-stores
