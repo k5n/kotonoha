@@ -21,7 +21,7 @@ use language_detection::detect_language_from_text;
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
 use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
-use tts::start_tts;
+use tts::{cancel_tts, start_tts};
 use youtube::fetch_youtube_subtitle;
 
 fn get_db_name() -> String {
@@ -95,6 +95,7 @@ pub fn run() {
             copy_audio_file,
             fetch_youtube_subtitle,
             start_tts,
+            cancel_tts,
             detect_language_from_text,
             download_file_with_progress,
             cancel_download,

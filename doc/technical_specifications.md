@@ -338,8 +338,11 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 #### TTS (Text-to-Speech)
 
-- `start_tts(transcript: String, config_path: String, output_path: String) -> Result<(), String>`
-  - 指定された設定とテキストを使用してTTSを開始し、結果を指定された出力パスに保存する。
+- `start_tts(app_handle: AppHandle, transcript: String, config_path: String) -> Result<String, String>`
+  - 指定されたtranscriptとconfigでTTSを実行し、一時ファイル(ogg)のパスを返す。
+  - 進捗は`tts-progress`イベントで通知される。
+- `cancel_tts() -> Result<(), String>`
+  - 実行中のTTSをキャンセルする。
 
 #### Language Detection
 

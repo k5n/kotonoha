@@ -109,7 +109,7 @@
 
 <div class="flex justify-end gap-2">
   <Button color="gray" {disabled} onclick={episodeAddStore.close}>
-    {t('components.episodeAddModal.cancel')}
+    {t('common.cancel')}
   </Button>
   <Button {disabled} onclick={handleSubmit}>
     {episodeAddStore.isSubmitting

@@ -1,9 +1,4 @@
-import type {
-  DownloadProgress,
-  TtsErrorPayload,
-  TtsFinishedPayload,
-  TtsProgressPayload,
-} from '$lib/domain/entities/ttsEvent';
+import type { DownloadProgress, TtsProgress } from '$lib/domain/entities/ttsEvent';
 import type { DefaultVoices, FileInfo, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
 import { normalizeBcp47 } from '$lib/utils/language';
 import { invoke } from '@tauri-apps/api/core';
@@ -116,13 +111,30 @@ const defaultVoices: DefaultVoices = {
 export const ttsRepository = {
   /**
    * Starts the Text-to-Speech (TTS) generation process.
-   * This command runs in the background and communicates progress via events.
    * @param transcript - The text to be synthesized.
-   * @param configPath - The path to the TTS model config file.
-   * @param outputPath - The path where the output audio file will be saved.
+   * @param voice - The voice to use for TTS.
+   * @param speakerId - The speaker ID to use for TTS.
+   * @returns The path to the generated audio file.
    */
-  async start(transcript: string, configPath: string, outputPath: string): Promise<void> {
-    await invoke('start_tts', { transcript, configPath, outputPath });
+  async start(transcript: string, voice: Voice, _speakerId: number): Promise<string> {
+    // Find the config file (.json) from the voice files
+    const configFile = voice.files.find((file) => file.url.endsWith('.json'));
+    if (!configFile) {
+      throw new Error('No config file (.json) found in voice files');
+    }
+
+    // Calculate the relative path by removing the base URL
+    if (!configFile.url.startsWith('https://huggingface.co/rhasspy/piper-voices/resolve/main/')) {
+      throw new Error('Unexpected config file URL format');
+    }
+    const relativePath = configFile.url.replace(
+      'https://huggingface.co/rhasspy/piper-voices/resolve/main/',
+      ''
+    );
+    const configPath = `models/${relativePath}`;
+
+    // TODO: speakerId 対応
+    return await invoke('start_tts', { transcript, configPath });
   },
 
   /**
@@ -130,32 +142,17 @@ export const ttsRepository = {
    * @param callback - A function to be called when a progress event is received.
    * @returns A function to stop listening.
    */
-  async listenTtsProgress(callback: (payload: TtsProgressPayload) => void): Promise<UnlistenFn> {
-    return await listen<TtsProgressPayload>('tts-progress', (event) => {
+  async listenTtsProgress(callback: (payload: TtsProgress) => void): Promise<UnlistenFn> {
+    return await listen<TtsProgress>('tts-progress', (event) => {
       callback(event.payload);
     });
   },
 
   /**
-   * Listens for the TTS finished event.
-   * @param callback - A function to be called when the TTS process is successfully completed.
-   * @returns A function to stop listening.
+   * Cancels the ongoing TTS process.
    */
-  async listenTtsFinished(callback: (payload: TtsFinishedPayload) => void): Promise<UnlistenFn> {
-    return await listen<TtsFinishedPayload>('tts-finished', (event) => {
-      callback(event.payload);
-    });
-  },
-
-  /**
-   * Listens for TTS error events.
-   * @param callback - A function to be called when an error occurs during the TTS process.
-   * @returns A function to stop listening.
-   */
-  async listenTtsError(callback: (payload: TtsErrorPayload) => void): Promise<UnlistenFn> {
-    return await listen<TtsErrorPayload>('tts-error', (event) => {
-      callback(event.payload);
-    });
+  async cancel(): Promise<void> {
+    await invoke('cancel_tts');
   },
 
   /**

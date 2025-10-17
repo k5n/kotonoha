@@ -2,11 +2,19 @@ use log::{error, info};
 use piper_rs::synth::{AudioOutputConfig, PiperSpeechSynthesizer};
 use serde::Serialize;
 use std::{
+    collections::HashMap,
     num::{NonZero, NonZeroU32},
     path::PathBuf,
+    sync::{LazyLock, Mutex},
 };
 use tauri::{path::BaseDirectory, AppHandle, Emitter, Manager};
+use tokio_util::sync::CancellationToken;
 use vorbis_rs::{VorbisBitrateManagementStrategy, VorbisEncoder, VorbisEncoderBuilder};
+
+const TTS_ID: &str = "tts";
+
+static TTS_CANCEL_TOKENS: LazyLock<Mutex<HashMap<String, CancellationToken>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -15,18 +23,6 @@ struct TtsProgressPayload {
     start_ms: u32,
     end_ms: u32,
     text: String,
-}
-
-#[derive(Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct TtsFinishedPayload {
-    media_path: String,
-}
-
-#[derive(Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct TtsErrorPayload {
-    error_message: String,
 }
 
 fn create_piper_synthesizer(
@@ -64,6 +60,7 @@ fn process_tts<F>(
     sample_rate: u32,
     margin_silence_ms: u32,
     transcript: &str,
+    cancel_token: &CancellationToken,
     mut callback: F,
 ) -> Result<(), String>
 where
@@ -94,11 +91,18 @@ where
     let total_lines = lines.len().max(1); // avoid div-by-zero
 
     for (idx, &line) in lines.iter().enumerate() {
+        if cancel_token.is_cancelled() {
+            return Err("TTS cancelled".to_string());
+        }
+
         let mut samples: Vec<f32> = Vec::new();
         let speech_stream = synthesizer
             .synthesize_parallel(line.to_string(), Some(output_config.clone()))
             .map_err(|e| format!("Could not synthesize speech: {:?}", e))?;
         for result in speech_stream {
+            if cancel_token.is_cancelled() {
+                return Err("TTS cancelled".to_string());
+            }
             match result {
                 Ok(ws) => {
                     samples.append(&mut ws.into_vec());
@@ -147,7 +151,8 @@ fn process_all_tts(
     channels: u8,
     margin_silence_ms: u32,
     transcript: &str,
-    output_path: &str,
+    output_path: &PathBuf,
+    cancel_token: &CancellationToken,
 ) -> Result<(), String> {
     assert!(channels == 1, "Only mono audio is supported");
 
@@ -166,7 +171,8 @@ fn process_all_tts(
         sample_rate,
         margin_silence_ms,
         transcript,
-        |status, start, end, line| {
+        cancel_token,
+        |status: u8, start: u32, end: u32, line: String| {
             app_handle
                 .emit(
                     "tts-progress",
@@ -187,23 +193,9 @@ fn process_all_tts(
         .finish()
         .map_err(|e| format!("Could not finish encoding: {:?}", e))?;
 
-    let output_absolute_path = app_handle
-        .path()
-        .resolve(&output_path, BaseDirectory::AppLocalData)
-        .map_err(|e| format!("Could not resolve output path: {:?}", e))?;
-    info!("TTS output path: {:?}", output_absolute_path);
-
-    std::fs::write(&output_absolute_path, transcoded_ogg)
+    info!("TTS output path: {:?}", output_path);
+    std::fs::write(&output_path, transcoded_ogg)
         .map_err(|e| format!("Could not write output file: {:?}", e))?;
-
-    app_handle
-        .emit(
-            "tts-finished",
-            TtsFinishedPayload {
-                media_path: output_path.to_string(),
-            },
-        )
-        .map_err(|e| format!("Could not emit tts-finished event: {:?}", e))?;
 
     Ok(())
 }
@@ -213,13 +205,30 @@ pub async fn start_tts(
     app_handle: AppHandle,
     transcript: String,
     config_path: String,
-    output_path: String,
-) -> Result<(), String> {
+) -> Result<String, String> {
+    // 同じ tts_id への同時TTSを防ぐ
+    {
+        let mut tokens = TTS_CANCEL_TOKENS.lock().unwrap();
+        if tokens.contains_key(TTS_ID) {
+            return Err("TTS already in progress".to_string());
+        }
+        let cancel_token = CancellationToken::new();
+        tokens.insert(TTS_ID.to_string(), cancel_token.clone());
+    }
+
+    let cancel_token = {
+        let tokens = TTS_CANCEL_TOKENS.lock().unwrap();
+        tokens.get(TTS_ID).cloned().unwrap()
+    };
+
     const SAMPLE_RATE: u32 = 22050;
     const CHANNELS: u8 = 1;
     const MARGIN_SILENCE_MS: u32 = 500;
 
-    process_all_tts(
+    let temp_dir = std::env::temp_dir();
+    let output_path = temp_dir.join("kotonoha_tts.ogg");
+
+    let result = process_all_tts(
         &app_handle,
         &config_path,
         SAMPLE_RATE,
@@ -227,21 +236,23 @@ pub async fn start_tts(
         MARGIN_SILENCE_MS,
         &transcript,
         &output_path,
-    )
-    .map_err(|e| {
-        error!("TTS processing error: {}", e);
-        app_handle
-            .emit(
-                "tts-error",
-                TtsErrorPayload {
-                    error_message: e.clone(),
-                },
-            )
-            .unwrap_or_else(|emit_err| {
-                error!("Could not emit tts-error event: {:?}", emit_err);
-            });
-        e
-    })?;
+        &cancel_token,
+    );
 
-    Ok(())
+    // 完了またはエラー時にトークンを削除
+    TTS_CANCEL_TOKENS.lock().unwrap().remove(TTS_ID);
+
+    result?;
+
+    Ok(output_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub async fn cancel_tts() -> Result<(), String> {
+    if let Some(token) = TTS_CANCEL_TOKENS.lock().unwrap().remove(TTS_ID) {
+        token.cancel();
+        Ok(())
+    } else {
+        Err("TTS not found for this TTS ID".to_string())
+    }
 }

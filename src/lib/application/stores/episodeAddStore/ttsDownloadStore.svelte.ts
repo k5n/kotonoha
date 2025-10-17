@@ -9,7 +9,7 @@ let progress = $state<DownloadProgress>({
   downloaded: 0,
   total: 0,
 });
-let downloadIds = $state<Set<string>>(new Set());
+const downloadIds = $state<Set<string>>(new Set());
 
 function openModal() {
   showModal = true;

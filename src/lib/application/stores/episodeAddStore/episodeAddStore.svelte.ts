@@ -3,6 +3,7 @@ import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fil
 import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
 import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
 import { ttsDownloadStore } from './ttsDownloadStore.svelte';
+import { ttsExecutionStore } from './ttsExecutionStore.svelte';
 
 /**
  * エピソード追加ペイロードのユニオン型
@@ -20,12 +21,13 @@ function reset() {
   fileEpisodeAddStore.reset();
   youtubeEpisodeAddStore.reset();
   ttsDownloadStore.reset();
+  ttsExecutionStore.reset();
 }
 
 export const episodeAddStore = {
   // Modal state getters
   get show() {
-    return show && !ttsDownloadStore.showModal;
+    return show && !ttsDownloadStore.showModal && !ttsExecutionStore.showModal;
   },
   get isSubmitting() {
     return isSubmitting;

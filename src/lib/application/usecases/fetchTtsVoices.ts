@@ -13,7 +13,7 @@ import { error, info } from '@tauri-apps/plugin-log';
 const MAX_TEXT_LENGTH = 1000;
 
 function parseScript(fullText: string, extension: string, tsvConfig: TsvConfig): string {
-  const { dialogues } = parseScriptToDialogues(fullText, extension!, 0, tsvConfig);
+  const { dialogues } = parseScriptToDialogues(fullText, extension, 0, tsvConfig);
   return dialogues.map((d) => d.originalText).join('\n');
 }
 
@@ -37,12 +37,6 @@ async function detectLanguage(filePath: string, tsvConfig: TsvConfig): Promise<s
  */
 export async function fetchTtsVoices(): Promise<void> {
   info('Fetching TTS voices...');
-  console.time('fetchTtsVoices');
-  const scriptFilePath = fileEpisodeAddStore.scriptFilePath;
-  if (!scriptFilePath) {
-    console.error('Script file path is not set. This must not happen.');
-    return;
-  }
   if (fileEpisodeAddStore.tts.isFetchingVoices) {
     console.warn('TTS voices are already being fetched. Skipping duplicate request.');
     return;
@@ -51,6 +45,13 @@ export async function fetchTtsVoices(): Promise<void> {
     console.log('TTS voices are already fetched. Skipping.');
     return;
   }
+  const scriptFilePath = fileEpisodeAddStore.scriptFilePath;
+  if (!scriptFilePath) {
+    console.error('Script file path is not set. This must not happen.');
+    return;
+  }
+
+  console.time('fetchTtsVoices');
 
   try {
     fileEpisodeAddStore.tts.startVoicesFetching();

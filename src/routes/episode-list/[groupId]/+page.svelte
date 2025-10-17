@@ -6,6 +6,7 @@
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { downloadTtsModel } from '$lib/application/usecases/downloadTtsModel';
+  import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
@@ -21,6 +22,7 @@
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
   import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
+  import TtsExecutionModal from '$lib/presentation/components/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '$lib/presentation/components/TtsModelDownloadModal.svelte';
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
@@ -61,14 +63,14 @@
         return;
       }
 
-      // Check if TTS is required
       if (episodeAddStore.isTtsRequired()) {
         debug('TTS is required for the new episode');
-        // Download TTS model if needed
         await downloadTtsModel();
-
-        // TODO: TTS execution and episode creation
-        console.log('TTS処理は今回スコープ外');
+        await executeTts();
+        // TODO: After TTS completion, create episode with the generated audio
+        console.log(
+          'TTS completed. Episode creation with generated audio is out of scope for now.'
+        );
         return;
       }
 
@@ -257,3 +259,5 @@
 />
 
 <TtsModelDownloadModal />
+
+<TtsExecutionModal onCancel={cancelTtsExecution} />
