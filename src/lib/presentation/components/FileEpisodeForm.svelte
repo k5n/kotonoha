@@ -62,7 +62,7 @@
     </Label>
     <FileSelect
       accept="audio/*"
-      onFileSelected={(file) => fileEpisodeAddStore.setAudioFilePath(file || null)}
+      onFileSelected={(file) => (fileEpisodeAddStore.audioFilePath = file || null)}
       id="audioFile"
     />
   </div>

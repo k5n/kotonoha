@@ -8,6 +8,14 @@ import { fetch } from '@tauri-apps/plugin-http';
 import { error } from '@tauri-apps/plugin-log';
 
 /**
+ * The result of a TTS operation.
+ */
+type TtsResult = {
+  readonly audioPath: string;
+  readonly scriptPath: string;
+};
+
+/**
  * Contains information about a model file.
  */
 type PiperFileInfo = {
@@ -114,9 +122,9 @@ export const ttsRepository = {
    * @param transcript - The text to be synthesized.
    * @param voice - The voice to use for TTS.
    * @param speakerId - The speaker ID to use for TTS.
-   * @returns The path to the generated audio file.
+   * @returns The paths to the generated audio and script files.
    */
-  async start(transcript: string, voice: Voice, speakerId: number): Promise<string> {
+  async start(transcript: string, voice: Voice, speakerId: number): Promise<TtsResult> {
     // Find the config file (.json) from the voice files
     const configFile = voice.files.find((file) => file.url.endsWith('.json'));
     if (!configFile) {
@@ -133,7 +141,6 @@ export const ttsRepository = {
     );
     const configPath = `models/${relativePath}`;
 
-    // TODO: speakerId 対応
     return await invoke('start_tts', { transcript, configPath, speakerId });
   },
 

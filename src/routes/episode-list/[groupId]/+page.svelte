@@ -67,14 +67,8 @@
         debug('TTS is required for the new episode');
         await downloadTtsModel();
         await executeTts();
-        // TODO: After TTS completion, create episode with the generated audio
-        console.log(
-          'TTS completed. Episode creation with generated audio is out of scope for now.'
-        );
-        return;
       }
 
-      // Normal episode creation (when TTS is not required)
       await addNewEpisode(episodeGroupId, episodes);
       await invalidateAll();
     } catch (e) {

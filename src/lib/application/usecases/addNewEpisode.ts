@@ -75,9 +75,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
     scriptFilePath
   );
   try {
-    // mediaFilePath: string, scriptFilePath: string
     const mediaPath = await fileRepository.saveAudioFile(audioFilePath, uuid, audioFilename);
-    // scriptFilePathから内容を読み込む
     const scriptContent = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
     const episode = await episodeRepository.addEpisode({
       episodeGroupId,
@@ -88,9 +86,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
       explanationLanguage: 'Japanese',
     });
     try {
-      // scriptFilePathの拡張子を取得
       const scriptExtension = scriptFilename.split('.').pop()?.toLowerCase();
-
       if (scriptExtension === undefined) {
         throw new Error('Script file extension is undefined');
       }

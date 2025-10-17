@@ -53,9 +53,12 @@ export async function executeTts(): Promise<void> {
     });
 
     // Start the TTS process and wait for completion
-    const mediaPath = await ttsRepository.start(scriptContent, selectedVoice, selectedSpeakerId);
-    info(`TTS completed successfully. Output: ${mediaPath}`);
-    fileEpisodeAddStore.setAudioFilePath(mediaPath);
+    const ttsResult = await ttsRepository.start(scriptContent, selectedVoice, selectedSpeakerId);
+    info(
+      `TTS completed successfully. Audio: ${ttsResult.audioPath}, Script: ${ttsResult.scriptPath}`
+    );
+    fileEpisodeAddStore.audioFilePath = ttsResult.audioPath;
+    fileEpisodeAddStore.scriptFilePath = ttsResult.scriptPath;
     ttsExecutionStore.completeExecution();
   } catch (err) {
     error(`Failed to execute TTS: ${err}`);

@@ -25,6 +25,25 @@ struct TtsProgressPayload {
     text: String,
 }
 
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TtsResult {
+    audio_path: String,
+    script_path: String,
+}
+
+fn format_timestamp(ms: u32) -> String {
+    let total_seconds = ms / 1000;
+    let hours = total_seconds / 3600;
+    let minutes = (total_seconds % 3600) / 60;
+    let seconds = total_seconds % 60;
+    let milliseconds = ms % 1000;
+    format!(
+        "{:02}:{:02}:{:02}.{:03}",
+        hours, minutes, seconds, milliseconds
+    )
+}
+
 fn create_piper_synthesizer(
     config_absolute_path: &PathBuf,
     speaker_id: i64,
@@ -65,6 +84,7 @@ fn process_tts<F>(
     margin_silence_ms: u32,
     transcript: &str,
     cancel_token: &CancellationToken,
+    sswt_lines: &mut Vec<String>,
     mut callback: F,
 ) -> Result<(), String>
 where
@@ -144,6 +164,14 @@ where
             current_ms.round() as u32,
             line.to_string(),
         );
+
+        let sswt_line = format!(
+            "[{} -> {}] {}",
+            format_timestamp(start_ms.round() as u32),
+            format_timestamp(current_ms.round() as u32),
+            line.trim()
+        );
+        sswt_lines.push(sswt_line);
     }
     Ok(())
 }
@@ -158,6 +186,7 @@ fn process_all_tts(
     output_path: &PathBuf,
     cancel_token: &CancellationToken,
     speaker_id: u32,
+    sswt_lines: &mut Vec<String>,
 ) -> Result<(), String> {
     assert!(channels == 1, "Only mono audio is supported");
 
@@ -177,6 +206,7 @@ fn process_all_tts(
         margin_silence_ms,
         transcript,
         cancel_token,
+        sswt_lines,
         |status: u8, start: u32, end: u32, line: String| {
             app_handle
                 .emit(
@@ -211,7 +241,7 @@ pub async fn start_tts(
     transcript: String,
     config_path: String,
     speaker_id: u32,
-) -> Result<String, String> {
+) -> Result<TtsResult, String> {
     // 同じ tts_id への同時TTSを防ぐ
     {
         let mut tokens = TTS_CANCEL_TOKENS.lock().unwrap();
@@ -233,7 +263,9 @@ pub async fn start_tts(
 
     let temp_dir = std::env::temp_dir();
     let output_path = temp_dir.join("kotonoha_tts.ogg");
+    let script_path = temp_dir.join("kotonoha_tts.sswt");
 
+    let mut sswt_lines = Vec::new();
     let result = process_all_tts(
         &app_handle,
         &config_path,
@@ -244,6 +276,7 @@ pub async fn start_tts(
         &output_path,
         &cancel_token,
         speaker_id,
+        &mut sswt_lines,
     );
 
     // 完了またはエラー時にトークンを削除
@@ -251,7 +284,15 @@ pub async fn start_tts(
 
     result?;
 
-    Ok(output_path.to_string_lossy().to_string())
+    // SSWT ファイルを書き出す
+    let sswt_content = sswt_lines.join("\n");
+    std::fs::write(&script_path, sswt_content)
+        .map_err(|e| format!("Could not write SSWT file: {:?}", e))?;
+
+    Ok(TtsResult {
+        audio_path: output_path.to_string_lossy().to_string(),
+        script_path: script_path.to_string_lossy().to_string(),
+    })
 }
 
 #[tauri::command]
