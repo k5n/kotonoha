@@ -116,7 +116,7 @@ export const ttsRepository = {
    * @param speakerId - The speaker ID to use for TTS.
    * @returns The path to the generated audio file.
    */
-  async start(transcript: string, voice: Voice, _speakerId: number): Promise<string> {
+  async start(transcript: string, voice: Voice, speakerId: number): Promise<string> {
     // Find the config file (.json) from the voice files
     const configFile = voice.files.find((file) => file.url.endsWith('.json'));
     if (!configFile) {
@@ -134,7 +134,7 @@ export const ttsRepository = {
     const configPath = `models/${relativePath}`;
 
     // TODO: speakerId 対応
-    return await invoke('start_tts', { transcript, configPath });
+    return await invoke('start_tts', { transcript, configPath, speakerId });
   },
 
   /**

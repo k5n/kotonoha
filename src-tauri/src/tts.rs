@@ -27,9 +27,13 @@ struct TtsProgressPayload {
 
 fn create_piper_synthesizer(
     config_absolute_path: &PathBuf,
+    speaker_id: i64,
 ) -> Result<PiperSpeechSynthesizer, String> {
     let model = piper_rs::from_config_path(config_absolute_path)
         .map_err(|e| format!("Could not load model: {:?}", e))?;
+    if model.set_speaker(speaker_id).is_none() {
+        return Err("Could not set speaker".to_string());
+    }
     let synth = PiperSpeechSynthesizer::new(model)
         .map_err(|e| format!("Could not create synthesizer: {:?}", e))?;
     Ok(synth)
@@ -153,6 +157,7 @@ fn process_all_tts(
     transcript: &str,
     output_path: &PathBuf,
     cancel_token: &CancellationToken,
+    speaker_id: u32,
 ) -> Result<(), String> {
     assert!(channels == 1, "Only mono audio is supported");
 
@@ -160,7 +165,7 @@ fn process_all_tts(
         .path()
         .resolve(config_path, BaseDirectory::AppLocalData)
         .map_err(|e| format!("Could not resolve config path: {:?}", e))?;
-    let synthesizer = create_piper_synthesizer(&config_absolute_path)?;
+    let synthesizer = create_piper_synthesizer(&config_absolute_path, speaker_id as i64)?;
 
     let mut transcoded_ogg = vec![];
     let mut encoder = create_vorbis_encoder(&mut transcoded_ogg, sample_rate, channels)?;
@@ -205,6 +210,7 @@ pub async fn start_tts(
     app_handle: AppHandle,
     transcript: String,
     config_path: String,
+    speaker_id: u32,
 ) -> Result<String, String> {
     // 同じ tts_id への同時TTSを防ぐ
     {
@@ -237,6 +243,7 @@ pub async fn start_tts(
         &transcript,
         &output_path,
         &cancel_token,
+        speaker_id,
     );
 
     // 完了またはエラー時にトークンを削除

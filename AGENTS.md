@@ -20,7 +20,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
   - Audio commands: `open_audio(path: String)`, `analyze_audio(path: String, max_peaks: usize) -> AudioInfo(duration, peaks)`, `play_audio()`, `pause_audio()`, `resume_audio()`, `stop_audio()`, `seek_audio(position_ms: u32)`, `copy_audio_file(src_path: String, dest_path: String)`
   - Download command: `download_file_with_progress(url: String, file_path: String) -> Result<String, String>` (returns download ID for cancellation)
 - Cancel download command: `cancel_download(download_id: String) -> Result<(), String>`
-  - TTS command: `start_tts(transcript: String, config_path: String) -> Result<String, String>`
+  - TTS command: `start_tts(transcript: String, config_path: String, speaker_id: u32) -> Result<String, String>`
     - Runs TTS using the given transcript and config, returning the path to a temporary ogg file. TTS progress is reported via the `tts-progress` event.
   - Cancel TTS: `cancel_tts() -> Result<(), String>`
     - Cancels an in-progress TTS operation.
