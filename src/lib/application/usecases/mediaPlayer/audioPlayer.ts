@@ -3,15 +3,22 @@ import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelt
 import type { MediaPlayer } from '$lib/application/usecases/mediaPlayer/mediaPlayer';
 import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import { audioRepository } from '$lib/infrastructure/repositories/audioRepository';
+import { error } from '@tauri-apps/plugin-log';
 
 export async function analyzeAudio(path: string): Promise<AudioInfo> {
   const cachedAudioInfo = audioInfoCacheStore.get(path);
   if (cachedAudioInfo) {
     return cachedAudioInfo;
   }
-  const audioInfo = await audioRepository.analyze(path);
-  audioInfoCacheStore.set(path, audioInfo);
-  return audioInfo;
+
+  try {
+    const audioInfo = await audioRepository.analyze(path);
+    audioInfoCacheStore.set(path, audioInfo);
+    return audioInfo;
+  } catch (e) {
+    error(`Failed to analyze audio at path ${path}: ${e}`);
+    throw new Error(`Failed to analyze audio at path ${path}: ${e}`);
+  }
 }
 
 export class AudioPlayer implements MediaPlayer {
