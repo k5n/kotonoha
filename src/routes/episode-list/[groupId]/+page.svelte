@@ -56,19 +56,24 @@
   // === エピソード追加 ===
 
   async function handleEpisodeAddSubmit() {
-    try {
-      const episodeGroupId = data.episodeGroup?.id;
-      if (!episodeGroupId) {
-        error('No group ID found, cannot add episode (this should not happen)');
-        return;
-      }
+    const episodeGroupId = data.episodeGroup?.id;
+    if (!episodeGroupId) {
+      error('No group ID found, cannot add episode (this should not happen)');
+      return;
+    }
 
-      if (episodeAddStore.isTtsRequired()) {
-        debug('TTS is required for the new episode');
+    if (episodeAddStore.isTtsRequired()) {
+      debug('TTS is required for the new episode');
+      try {
         await downloadTtsModel();
         await executeTts();
+      } catch (e) {
+        error(`Failed during TTS preparation: ${e}`);
+        return;
       }
+    }
 
+    try {
       await addNewEpisode(episodeGroupId, episodes);
       await invalidateAll();
     } catch (e) {

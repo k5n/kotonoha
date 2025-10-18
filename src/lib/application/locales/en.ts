@@ -406,6 +406,11 @@ export const en = {
         title: 'Downloading TTS Model',
         downloadingFile: 'Downloading file',
         pleaseWait: 'Please wait while the model is being downloaded...',
+        close: 'Close',
+        error: {
+          downloadFailed:
+            'Failed to download TTS model. Please check your network connection or storage.',
+        },
       },
       ttsExecutionModal: {
         title: 'Generating Audio',

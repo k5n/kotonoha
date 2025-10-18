@@ -406,6 +406,11 @@ export const ja = {
         title: 'TTSモデルをダウンロード中',
         downloadingFile: 'ダウンロード中のファイル',
         pleaseWait: 'モデルをダウンロード中です。しばらくお待ちください...',
+        close: '閉じる',
+        error: {
+          downloadFailed:
+            'TTSモデルのダウンロードに失敗しました。ネットワークまたはストレージの状態を確認してください。',
+        },
       },
       ttsExecutionModal: {
         title: '音声を生成中',

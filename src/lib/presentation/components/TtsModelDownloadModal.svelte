@@ -5,6 +5,8 @@
 
   let show = $derived(ttsDownloadStore.showModal);
   let progress = $derived(ttsDownloadStore.progress);
+  let isDownloading = $derived(ttsDownloadStore.isDownloading);
+  let errorMessageKey = $derived(ttsDownloadStore.errorMessageKey);
 
   // Format bytes to human readable format
   function formatBytes(bytes: number): string {
@@ -17,15 +19,21 @@
 </script>
 
 {#snippet footer()}
-  <Button
-    color="gray"
-    onclick={async () => {
-      await ttsDownloadStore.cancelDownload();
-      ttsDownloadStore.closeModal();
-    }}
-  >
-    {t('common.cancel')}
-  </Button>
+  {#if isDownloading}
+    <Button
+      color="gray"
+      onclick={async () => {
+        await ttsDownloadStore.cancelDownload();
+        ttsDownloadStore.closeModal();
+      }}
+    >
+      {t('common.cancel')}
+    </Button>
+  {:else}
+    <Button onclick={ttsDownloadStore.closeModal}>
+      {t('components.ttsModelDownloadModal.close')}
+    </Button>
+  {/if}
 {/snippet}
 
 <Modal bind:open={show} size="md" onclose={ttsDownloadStore.closeModal} {footer}>
@@ -52,6 +60,13 @@
       </span>
     </div>
   </div>
+
+  <!-- Error message -->
+  {#if errorMessageKey}
+    <div class="mb-4 rounded-md bg-red-50 p-3">
+      <div class="text-sm text-red-700">{t(errorMessageKey)}</div>
+    </div>
+  {/if}
 
   <!-- Status message -->
   <div class="text-center text-sm text-gray-600">

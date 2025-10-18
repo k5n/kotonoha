@@ -150,8 +150,13 @@ export async function downloadTtsModel(): Promise<void> {
 
   try {
     await executeDownloads(downloadTasks, baseUrl, ttsRepository.downloadModel.bind(ttsRepository));
+    // On success, close the modal
+    ttsDownloadStore.closeModal();
+  } catch (e) {
+    // Report error to store so modal shows the message but do not swallow the error — rethrow
+    ttsDownloadStore.failedDownload('components.ttsModelDownloadModal.error.downloadFailed');
+    throw e;
   } finally {
     progressUnlisten();
-    ttsDownloadStore.closeModal();
   }
 }
