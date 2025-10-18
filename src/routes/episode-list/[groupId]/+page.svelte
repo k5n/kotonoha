@@ -10,7 +10,7 @@
     downloadTtsModel,
   } from '$lib/application/usecases/downloadTtsModel';
   import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
-  import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
+  import { fetchAvailableTargetGroupsForEpisodeMove } from '$lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
@@ -43,7 +43,7 @@
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
 
-  // === ページ遷移 ===
+  // === Page transition ===
 
   function openEpisode(episodeId: number) {
     goto(`/episode/${episodeId}`);
@@ -56,7 +56,7 @@
     }
   }
 
-  // === エピソード追加 ===
+  // === Add episode ===
 
   async function handleEpisodeAddSubmit() {
     const episodeGroupId = data.episodeGroup?.id;
@@ -85,12 +85,13 @@
     }
   }
 
-  // === エピソード移動 ===
+  // === Move episode ===
 
   async function handleEpisodeMoveClick(episode: Episode) {
     try {
-      const allAlbumGroups = await fetchAlbumGroups();
-      availableTargetGroups = allAlbumGroups.filter((g) => g.id !== episode.episodeGroupId);
+      availableTargetGroups = await fetchAvailableTargetGroupsForEpisodeMove(
+        episode.episodeGroupId
+      );
       targetEpisode = episode;
       showEpisodeMove = true;
     } catch (e) {
@@ -115,7 +116,7 @@
     }
   }
 
-  // === エピソード削除 ===
+  // === Delete episode ===
 
   function handleEpisodeDeleteClick(episode: Episode) {
     targetEpisode = episode;
@@ -138,7 +139,7 @@
     }
   }
 
-  // === エピソード名変更 ===
+  // === Rename episode ===
 
   function handleEpisodeRenameClick(episode: Episode) {
     targetEpisode = episode;

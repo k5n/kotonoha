@@ -39,7 +39,7 @@
       : t('components.confirmModal.confirmDelete')}
   </Button>
   <Button color="alternative" disabled={isSubmitting} onclick={handleCancel}>
-    {t('components.confirmModal.cancel')}
+    {t('common.cancel')}
   </Button>
 {/snippet}
 

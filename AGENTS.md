@@ -11,9 +11,14 @@ Kotonoha is a desktop application that helps language learners transform audio/v
   - Desktop framework: Tauri (Rust backend). Rust implements LLM calls, Stronghold-based secret storage, audio processing, and other system integrations.
   - DB: SQLite (accessed via Tauri SQL plugin). App uses file-based DBs: `dev.db` for development and `app.db` for release.
 - Layered architecture
-  - Overview: Kotonoha follows a four-layer, one-way dependency architecture: Presentation → Application, Application → Domain, Application → Infrastructure. Each layer has a focused responsibility and communicates only with lower layers through well-defined interfaces.
-  - One notable exception: the domain/entities package is intentionally referenced by all other layers. While the architecture enforces one-way dependencies between Presentation, Application, Domain, and Infrastructure, domain entities represent the canonical data models and business concepts that must be shared project-wide. To avoid cyclic dependencies, entities must remain pure — contain no side effects, framework-specific imports, or dependencies on higher layers
-  - Rationale: This structure keeps UI concerns separate from business rules and infrastructure details, makes domain logic highly testable, and allows the Rust/Tauri backend to evolve independently of the frontend UI.
+  - Structure: Four-layer architecture with specific flow: Presentation → Application → Infrastructure. Domain layer (entities/services) is shared across all layers.
+  - Layer responsibilities:
+    - **Presentation** (routes, components): Routes are page-level components that compose UI parts and delegate business logic to usecases. Components are individual UI parts without business logic. Routes invoke usecases; components may access stores directly to avoid prop drilling.
+    - **Application** (usecases, stores): Usecases orchestrate workflows by calling domain services and infrastructure repositories. Stores manage cross-component UI state only (no business logic, no usecase invocation). Usecases may access stores directly to avoid prop drilling, but not vice versa.
+    - **Domain** (entities, services): Entities are pure data types (no logic). Services are pure functions depending only on entities. Only usecases invoke services.
+    - **Infrastructure** (repositories): Handles external system communication: Tauri commands, DB operations, file system access, HTTP requests, etc. Repositories consolidate external system communication.
+  - Dependency flow: While labeled as four layers, the actual processing hierarchy is three-tier (Presentation → Application → Infrastructure). All layers depend on Domain entities; only usecases depend on Domain services. No dependency inversion is used - repositories are called directly by usecases (not Clean Architecture style).
+  - Rationale: Keeps UI separate from business rules and infrastructure, makes domain logic testable, and allows backend evolution independent of frontend UI.
 - Key Tauri commands
   - LLM: `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
   - Stronghold: `get_stronghold_password() -> Result<String, String>`
@@ -60,7 +65,6 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/stores/episodeAddStore/episodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts
-- src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts -> src/lib/domain/entities/scriptPreview.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts -> src/lib/domain/entities/tsvConfig.ts
@@ -117,14 +121,14 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/executeTts.ts -> src/lib/domain/services/parseScriptToDialogues.ts
 - src/lib/application/usecases/executeTts.ts -> src/lib/infrastructure/repositories/fileRepository.ts
 - src/lib/application/usecases/executeTts.ts -> src/lib/infrastructure/repositories/ttsRepository.ts
-- src/lib/application/usecases/fetchAlbumGroups.ts -> src/lib/domain/services/buildEpisodeGroupTree.ts
-- src/lib/application/usecases/fetchAlbumGroups.ts -> src/lib/infrastructure/repositories/episodeGroupRepository.ts
 - src/lib/application/usecases/fetchAppInfo.ts -> src/lib/domain/entities/appInfo.ts
 - src/lib/application/usecases/fetchAppInfo.ts -> src/lib/infrastructure/repositories/appInfoRepository.ts
 - src/lib/application/usecases/fetchAvailableParentGroups.ts -> src/lib/domain/entities/episodeGroup.ts
 - src/lib/application/usecases/fetchAvailableParentGroups.ts -> src/lib/domain/services/buildEpisodeGroupTree.ts
 - src/lib/application/usecases/fetchAvailableParentGroups.ts -> src/lib/domain/services/groupTreeHelper.ts
 - src/lib/application/usecases/fetchAvailableParentGroups.ts -> src/lib/infrastructure/repositories/episodeGroupRepository.ts
+- src/lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove.ts -> src/lib/domain/entities/episodeGroup.ts
+- src/lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove.ts -> src/lib/infrastructure/repositories/episodeGroupRepository.ts
 - src/lib/application/usecases/fetchEpisodeDetail.ts -> src/lib/domain/entities/dialogue.ts
 - src/lib/application/usecases/fetchEpisodeDetail.ts -> src/lib/domain/entities/episode.ts
 - src/lib/application/usecases/fetchEpisodeDetail.ts -> src/lib/domain/entities/sentenceCard.ts
@@ -266,6 +270,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/presentation/components/TsvConfigSection.svelte -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/presentation/components/TtsConfigSection.svelte -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts
 - src/lib/presentation/components/TtsConfigSection.svelte -> src/lib/application/stores/i18n.svelte.ts
+- src/lib/presentation/components/TtsConfigSection.svelte -> src/lib/utils/language.ts
 - src/lib/presentation/components/TtsExecutionModal.svelte -> src/lib/application/stores/episodeAddStore/ttsExecutionStore.svelte.ts
 - src/lib/presentation/components/TtsExecutionModal.svelte -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/presentation/components/TtsModelDownloadModal.svelte -> src/lib/application/stores/episodeAddStore/ttsDownloadStore.svelte.ts
@@ -298,7 +303,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/deleteEpisode.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/downloadTtsModel.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/executeTts.ts
-- src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchAlbumGroups.ts
+- src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchTtsVoices.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchYoutubeMetadata.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/moveEpisode.ts

@@ -91,7 +91,7 @@
 
     <div class="flex justify-end gap-2">
       <Button color="gray" onclick={handleClose} disabled={isSubmitting}
-        >{t('components.episodeMoveModal.cancel')}</Button
+        >{t('common.cancel')}</Button
       >
       <Button onclick={handleSubmit} disabled={isSubmitting || selectedGroupId === null}>
         {isSubmitting

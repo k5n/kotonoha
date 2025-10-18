@@ -37,9 +37,9 @@ graph LR
                     src_lib_application_usecases_deleteGroupRecursive_ts["deleteGroupRecursive.ts"]
                     src_lib_application_usecases_downloadTtsModel_ts["downloadTtsModel.ts"]
                     src_lib_application_usecases_executeTts_ts["executeTts.ts"]
-                    src_lib_application_usecases_fetchAlbumGroups_ts["fetchAlbumGroups.ts"]
                     src_lib_application_usecases_fetchAppInfo_ts["fetchAppInfo.ts"]
                     src_lib_application_usecases_fetchAvailableParentGroups_ts["fetchAvailableParentGroups.ts"]
+                    src_lib_application_usecases_fetchAvailableTargetGroupsForEpisodeMove_ts["fetchAvailableTargetGroupsForEpisodeMove.ts"]
                     src_lib_application_usecases_fetchEpisodeDetail_ts["fetchEpisodeDetail.ts"]
                     src_lib_application_usecases_fetchEpisodeGroups_ts["fetchEpisodeGroups.ts"]
                     src_lib_application_usecases_fetchEpisodes_ts["fetchEpisodes.ts"]
@@ -179,7 +179,6 @@ src_lib_application_stores_episodeAddStore_episodeAddStore_svelte_ts --> src_lib
 src_lib_application_stores_episodeAddStore_episodeAddStore_svelte_ts --> src_lib_application_stores_episodeAddStore_youtubeEpisodeAddStore_svelte_ts
 src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts
 src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_ttsConfigStore_svelte_ts
-src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_application_stores_i18n_svelte_ts
 src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts --> src_lib_domain_entities_tsvConfig_ts
 src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts --> src_lib_domain_entities_scriptPreview_ts
 src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts --> src_lib_domain_entities_tsvConfig_ts
@@ -236,14 +235,14 @@ src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_tsvConfig
 src_lib_application_usecases_executeTts_ts --> src_lib_domain_services_parseScriptToDialogues_ts
 src_lib_application_usecases_executeTts_ts --> src_lib_infrastructure_repositories_fileRepository_ts
 src_lib_application_usecases_executeTts_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
-src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
-src_lib_application_usecases_fetchAlbumGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_fetchAppInfo_ts --> src_lib_domain_entities_appInfo_ts
 src_lib_application_usecases_fetchAppInfo_ts --> src_lib_infrastructure_repositories_appInfoRepository_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_services_buildEpisodeGroupTree_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_domain_services_groupTreeHelper_ts
 src_lib_application_usecases_fetchAvailableParentGroups_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
+src_lib_application_usecases_fetchAvailableTargetGroupsForEpisodeMove_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_application_usecases_fetchAvailableTargetGroupsForEpisodeMove_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_episode_ts
 src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_sentenceCard_ts
@@ -385,6 +384,7 @@ src_lib_presentation_components_TsvConfigSection_svelte --> src_lib_application_
 src_lib_presentation_components_TsvConfigSection_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_ttsConfigStore_svelte_ts
 src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_application_stores_i18n_svelte_ts
+src_lib_presentation_components_TtsConfigSection_svelte --> src_lib_utils_language_ts
 src_lib_presentation_components_TtsExecutionModal_svelte --> src_lib_application_stores_episodeAddStore_ttsExecutionStore_svelte_ts
 src_lib_presentation_components_TtsExecutionModal_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_TtsModelDownloadModal_svelte --> src_lib_application_stores_episodeAddStore_ttsDownloadStore_svelte_ts
@@ -417,7 +417,7 @@ src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_deleteEpisode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_downloadTtsModel_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_executeTts_ts
-src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchAlbumGroups_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchAvailableTargetGroupsForEpisodeMove_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchTtsVoices_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchYoutubeMetadata_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_moveEpisode_ts

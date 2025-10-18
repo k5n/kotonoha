@@ -15,18 +15,6 @@ let selectedVoiceName = $state('');
 let selectedSpeakerId = $state(0);
 let errorMessage = $state('');
 let warningMessage = $state('');
-let audioElement = $state(null as HTMLAudioElement | null);
-let isPlayingSample = $state(false);
-
-const languageOptions = $derived(
-  fetchedParams.learningTargetVoices
-    ?.map((voice) => voice.language)
-    .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
-    .map((lang) => ({
-      value: lang.family,
-      name: `${t(bcp47ToTranslationKey(lang.family)!)} (${bcp47ToLanguageName(lang.family)})`,
-    })) || []
-);
 
 const selectedLanguageVoices = $derived(
   fetchedParams.learningTargetVoices?.filter(
@@ -38,19 +26,8 @@ const availableQualities = $derived(
   Array.from(new Set(selectedLanguageVoices.map((v) => v.quality)))
 );
 
-const qualityOptions = $derived(
-  availableQualities.map((quality) => ({ value: quality, name: quality }))
-);
-
 const selectedLanguageQualityVoices = $derived(
   selectedLanguageVoices.filter((voice) => voice.quality === selectedQuality) || []
-);
-
-const voiceOptions = $derived(
-  selectedLanguageQualityVoices.map((voice) => ({
-    value: voice.name,
-    name: `${voice.name} (${voice.language.region})`,
-  })) || []
 );
 
 const currentVoice = $derived(
@@ -58,13 +35,6 @@ const currentVoice = $derived(
 );
 
 const availableSpeakers = $derived(currentVoice ? resolveSpeakers(currentVoice) : []);
-
-const speakerOptions = $derived(
-  availableSpeakers.map((speaker) => ({
-    value: speaker.id.toString(),
-    name: speaker.name,
-  }))
-);
 
 const currentSpeaker = $derived(
   availableSpeakers.find((speaker) => speaker.id === selectedSpeakerId) || null
@@ -177,8 +147,6 @@ function setSelectedVoiceName(voiceName: string) {
 
 function setSelectedSpeakerId(id: number) {
   selectedSpeakerId = id;
-  // Stop any playing sample
-  ttsConfigStore.stopSample();
 }
 
 function resetFetchedParams() {
@@ -240,57 +208,12 @@ export const ttsConfigStore = {
     return currentSpeaker?.sampleUrl || null;
   },
 
-  get languageOptions() {
-    return languageOptions;
-  },
-
-  get qualityOptions() {
-    return qualityOptions;
-  },
-
-  get voiceOptions() {
-    return voiceOptions;
-  },
-
-  get speakerOptions() {
-    return speakerOptions;
-  },
-
   get errorMessage() {
     return errorMessage;
   },
 
   get warningMessage() {
     return warningMessage;
-  },
-
-  get isPlayingSample() {
-    return isPlayingSample;
-  },
-
-  playSample(url: string) {
-    if (audioElement) {
-      audioElement.pause();
-    }
-    audioElement = new Audio(url);
-    audioElement.volume = 0.8;
-    audioElement.addEventListener('ended', () => {
-      isPlayingSample = false;
-    });
-    audioElement.addEventListener('error', () => {
-      errorMessage = t('components.ttsConfigSection.playbackError');
-      isPlayingSample = false;
-    });
-    audioElement.play();
-    isPlayingSample = true;
-  },
-
-  stopSample() {
-    if (audioElement) {
-      audioElement.pause();
-      audioElement = null;
-    }
-    isPlayingSample = false;
   },
 
   startVoicesFetching() {
@@ -369,7 +292,5 @@ export const ttsConfigStore = {
     selectedSpeakerId = 0;
     errorMessage = '';
     warningMessage = '';
-    audioElement = null;
-    isPlayingSample = false;
   },
 };

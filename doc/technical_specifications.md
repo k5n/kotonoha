@@ -119,27 +119,40 @@ graph TD
 
     User ---> components
     routes --> components
-    routes ---> usecases
-    routes ---> stores
-    routes ---> actions
+    routes ----> usecases
+    routes --> stores
+    routes --> actions
     routes ---> entities
     components --> actions
     components ---> stores
     components ---> entities
     actions ---> entities
-    usecases --> entities
     usecases --> stores
-    usecases ---> services
+    usecases ---> entities
+    usecases --> services
     usecases ---> repositories
     stores ---> entities
     services ---> entities
     repositories ---> entities
-    repositories ---> ExternalSystems
+    repositories --> ExternalSystems
 
     Components:::cssComponents
     PureTypeScript[Pure TypeScript Code]:::cssPure
     TypeDefinitions[Type Definitions]:::cssTypes
 ```
+
+- routes は SvelteKit のルーティング機能を利用した画面単位のコンポーネント群で、components の画面部品を束ねる。ビジネスロジックはできるだけ Application レイヤーの usecases に委譲する。
+- components には各画面の個々の部品を格納し、ビジネスロジックを持たせない。usecases の呼び出しは routes から行う。ただし Props のバケツリレーを避けるため、stores への直接アクセスは許容する。
+- stores はアプリケーション全体の状態管理を担う。特に複数のコンポーネントにまたがる UI 状態を管理する役割を果たす。あくまで状態管理に専念し、ビジネスロジックは持たせず、usecases を呼び出すことはしない。
+- usecases はアプリケーションのユースケースを実装し、処理全体のオーケストレーションを担う。Domain レイヤーの services や Infrastructure レイヤーの repositories を呼び出す。routes 経由でのバケツリレーを避けるため、stores への直接アクセスを許容する。
+- entities は純粋なデータ型定義のみを含み、ロジックを持たせない。
+- services は純粋関数として entities にのみ依存するロジックを実装する。
+- repositories は Tauri コマンドの呼び出しや DB 操作、ファイルシステム操作、HTTP 通信などを実装する。Infrastructure レイヤーに外部システムとの通信ロジックを集約する。
+
+Domain と言いつつ、それほど大規模なビジネスロジックが存在しないため、Domain レイヤーは薄くなる見込み。
+４層あるが、上下関係が Presentation → Application → Domain → Infrastructure にはなっていない点に注意。実際には Presentation → Application → Infrastructure という３階層である。Domain には全ての層が依存している。
+ただし全ての層が依存してよいのは entities であり、services を利用するのは usecases だけである。
+Infrastructure が Domain に依存する方向になっているが、Clean Architecture のような依存関係逆転を用いているわけではない。前述したように実質的に処理の流れの階層としては３階層であり、Application (usecases) が Infrastructure (repositories)  を直接呼び出すシンプルな構成となっている。
 
 ---
 
