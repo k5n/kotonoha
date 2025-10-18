@@ -155,7 +155,7 @@
   <div class="flex justify-end space-x-2">
     <Button color="alternative" onclick={handleCancel} disabled={isProcessing}>
       <CloseOutline class="me-2 h-5 w-5" />
-      {t('components.sentenceMiningModal.cancel')}
+      {t('common.cancel')}
     </Button>
     <Button disabled={selectedItemIds.length === 0 || isProcessing} onclick={handleCreate}>
       {#if isProcessing}

@@ -88,9 +88,7 @@
     {/if}
 
     <div class="flex justify-end gap-2">
-      <Button color="gray" onclick={onClose} disabled={isSubmitting}
-        >{t('components.groupMoveModal.cancel')}</Button
-      >
+      <Button color="gray" onclick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>
       <Button onclick={handleSubmit} disabled={isSubmitting}>
         {isSubmitting
           ? t('components.groupMoveModal.submitting')

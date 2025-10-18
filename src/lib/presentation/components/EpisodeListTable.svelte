@@ -128,7 +128,7 @@
                     onEpisodeDeleteClick(episode);
                   }}
                 >
-                  {t('components.episodeListTable.delete')}
+                  {t('common.delete')}
                 </DropdownItem>
               </Dropdown>
             </div>

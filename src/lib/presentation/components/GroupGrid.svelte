@@ -124,7 +124,7 @@
               onclick={(e: MouseEvent) => handleDeleteGroup(e, group)}
               class="text-red-600 dark:text-red-500"
             >
-              {t('components.groupGrid.delete')}
+              {t('common.delete')}
             </DropdownItem>
           </Dropdown>
         </div>

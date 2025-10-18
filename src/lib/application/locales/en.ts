@@ -240,7 +240,6 @@ export const en = {
       confirmModal: {
         processing: 'Processing...',
         confirmDelete: 'Yes, delete',
-        cancel: 'Cancel',
       },
       episodeAddModal: {
         title: 'Add New Episode',
@@ -311,7 +310,6 @@ export const en = {
         actions: 'Actions',
         rename: 'Rename',
         move: 'Move',
-        delete: 'Delete',
       },
       episodeMoveModal: {
         title: 'Move Episode',
@@ -319,7 +317,6 @@ export const en = {
         targetGroupLabel: 'Target Group',
         targetGroupPlaceholder: 'Select a destination...',
         errorTargetRequired: 'Please select a destination.',
-        cancel: 'Cancel',
         submitting: 'Moving...',
         submit: 'Move',
       },
@@ -328,9 +325,7 @@ export const en = {
         nameLabel: 'Episode Name',
         namePlaceholder: 'New episode name',
         errorNameRequired: 'Please enter an episode name.',
-        cancel: 'Cancel',
         submitting: 'Saving...',
-        submit: 'Save',
       },
       groupAddModal: {
         title: 'Add New Group',
@@ -342,14 +337,12 @@ export const en = {
         typeFolderDescription: 'A container for organizing other groups (folders or albums)',
         typeAlbumDescription: 'A collection for managing episodes',
         errorNameRequired: 'Please enter a group name.',
-        cancel: 'Cancel',
         submitting: 'Creating...',
         submit: 'Create',
       },
       groupGrid: {
         rename: 'Rename',
         move: 'Move',
-        delete: 'Delete',
         noGroups: 'There are no groups in this folder.',
         emptyState: {
           title: 'No Groups',
@@ -363,7 +356,6 @@ export const en = {
         targetGroupLabel: 'Target Group',
         root: 'Root',
         errorTargetRequired: 'Please select a destination.',
-        cancel: 'Cancel',
         submitting: 'Moving...',
         submit: 'Move',
       },
@@ -372,9 +364,7 @@ export const en = {
         nameLabel: 'Group Name',
         namePlaceholder: 'New group name',
         errorNameRequired: 'Please enter a group name.',
-        cancel: 'Cancel',
         submitting: 'Saving...',
-        submit: 'Save',
       },
       languageSelectionModal: {
         search: 'Search for a language',
@@ -393,7 +383,6 @@ export const en = {
         selectPrompt: 'Select the words/expressions you want to make into cards.',
         contextLabel: 'Context',
         coreMeaningLabel: 'Core',
-        cancel: 'Cancel',
         submitting: 'Adding...',
         submit: 'Add {{count}} selected items to cards',
       },

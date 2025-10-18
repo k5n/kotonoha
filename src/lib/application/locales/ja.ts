@@ -240,7 +240,6 @@ export const ja = {
       confirmModal: {
         processing: '処理中...',
         confirmDelete: 'はい、削除します',
-        cancel: 'キャンセル',
       },
       episodeAddModal: {
         title: 'エピソード新規追加',
@@ -311,7 +310,6 @@ export const ja = {
         actions: 'Actions',
         rename: '名前の変更',
         move: '移動',
-        delete: '削除',
       },
       episodeMoveModal: {
         title: 'エピソードの移動',
@@ -319,7 +317,6 @@ export const ja = {
         targetGroupLabel: '移動先グループ',
         targetGroupPlaceholder: '移動先を選択...',
         errorTargetRequired: '移動先を選択してください。',
-        cancel: 'キャンセル',
         submitting: '移動中...',
         submit: '移動',
       },
@@ -328,9 +325,7 @@ export const ja = {
         nameLabel: 'エピソード名',
         namePlaceholder: '新しいエピソード名',
         errorNameRequired: 'エピソード名を入力してください',
-        cancel: 'キャンセル',
         submitting: '保存中...',
-        submit: '保存',
       },
       groupAddModal: {
         title: 'グループ新規追加',
@@ -342,14 +337,12 @@ export const ja = {
         typeFolderDescription: '他のグループ（フォルダやアルバム）を格納して整理します。',
         typeAlbumDescription: 'エピソードを格納して管理します。',
         errorNameRequired: 'グループ名を入力してください',
-        cancel: 'キャンセル',
         submitting: '作成中...',
         submit: '作成',
       },
       groupGrid: {
         rename: '名前の変更',
         move: '移動',
-        delete: '削除',
         noGroups: 'このフォルダーにはグループがありません。',
         emptyState: {
           title: 'グループがありません',
@@ -363,7 +356,6 @@ export const ja = {
         targetGroupLabel: '移動先グループ',
         root: '一番下の階層',
         errorTargetRequired: '移動先を選択してください。',
-        cancel: 'キャンセル',
         submitting: '移動中...',
         submit: '移動',
       },
@@ -372,9 +364,7 @@ export const ja = {
         nameLabel: 'グループ名',
         namePlaceholder: '新しいグループ名',
         errorNameRequired: 'グループ名を入力してください',
-        cancel: 'キャンセル',
         submitting: '保存中...',
-        submit: '保存',
       },
       languageSelectionModal: {
         search: '言語を検索',
@@ -393,7 +383,6 @@ export const ja = {
         selectPrompt: 'カードにしたい単語・表現を選択してください。',
         contextLabel: '文脈',
         coreMeaningLabel: 'コア',
-        cancel: 'キャンセル',
         submitting: '追加中...',
         submit: '選択した {{count}} 件をカードに追加',
       },
