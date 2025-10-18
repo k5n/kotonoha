@@ -1,18 +1,126 @@
 <script lang="ts">
   import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Label, Select } from 'flowbite-svelte';
 
+  let audioElement = $state<HTMLAudioElement | null>(null);
+  let isPlayingSample = $state(false);
+
+  const languageOptions = $derived(
+    ttsConfigStore.learningTargetVoices
+      ?.map((voice) => voice.language)
+      .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
+      .map((lang) => ({
+        value: lang.family,
+        name: `${t(bcp47ToTranslationKey(lang.family)!)} (${bcp47ToLanguageName(lang.family)})`,
+      })) || []
+  );
+
+  const selectedLanguageVoices = $derived(
+    ttsConfigStore.learningTargetVoices?.filter(
+      (voice) => voice.language.family === ttsConfigStore.selectedLanguage
+    ) || []
+  );
+
+  const availableQualities = $derived(
+    Array.from(new Set(selectedLanguageVoices.map((v) => v.quality)))
+  );
+
+  const qualityOptions = $derived(
+    availableQualities.map((quality) => ({ value: quality, name: quality }))
+  );
+
+  const selectedLanguageQualityVoices = $derived(
+    selectedLanguageVoices.filter((voice) => voice.quality === ttsConfigStore.selectedQuality) || []
+  );
+
+  const voiceOptions = $derived(
+    selectedLanguageQualityVoices.map((voice) => ({
+      value: voice.name,
+      name: `${voice.name} (${voice.language.region})`,
+    })) || []
+  );
+
+  const currentVoice = $derived(ttsConfigStore.selectedVoice);
+
+  const speakerOptions = $derived(
+    currentVoice?.speakers.map((speaker) => ({
+      value: speaker.id.toString(),
+      name: speaker.name,
+    })) || []
+  );
+
+  const currentSpeaker = $derived(
+    currentVoice?.speakers.find((s) => s.id.toString() === ttsConfigStore.selectedSpeakerId) ||
+      (currentVoice?.speakers.length === 0
+        ? { id: 0, name: currentVoice.name, sampleUrl: '' }
+        : null)
+  );
+
+  const sampleUrl = $derived(currentSpeaker?.sampleUrl || null);
+
+  function playSample(url: string) {
+    if (audioElement) {
+      audioElement.pause();
+    }
+    audioElement = new Audio(url);
+    audioElement.volume = 0.8;
+    audioElement.addEventListener('ended', () => {
+      isPlayingSample = false;
+    });
+    audioElement.addEventListener('error', () => {
+      // You might want to show an error to the user here
+      console.error('Error playing audio sample.');
+      isPlayingSample = false;
+    });
+    audioElement.play();
+    isPlayingSample = true;
+  }
+
+  function stopSample() {
+    if (audioElement) {
+      audioElement.pause();
+      audioElement = null;
+    }
+    isPlayingSample = false;
+  }
+
   function handlePlaySample() {
-    const sampleUrl = ttsConfigStore.sampleUrl;
     if (sampleUrl) {
-      if (ttsConfigStore.isPlayingSample) {
-        ttsConfigStore.stopSample();
+      if (isPlayingSample) {
+        stopSample();
       } else {
-        ttsConfigStore.playSample(sampleUrl);
+        playSample(sampleUrl);
       }
     }
   }
+
+  // NOTE: Flowbite Svelte's Select component supports two-way binding only. So we create proxies here.
+  type SelectableKeys =
+    | 'selectedLanguage'
+    | 'selectedQuality'
+    | 'selectedVoiceName'
+    | 'selectedSpeakerId';
+
+  function createSelectionProxy<K extends SelectableKeys>(key: K) {
+    type ValueType = (typeof ttsConfigStore)[K];
+
+    return {
+      get value(): ValueType {
+        return ttsConfigStore[key];
+      },
+      set value(newValue: ValueType) {
+        stopSample();
+        ttsConfigStore[key] = newValue;
+      },
+    };
+  }
+
+  const language = createSelectionProxy('selectedLanguage');
+  const quality = createSelectionProxy('selectedQuality');
+  const voiceName = createSelectionProxy('selectedVoiceName');
+  const speakerId = createSelectionProxy('selectedSpeakerId');
 </script>
 
 <div class="mb-4 space-y-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
@@ -39,58 +147,42 @@
       <Label class="mb-2 block" for="tts-language">
         {t('components.ttsConfigSection.languageLabel')}
       </Label>
-      <Select
-        id="tts-language"
-        items={ttsConfigStore.languageOptions}
-        bind:value={ttsConfigStore.selectedLanguage}
-      />
+      <Select id="tts-language" items={languageOptions} bind:value={language.value} />
     </div>
 
     <!-- Quality Selection -->
-    {#if ttsConfigStore.qualityOptions.length > 0}
+    {#if qualityOptions.length > 0}
       <div>
         <Label class="mb-2 block" for="tts-quality">
           {t('components.ttsConfigSection.qualityLabel')}
         </Label>
-        <Select
-          id="tts-quality"
-          items={ttsConfigStore.qualityOptions}
-          bind:value={ttsConfigStore.selectedQuality}
-        />
+        <Select id="tts-quality" items={qualityOptions} bind:value={quality.value} />
       </div>
 
       <!-- Voice Name Selection -->
-      {#if ttsConfigStore.voiceOptions.length > 0}
+      {#if voiceOptions.length > 0}
         <div>
           <Label class="mb-2 block" for="tts-voice">
             {t('components.ttsConfigSection.voiceLabel')}
           </Label>
-          <Select
-            id="tts-voice"
-            items={ttsConfigStore.voiceOptions}
-            bind:value={ttsConfigStore.selectedVoiceName}
-          />
+          <Select id="tts-voice" items={voiceOptions} bind:value={voiceName.value} />
         </div>
 
         <!-- Speaker Selection -->
-        {#if ttsConfigStore.speakerOptions.length > 1}
+        {#if speakerOptions.length > 1}
           <div>
             <Label class="mb-2 block" for="tts-speaker">
               {t('components.ttsConfigSection.speakerLabel')}
             </Label>
-            <Select
-              id="tts-speaker"
-              items={ttsConfigStore.speakerOptions}
-              bind:value={ttsConfigStore.selectedSpeakerId}
-            />
+            <Select id="tts-speaker" items={speakerOptions} bind:value={speakerId.value} />
           </div>
         {/if}
 
         <!-- Sample Playback -->
-        {#if ttsConfigStore.sampleUrl}
+        {#if sampleUrl}
           <div>
             <Button onclick={handlePlaySample} color="light" size="sm">
-              {#if ttsConfigStore.isPlayingSample}
+              {#if isPlayingSample}
                 ⏹️ {t('components.ttsConfigSection.stopSample')}
               {:else}
                 ▶️ {t('components.ttsConfigSection.playSample')}
