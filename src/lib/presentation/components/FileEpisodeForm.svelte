@@ -62,7 +62,13 @@
     </Label>
     <FileSelect
       accept="audio/*"
-      onFileSelected={(file) => (fileEpisodeAddStore.audioFilePath = file || null)}
+      value={fileEpisodeAddStore.audioFilePath}
+      onFileSelected={(file) => {
+        fileEpisodeAddStore.audioFilePath = file;
+      }}
+      onClear={() => {
+        fileEpisodeAddStore.audioFilePath = null;
+      }}
       id="audioFile"
     />
   </div>
@@ -74,7 +80,9 @@
   </Label>
   <FileSelect
     accept=".srt,.sswt,.tsv,.vtt,.txt"
-    onFileSelected={(file) => handleScriptFileChange(file || null)}
+    value={fileEpisodeAddStore.scriptFilePath}
+    onFileSelected={(file) => handleScriptFileChange(file)}
+    onClear={() => handleScriptFileChange(null)}
     id="scriptFile"
   />
 </div>

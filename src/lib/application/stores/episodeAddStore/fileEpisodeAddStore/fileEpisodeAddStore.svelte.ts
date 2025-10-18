@@ -55,6 +55,10 @@ export const fileEpisodeAddStore = {
   get isTxtScriptFile() {
     return isTxtScriptFile;
   },
+
+  get audioFilePath() {
+    return audioFilePath;
+  },
   set audioFilePath(path: string | null) {
     audioFilePath = path;
   },
