@@ -300,7 +300,7 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 #### LLM
 
-- `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
+- `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
   - センテンスを解析し、単語や表現の情報をLLMから取得する。
   - `SentenceMiningResult` は `translation`, `explanation`, `items` を含む。
 
@@ -338,8 +338,8 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 #### TTS (Text-to-Speech)
 
-- `start_tts(app_handle: AppHandle, transcript: String, config_path: String, speaker_id: u32) -> Result<String, String>`
-  - 指定されたtranscriptとconfigでTTSを実行し、一時ファイル(ogg)のパスを返す。
+ - `start_tts(transcript: String, config_path: String, speaker_id: u32) -> Result<{ audio_path: String, script_path: String }, String>`
+  - 指定されたtranscriptとconfigでTTSを実行し、生成された一時OGGファイルのパス (`audio_path`) と、対応するSSWTスクリプトのパス (`script_path`) を返す。
   - 進捗は`tts-progress`イベントで通知される。
 - `cancel_tts() -> Result<(), String>`
   - 実行中のTTSをキャンセルする。
@@ -348,6 +348,11 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 - `detect_language_from_text(text: String) -> Option<String>`
   - 入力テキストの言語をBCP-47形式で返す。検出できない場合は`None`を返す。
+
+#### YouTube 字幕取得
+
+- `fetch_youtube_subtitle(video_id: String, language: String, track_kind: String) -> Result<Vec<AtomicDialogue>, String>`
+  - YouTubeから指定したvideo_idの字幕データを取得して返す。戻り値は `AtomicDialogue` の配列で、各要素は `start_time_ms`, `end_time_ms` (optional), `original_text` を含む。
 
 #### Utility
 

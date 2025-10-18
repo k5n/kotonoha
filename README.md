@@ -13,6 +13,7 @@ Kotonoha is a desktop application for language learning, centered around AI-powe
 - **Smart Content Analysis**: Select any sentence and let AI identify important words, phrasal verbs, idioms, and collocations with detailed explanations.
 - **Multiple Content Sources**:
   - Local audio + transcript file pairs with native audio player
+  - Transcript-only import with TTS audio synthesis using [Piper](https://github.com/OHF-Voice/piper1-gpl)
   - YouTube videos with embedded player and automatic subtitle extraction
 - **Episode Management**: Organize your learning materials into groups and episodes for structured study.
 - **Interactive Transcript Viewer**: View synchronized transcripts with media playback (local audio or embedded YouTube) and click-to-analyze functionality.
@@ -27,7 +28,6 @@ We are continuously working to improve Kotonoha. Here's a look at our planned fe
 - **Cross-Platform Support**: Official installers and support for Windows and macOS.
 - **Multiple Content Sources**:
   - Audio-only import with ASR transcript generation
-  - Transcript-only import with TTS audio synthesis
   - Real-time audio capture with live ASR transcription
 - **Card Management**:
   - Hide/suspend cards that you have already learned.
