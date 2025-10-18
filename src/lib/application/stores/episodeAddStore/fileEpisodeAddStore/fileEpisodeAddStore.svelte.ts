@@ -1,4 +1,4 @@
-import { t } from '$lib/application/stores/i18n.svelte';
+// i18n functions are used by components; store keeps errorMessage only
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import { tsvConfigStore } from './tsvConfigStore.svelte';
 import { ttsConfigStore } from './ttsConfigStore.svelte';
@@ -23,10 +23,6 @@ let scriptFilePath = $state<string | null>(null);
 let shouldGenerateAudio = $state(false);
 let errorMessage = $state('');
 
-const hasOnlyScriptFile = $derived(!!scriptFilePath && !audioFilePath);
-const isTxtScriptFile = $derived(scriptFilePath?.toLowerCase().endsWith('.txt') ?? false);
-const extension = $derived(scriptFilePath?.split('.').pop()?.toLowerCase() ?? null);
-
 export const fileEpisodeAddStore = {
   get title() {
     return title;
@@ -38,22 +34,15 @@ export const fileEpisodeAddStore = {
   get errorMessage() {
     return errorMessage;
   },
+  set errorMessage(value: string) {
+    errorMessage = value;
+  },
 
   get shouldGenerateAudio() {
     return shouldGenerateAudio;
   },
   set shouldGenerateAudio(value: boolean) {
     shouldGenerateAudio = value;
-  },
-
-  get shouldShowTtsSection() {
-    return (
-      hasOnlyScriptFile && (extension !== 'tsv' || tsvConfigStore.tsvConfig.textColumnIndex >= 0)
-    );
-  },
-
-  get isTxtScriptFile() {
-    return isTxtScriptFile;
   },
 
   get audioFilePath() {
@@ -68,33 +57,6 @@ export const fileEpisodeAddStore = {
   },
   set scriptFilePath(path: string | null) {
     scriptFilePath = path;
-  },
-
-  validate(): boolean {
-    const titleValue = title.trim();
-    const audioFilePathValue = audioFilePath;
-    const scriptFilePathValue = scriptFilePath;
-    const scriptPreview = tsvConfigStore.scriptPreview;
-    const tsvConfig = tsvConfigStore.tsvConfig;
-    if (!titleValue.trim()) {
-      errorMessage = t('components.fileEpisodeForm.errorTitleRequired');
-      return false;
-    }
-    if (!audioFilePathValue && !shouldGenerateAudio) {
-      errorMessage = t('components.fileEpisodeForm.errorAudioRequired');
-      return false;
-    }
-    if (!scriptFilePathValue) {
-      errorMessage = t('components.fileEpisodeForm.errorScriptFileRequired');
-      return false;
-    }
-    if (scriptPreview) {
-      if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
-        errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
-        return false;
-      }
-    }
-    return true;
   },
 
   buildPayload(): FileEpisodeAddPayload | null {

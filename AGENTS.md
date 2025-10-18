@@ -60,7 +60,6 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/stores/episodeAddStore/episodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts
-- src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts -> src/lib/domain/entities/scriptPreview.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts -> src/lib/domain/entities/tsvConfig.ts

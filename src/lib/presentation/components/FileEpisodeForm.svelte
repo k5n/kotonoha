@@ -21,11 +21,27 @@
       fileEpisodeAddStore.tts.isFetchingVoices
   );
 
+  // Local UI-derived state moved from the store
+  let isTxtScriptFile = $derived(
+    fileEpisodeAddStore.scriptFilePath?.toLowerCase().endsWith('.txt') ?? false
+  );
+  let extension = $derived(
+    fileEpisodeAddStore.scriptFilePath?.split('.').pop()?.toLowerCase() ?? null
+  );
+  let hasOnlyScriptFile = $derived(
+    !!fileEpisodeAddStore.scriptFilePath && !fileEpisodeAddStore.audioFilePath
+  );
+  let shouldShowTtsSection = $derived(
+    hasOnlyScriptFile &&
+      (extension !== 'tsv' || fileEpisodeAddStore.tsv.tsvConfig.textColumnIndex >= 0)
+  );
+
   async function handleScriptFileChange(filePath: string | null) {
     fileEpisodeAddStore.scriptFilePath = filePath;
     if (filePath && filePath.toLowerCase().endsWith('.tsv')) {
       await onTsvFileSelected(filePath);
-    } else if (fileEpisodeAddStore.isTxtScriptFile) {
+    } else if (filePath && filePath.toLowerCase().endsWith('.txt')) {
+      // immediate behavior: .txt files imply TTS generation
       handleTtsCheckboxChange(true);
     }
   }
@@ -38,9 +54,41 @@
   }
 
   async function handleSubmit() {
-    if (fileEpisodeAddStore.validate()) {
+    if (validateLocal()) {
       onSubmit();
     }
+  }
+
+  // Local validation moved from the store. Writes errors back into the store's errorMessage
+  function validateLocal(): boolean {
+    const titleValue = (fileEpisodeAddStore.title || '').trim();
+    const audioFilePathValue = fileEpisodeAddStore.audioFilePath;
+    const scriptFilePathValue = fileEpisodeAddStore.scriptFilePath;
+    const scriptPreview = fileEpisodeAddStore.tsv.scriptPreview;
+    const tsvConfig = fileEpisodeAddStore.tsv.tsvConfig;
+
+    if (!titleValue) {
+      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorTitleRequired');
+      return false;
+    }
+    if (!audioFilePathValue && !fileEpisodeAddStore.shouldGenerateAudio) {
+      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorAudioRequired');
+      return false;
+    }
+    if (!scriptFilePathValue) {
+      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorScriptFileRequired');
+      return false;
+    }
+    if (scriptPreview) {
+      if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
+        fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
+        return false;
+      }
+    }
+
+    // clear error (store's errorMessage remains authoritative for resets)
+    fileEpisodeAddStore.errorMessage = '';
+    return true;
   }
 </script>
 
@@ -91,14 +139,14 @@
   <TsvConfigSection />
 {/if}
 
-{#if fileEpisodeAddStore.shouldShowTtsSection}
+{#if shouldShowTtsSection}
   <div class="mb-4">
     <Label class="flex items-center gap-2">
       <Checkbox
         checked={fileEpisodeAddStore.shouldGenerateAudio}
         onchange={(e) => handleTtsCheckboxChange((e.currentTarget as HTMLInputElement).checked)}
         class="h-4 w-4"
-        disabled={fileEpisodeAddStore.isTxtScriptFile}
+        disabled={isTxtScriptFile}
       />
       {t('components.fileEpisodeForm.generateAudioLabel')}
     </Label>
