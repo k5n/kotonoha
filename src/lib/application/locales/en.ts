@@ -420,7 +420,6 @@ export const en = {
         close: 'Close',
         error: {
           failedToExecute: 'Failed to generate audio using TTS.',
-          cancelled: 'TTS execution was cancelled.',
         },
       },
     },

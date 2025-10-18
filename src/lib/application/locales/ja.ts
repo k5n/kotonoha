@@ -420,7 +420,6 @@ export const ja = {
         close: '閉じる',
         error: {
           failedToExecute: 'TTSによる音声生成に失敗しました。',
-          cancelled: 'TTS実行がキャンセルされました。',
         },
       },
     },

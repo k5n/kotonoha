@@ -70,6 +70,7 @@ function failedExecution(key: string) {
 
 function cancelExecution() {
   isCancelled = true;
+  showModal = false;
 }
 
 function truncateText(text: string, maxLength: number): string {

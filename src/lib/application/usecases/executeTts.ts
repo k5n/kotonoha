@@ -62,11 +62,10 @@ export async function executeTts(): Promise<void> {
     ttsExecutionStore.completeExecution();
   } catch (err) {
     error(`Failed to execute TTS: ${err}`);
-    if (ttsExecutionStore.isCancelled) {
-      ttsExecutionStore.failedExecution('components.ttsExecutionModal.error.cancelled');
-    } else {
+    if (!ttsExecutionStore.isCancelled) {
       ttsExecutionStore.failedExecution('components.ttsExecutionModal.error.failedToExecute');
     }
+    throw err;
   } finally {
     // Clean up event listeners
     if (progressUnlisten) progressUnlisten();
@@ -75,6 +74,6 @@ export async function executeTts(): Promise<void> {
 
 export async function cancelTtsExecution(): Promise<void> {
   info('TTS execution cancelled by user.');
-  ttsExecutionStore.cancelExecution();
   await ttsRepository.cancel();
+  ttsExecutionStore.cancelExecution();
 }
