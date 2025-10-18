@@ -5,7 +5,10 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
-  import { downloadTtsModel } from '$lib/application/usecases/downloadTtsModel';
+  import {
+    cancelTtsModelDownload,
+    downloadTtsModel,
+  } from '$lib/application/usecases/downloadTtsModel';
   import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
@@ -257,6 +260,6 @@
   }}
 />
 
-<TtsModelDownloadModal />
+<TtsModelDownloadModal onCancel={cancelTtsModelDownload} />
 
 <TtsExecutionModal onCancel={cancelTtsExecution} />

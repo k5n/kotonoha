@@ -3,6 +3,11 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { Button, Modal, Progressbar } from 'flowbite-svelte';
 
+  type Props = {
+    onCancel: () => void;
+  };
+  let { onCancel }: Props = $props();
+
   let show = $derived(ttsDownloadStore.showModal);
   let progress = $derived(ttsDownloadStore.progress);
   let isDownloading = $derived(ttsDownloadStore.isDownloading);
@@ -20,13 +25,7 @@
 
 {#snippet footer()}
   {#if isDownloading}
-    <Button
-      color="gray"
-      onclick={async () => {
-        await ttsDownloadStore.cancelDownload();
-        ttsDownloadStore.closeModal();
-      }}
-    >
+    <Button color="gray" onclick={onCancel}>
       {t('common.cancel')}
     </Button>
   {:else}

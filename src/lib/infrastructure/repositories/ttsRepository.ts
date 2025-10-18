@@ -236,4 +236,11 @@ export const ttsRepository = {
       callback(event.payload);
     });
   },
+
+  /**
+   * Cancels the ongoing download process.
+   */
+  async cancelDownload(id: string): Promise<void> {
+    await invoke('cancel_download', { downloadId: id });
+  },
 };

@@ -160,3 +160,15 @@ export async function downloadTtsModel(): Promise<void> {
     progressUnlisten();
   }
 }
+
+export async function cancelTtsModelDownload(): Promise<void> {
+  const downloadIds = ttsDownloadStore.downloadIds;
+  for (const id of downloadIds) {
+    try {
+      await ttsRepository.cancelDownload(id);
+    } catch (error) {
+      console.error('Failed to cancel download:', error);
+    }
+  }
+  ttsDownloadStore.closeModal();
+}

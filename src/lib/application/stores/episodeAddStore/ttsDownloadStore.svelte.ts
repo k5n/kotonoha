@@ -1,5 +1,4 @@
 import type { DownloadProgress } from '$lib/domain/entities/ttsEvent';
-import { invoke } from '@tauri-apps/api/core';
 
 let showModal = $state(false);
 let progress = $state<DownloadProgress>({
@@ -39,18 +38,6 @@ function setDownloadId(downloadId: string) {
   downloadIds.add(downloadId);
 }
 
-async function cancelDownload() {
-  const ids = Array.from(downloadIds);
-  downloadIds.clear();
-  for (const id of ids) {
-    try {
-      await invoke('cancel_download', { downloadId: id });
-    } catch (error) {
-      console.error('Failed to cancel download:', error);
-    }
-  }
-}
-
 function reset() {
   showModal = false;
   progress = {
@@ -85,7 +72,6 @@ export const ttsDownloadStore = {
   closeModal,
   updateProgress,
   setDownloadId,
-  cancelDownload,
   failedDownload,
   reset,
 };
