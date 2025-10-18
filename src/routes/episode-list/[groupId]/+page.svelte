@@ -10,7 +10,7 @@
     downloadTtsModel,
   } from '$lib/application/usecases/downloadTtsModel';
   import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
-  import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
+  import { fetchAvailableTargetGroupsForEpisodeMove } from '$lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
@@ -89,8 +89,9 @@
 
   async function handleEpisodeMoveClick(episode: Episode) {
     try {
-      const allAlbumGroups = await fetchAlbumGroups();
-      availableTargetGroups = allAlbumGroups.filter((g) => g.id !== episode.episodeGroupId);
+      availableTargetGroups = await fetchAvailableTargetGroupsForEpisodeMove(
+        episode.episodeGroupId
+      );
       targetEpisode = episode;
       showEpisodeMove = true;
     } catch (e) {

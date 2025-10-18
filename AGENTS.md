@@ -116,14 +116,14 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/executeTts.ts -> src/lib/domain/services/parseScriptToDialogues.ts
 - src/lib/application/usecases/executeTts.ts -> src/lib/infrastructure/repositories/fileRepository.ts
 - src/lib/application/usecases/executeTts.ts -> src/lib/infrastructure/repositories/ttsRepository.ts
-- src/lib/application/usecases/fetchAlbumGroups.ts -> src/lib/domain/services/buildEpisodeGroupTree.ts
-- src/lib/application/usecases/fetchAlbumGroups.ts -> src/lib/infrastructure/repositories/episodeGroupRepository.ts
 - src/lib/application/usecases/fetchAppInfo.ts -> src/lib/domain/entities/appInfo.ts
 - src/lib/application/usecases/fetchAppInfo.ts -> src/lib/infrastructure/repositories/appInfoRepository.ts
 - src/lib/application/usecases/fetchAvailableParentGroups.ts -> src/lib/domain/entities/episodeGroup.ts
 - src/lib/application/usecases/fetchAvailableParentGroups.ts -> src/lib/domain/services/buildEpisodeGroupTree.ts
 - src/lib/application/usecases/fetchAvailableParentGroups.ts -> src/lib/domain/services/groupTreeHelper.ts
 - src/lib/application/usecases/fetchAvailableParentGroups.ts -> src/lib/infrastructure/repositories/episodeGroupRepository.ts
+- src/lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove.ts -> src/lib/domain/entities/episodeGroup.ts
+- src/lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove.ts -> src/lib/infrastructure/repositories/episodeGroupRepository.ts
 - src/lib/application/usecases/fetchEpisodeDetail.ts -> src/lib/domain/entities/dialogue.ts
 - src/lib/application/usecases/fetchEpisodeDetail.ts -> src/lib/domain/entities/episode.ts
 - src/lib/application/usecases/fetchEpisodeDetail.ts -> src/lib/domain/entities/sentenceCard.ts
@@ -298,7 +298,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/deleteEpisode.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/downloadTtsModel.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/executeTts.ts
-- src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchAlbumGroups.ts
+- src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchTtsVoices.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchYoutubeMetadata.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/moveEpisode.ts
