@@ -61,7 +61,7 @@ export async function fetchTtsVoices(): Promise<void> {
       ttsRepository.getAvailableVoices(),
     ]);
     const supportedLanguageCodes = getSupportedLanguages().map((lang) => lang.code);
-    const filteredVoices: Voice[] = voices.voices.filter((voice) => {
+    const filteredVoices: Voice[] = voices.filter((voice) => {
       return supportedLanguageCodes.includes(voice.language.family);
     });
 
@@ -76,14 +76,8 @@ export async function fetchTtsVoices(): Promise<void> {
         : filteredVoices;
 
     fileEpisodeAddStore.tts.completeVoicesFetching({
-      allVoices: {
-        baseUrl: voices.baseUrl,
-        voices: filteredVoices,
-      },
-      learningTargetVoices: {
-        baseUrl: voices.baseUrl,
-        voices: learningTargetVoices,
-      },
+      allVoices: filteredVoices,
+      learningTargetVoices: learningTargetVoices,
       detectedLanguage,
       defaultVoices,
     });

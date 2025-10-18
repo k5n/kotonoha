@@ -40,12 +40,11 @@ function validateSelectedVoice(selectedVoice: Voice | null): asserts selectedVoi
  */
 async function getDownloadTasks(
   modelFiles: readonly FileInfo[],
-  baseUrl: string,
-  isDownloadedChecker: (file: FileInfo, baseUrl: string) => Promise<boolean>
+  isDownloadedChecker: (file: FileInfo) => Promise<boolean>
 ): Promise<readonly FileInfo[]> {
   const downloadTasks: FileInfo[] = [];
   for (const file of modelFiles) {
-    const isDownloaded = await isDownloadedChecker(file, baseUrl);
+    const isDownloaded = await isDownloadedChecker(file);
     if (!isDownloaded) {
       downloadTasks.push(file);
     }
@@ -80,14 +79,14 @@ function calculateTotalProgress(
  */
 async function executeDownloads(
   downloadTasks: readonly FileInfo[],
-  baseUrl: string,
-  downloader: (file: FileInfo, baseUrl: string, downloadId: string) => Promise<void>
+  downloader: (file: FileInfo, downloadId: string) => Promise<void>
 ): Promise<void> {
   const downloadPromises = downloadTasks.map(async (file) => {
     try {
-      const downloadId = file.url;
+      // use the relative path as a stable download id
+      const downloadId = file.path;
       ttsDownloadStore.setDownloadId(downloadId);
-      await downloader(file, baseUrl, downloadId);
+      await downloader(file, downloadId);
     } catch (error) {
       throw new TtsDownloadError(`Failed to download ${file.url}: ${error}`, 'download');
     }
@@ -108,16 +107,10 @@ async function executeDownloads(
  */
 export async function downloadTtsModel(): Promise<void> {
   const selectedVoice = ttsConfigStore.selectedVoice;
-  const baseUrl = ttsConfigStore.learningTargetVoices?.baseUrl;
-
   validateSelectedVoice(selectedVoice);
-  if (!baseUrl) {
-    throw new TtsDownloadError('Base URL for voice files not found', 'validation');
-  }
 
   const downloadTasks = await getDownloadTasks(
     selectedVoice.files,
-    baseUrl,
     ttsRepository.isModelDownloaded.bind(ttsRepository)
   );
 
@@ -131,6 +124,7 @@ export async function downloadTtsModel(): Promise<void> {
   const progressUnlisten = await ttsRepository.listenDownloadProgress((payload) => {
     // Update file progress
     const fileProgress = new Map<string, number>();
+    // payload.fileName may be a URL in the Tauri event; prefer using the relative path
     fileProgress.set(payload.fileName, payload.downloaded);
 
     // Calculate overall progress
@@ -149,7 +143,7 @@ export async function downloadTtsModel(): Promise<void> {
   });
 
   try {
-    await executeDownloads(downloadTasks, baseUrl, ttsRepository.downloadModel.bind(ttsRepository));
+    await executeDownloads(downloadTasks, ttsRepository.downloadModel.bind(ttsRepository));
     // On success, close the modal
     ttsDownloadStore.closeModal();
   } catch (e) {

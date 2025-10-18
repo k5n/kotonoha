@@ -1,5 +1,5 @@
 import type { DownloadProgress, TtsProgress } from '$lib/domain/entities/ttsEvent';
-import type { DefaultVoices, FileInfo, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
+import type { DefaultVoices, FileInfo, Speaker, Voice } from '$lib/domain/entities/voice';
 import { normalizeBcp47 } from '$lib/utils/language';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
@@ -62,22 +62,27 @@ async function getAvailablePiperVoices(): Promise<PiperVoices> {
   return data as PiperVoices;
 }
 
-function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
+function mapPiperVoicesToVoices(piperVoices: PiperVoices): readonly Voice[] {
   const baseUrl = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/';
   const voices: Voice[] = Object.values(piperVoices).map((piperVoice) => {
     const files: FileInfo[] = Object.entries(piperVoice.files)
       .filter(([filePath, _fileInfo]) => filePath.endsWith('.onnx') || filePath.endsWith('.json'))
       .map(([filePath, fileInfo]) => ({
+        // keep the original url for possible network operations, but also store
+        // the relative path (path is required): remove the baseUrl prefix
         url: baseUrl + filePath,
+        path: filePath,
         bytes: fileInfo.size_bytes,
         md5: fileInfo.md5_digest,
       }));
-    const voiceBaseUrl = files[0]?.url.replace(/\/[^/]+$/, '/');
+
+    const voiceBaseUrl = baseUrl + Object.keys(piperVoice.files)[0]?.replace(/\/[^/]+$/, '/');
     const speakers: Speaker[] = Object.entries(piperVoice.speaker_id_map).map(([name, id]) => ({
       name,
       id,
       sampleUrl: `${voiceBaseUrl}samples/speaker_${id}.mp3`,
     }));
+
     return {
       name: piperVoice.name,
       language: {
@@ -92,7 +97,7 @@ function mapPiperVoicesToVoices(piperVoices: PiperVoices): Voices {
           : [{ id: 0, name: piperVoice.name, sampleUrl: `${voiceBaseUrl}samples/speaker_0.mp3` }],
     };
   });
-  return { baseUrl, voices };
+  return voices;
 }
 
 // cSpell:ignore gwryw_gogleddol thorsten siwis chitwan
@@ -131,14 +136,8 @@ export const ttsRepository = {
       throw new Error('No config file (.json) found in voice files');
     }
 
-    // Calculate the relative path by removing the base URL
-    if (!configFile.url.startsWith('https://huggingface.co/rhasspy/piper-voices/resolve/main/')) {
-      throw new Error('Unexpected config file URL format');
-    }
-    const relativePath = configFile.url.replace(
-      'https://huggingface.co/rhasspy/piper-voices/resolve/main/',
-      ''
-    );
+    // Use the required `path` field to construct the configPath under models/
+    const relativePath = configFile.path;
     const configPath = `models/${relativePath}`;
 
     return await invoke('start_tts', { transcript, configPath, speakerId });
@@ -166,7 +165,7 @@ export const ttsRepository = {
    * Fetches the available Piper voices from the remote server.
    * @returns Available voices.
    */
-  async getAvailableVoices(): Promise<Voices> {
+  async getAvailableVoices(): Promise<readonly Voice[]> {
     const piperVoices = await getAvailablePiperVoices();
     return mapPiperVoicesToVoices(piperVoices);
   },
@@ -179,12 +178,8 @@ export const ttsRepository = {
     return defaultVoices;
   },
 
-  async isModelDownloaded(fileInfo: FileInfo, baseUrl: string): Promise<boolean> {
-    if (!fileInfo.url.startsWith(baseUrl)) {
-      throw new Error('Invalid fileInfo.url: does not start with baseUrl');
-    }
-    const relativePath = fileInfo.url.replace(baseUrl, '');
-    const checkPath = `models/${relativePath}`;
+  async isModelDownloaded(fileInfo: FileInfo): Promise<boolean> {
+    const checkPath = `models/${fileInfo.path}`;
     return await fs.exists(checkPath, { baseDir: fs.BaseDirectory.AppLocalData });
   },
 
@@ -195,15 +190,12 @@ export const ttsRepository = {
    * @param baseUrl - The base URL to calculate the relative path.
    * @param downloadId - The download ID for cancellation.
    */
-  async downloadModel(fileInfo: FileInfo, baseUrl: string, downloadId: string): Promise<void> {
-    if (!fileInfo.url.startsWith(baseUrl)) {
-      throw new Error('Invalid fileInfo.url: does not start with baseUrl');
-    }
-    const relativePath = fileInfo.url.replace(baseUrl, '');
-    const tempPath = `models/${relativePath}.tmp`;
-    const finalPath = `models/${relativePath}`;
+  async downloadModel(fileInfo: FileInfo, downloadId: string): Promise<void> {
+    const tempPath = `models/${fileInfo.path}.tmp`;
+    const finalPath = `models/${fileInfo.path}`;
 
     try {
+      // invoke download with the original URL (we kept url on FileInfo)
       await invoke('download_file_with_progress', {
         url: fileInfo.url,
         filePath: tempPath,

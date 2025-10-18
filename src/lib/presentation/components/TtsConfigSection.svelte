@@ -27,7 +27,7 @@
     <div class="text-sm text-red-600">
       {ttsConfigStore.errorMessage}
     </div>
-  {:else if (ttsConfigStore.learningTargetVoices?.voices || []).length > 0}
+  {:else if (ttsConfigStore.learningTargetVoices || []).length > 0}
     {#if ttsConfigStore.warningMessage}
       <div class="text-sm text-yellow-600">
         {ttsConfigStore.warningMessage}

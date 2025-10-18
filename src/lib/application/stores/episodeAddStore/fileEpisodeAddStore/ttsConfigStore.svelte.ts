@@ -1,10 +1,10 @@
 import { t } from '$lib/application/stores/i18n.svelte';
-import type { DefaultVoices, Speaker, Voice, Voices } from '$lib/domain/entities/voice';
+import type { DefaultVoices, Speaker, Voice } from '$lib/domain/entities/voice';
 import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
 
 let fetchedParams = $state({
-  allVoices: null as Voices | null,
-  learningTargetVoices: null as Voices | null,
+  allVoices: null as readonly Voice[] | null,
+  learningTargetVoices: null as readonly Voice[] | null,
   defaultVoices: {} as DefaultVoices,
   detectedLanguage: null as string | null,
   isFetchingVoices: false,
@@ -19,8 +19,8 @@ let audioElement = $state(null as HTMLAudioElement | null);
 let isPlayingSample = $state(false);
 
 const languageOptions = $derived(
-  fetchedParams.learningTargetVoices?.voices
-    .map((voice) => voice.language)
+  fetchedParams.learningTargetVoices
+    ?.map((voice) => voice.language)
     .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
     .map((lang) => ({
       value: lang.family,
@@ -29,7 +29,7 @@ const languageOptions = $derived(
 );
 
 const selectedLanguageVoices = $derived(
-  fetchedParams.learningTargetVoices?.voices.filter(
+  fetchedParams.learningTargetVoices?.filter(
     (voice) => voice.language.family === selectedLanguage
   ) || []
 );
@@ -120,7 +120,7 @@ function selectDefaultVoiceConfig(language: string): VoiceConfig | null {
     return null;
   }
 
-  const voices = fetchedParams.learningTargetVoices?.voices || [];
+  const voices = fetchedParams.learningTargetVoices || [];
   const qualityVoices = voices.filter(
     (v) => v.language.family === language && v.quality === defaultForLang.quality
   );
@@ -305,17 +305,15 @@ export const ttsConfigStore = {
     defaultVoices,
     detectedLanguage,
   }: {
-    allVoices: Voices;
-    learningTargetVoices: Voices;
+    allVoices: readonly Voice[];
+    learningTargetVoices: readonly Voice[];
     defaultVoices: DefaultVoices;
     detectedLanguage: string | null;
   }) {
     // Check if detected language exists in learning target voices
-    const availableLanguages = allVoices.voices.map((voice) => voice.language.family);
-    const learningTargetLanguages = learningTargetVoices.voices.map(
-      (voice) => voice.language.family
-    );
-    const fallbackLanguage = learningTargetVoices.voices[0]?.language.family;
+    const availableLanguages = allVoices.map((voice) => voice.language.family);
+    const learningTargetLanguages = learningTargetVoices.map((voice) => voice.language.family);
+    const fallbackLanguage = learningTargetVoices[0]?.language.family;
     if (fallbackLanguage === undefined) {
       errorMessage = t('components.ttsConfigSection.noVoices');
       resetFetchedParams();
