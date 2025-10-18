@@ -1,0 +1,3 @@
+# cSpell:words rustflags espeak pcaudio rpath
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-L", "/usr/lib", "-l", "espeak-ng", "-l", "sonic", "-l", "pcaudio", "-Clink-arg=-Wl,-rpath,$$ORIGIN"]

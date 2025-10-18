@@ -1,8 +1,11 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod audio;
+mod download;
+mod language_detection;
 mod llm;
 mod migrations;
 mod stronghold;
+mod tts;
 mod youtube;
 
 use dotenvy::from_filename;
@@ -13,9 +16,12 @@ use audio::{
     analyze_audio, copy_audio_file, open_audio, pause_audio, play_audio, resume_audio, seek_audio,
     stop_audio, AudioState,
 };
+use download::{cancel_download, download_file_with_progress};
+use language_detection::detect_language_from_text;
 use llm::analyze_sentence_with_llm;
 use migrations::get_migrations;
 use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
+use tts::{cancel_tts, start_tts};
 use youtube::fetch_youtube_subtitle;
 
 fn get_db_name() -> String {
@@ -88,6 +94,11 @@ pub fn run() {
             read_text_file,
             copy_audio_file,
             fetch_youtube_subtitle,
+            start_tts,
+            cancel_tts,
+            detect_language_from_text,
+            download_file_with_progress,
+            cancel_download,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,11 +1,17 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
+  import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { addNewEpisode, addYoutubeEpisode } from '$lib/application/usecases/addNewEpisode';
+  import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
+  import {
+    cancelTtsModelDownload,
+    downloadTtsModel,
+  } from '$lib/application/usecases/downloadTtsModel';
+  import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
   import { fetchAlbumGroups } from '$lib/application/usecases/fetchAlbumGroups';
+  import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { moveEpisode } from '$lib/application/usecases/moveEpisode';
   import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
@@ -19,6 +25,8 @@
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
   import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
+  import TtsExecutionModal from '$lib/presentation/components/TtsExecutionModal.svelte';
+  import TtsModelDownloadModal from '$lib/presentation/components/TtsModelDownloadModal.svelte';
   import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ExclamationCircleOutline, FileOutline, PlusOutline } from 'flowbite-svelte-icons';
@@ -50,76 +58,30 @@
 
   // === エピソード追加 ===
 
-  async function handleTsvFileSelected(filePath: string) {
-    try {
-      episodeAddStore.startScriptPreviewFetching();
-      const preview = await previewScriptFile(filePath);
-      episodeAddStore.completeScriptPreviewFetching(preview);
-    } catch (e) {
-      episodeAddStore.failedScriptPreviewFetching(t('components.episodeAddModal.errorTsvParse'));
-      console.error(e);
-    }
-  }
-
-  async function handleYoutubeUrlChanged(url: string) {
-    if (!url.trim()) {
-      episodeAddStore.completeYoutubeMetadataFetching(null);
+  async function handleEpisodeAddSubmit() {
+    const episodeGroupId = data.episodeGroup?.id;
+    if (!episodeGroupId) {
+      error('No group ID found, cannot add episode (this should not happen)');
       return;
     }
 
-    try {
-      episodeAddStore.startYoutubeMetadataFetching();
-      const metadata = await fetchYoutubeMetadata(url);
-      episodeAddStore.completeYoutubeMetadataFetching(metadata);
-    } catch (err) {
-      episodeAddStore.failedYoutubeMetadataFetching(`${err}`);
-      console.error('Failed to fetch YouTube metadata:', err);
+    if (episodeAddStore.isTtsRequired()) {
+      debug('TTS is required for the new episode');
+      try {
+        await downloadTtsModel();
+        await executeTts();
+      } catch (e) {
+        error(`Failed during TTS preparation: ${e}`);
+        return;
+      }
     }
-  }
 
-  async function handleEpisodeAddSubmit() {
     try {
-      const payload = episodeAddStore.buildPayload();
-      if (!payload) {
-        // This should not happen if validation passed, but just in case.
-        error('No valid payload to submit');
-        return;
-      }
-      debug(`Adding episode with payload: ${JSON.stringify(payload)}`);
-      const episodeGroupId = data.episodeGroup?.id;
-      if (!episodeGroupId) {
-        debug('No group ID found, cannot add episode');
-        return;
-      }
-      episodeAddStore.startSubmitting();
-      const maxDisplayOrder = episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
-      const displayOrder = maxDisplayOrder + 1;
-
-      if (payload.source === 'file') {
-        await addNewEpisode({
-          episodeGroupId,
-          displayOrder,
-          title: payload.title,
-          mediaFilePath: payload.audioFilePath,
-          scriptFilePath: payload.scriptFilePath,
-          tsvConfig: payload.tsvConfig,
-        });
-      } else if (payload.source === 'youtube') {
-        await addYoutubeEpisode({
-          episodeGroupId,
-          displayOrder,
-          youtubeMetadata: payload.youtubeMetadata,
-        });
-      } else {
-        throw new Error(`Unknown payload source: ${JSON.stringify(payload)}`);
-      }
-
+      await addNewEpisode(episodeGroupId, episodes);
       await invalidateAll();
-      episodeAddStore.close();
     } catch (e) {
       error(`Failed to add new episode: ${e}`);
       errorMessage = t('episodeListPage.errors.addEpisode');
-      episodeAddStore.close();
     }
   }
 
@@ -257,9 +219,10 @@
 </div>
 
 <EpisodeAddModal
-  onTsvFileSelected={handleTsvFileSelected}
-  onYoutubeUrlChanged={handleYoutubeUrlChanged}
+  onTsvFileSelected={previewScriptFile}
+  onYoutubeUrlChanged={fetchYoutubeMetadata}
   onSubmit={handleEpisodeAddSubmit}
+  onTtsEnabled={fetchTtsVoices}
 />
 
 <EpisodeMoveModal
@@ -296,3 +259,7 @@
     targetEpisode = null;
   }}
 />
+
+<TtsModelDownloadModal onCancel={cancelTtsModelDownload} />
+
+<TtsExecutionModal onCancel={cancelTtsExecution} />

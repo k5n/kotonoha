@@ -1,0 +1,168 @@
+import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
+import { ttsDownloadStore } from '$lib/application/stores/episodeAddStore/ttsDownloadStore.svelte';
+import type { FileInfo, Voice } from '$lib/domain/entities/voice';
+import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
+
+/**
+ * Custom error for TTS download operations.
+ */
+export class TtsDownloadError extends Error {
+  constructor(
+    message: string,
+    public readonly type: 'validation' | 'download' | 'network'
+  ) {
+    super(message);
+    this.name = 'TtsDownloadError';
+  }
+}
+
+/**
+ * Validates the selected voice and its model files.
+ * @param selectedVoice The selected voice to validate.
+ * @throws TtsDownloadError if validation fails.
+ */
+function validateSelectedVoice(selectedVoice: Voice | null): asserts selectedVoice is Voice {
+  if (!selectedVoice) {
+    throw new TtsDownloadError('No voice selected', 'validation');
+  }
+
+  if (selectedVoice.files.length === 0) {
+    throw new TtsDownloadError('No voice model files found', 'validation');
+  }
+}
+
+/**
+ * Gets the list of files that need to be downloaded.
+ * @param modelFiles The model files to check.
+ * @param baseUrl The base URL for the files.
+ * @param isDownloadedChecker Function to check if a file is already downloaded.
+ * @returns Promise resolving to the list of files to download.
+ */
+async function getDownloadTasks(
+  modelFiles: readonly FileInfo[],
+  isDownloadedChecker: (file: FileInfo) => Promise<boolean>
+): Promise<readonly FileInfo[]> {
+  const downloadTasks: FileInfo[] = [];
+  for (const file of modelFiles) {
+    const isDownloaded = await isDownloadedChecker(file);
+    if (!isDownloaded) {
+      downloadTasks.push(file);
+    }
+  }
+  return downloadTasks;
+}
+
+/**
+ * Calculates the total progress across all download tasks.
+ * @param downloadTasks The list of files being downloaded.
+ * @param fileProgress Map of file names to their downloaded bytes.
+ * @returns Object with overall progress percentage and total downloaded bytes.
+ */
+function calculateTotalProgress(
+  downloadTasks: readonly FileInfo[],
+  fileProgress: Map<string, number>
+): { overallProgress: number; totalDownloaded: number } {
+  const totalBytes = downloadTasks.reduce((sum, file) => sum + file.bytes, 0);
+  const totalDownloaded = Array.from(fileProgress.values()).reduce(
+    (sum, downloaded) => sum + downloaded,
+    0
+  );
+  const overallProgress = totalBytes > 0 ? Math.round((totalDownloaded / totalBytes) * 100) : 0;
+  return { overallProgress, totalDownloaded };
+}
+
+/**
+ * Executes the download of all tasks in parallel.
+ * @param downloadTasks The files to download.
+ * @param baseUrl The base URL for the files.
+ * @param downloader Function to download a single file.
+ */
+async function executeDownloads(
+  downloadTasks: readonly FileInfo[],
+  downloader: (file: FileInfo, downloadId: string) => Promise<void>
+): Promise<void> {
+  const downloadPromises = downloadTasks.map(async (file) => {
+    try {
+      // use the relative path as a stable download id
+      const downloadId = file.path;
+      ttsDownloadStore.setDownloadId(downloadId);
+      await downloader(file, downloadId);
+    } catch (error) {
+      throw new TtsDownloadError(`Failed to download ${file.url}: ${error}`, 'download');
+    }
+  });
+
+  const results = await Promise.allSettled(downloadPromises);
+  const failures = results.filter((result) => result.status === 'rejected');
+  if (failures.length > 0) {
+    throw new TtsDownloadError(`${failures.length} file(s) failed to download`, 'download');
+  }
+}
+
+/**
+ * Download TTS model if not already downloaded.
+ * Gets the currently selected voice and speaker from the store.
+ *
+ * @throws TtsDownloadError if no voice/speaker is selected or download fails
+ */
+export async function downloadTtsModel(): Promise<void> {
+  const selectedVoice = ttsConfigStore.selectedVoice;
+  validateSelectedVoice(selectedVoice);
+
+  const downloadTasks = await getDownloadTasks(
+    selectedVoice.files,
+    ttsRepository.isModelDownloaded.bind(ttsRepository)
+  );
+
+  if (downloadTasks.length === 0) {
+    return; // All files already downloaded
+  }
+
+  const totalBytes = downloadTasks.reduce((sum, file) => sum + file.bytes, 0);
+
+  ttsDownloadStore.openModal();
+  const progressUnlisten = await ttsRepository.listenDownloadProgress((payload) => {
+    // Update file progress
+    const fileProgress = new Map<string, number>();
+    // payload.fileName may be a URL in the Tauri event; prefer using the relative path
+    fileProgress.set(payload.fileName, payload.downloaded);
+
+    // Calculate overall progress
+    const { overallProgress, totalDownloaded } = calculateTotalProgress(
+      downloadTasks,
+      fileProgress
+    );
+
+    ttsDownloadStore.updateProgress({
+      downloadId: '',
+      fileName: `${fileProgress.size}/${downloadTasks.length} files`,
+      progress: overallProgress,
+      downloaded: totalDownloaded,
+      total: totalBytes,
+    });
+  });
+
+  try {
+    await executeDownloads(downloadTasks, ttsRepository.downloadModel.bind(ttsRepository));
+    // On success, close the modal
+    ttsDownloadStore.closeModal();
+  } catch (e) {
+    // Report error to store so modal shows the message but do not swallow the error — rethrow
+    ttsDownloadStore.failedDownload('components.ttsModelDownloadModal.error.downloadFailed');
+    throw e;
+  } finally {
+    progressUnlisten();
+  }
+}
+
+export async function cancelTtsModelDownload(): Promise<void> {
+  const downloadIds = ttsDownloadStore.downloadIds;
+  for (const id of downloadIds) {
+    try {
+      await ttsRepository.cancelDownload(id);
+    } catch (error) {
+      console.error('Failed to cancel download:', error);
+    }
+  }
+  ttsDownloadStore.closeModal();
+}

@@ -1,14 +1,14 @@
 use log::{debug, error, info, warn};
 use rodio::{Decoder, OutputStream, OutputStreamBuilder, Sink, Source};
 use serde::Serialize;
-use std::fs;
-use std::io::{BufReader, Cursor};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use tauri::path::BaseDirectory;
-use tauri::{AppHandle, Runtime};
-use tauri::{Emitter, Manager, State};
+use std::{
+    fs,
+    io::{BufReader, Cursor},
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
+use tauri::{path::BaseDirectory, AppHandle, Emitter, Manager, State};
 
 const POSITION_UPDATE_FREQUENCY: u64 = 200;
 
@@ -17,6 +17,14 @@ pub struct AudioState {
     pub sink: Arc<Mutex<Option<Sink>>>,      // Arc to share between threads
     pub audio_data: Mutex<Option<Vec<u8>>>,
     pub playback_position_tracker: Mutex<Option<thread::JoinHandle<()>>>,
+}
+
+#[derive(Clone)]
+struct DecodedAudio {
+    sample_rate: u32,
+    channels: u16,
+    samples: Vec<f32>,
+    total_duration: Option<Duration>,
 }
 
 #[derive(Serialize, Clone)]
@@ -47,54 +55,85 @@ fn open_audio_file(file_path: &std::path::Path) -> Result<Vec<u8>, String> {
     Ok(file_bytes)
 }
 
-fn analyze_audio_file(file_bytes: Vec<u8>, max_peaks: usize) -> Result<AudioInfo, String> {
-    // NOTE: Cursorを作るのにはVec<u8>が必要なので、borrowではなく所有権を受け取る。
-    // 再生を邪魔しないように別途オーディオファイルを開いてデータを取得する想定なので問題ない。
-    info!(
-        "analyze_audio: {} bytes, max_peaks: {}",
-        file_bytes.len(),
-        max_peaks
-    );
+fn decode_audio_source(file_bytes: Vec<u8>) -> Result<DecodedAudio, String> {
+    info!("decode_audio_source: {} bytes", file_bytes.len());
 
     let cursor = Cursor::new(file_bytes);
     let source = Decoder::try_from(BufReader::new(cursor))
         .map_err(|e| format!("Failed to decode audio from memory: {}", e))?;
 
-    // 1. 音声全体の時間を取得
-    let duration = source
-        .total_duration()
-        .ok_or_else(|| "Could not get duration from audio source".to_string())?;
-    let duration_ms = duration.as_millis() as u64;
-    debug!("Audio duration: {} ms", duration_ms);
-
-    // 2. ピーク波形を計算
-    // サンプルをf32に変換して収集
+    let sample_rate = source.sample_rate();
+    let channels = source.channels() as u16;
+    let total_duration = source.total_duration();
     let samples: Vec<f32> = source.map(|s| s as f32 / i16::MAX as f32).collect();
-    let num_samples = samples.len();
 
-    let peaks = if max_peaks > 0 && num_samples > 0 {
-        let chunk_size = (num_samples as f64 / max_peaks as f64).ceil() as usize;
-        if chunk_size > 0 {
-            let raw_peaks: Vec<f32> = samples
-                .chunks(chunk_size)
-                .map(|chunk| chunk.iter().map(|&s| s.abs()).fold(0.0f32, |a, b| a.max(b)))
-                .collect();
-            let max_peak = raw_peaks.iter().cloned().fold(0. / 0., f32::max).max(1e-6); // avoid division by zero
-            raw_peaks.iter().map(|&p| p / max_peak).collect()
-        } else {
-            vec![]
-        }
+    Ok(DecodedAudio {
+        sample_rate,
+        channels,
+        samples,
+        total_duration,
+    })
+}
+
+fn calculate_duration(decoded: &DecodedAudio) -> u64 {
+    if let Some(duration) = decoded.total_duration {
+        debug!("Audio duration from metadata: {} ms", duration.as_millis());
+        duration.as_millis() as u64
     } else {
-        vec![]
-    };
+        let total_samples = decoded.samples.len() as u64;
+        let channels = decoded.channels as u64;
+        let sample_rate = decoded.sample_rate as u64;
+        if sample_rate > 0 && channels > 0 && total_samples > 0 {
+            let num_frames = total_samples / channels;
+            let calculated_duration = (num_frames * 1000) / sample_rate;
+            debug!(
+                "Calculated duration from samples: {} ms",
+                calculated_duration
+            );
+            calculated_duration
+        } else {
+            warn!(
+                "Could not calculate duration (sr={}, ch={}, samples={}). Defaulting to 0.",
+                sample_rate, channels, total_samples
+            );
+            0
+        }
+    }
+}
+
+fn calculate_peaks(samples: &[f32], max_peaks: usize) -> Vec<f32> {
+    if max_peaks == 0 || samples.is_empty() {
+        return vec![];
+    }
+
+    let chunk_size = (samples.len() as f64 / max_peaks as f64).ceil() as usize;
+    if chunk_size == 0 {
+        return vec![];
+    }
+
+    let raw_peaks: Vec<f32> = samples
+        .chunks(chunk_size)
+        .map(|chunk| chunk.iter().map(|&s| s.abs()).fold(0.0f32, |a, b| a.max(b)))
+        .collect();
+
+    let max_peak = raw_peaks.iter().cloned().fold(0.0f32, f32::max).max(1e-6);
+    raw_peaks.iter().map(|&p| p / max_peak).collect()
+}
+
+fn analyze_audio_file(file_bytes: Vec<u8>, max_peaks: usize) -> Result<AudioInfo, String> {
+    info!(
+        "analyze_audio_file: {} bytes, max_peaks: {}",
+        file_bytes.len(),
+        max_peaks
+    );
+
+    let decoded = decode_audio_source(file_bytes)?;
+    let duration = calculate_duration(&decoded);
+    let peaks = calculate_peaks(&decoded.samples, max_peaks);
+
     debug!("Calculated {} peaks", peaks.len());
 
-    let audio_info = AudioInfo {
-        duration: duration_ms,
-        peaks,
-    };
-
-    Ok(audio_info)
+    Ok(AudioInfo { duration, peaks })
 }
 
 fn create_audio_playback(
@@ -243,8 +282,8 @@ pub async fn open_audio(app_handle: AppHandle, path: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub async fn copy_audio_file<R: Runtime>(
-    app_handle: AppHandle<R>,
+pub async fn copy_audio_file(
+    app_handle: AppHandle,
     src: String,
     dest: String,
 ) -> Result<(), String> {

@@ -22,6 +22,12 @@
       "identifier": "fs:allow-mkdir",
       "allow": [
         {
+          "path": "$APPLOCALDATA/models"
+        },
+        {
+          "path": "$APPLOCALDATA/models/**"
+        },
+        {
           "path": "$APPLOCALDATA/media"
         },
         {
@@ -91,10 +97,21 @@
       "identifier": "fs:allow-remove",
       "allow": [
         {
+          "path": "$APPLOCALDATA/models/**"
+        },
+        {
           "path": "$APPLOCALDATA/media/**"
         },
         {
           "path": "$APPLOCALDATA/dev_media/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-rename",
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/models/**"
         }
       ]
     },
@@ -105,7 +122,8 @@
       "identifier": "http:default",
       "allow": [
         { "url": "https://www.youtube.com/oembed" },
-        { "url": "https://www.googleapis.com/youtube/v3/*" }
+        { "url": "https://www.googleapis.com/youtube/v3/*" },
+        { "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/*" }
       ]
     }
   ]

@@ -1,16 +1,17 @@
 <script lang="ts">
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
+  import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import FileEpisodeForm from '$lib/presentation/components/FileEpisodeForm.svelte';
   import YoutubeEpisodeForm from '$lib/presentation/components/YoutubeEpisodeForm.svelte';
   import { Heading, Label, Modal, Radio } from 'flowbite-svelte';
 
   type Props = {
-    onSubmit: () => void;
-    onTsvFileSelected: (filePath: string) => void;
-    onYoutubeUrlChanged: (url: string) => void;
+    onSubmit: () => Promise<void>;
+    onTsvFileSelected: (filePath: string) => Promise<void>;
+    onYoutubeUrlChanged: (url: string) => Promise<void>;
+    onTtsEnabled: () => Promise<void>;
   };
-  let { onSubmit, onTsvFileSelected, onYoutubeUrlChanged }: Props = $props();
+  let { onSubmit, onTsvFileSelected, onYoutubeUrlChanged, onTtsEnabled }: Props = $props();
 </script>
 
 <Modal onclose={episodeAddStore.close} open={episodeAddStore.show} size="xl">
@@ -36,7 +37,7 @@
     </div>
 
     {#if episodeAddStore.sourceType === 'file'}
-      <FileEpisodeForm {onTsvFileSelected} {onSubmit} />
+      <FileEpisodeForm {onTsvFileSelected} {onSubmit} {onTtsEnabled} />
     {/if}
 
     {#if episodeAddStore.sourceType === 'youtube'}

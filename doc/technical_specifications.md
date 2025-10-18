@@ -98,11 +98,11 @@ graph TD
     subgraph Presentation
         components[components]:::cssComponents
         routes[routes]:::cssComponents
-        types[types]:::cssTypes
+        actions[actions]:::cssPure
     end
 
     subgraph Application
-        usecases[usecases]
+        usecases[usecases]:::cssPure
         stores[stores]
     end
 
@@ -112,7 +112,6 @@ graph TD
     end
 
     subgraph Infrastructure
-        contracts[contracts]:::cssTypes
         repositories[repositories]:::cssPure
     end
 
@@ -122,8 +121,12 @@ graph TD
     routes --> components
     routes ---> usecases
     routes ---> stores
-    routes --> types
-    components --> types
+    routes ---> actions
+    routes ---> entities
+    components --> actions
+    components ---> stores
+    components ---> entities
+    actions ---> entities
     usecases --> entities
     usecases --> stores
     usecases ---> services
@@ -131,22 +134,12 @@ graph TD
     stores ---> entities
     services ---> entities
     repositories ---> entities
-    repositories --> contracts
     repositories ---> ExternalSystems
 
     Components:::cssComponents
     PureTypeScript[Pure TypeScript Code]:::cssPure
     TypeDefinitions[Type Definitions]:::cssTypes
 ```
-
-#### NOTES
-
-- types/ ディレクトリは、複数コンポーネントで共有する表示用のデータ型を定義するために使用する。
-  - 各コンポーネントとその利用側だけで完結する型は、コンポーネント内で定義する。
-  - ほとんどの場合はコンポーネント内で定義すれば済むため、現時点では空だが、必要に応じて追加する。
-- contracts/ ディレクトリは、複数リポジトリで共通に利用する外部システムとの通信に使われるデータ型を定義する。
-  - 各リポジトリで完結する型は、リポジトリ内で定義する。
-  - ほとんどの場合はリポジトリ内で定義すれば済むため、現時点では空だが、必要に応じて追加する。
 
 ---
 
@@ -307,7 +300,7 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 #### LLM
 
-- `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, part_of_speech_options: Vec<String>, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
+- `analyze_sentence_with_llm(api_key: String, learning_language: String, explanation_language: String, context: String, target_sentence: String) -> Result<SentenceMiningResult, String>`
   - センテンスを解析し、単語や表現の情報をLLMから取得する。
   - `SentenceMiningResult` は `translation`, `explanation`, `items` を含む。
 
@@ -335,6 +328,31 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
   - 音声の再生位置を指定された時間（ミリ秒）に移動する。
 - `copy_audio_file(src_path: String, dest_path: String) -> Result<(), String>`
   - 指定した音声ファイル（アプリ管理外の絶対パス）を別のパス（アプリ管理下の相対パス）にコピーする。
+
+#### Download
+
+- `download_file_with_progress(url: String, file_path: String, download_id: String) -> Result<(), String>`
+  - 指定されたURLからファイルをダウンロードし、指定されたパスに保存する。進捗状況をフロントエンドに通知する。
+- `cancel_download(download_id: String) -> Result<(), String>`
+  - 指定されたダウンロードIDのダウンロードをキャンセルする。
+
+#### TTS (Text-to-Speech)
+
+ - `start_tts(transcript: String, config_path: String, speaker_id: u32) -> Result<{ audio_path: String, script_path: String }, String>`
+  - 指定されたtranscriptとconfigでTTSを実行し、生成された一時OGGファイルのパス (`audio_path`) と、対応するSSWTスクリプトのパス (`script_path`) を返す。
+  - 進捗は`tts-progress`イベントで通知される。
+- `cancel_tts() -> Result<(), String>`
+  - 実行中のTTSをキャンセルする。
+
+#### Language Detection
+
+- `detect_language_from_text(text: String) -> Option<String>`
+  - 入力テキストの言語をBCP-47形式で返す。検出できない場合は`None`を返す。
+
+#### YouTube 字幕取得
+
+- `fetch_youtube_subtitle(video_id: String, language: String, track_kind: String) -> Result<Vec<AtomicDialogue>, String>`
+  - YouTubeから指定したvideo_idの字幕データを取得して返す。戻り値は `AtomicDialogue` の配列で、各要素は `start_time_ms`, `end_time_ms` (optional), `original_text` を含む。
 
 #### Utility
 

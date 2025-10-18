@@ -1,10 +1,9 @@
-import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
+import type { Episode } from '$lib/domain/entities/episode';
+import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
-import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
-import { parseSswtToDialogues } from '$lib/domain/services/parseSswtToDialogues';
-import { parseTsvToDialogues } from '$lib/domain/services/parseTsvToDialogues';
-import { parseVttToDialogues } from '$lib/domain/services/parseVttToDialogues';
+import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
@@ -14,18 +13,9 @@ import { bcp47ToLanguageName } from '$lib/utils/language';
 import { error, info, warn } from '@tauri-apps/plugin-log';
 
 /**
- * TSVファイルのカラム設定
+ * ファイルから新しいエピソードを追加するためのパラメータ
  */
-type TsvConfig = {
-  readonly startTimeColumnIndex: number;
-  readonly textColumnIndex: number;
-  readonly endTimeColumnIndex?: number;
-};
-
-/**
- * 新しいエピソードを追加するためのパラメータ
- */
-interface AddNewEpisodeParams {
+interface AddNewEpisodeFromFilesParams {
   episodeGroupId: number;
   displayOrder: number;
   title: string;
@@ -65,12 +55,12 @@ async function generateUniqueEpisodeFilenames(
 }
 
 /**
- * 新しいエピソードを追加するユースケース
+ * ファイルから新しいエピソードを追加するユースケース
  *
  * @param params - 新しいエピソードの情報
  * @throws エピソードの追加に失敗した場合にエラーをスローする
  */
-export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> {
+async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Promise<void> {
   info(`Adding new episode with params: ${JSON.stringify(params)}`);
   const {
     episodeGroupId,
@@ -85,9 +75,7 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
     scriptFilePath
   );
   try {
-    // mediaFilePath: string, scriptFilePath: string
     const mediaPath = await fileRepository.saveAudioFile(audioFilePath, uuid, audioFilename);
-    // scriptFilePathから内容を読み込む
     const scriptContent = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
     const episode = await episodeRepository.addEpisode({
       episodeGroupId,
@@ -98,37 +86,12 @@ export async function addNewEpisode(params: AddNewEpisodeParams): Promise<void> 
       explanationLanguage: 'Japanese',
     });
     try {
-      // scriptFilePathの拡張子を取得
       const scriptExtension = scriptFilename.split('.').pop()?.toLowerCase();
-
-      const supportedExtensions = ['srt', 'sswt', 'tsv', 'vtt'];
-      if (scriptExtension === undefined || !supportedExtensions.includes(scriptExtension)) {
-        throw new Error(`Unsupported script file type: ${scriptExtension}`);
+      if (scriptExtension === undefined) {
+        throw new Error('Script file extension is undefined');
       }
 
-      let result: { dialogues: readonly NewDialogue[]; warnings: readonly string[] };
-
-      switch (scriptExtension) {
-        case 'srt':
-          result = parseSrtToDialogues(scriptContent, episode.id);
-          break;
-        case 'sswt':
-          result = parseSswtToDialogues(scriptContent, episode.id);
-          break;
-        case 'tsv': {
-          if (tsvConfig === undefined) {
-            throw new Error('TSV config is required for TSV script files.');
-          }
-          result = parseTsvToDialogues(scriptContent, episode.id, tsvConfig);
-          break;
-        }
-        case 'vtt':
-          result = parseVttToDialogues(scriptContent, episode.id);
-          break;
-        default:
-          // This part should not be reached due to the check above, but it's good for safety.
-          throw new Error(`Parser not implemented for: ${scriptExtension}`);
-      }
+      const result = parseScriptToDialogues(scriptContent, scriptExtension, episode.id, tsvConfig);
 
       const dialogues = result.dialogues;
       const warnings = result.warnings;
@@ -156,7 +119,7 @@ interface AddNewYoutubeEpisodeParams {
   youtubeMetadata: YoutubeMetadata;
 }
 
-export async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<void> {
+async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<void> {
   info(`Adding new YouTube episode with params: ${JSON.stringify(params)}`);
   const { episodeGroupId, displayOrder, youtubeMetadata } = params;
   const { title, embedUrl, language, trackKind } = youtubeMetadata;
@@ -190,6 +153,68 @@ export async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Pro
     await dialogueRepository.bulkInsertDialogues(episode.id, dialogues);
   } catch (err) {
     episodeRepository.deleteEpisode(episode.id);
+    throw err;
+  }
+}
+
+/**
+ * エピソードの表示順序の最大値を計算する
+ */
+function calculateMaxDisplayOrder(episodes: readonly Episode[]): number {
+  return episodes.reduce((max, ep) => Math.max(max, ep.displayOrder || 0), 0);
+}
+
+/**
+ * ストアからエピソードを追加する統合関数
+ *
+ * ストアの状態管理、ペイロード構築、エピソード追加処理を統合的に実行する。
+ * Presentation層は成功時のinvalidateAll()と失敗時のエラーメッセージ設定のみを行う。
+ *
+ * @param episodeGroupId - エピソードを追加するグループのID
+ * @param existingEpisodes - 既存のエピソード一覧（表示順序計算用）
+ * @throws エピソードの追加に失敗した場合にエラーをスローする
+ */
+export async function addNewEpisode(
+  episodeGroupId: number,
+  existingEpisodes: readonly Episode[]
+): Promise<void> {
+  info(`Adding episode from store for group ${episodeGroupId}`);
+
+  const payload = episodeAddStore.buildPayload();
+  if (!payload) {
+    error('No valid payload to submit');
+    throw new Error('Invalid form data');
+  }
+
+  episodeAddStore.startSubmitting();
+
+  try {
+    const displayOrder = calculateMaxDisplayOrder(existingEpisodes) + 1;
+
+    if (payload.source === 'file') {
+      await addNewEpisodeFromFiles({
+        episodeGroupId,
+        displayOrder,
+        title: payload.title,
+        mediaFilePath: payload.audioFilePath,
+        scriptFilePath: payload.scriptFilePath,
+        tsvConfig: payload.tsvConfig,
+      });
+    } else if (payload.source === 'youtube') {
+      await addYoutubeEpisode({
+        episodeGroupId,
+        displayOrder,
+        youtubeMetadata: payload.metadata,
+      });
+    } else {
+      throw new Error(`Unknown payload source: ${JSON.stringify(payload)}`);
+    }
+
+    episodeAddStore.close();
+    info(`Successfully added episode for group ${episodeGroupId}`);
+  } catch (err) {
+    error(`Failed to add episode from store: ${err}`);
+    episodeAddStore.close();
     throw err;
   }
 }

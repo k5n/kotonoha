@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore.svelte';
+  import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import {
     Heading,
@@ -14,55 +14,62 @@
   } from 'flowbite-svelte';
 
   let displayHeaders = $derived.by(() => {
-    const scriptPreview = episodeAddStore.scriptPreview;
+    const scriptPreview = tsvConfigStore.scriptPreview;
     if (!scriptPreview || !scriptPreview.headers) return [];
     return scriptPreview.headers;
   });
+
+  let columnOptions = $derived(displayHeaders.map((header, i) => ({ value: i, name: header })));
+
+  let endTimeColumnOptions = $derived([
+    { value: -1, name: t('components.tsvConfigSection.none') },
+    ...columnOptions,
+  ]);
 </script>
 
-{#if episodeAddStore.scriptPreview && episodeAddStore.scriptPreview.rows.length > 0}
+{#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
   <div class="mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+    {#if tsvConfigStore.errorMessageKey}
+      <div class="mb-4 text-sm text-red-600">{t(tsvConfigStore.errorMessageKey)}</div>
+    {/if}
     <Heading tag="h3" class="mb-2 text-lg font-semibold">
-      {t('components.episodeAddModal.tsvSettingsTitle')}
+      {t('components.tsvConfigSection.tsvSettingsTitle')}
     </Heading>
     <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
       <div>
         <Label for="startTimeColumn" class="mb-2 block">
-          {t('components.episodeAddModal.startTimeColumnLabel')} *
+          {t('components.tsvConfigSection.startTimeColumnLabel')} *
         </Label>
         <Select
           id="startTimeColumn"
-          value={episodeAddStore.tsvConfig.startTimeColumnIndex}
+          value={tsvConfigStore.tsvConfig.startTimeColumnIndex}
           onchange={(e) =>
-            episodeAddStore.updateConfig('startTimeColumnIndex', parseInt(e.currentTarget.value))}
-          items={displayHeaders.map((header, i) => ({ value: i, name: header }))}
+            tsvConfigStore.updateConfig('startTimeColumnIndex', parseInt(e.currentTarget.value))}
+          items={columnOptions}
         />
       </div>
       <div>
         <Label for="textColumn" class="mb-2 block">
-          {t('components.episodeAddModal.textColumnLabel')} *
+          {t('components.tsvConfigSection.textColumnLabel')} *
         </Label>
         <Select
           id="textColumn"
-          value={episodeAddStore.tsvConfig.textColumnIndex}
+          value={tsvConfigStore.tsvConfig.textColumnIndex}
           onchange={(e) =>
-            episodeAddStore.updateConfig('textColumnIndex', parseInt(e.currentTarget.value))}
-          items={displayHeaders.map((header, i) => ({ value: i, name: header }))}
+            tsvConfigStore.updateConfig('textColumnIndex', parseInt(e.currentTarget.value))}
+          items={columnOptions}
         />
       </div>
       <div>
         <Label for="endTimeColumn" class="mb-2 block">
-          {t('components.episodeAddModal.endTimeColumnLabel')}
+          {t('components.tsvConfigSection.endTimeColumnLabel')}
         </Label>
         <Select
           id="endTimeColumn"
-          value={episodeAddStore.tsvConfig.endTimeColumnIndex}
+          value={tsvConfigStore.tsvConfig.endTimeColumnIndex}
           onchange={(e) =>
-            episodeAddStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
-          items={[
-            { value: -1, name: t('components.episodeAddModal.none') },
-            ...displayHeaders.map((header, i) => ({ value: i, name: header })),
-          ]}
+            tsvConfigStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
+          items={endTimeColumnOptions}
         />
       </div>
     </div>
@@ -70,14 +77,14 @@
       <Table>
         <TableHead>
           <TableHeadCell>
-            {t('components.episodeAddModal.previewTable.rowNumber')}
+            {t('components.tsvConfigSection.previewTable.rowNumber')}
           </TableHeadCell>
           {#each displayHeaders as header, i (i)}
             <TableHeadCell>{header}</TableHeadCell>
           {/each}
         </TableHead>
         <TableBody>
-          {#each episodeAddStore.scriptPreview.rows as row, i (i)}
+          {#each tsvConfigStore.scriptPreview.rows as row, i (i)}
             <TableBodyRow>
               <TableBodyCell>{i + 1}</TableBodyCell>
               {#each row as cell, j (j)}

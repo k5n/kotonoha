@@ -9,11 +9,11 @@
     multiple?: boolean;
     disabled?: boolean;
     id?: string;
-    onFileSelected: (file: string) => void;
+    value: string | null;
+    onFileSelected: (file: string | null) => void;
+    onClear: () => void;
   };
-  let { accept = '*', disabled = false, id, onFileSelected }: Props = $props();
-
-  let selectedFile = $state<string | null>(null);
+  let { accept = '*', disabled = false, id, value, onFileSelected, onClear }: Props = $props();
 
   // acceptプロパティからTauriのfiltersを生成
   function createFilters(accept: string) {
@@ -73,16 +73,10 @@
         return; // ユーザーがキャンセルした場合
       }
 
-      selectedFile = selected;
       onFileSelected(selected);
     } catch (error) {
       console.error('Failed to select files:', error);
     }
-  }
-
-  function handleClear() {
-    selectedFile = null;
-    onFileSelected('');
   }
 </script>
 
@@ -96,11 +90,11 @@
       {id}
     >
       <FolderOpenOutline class="h-4 w-4" />
-      {selectedFile || t('components.fileSelect.placeholder')}
+      {value || t('components.fileSelect.placeholder')}
     </Button>
 
-    {#if selectedFile}
-      <Button onclick={handleClear} color="light" size="sm" class="p-1" title="Clear selection">
+    {#if value}
+      <Button onclick={onClear} color="light" size="sm" class="p-1" title="Clear selection">
         <CloseCircleSolid class="h-4 w-4" />
       </Button>
     {/if}
