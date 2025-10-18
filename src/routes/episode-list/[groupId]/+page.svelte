@@ -43,7 +43,7 @@
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
 
-  // === ページ遷移 ===
+  // === Page transition ===
 
   function openEpisode(episodeId: number) {
     goto(`/episode/${episodeId}`);
@@ -56,7 +56,7 @@
     }
   }
 
-  // === エピソード追加 ===
+  // === Add episode ===
 
   async function handleEpisodeAddSubmit() {
     const episodeGroupId = data.episodeGroup?.id;
@@ -85,7 +85,7 @@
     }
   }
 
-  // === エピソード移動 ===
+  // === Move episode ===
 
   async function handleEpisodeMoveClick(episode: Episode) {
     try {
@@ -116,7 +116,7 @@
     }
   }
 
-  // === エピソード削除 ===
+  // === Delete episode ===
 
   function handleEpisodeDeleteClick(episode: Episode) {
     targetEpisode = episode;
@@ -139,7 +139,7 @@
     }
   }
 
-  // === エピソード名変更 ===
+  // === Rename episode ===
 
   function handleEpisodeRenameClick(episode: Episode) {
     targetEpisode = episode;
