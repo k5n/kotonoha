@@ -6,7 +6,6 @@ let fetchedParams = $state({
   allVoices: null as readonly Voice[] | null,
   learningTargetVoices: null as readonly Voice[] | null,
   defaultVoices: {} as DefaultVoices,
-  detectedLanguage: null as string | null,
   isFetchingVoices: false,
 });
 let selectedLanguage = $state('en');
@@ -154,7 +153,6 @@ function resetFetchedParams() {
     allVoices: null,
     learningTargetVoices: null,
     defaultVoices: {},
-    detectedLanguage: null,
     isFetchingVoices: false,
   };
 }
@@ -247,7 +245,6 @@ export const ttsConfigStore = {
       allVoices,
       learningTargetVoices,
       defaultVoices,
-      detectedLanguage,
       isFetchingVoices: false,
     };
 

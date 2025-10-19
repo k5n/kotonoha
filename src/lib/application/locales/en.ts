@@ -259,6 +259,7 @@ export const en = {
         errorAudioRequired:
           'Please select an audio file or check the option to generate audio using TTS.',
         errorScriptFileRequired: 'Please select a script file.',
+        errorDetectLanguage: 'Failed to auto-detect language.',
         errorTsvParse: 'Failed to parse TSV file.',
         errorTsvColumnRequired: 'Please select the start time and text columns.',
       },

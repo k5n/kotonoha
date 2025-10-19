@@ -11,9 +11,10 @@
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onSubmit: () => Promise<void>;
     onTtsEnabled: () => Promise<void>;
+    onDetectScriptLanguage: () => Promise<void>;
   };
 
-  let { onTsvFileSelected, onSubmit, onTtsEnabled }: Props = $props();
+  let { onTsvFileSelected, onSubmit, onTtsEnabled, onDetectScriptLanguage }: Props = $props();
 
   let disabled = $derived(
     episodeAddStore.isSubmitting ||
@@ -42,14 +43,16 @@
       await onTsvFileSelected(filePath);
     } else if (filePath && filePath.toLowerCase().endsWith('.txt')) {
       // immediate behavior: .txt files imply TTS generation
-      handleTtsCheckboxChange(true);
+      await handleTtsCheckboxChange(true);
+    } else {
+      await onDetectScriptLanguage();
     }
   }
 
-  function handleTtsCheckboxChange(checked: boolean) {
+  async function handleTtsCheckboxChange(checked: boolean) {
     fileEpisodeAddStore.shouldGenerateAudio = checked;
     if (checked) {
-      onTtsEnabled();
+      await onTtsEnabled();
     }
   }
 
@@ -59,7 +62,7 @@
     }
   }
 
-  // Local validation moved from the store. Writes errors back into the store's errorMessage
+  // Local validation moved from the store. Writes errors back into the store's errorMessageKey
   function validateLocal(): boolean {
     const titleValue = (fileEpisodeAddStore.title || '').trim();
     const audioFilePathValue = fileEpisodeAddStore.audioFilePath;
@@ -68,26 +71,26 @@
     const tsvConfig = fileEpisodeAddStore.tsv.tsvConfig;
 
     if (!titleValue) {
-      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorTitleRequired');
+      fileEpisodeAddStore.errorMessageKey = 'components.fileEpisodeForm.errorTitleRequired';
       return false;
     }
     if (!audioFilePathValue && !fileEpisodeAddStore.shouldGenerateAudio) {
-      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorAudioRequired');
+      fileEpisodeAddStore.errorMessageKey = 'components.fileEpisodeForm.errorAudioRequired';
       return false;
     }
     if (!scriptFilePathValue) {
-      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorScriptFileRequired');
+      fileEpisodeAddStore.errorMessageKey = 'components.fileEpisodeForm.errorScriptFileRequired';
       return false;
     }
     if (scriptPreview) {
       if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
-        fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
+        fileEpisodeAddStore.errorMessageKey = 'components.fileEpisodeForm.errorTsvColumnRequired';
         return false;
       }
     }
 
     // clear error (store's errorMessage remains authoritative for resets)
-    fileEpisodeAddStore.errorMessage = '';
+    fileEpisodeAddStore.errorMessageKey = '';
     return true;
   }
 </script>
@@ -157,9 +160,9 @@
   {/if}
 {/if}
 
-{#if fileEpisodeAddStore.errorMessage}
+{#if fileEpisodeAddStore.errorMessageKey}
   <div class="mb-4">
-    <div class="text-sm text-red-600">{fileEpisodeAddStore.errorMessage}</div>
+    <div class="text-sm text-red-600">{t(fileEpisodeAddStore.errorMessageKey)}</div>
   </div>
 {/if}
 

@@ -1,34 +1,22 @@
 import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
-import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
-import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import type { Voice } from '$lib/domain/entities/voice';
-import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
-import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
-import { languageDetectionRepository } from '$lib/infrastructure/repositories/languageDetectionRepository';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import { getSupportedLanguages } from '$lib/utils/language';
 import { error, info } from '@tauri-apps/plugin-log';
+import { detectScriptLanguage } from './detectScriptLanguage';
 
-const MAX_TEXT_LENGTH = 1000;
-
-function parseScript(fullText: string, extension: string, tsvConfig: TsvConfig): string {
-  const { dialogues } = parseScriptToDialogues(fullText, extension, 0, tsvConfig);
-  return dialogues.map((d) => d.originalText).join('\n');
-}
-
-async function detectLanguage(filePath: string, tsvConfig: TsvConfig): Promise<string | null> {
-  const extension = filePath.split('.').pop()?.toLowerCase();
-  if (!extension) {
-    return null;
+async function getAvailableVoices(): Promise<readonly Voice[]> {
+  if (fileEpisodeAddStore.detectedLanguage === null) {
+    const [_, voices] = await Promise.all([
+      detectScriptLanguage(),
+      ttsRepository.getAvailableVoices(),
+    ]);
+    return voices;
+  } else {
+    const voices = await ttsRepository.getAvailableVoices();
+    return voices;
   }
-
-  const fullText = await fileRepository.readTextFileByAbsolutePath(filePath);
-
-  const text = extension === 'txt' ? fullText : parseScript(fullText, extension, tsvConfig);
-
-  const truncatedText = text.substring(0, MAX_TEXT_LENGTH);
-  return languageDetectionRepository.detectLanguage(truncatedText);
 }
 
 /**
@@ -56,10 +44,7 @@ export async function fetchTtsVoices(): Promise<void> {
   try {
     fileEpisodeAddStore.tts.startVoicesFetching();
 
-    const [detectedLanguage, voices] = await Promise.all([
-      detectLanguage(scriptFilePath, tsvConfigStore.tsvConfig),
-      ttsRepository.getAvailableVoices(),
-    ]);
+    const voices = await getAvailableVoices();
     const supportedLanguageCodes = getSupportedLanguages().map((lang) => lang.code);
     const filteredVoices: Voice[] = voices.filter((voice) => {
       return supportedLanguageCodes.includes(voice.language.family);
@@ -78,11 +63,11 @@ export async function fetchTtsVoices(): Promise<void> {
     fileEpisodeAddStore.tts.completeVoicesFetching({
       allVoices: filteredVoices,
       learningTargetVoices: learningTargetVoices,
-      detectedLanguage,
+      detectedLanguage: fileEpisodeAddStore.detectedLanguage,
       defaultVoices,
     });
     info(
-      `Fetched ${filteredVoices.length} TTS voices, ${learningTargetVoices.length} match voices for learning target languages and detected language is ${detectedLanguage}.`
+      `Fetched ${filteredVoices.length} TTS voices, ${learningTargetVoices.length} match voices for learning target languages.`
     );
   } catch (err) {
     error(`Failed to fetch TTS voices: ${err}`);

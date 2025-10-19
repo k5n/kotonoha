@@ -259,6 +259,7 @@ export const ja = {
         errorAudioRequired:
           '音声ファイルを選択するか、TTSで音声を生成するオプションをチェックしてください。',
         errorScriptFileRequired: 'スクリプトファイルを選択してください',
+        errorDetectLanguage: '言語の自動判定に失敗しました。',
         errorTsvParse: 'TSVファイルの解析に失敗しました。',
         errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
       },
