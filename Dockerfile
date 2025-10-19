@@ -14,6 +14,7 @@ RUN apt-get update && \
     curl \
     build-essential \
     clang \
+    cmake \
     libwebkit2gtk-4.1-dev \
     libappindicator3-dev \
     librsvg2-dev \
