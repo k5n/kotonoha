@@ -8,7 +8,9 @@ use serde::{Deserialize, Serialize};
     description = "Represents an item of vocabulary or expression identified in the target line."
 )]
 pub struct SentenceMiningItem {
-    #[schema(description = "The expression or phrase identified in the target line.")]
+    #[schema(
+        description = "A complete, grammatically correct sentence. If the target line was a fragment, this sentence is reconstructed by combining it with adjacent lines, strictly preserving their original sequence. If the target line was already complete, this will be the target line itself."
+    )]
     pub expression: String,
 
     #[schema(
@@ -107,9 +109,14 @@ e.  `exampleSentence`: The full `sentence` from the top-level, but with the spec
 * **Comprehensive Identification**: You must identify both multi-word units (phrasal verbs, idioms, etc.) and important individual words from the `TARGET_LINE`. When you identify a phrase, also consider extracting its key component words separately if they are likely to be unknown to an intermediate learner.
 * **Part-of-Speech Language**: The value for the `partOfSpeech` field **MUST be written in the `EXPLANATION_LANGUAGE`** (the learner's native language). Use a common linguistic term that an average language learner would understand (e.g., 名詞, 動詞, 慣用句).
 * **Empty Result**: If no relevant expressions are found, the "items" array should be empty, but the `sentence`, `translation`, and `explanation` fields should still be provided.
-* **[CRITICAL] Rule for `sentence` and `exampleSentence` Construction**: Your construction process must follow two steps:
-  1.  **Generate the Base `sentence`**: First, you must construct a single, natural, and grammatically complete sentence from the `TARGET_LINE` and its surrounding `CONVERSATION_LOG`. If the `TARGET_LINE` is already a complete sentence, use it. If it is a fragment, combine it with the necessary preceding or succeeding lines. **This complete sentence is the value for the top-level `sentence` field.**
-  2.  **Generate each `exampleSentence`**: For each vocabulary item in the `items` array, take the base `sentence` generated in Step 1 and enclose the corresponding `expression` for that item within `<b>` tags. This highlighted version is the value for the `exampleSentence` field within that item.
+* **[CRITICAL] Rule for `sentence` and `exampleSentence` Construction**: Your construction process must follow two steps, with a strict ordering constraint:
+  1. **Generate the Base `sentence`**:
+      * First, determine if the `TARGET_LINE` is a grammatically complete sentence on its own.
+      * If it is complete, use the `TARGET_LINE` *exactly as-is* for the `sentence`.
+      * If the `TARGET_LINE` is a fragment (e.g., from an ASR transcript), you must reconstruct the full, continuous sentence it belongs to. To do this, find the necessary lines immediately preceding and/or succeeding the `TARGET_LINE` in the `CONVERSATION_LOG` that form this single utterance.
+      * **Sequential Constraint**: You **MUST** combine these lines (e.g., `preceding_line` + `TARGET_LINE` + `succeeding_line`) **strictly in their original sequence** as they appear in the `CONVERSATION_LOG`. **Do NOT reorder, rearrange, or shuffle the lines.** The goal is to "stitch together" the fragments into the single, continuous utterance they represent, preserving their original order.
+      * **This complete, sequentially-ordered sentence is the value for the top-level `sentence` field.**
+  2. **Generate each `exampleSentence`**: For each vocabulary item in the `items` array, take the base `sentence` generated in Step 1 and enclose the corresponding `expression` for that item within `<b>` tags. This highlighted version is the value for the `exampleSentence` field within that item.
 * **Language Fidelity**: All user-facing explanations (`translation`, `explanation`, `contextualDefinition`, `coreMeaning`, and `partOfSpeech`) **MUST** be written in the specified `EXPLANATION_LANGUAGE`.
 * **Negation Handling**: When extracting a verb from a negative construction (e.g., "didn't finish"), extract the base form (`finish`). The explanations for the verb should define the verb itself, not the negation. The role of the negation should be covered in the main `explanation` field.
 
