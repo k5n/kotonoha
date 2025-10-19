@@ -139,7 +139,7 @@
 </div>
 
 {#if fileEpisodeAddStore.tsv.scriptPreview}
-  <TsvConfigSection />
+  <TsvConfigSection {onDetectScriptLanguage} />
 {/if}
 
 {#if shouldShowTtsSection}

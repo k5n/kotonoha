@@ -1,7 +1,6 @@
 import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
 import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
-import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
-import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
+import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { languageDetectionRepository } from '$lib/infrastructure/repositories/languageDetectionRepository';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
@@ -9,12 +8,6 @@ import { getSupportedLanguages } from '$lib/utils/language';
 import { error, info } from '@tauri-apps/plugin-log';
 
 const MAX_TEXT_LENGTH = 1000;
-
-function extractTextFromScript(fullText: string, extension: string, tsvConfig: TsvConfig): string {
-  if (extension === 'txt') return fullText;
-  const { dialogues } = parseScriptToDialogues(fullText, extension, 0, tsvConfig);
-  return dialogues.map((d) => d.originalText).join('\n');
-}
 
 async function populateLearningTargetLanguages(): Promise<readonly string[]> {
   try {
@@ -52,7 +45,7 @@ export async function detectScriptLanguage(): Promise<void> {
   try {
     const extension = scriptFilePath.split('.').pop()?.toLowerCase() ?? '';
     const fullText = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
-    const text = extractTextFromScript(fullText, extension, tsvConfigStore.tsvConfig);
+    const text = extractScriptText(fullText, extension, tsvConfigStore.tsvConfig);
     const truncated = text.substring(0, MAX_TEXT_LENGTH);
 
     const detected = await languageDetectionRepository.detectLanguage(truncated);

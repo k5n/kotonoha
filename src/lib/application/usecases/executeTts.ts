@@ -1,23 +1,12 @@
 import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
 import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
 import { ttsExecutionStore } from '$lib/application/stores/episodeAddStore/ttsExecutionStore.svelte';
-import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
-import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
+import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import { error, info } from '@tauri-apps/plugin-log';
 import { tsvConfigStore } from '../stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
-
-function parseScript(fullText: string, extension: string, tsvConfig: TsvConfig): string {
-  const { dialogues } = parseScriptToDialogues(fullText, extension, 0, tsvConfig);
-  return dialogues.map((d) => d.originalText).join('\n');
-}
-
-async function readText(filePath: string, tsvConfig: TsvConfig): Promise<string> {
-  const fullText = await fileRepository.readTextFileByAbsolutePath(filePath);
-  return parseScript(fullText, filePath.split('.').pop() || '', tsvConfig);
-}
 
 /**
  * Execute TTS generation with progress tracking
@@ -32,7 +21,9 @@ export async function executeTts(): Promise<void> {
     if (!scriptFilePath) {
       throw new Error('Script file path is not set (this must not happen)');
     }
-    const scriptContent = await readText(scriptFilePath, tsvConfigStore.tsvConfig);
+    const fullText = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
+    const extension = scriptFilePath.split('.').pop()?.toLowerCase() ?? '';
+    const scriptContent = extractScriptText(fullText, extension, tsvConfigStore.tsvConfig);
 
     // Get voice and speaker information from the store
     const selectedVoice = ttsConfigStore.selectedVoice;

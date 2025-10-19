@@ -35,6 +35,7 @@ graph LR
                     src_lib_application_usecases_analyzeDialogueForMining_ts["analyzeDialogueForMining.ts"]
                     src_lib_application_usecases_deleteEpisode_ts["deleteEpisode.ts"]
                     src_lib_application_usecases_deleteGroupRecursive_ts["deleteGroupRecursive.ts"]
+                    src_lib_application_usecases_detectScriptLanguage_ts["detectScriptLanguage.ts"]
                     src_lib_application_usecases_downloadTtsModel_ts["downloadTtsModel.ts"]
                     src_lib_application_usecases_executeTts_ts["executeTts.ts"]
                     src_lib_application_usecases_fetchAppInfo_ts["fetchAppInfo.ts"]
@@ -83,6 +84,7 @@ graph LR
                 end
                 subgraph "services"
                     src_lib_domain_services_buildEpisodeGroupTree_ts["buildEpisodeGroupTree.ts"]
+                    src_lib_domain_services_extractScriptText_ts["extractScriptText.ts"]
                     src_lib_domain_services_generateEpisodeFilenames_ts["generateEpisodeFilenames.ts"]
                     src_lib_domain_services_groupTreeHelper_ts["groupTreeHelper.ts"]
                     src_lib_domain_services_parseScriptPreview_ts["parseScriptPreview.ts"]
@@ -90,6 +92,7 @@ graph LR
                     src_lib_domain_services_parseSrtToDialogues_ts["parseSrtToDialogues.ts"]
                     src_lib_domain_services_parseSswtToDialogues_ts["parseSswtToDialogues.ts"]
                     src_lib_domain_services_parseTsvToDialogues_ts["parseTsvToDialogues.ts"]
+                    src_lib_domain_services_parseTsvToText_ts["parseTsvToText.ts"]
                     src_lib_domain_services_parseVttToDialogues_ts["parseVttToDialogues.ts"]
                     src_lib_domain_services_youtubeUrlValidator_ts["youtubeUrlValidator.ts"]
                 end
@@ -223,6 +226,13 @@ src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_domain_entities
 src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_domain_services_groupTreeHelper_ts
 src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_infrastructure_repositories_episodeGroupRepository_ts
 src_lib_application_usecases_deleteGroupRecursive_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
+src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts
+src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts
+src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_domain_services_extractScriptText_ts
+src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_infrastructure_repositories_fileRepository_ts
+src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_infrastructure_repositories_languageDetectionRepository_ts
+src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
+src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_utils_language_ts
 src_lib_application_usecases_downloadTtsModel_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_ttsConfigStore_svelte_ts
 src_lib_application_usecases_downloadTtsModel_ts --> src_lib_application_stores_episodeAddStore_ttsDownloadStore_svelte_ts
 src_lib_application_usecases_downloadTtsModel_ts --> src_lib_domain_entities_voice_ts
@@ -231,8 +241,7 @@ src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_episod
 src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts
 src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_ttsConfigStore_svelte_ts
 src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_episodeAddStore_ttsExecutionStore_svelte_ts
-src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_tsvConfig_ts
-src_lib_application_usecases_executeTts_ts --> src_lib_domain_services_parseScriptToDialogues_ts
+src_lib_application_usecases_executeTts_ts --> src_lib_domain_services_extractScriptText_ts
 src_lib_application_usecases_executeTts_ts --> src_lib_infrastructure_repositories_fileRepository_ts
 src_lib_application_usecases_executeTts_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
 src_lib_application_usecases_fetchAppInfo_ts --> src_lib_domain_entities_appInfo_ts
@@ -260,12 +269,8 @@ src_lib_application_usecases_fetchSettings_ts --> src_lib_domain_entities_settin
 src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
 src_lib_application_usecases_fetchSettings_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_fileEpisodeAddStore_svelte_ts
-src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_application_stores_episodeAddStore_fileEpisodeAddStore_tsvConfigStore_svelte_ts
-src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_domain_entities_tsvConfig_ts
+src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_application_usecases_detectScriptLanguage_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_domain_entities_voice_ts
-src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_domain_services_parseScriptToDialogues_ts
-src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_fileRepository_ts
-src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_languageDetectionRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
 src_lib_application_usecases_fetchTtsVoices_ts --> src_lib_utils_language_ts
@@ -308,6 +313,9 @@ src_lib_application_usecases_updateEpisodesOrder_ts --> src_lib_domain_entities_
 src_lib_application_usecases_updateEpisodesOrder_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
 src_lib_domain_entities_sentenceAnalysisResult_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_domain_services_buildEpisodeGroupTree_ts --> src_lib_domain_entities_episodeGroup_ts
+src_lib_domain_services_extractScriptText_ts --> src_lib_domain_entities_tsvConfig_ts
+src_lib_domain_services_extractScriptText_ts --> src_lib_domain_services_parseScriptToDialogues_ts
+src_lib_domain_services_extractScriptText_ts --> src_lib_domain_services_parseTsvToText_ts
 src_lib_domain_services_groupTreeHelper_ts --> src_lib_domain_entities_episodeGroup_ts
 src_lib_domain_services_parseScriptPreview_ts --> src_lib_domain_entities_scriptPreview_ts
 src_lib_domain_services_parseScriptToDialogues_ts --> src_lib_domain_entities_dialogue_ts
@@ -320,6 +328,7 @@ src_lib_domain_services_parseSrtToDialogues_ts --> src_lib_domain_entities_dialo
 src_lib_domain_services_parseSswtToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_domain_services_parseTsvToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_domain_services_parseTsvToDialogues_ts --> src_lib_domain_entities_tsvConfig_ts
+src_lib_domain_services_parseTsvToText_ts --> src_lib_domain_entities_tsvConfig_ts
 src_lib_domain_services_parseVttToDialogues_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_appInfoRepository_ts --> src_lib_domain_entities_appInfo_ts
 src_lib_infrastructure_repositories_audioRepository_ts --> src_lib_domain_entities_audioInfo_ts
@@ -415,6 +424,7 @@ src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_gr
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_addNewEpisode_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_deleteEpisode_ts
+src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_detectScriptLanguage_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_downloadTtsModel_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_executeTts_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_fetchAvailableTargetGroupsForEpisodeMove_ts
