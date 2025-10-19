@@ -5,7 +5,8 @@
   import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
   import TtsConfigSection from '$lib/presentation/components/TtsConfigSection.svelte';
-  import { Button, Checkbox, Input, Label } from 'flowbite-svelte';
+  import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
+  import { Button, Checkbox, Input, Label, Select } from 'flowbite-svelte';
 
   type Props = {
     onTsvFileSelected: (filePath: string) => Promise<void>;
@@ -35,6 +36,12 @@
   let shouldShowTtsSection = $derived(
     hasOnlyScriptFile &&
       (extension !== 'tsv' || fileEpisodeAddStore.tsv.tsvConfig.textColumnIndex >= 0)
+  );
+  let learningTargetLanguageOptions = $derived(
+    fileEpisodeAddStore.learningTargetLanguages.map((lang) => ({
+      value: lang,
+      name: `${t(bcp47ToTranslationKey(lang)!)} (${bcp47ToLanguageName(lang)})`,
+    })) || []
   );
 
   async function handleScriptFileChange(filePath: string | null) {
@@ -71,26 +78,25 @@
     const tsvConfig = fileEpisodeAddStore.tsv.tsvConfig;
 
     if (!titleValue) {
-      fileEpisodeAddStore.errorMessageKey = 'components.fileEpisodeForm.errorTitleRequired';
+      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorTitleRequired');
       return false;
     }
     if (!audioFilePathValue && !fileEpisodeAddStore.shouldGenerateAudio) {
-      fileEpisodeAddStore.errorMessageKey = 'components.fileEpisodeForm.errorAudioRequired';
+      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorAudioRequired');
       return false;
     }
     if (!scriptFilePathValue) {
-      fileEpisodeAddStore.errorMessageKey = 'components.fileEpisodeForm.errorScriptFileRequired';
+      fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorScriptFileRequired');
       return false;
     }
     if (scriptPreview) {
       if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
-        fileEpisodeAddStore.errorMessageKey = 'components.fileEpisodeForm.errorTsvColumnRequired';
+        fileEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
         return false;
       }
     }
 
-    // clear error (store's errorMessage remains authoritative for resets)
-    fileEpisodeAddStore.errorMessageKey = '';
+    fileEpisodeAddStore.errorMessage = '';
     return true;
   }
 </script>
@@ -142,6 +148,24 @@
   <TsvConfigSection {onDetectScriptLanguage} />
 {/if}
 
+{#if learningTargetLanguageOptions.length > 0}
+  <div class="mb-4">
+    <Label class="mb-2 block" for="learningLanguage">
+      {t('components.fileEpisodeForm.learningLanguageLabel')}
+    </Label>
+    {#if fileEpisodeAddStore.languageDetectionWarningMessage}
+      <div class="mb-2 text-sm text-yellow-600">
+        {fileEpisodeAddStore.languageDetectionWarningMessage}
+      </div>
+    {/if}
+    <Select
+      id="learningLanguage"
+      bind:value={fileEpisodeAddStore.selectedStudyLanguage}
+      items={learningTargetLanguageOptions}
+    ></Select>
+  </div>
+{/if}
+
 {#if shouldShowTtsSection}
   <div class="mb-4">
     <Label class="flex items-center gap-2">
@@ -160,9 +184,9 @@
   {/if}
 {/if}
 
-{#if fileEpisodeAddStore.errorMessageKey}
+{#if fileEpisodeAddStore.errorMessage}
   <div class="mb-4">
-    <div class="text-sm text-red-600">{t(fileEpisodeAddStore.errorMessageKey)}</div>
+    <div class="text-sm text-red-600">{fileEpisodeAddStore.errorMessage}</div>
   </div>
 {/if}
 

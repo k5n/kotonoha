@@ -254,6 +254,7 @@ export const en = {
         titlePlaceholder: "Episode's title",
         audioFileLabel: 'Audio File',
         scriptFileLabel: 'Subtitle File (*.srt, *.vtt, *.sswt, *.tsv, *.txt)',
+        learningLanguageLabel: 'Learning Target Language',
         generateAudioLabel: 'Generate audio using Text-to-Speech (TTS)',
         errorTitleRequired: 'Please enter a title.',
         errorAudioRequired:
@@ -262,6 +263,9 @@ export const en = {
         errorDetectLanguage: 'Failed to auto-detect language.',
         errorTsvParse: 'Failed to parse TSV file.',
         errorTsvColumnRequired: 'Please select the start time and text columns.',
+        noLanguageDetected: 'No language detected.',
+        languageNotTargeted:
+          'The language was detected as {{language}}, but it is not included in the learning target languages.',
       },
       youtubeEpisodeForm: {
         youtubeUrlLabel: 'YouTube URL',

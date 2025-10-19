@@ -254,6 +254,7 @@ export const ja = {
         titlePlaceholder: 'エピソードのタイトル',
         audioFileLabel: '音声ファイル',
         scriptFileLabel: '字幕ファイル  (*.srt, *.vtt, *.sswt, *.tsv, *.txt)',
+        learningLanguageLabel: '学習対象言語',
         generateAudioLabel: 'Text-to-Speech (TTS) で音声を生成する',
         errorTitleRequired: 'タイトルを入力してください',
         errorAudioRequired:
@@ -262,6 +263,9 @@ export const ja = {
         errorDetectLanguage: '言語の自動判定に失敗しました。',
         errorTsvParse: 'TSVファイルの解析に失敗しました。',
         errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
+        noLanguageDetected: '言語が検出されませんでした。',
+        languageNotTargeted:
+          '言語は{{language}}と判定されましたが、学習対象言語に含まれていません。',
       },
       youtubeEpisodeForm: {
         youtubeUrlLabel: 'YouTube URL',

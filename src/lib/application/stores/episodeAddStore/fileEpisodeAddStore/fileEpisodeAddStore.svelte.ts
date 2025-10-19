@@ -1,4 +1,6 @@
+import { t } from '$lib/application/stores/i18n.svelte';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
+import { bcp47ToTranslationKey } from '$lib/utils/language';
 import { tsvConfigStore } from './tsvConfigStore.svelte';
 import { ttsConfigStore } from './ttsConfigStore.svelte';
 
@@ -20,7 +22,8 @@ let title = $state('');
 let audioFilePath = $state<string | null>(null);
 let scriptFilePath = $state<string | null>(null);
 let shouldGenerateAudio = $state(false);
-let errorMessageKey = $state('');
+let errorMessage = $state('');
+let languageDetectionWarningMessage = $state('');
 let detectedLanguage = $state<string | null>(null);
 let learningTargetLanguages = $state<readonly string[]>([]);
 let selectedStudyLanguage = $state<string | null>(null);
@@ -31,12 +34,24 @@ function completeLanguageDetection(
 ) {
   detectedLanguage = detectedLanguageCode;
   learningTargetLanguages = supportedLanguages;
-  errorMessageKey = '';
+  if (detectedLanguageCode === null) {
+    selectedStudyLanguage = supportedLanguages.length > 0 ? supportedLanguages[0] : null;
+    languageDetectionWarningMessage = t('components.fileEpisodeForm.noLanguageDetected');
+  } else if (supportedLanguages.includes(detectedLanguageCode)) {
+    selectedStudyLanguage = detectedLanguageCode;
+    languageDetectionWarningMessage = '';
+  } else {
+    selectedStudyLanguage = supportedLanguages.length > 0 ? supportedLanguages[0] : null;
+    languageDetectionWarningMessage = t('components.fileEpisodeForm.languageNotTargeted', {
+      language: t(bcp47ToTranslationKey(detectedLanguageCode) || detectedLanguageCode),
+    });
+  }
+  errorMessage = '';
 }
 
 function failedLanguageDetection(errorKey: string, supportedLanguages: readonly string[]) {
   detectedLanguage = null;
-  errorMessageKey = errorKey;
+  errorMessage = t(errorKey);
   learningTargetLanguages = supportedLanguages;
 }
 
@@ -83,7 +98,8 @@ function reset() {
   audioFilePath = null;
   scriptFilePath = null;
   shouldGenerateAudio = false;
-  errorMessageKey = '';
+  languageDetectionWarningMessage = '';
+  errorMessage = '';
   detectedLanguage = null;
   selectedStudyLanguage = null;
   learningTargetLanguages = [];
@@ -99,11 +115,15 @@ export const fileEpisodeAddStore = {
     title = value;
   },
 
-  get errorMessageKey() {
-    return errorMessageKey;
+  get languageDetectionWarningMessage() {
+    return languageDetectionWarningMessage;
   },
-  set errorMessageKey(value: string) {
-    errorMessageKey = value;
+
+  get errorMessage() {
+    return errorMessage;
+  },
+  set errorMessage(value: string) {
+    errorMessage = value;
   },
 
   get detectedLanguage() {
