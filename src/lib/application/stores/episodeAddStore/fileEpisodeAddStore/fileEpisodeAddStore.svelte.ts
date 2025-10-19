@@ -1,5 +1,6 @@
-// i18n functions are used by components; store keeps errorMessage only
+import { t } from '$lib/application/stores/i18n.svelte';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
+import { bcp47ToTranslationKey } from '$lib/utils/language';
 import { tsvConfigStore } from './tsvConfigStore.svelte';
 import { ttsConfigStore } from './ttsConfigStore.svelte';
 
@@ -11,10 +12,8 @@ export type FileEpisodeAddPayload = {
   readonly title: string;
   readonly audioFilePath: string;
   readonly scriptFilePath: string;
+  readonly learningLanguage: string;
   readonly tsvConfig?: TsvConfig;
-  readonly ttsLanguage?: string;
-  readonly ttsVoiceName?: string;
-  readonly ttsQuality?: string;
 };
 
 let title = $state('');
@@ -22,6 +21,89 @@ let audioFilePath = $state<string | null>(null);
 let scriptFilePath = $state<string | null>(null);
 let shouldGenerateAudio = $state(false);
 let errorMessage = $state('');
+let languageDetectionWarningMessage = $state('');
+let detectedLanguage = $state<string | null>(null);
+let learningTargetLanguages = $state<readonly string[]>([]);
+let selectedStudyLanguage = $state<string | null>(null);
+
+function completeLanguageDetection(
+  detectedLanguageCode: string | null,
+  supportedLanguages: readonly string[]
+) {
+  if (supportedLanguages.length === 0) {
+    throw new Error('supportedLanguages must contain at least one language');
+  }
+
+  detectedLanguage = detectedLanguageCode;
+  learningTargetLanguages = supportedLanguages;
+  if (detectedLanguageCode === null) {
+    setSelectedStudyLanguage(supportedLanguages[0]);
+    languageDetectionWarningMessage = t('components.fileEpisodeForm.noLanguageDetected');
+  } else if (supportedLanguages.includes(detectedLanguageCode)) {
+    setSelectedStudyLanguage(detectedLanguageCode);
+    languageDetectionWarningMessage = '';
+  } else {
+    setSelectedStudyLanguage(supportedLanguages[0]);
+    languageDetectionWarningMessage = t('components.fileEpisodeForm.languageNotTargeted', {
+      language: t(bcp47ToTranslationKey(detectedLanguageCode) || detectedLanguageCode),
+    });
+  }
+  errorMessage = '';
+}
+
+function failedLanguageDetection(errorKey: string, supportedLanguages: readonly string[]) {
+  detectedLanguage = null;
+  errorMessage = t(errorKey);
+  learningTargetLanguages = supportedLanguages;
+}
+
+function buildPayload(): FileEpisodeAddPayload | null {
+  if (!title.trim() || !audioFilePath || !scriptFilePath || !selectedStudyLanguage) {
+    return null;
+  }
+
+  const tsvConfig = tsvConfigStore.tsvConfig;
+  const finalTsvConfig =
+    tsvConfig.startTimeColumnIndex !== -1 && tsvConfig.textColumnIndex !== -1
+      ? {
+          startTimeColumnIndex: tsvConfig.startTimeColumnIndex,
+          textColumnIndex: tsvConfig.textColumnIndex,
+          ...(tsvConfig.endTimeColumnIndex !== -1 && {
+            endTimeColumnIndex: tsvConfig.endTimeColumnIndex,
+          }),
+        }
+      : undefined;
+
+  const payload: FileEpisodeAddPayload = {
+    source: 'file',
+    title: title.trim(),
+    audioFilePath: audioFilePath,
+    scriptFilePath: scriptFilePath,
+    learningLanguage: selectedStudyLanguage,
+    tsvConfig: finalTsvConfig,
+  };
+
+  return payload;
+}
+
+function setSelectedStudyLanguage(language: string | null) {
+  selectedStudyLanguage = language;
+  ttsConfigStore.setLanguage(language);
+}
+
+function reset() {
+  title = '';
+  audioFilePath = null;
+  scriptFilePath = null;
+  shouldGenerateAudio = false;
+  languageDetectionWarningMessage = '';
+  errorMessage = '';
+  detectedLanguage = null;
+  selectedStudyLanguage = null;
+  learningTargetLanguages = [];
+  tsvConfigStore.reset();
+  ttsConfigStore.reset();
+}
 
 export const fileEpisodeAddStore = {
   get title() {
@@ -31,11 +113,30 @@ export const fileEpisodeAddStore = {
     title = value;
   },
 
+  get languageDetectionWarningMessage() {
+    return languageDetectionWarningMessage;
+  },
+
   get errorMessage() {
     return errorMessage;
   },
   set errorMessage(value: string) {
     errorMessage = value;
+  },
+
+  get detectedLanguage() {
+    return detectedLanguage;
+  },
+
+  get learningTargetLanguages() {
+    return learningTargetLanguages;
+  },
+
+  get selectedStudyLanguage() {
+    return selectedStudyLanguage;
+  },
+  set selectedStudyLanguage(value: string | null) {
+    setSelectedStudyLanguage(value);
   },
 
   get shouldGenerateAudio() {
@@ -59,53 +160,11 @@ export const fileEpisodeAddStore = {
     scriptFilePath = path;
   },
 
-  buildPayload(): FileEpisodeAddPayload | null {
-    if (!title.trim() || !audioFilePath || !scriptFilePath) {
-      return null;
-    }
-
-    const tsvConfig = tsvConfigStore.tsvConfig;
-    const finalTsvConfig =
-      tsvConfig.startTimeColumnIndex !== -1 && tsvConfig.textColumnIndex !== -1
-        ? {
-            startTimeColumnIndex: tsvConfig.startTimeColumnIndex,
-            textColumnIndex: tsvConfig.textColumnIndex,
-            ...(tsvConfig.endTimeColumnIndex !== -1 && {
-              endTimeColumnIndex: tsvConfig.endTimeColumnIndex,
-            }),
-          }
-        : undefined;
-
-    const payload: FileEpisodeAddPayload = {
-      source: 'file',
-      title: title.trim(),
-      audioFilePath: audioFilePath,
-      scriptFilePath: scriptFilePath,
-      tsvConfig: finalTsvConfig,
-    };
-
-    // Add TTS configuration if audio generation is enabled
-    if (shouldGenerateAudio) {
-      return {
-        ...payload,
-        ttsLanguage: ttsConfigStore.selectedLanguage,
-        ttsVoiceName: ttsConfigStore.selectedVoiceName || undefined,
-        ttsQuality: ttsConfigStore.selectedQuality,
-      };
-    }
-
-    return payload;
-  },
-
-  reset() {
-    title = '';
-    audioFilePath = null;
-    scriptFilePath = null;
-    shouldGenerateAudio = false;
-    errorMessage = '';
-    tsvConfigStore.reset();
-    ttsConfigStore.reset();
-  },
+  // methods
+  completeLanguageDetection,
+  failedLanguageDetection,
+  buildPayload,
+  reset,
 
   // Sub stores
   tsv: tsvConfigStore,

@@ -10,8 +10,15 @@
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onYoutubeUrlChanged: (url: string) => Promise<void>;
     onTtsEnabled: () => Promise<void>;
+    onDetectScriptLanguage: () => Promise<void>;
   };
-  let { onSubmit, onTsvFileSelected, onYoutubeUrlChanged, onTtsEnabled }: Props = $props();
+  let {
+    onSubmit,
+    onTsvFileSelected,
+    onYoutubeUrlChanged,
+    onTtsEnabled,
+    onDetectScriptLanguage,
+  }: Props = $props();
 </script>
 
 <Modal onclose={episodeAddStore.close} open={episodeAddStore.show} size="xl">
@@ -37,7 +44,7 @@
     </div>
 
     {#if episodeAddStore.sourceType === 'file'}
-      <FileEpisodeForm {onTsvFileSelected} {onSubmit} {onTtsEnabled} />
+      <FileEpisodeForm {onTsvFileSelected} {onSubmit} {onTtsEnabled} {onDetectScriptLanguage} />
     {/if}
 
     {#if episodeAddStore.sourceType === 'youtube'}

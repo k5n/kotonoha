@@ -13,6 +13,12 @@
     TableHeadCell,
   } from 'flowbite-svelte';
 
+  type Props = {
+    onDetectScriptLanguage: () => Promise<void>;
+  };
+
+  let { onDetectScriptLanguage }: Props = $props();
+
   let displayHeaders = $derived.by(() => {
     const scriptPreview = tsvConfigStore.scriptPreview;
     if (!scriptPreview || !scriptPreview.headers) return [];
@@ -25,6 +31,14 @@
     { value: -1, name: t('components.tsvConfigSection.none') },
     ...columnOptions,
   ]);
+
+  async function handleTextColumnChange(e: Event) {
+    tsvConfigStore.updateConfig(
+      'textColumnIndex',
+      parseInt((e.currentTarget as HTMLSelectElement).value)
+    );
+    await onDetectScriptLanguage();
+  }
 </script>
 
 {#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
@@ -55,8 +69,7 @@
         <Select
           id="textColumn"
           value={tsvConfigStore.tsvConfig.textColumnIndex}
-          onchange={(e) =>
-            tsvConfigStore.updateConfig('textColumnIndex', parseInt(e.currentTarget.value))}
+          onchange={handleTextColumnChange}
           items={columnOptions}
         />
       </div>

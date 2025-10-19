@@ -5,6 +5,7 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
+  import { detectScriptLanguage } from '$lib/application/usecases/detectScriptLanguage';
   import {
     cancelTtsModelDownload,
     downloadTtsModel,
@@ -57,6 +58,16 @@
   }
 
   // === Add episode ===
+
+  // Route wrapper for detection usecase (components must call through the route)
+  async function handleDetectScriptLanguage(): Promise<void> {
+    try {
+      await detectScriptLanguage();
+    } catch (e) {
+      error(`Failed to detect script language: ${e}`);
+      return;
+    }
+  }
 
   async function handleEpisodeAddSubmit() {
     const episodeGroupId = data.episodeGroup?.id;
@@ -224,6 +235,7 @@
   onYoutubeUrlChanged={fetchYoutubeMetadata}
   onSubmit={handleEpisodeAddSubmit}
   onTtsEnabled={fetchTtsVoices}
+  onDetectScriptLanguage={handleDetectScriptLanguage}
 />
 
 <EpisodeMoveModal

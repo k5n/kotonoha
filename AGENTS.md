@@ -65,12 +65,13 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/stores/episodeAddStore/episodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts
+- src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/domain/entities/tsvConfig.ts
+- src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts -> src/lib/utils/language.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts -> src/lib/domain/entities/scriptPreview.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts -> src/lib/domain/entities/voice.ts
-- src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts -> src/lib/utils/language.ts
 - src/lib/application/stores/episodeAddStore/ttsDownloadStore.svelte.ts -> src/lib/domain/entities/ttsEvent.ts
 - src/lib/application/stores/episodeAddStore/ttsExecutionStore.svelte.ts -> src/lib/domain/entities/ttsEvent.ts
 - src/lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte.ts -> src/lib/domain/entities/youtubeMetadata.ts
@@ -109,6 +110,13 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/deleteGroupRecursive.ts -> src/lib/domain/services/groupTreeHelper.ts
 - src/lib/application/usecases/deleteGroupRecursive.ts -> src/lib/infrastructure/repositories/episodeGroupRepository.ts
 - src/lib/application/usecases/deleteGroupRecursive.ts -> src/lib/infrastructure/repositories/episodeRepository.ts
+- src/lib/application/usecases/detectScriptLanguage.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts
+- src/lib/application/usecases/detectScriptLanguage.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts
+- src/lib/application/usecases/detectScriptLanguage.ts -> src/lib/domain/services/extractScriptText.ts
+- src/lib/application/usecases/detectScriptLanguage.ts -> src/lib/infrastructure/repositories/fileRepository.ts
+- src/lib/application/usecases/detectScriptLanguage.ts -> src/lib/infrastructure/repositories/languageDetectionRepository.ts
+- src/lib/application/usecases/detectScriptLanguage.ts -> src/lib/infrastructure/repositories/settingsRepository.ts
+- src/lib/application/usecases/detectScriptLanguage.ts -> src/lib/utils/language.ts
 - src/lib/application/usecases/downloadTtsModel.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts
 - src/lib/application/usecases/downloadTtsModel.ts -> src/lib/application/stores/episodeAddStore/ttsDownloadStore.svelte.ts
 - src/lib/application/usecases/downloadTtsModel.ts -> src/lib/domain/entities/voice.ts
@@ -117,8 +125,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/executeTts.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts
 - src/lib/application/usecases/executeTts.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts
 - src/lib/application/usecases/executeTts.ts -> src/lib/application/stores/episodeAddStore/ttsExecutionStore.svelte.ts
-- src/lib/application/usecases/executeTts.ts -> src/lib/domain/entities/tsvConfig.ts
-- src/lib/application/usecases/executeTts.ts -> src/lib/domain/services/parseScriptToDialogues.ts
+- src/lib/application/usecases/executeTts.ts -> src/lib/domain/services/extractScriptText.ts
 - src/lib/application/usecases/executeTts.ts -> src/lib/infrastructure/repositories/fileRepository.ts
 - src/lib/application/usecases/executeTts.ts -> src/lib/infrastructure/repositories/ttsRepository.ts
 - src/lib/application/usecases/fetchAppInfo.ts -> src/lib/domain/entities/appInfo.ts
@@ -146,12 +153,8 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/fetchSettings.ts -> src/lib/infrastructure/repositories/apiKeyRepository.ts
 - src/lib/application/usecases/fetchSettings.ts -> src/lib/infrastructure/repositories/settingsRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte.ts
-- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte.ts
-- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/domain/entities/tsvConfig.ts
+- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/application/usecases/detectScriptLanguage.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/domain/entities/voice.ts
-- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/domain/services/parseScriptToDialogues.ts
-- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/fileRepository.ts
-- src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/languageDetectionRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/settingsRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/infrastructure/repositories/ttsRepository.ts
 - src/lib/application/usecases/fetchTtsVoices.ts -> src/lib/utils/language.ts
@@ -194,6 +197,9 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/application/usecases/updateEpisodesOrder.ts -> src/lib/infrastructure/repositories/episodeRepository.ts
 - src/lib/domain/entities/sentenceAnalysisResult.ts -> src/lib/domain/entities/sentenceCard.ts
 - src/lib/domain/services/buildEpisodeGroupTree.ts -> src/lib/domain/entities/episodeGroup.ts
+- src/lib/domain/services/extractScriptText.ts -> src/lib/domain/entities/tsvConfig.ts
+- src/lib/domain/services/extractScriptText.ts -> src/lib/domain/services/parseScriptToDialogues.ts
+- src/lib/domain/services/extractScriptText.ts -> src/lib/domain/services/parseTsvToText.ts
 - src/lib/domain/services/groupTreeHelper.ts -> src/lib/domain/entities/episodeGroup.ts
 - src/lib/domain/services/parseScriptPreview.ts -> src/lib/domain/entities/scriptPreview.ts
 - src/lib/domain/services/parseScriptToDialogues.ts -> src/lib/domain/entities/dialogue.ts
@@ -206,6 +212,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/domain/services/parseSswtToDialogues.ts -> src/lib/domain/entities/dialogue.ts
 - src/lib/domain/services/parseTsvToDialogues.ts -> src/lib/domain/entities/dialogue.ts
 - src/lib/domain/services/parseTsvToDialogues.ts -> src/lib/domain/entities/tsvConfig.ts
+- src/lib/domain/services/parseTsvToText.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/domain/services/parseVttToDialogues.ts -> src/lib/domain/entities/dialogue.ts
 - src/lib/infrastructure/repositories/appInfoRepository.ts -> src/lib/domain/entities/appInfo.ts
 - src/lib/infrastructure/repositories/audioRepository.ts -> src/lib/domain/entities/audioInfo.ts
@@ -248,6 +255,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/presentation/components/FileEpisodeForm.svelte -> src/lib/presentation/components/FileSelect.svelte
 - src/lib/presentation/components/FileEpisodeForm.svelte -> src/lib/presentation/components/TsvConfigSection.svelte
 - src/lib/presentation/components/FileEpisodeForm.svelte -> src/lib/presentation/components/TtsConfigSection.svelte
+- src/lib/presentation/components/FileEpisodeForm.svelte -> src/lib/utils/language.ts
 - src/lib/presentation/components/FileSelect.svelte -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/presentation/components/GroupAddModal.svelte -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/presentation/components/GroupAddModal.svelte -> src/lib/domain/entities/episodeGroup.ts
@@ -270,7 +278,6 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/lib/presentation/components/TsvConfigSection.svelte -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/presentation/components/TtsConfigSection.svelte -> src/lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte.ts
 - src/lib/presentation/components/TtsConfigSection.svelte -> src/lib/application/stores/i18n.svelte.ts
-- src/lib/presentation/components/TtsConfigSection.svelte -> src/lib/utils/language.ts
 - src/lib/presentation/components/TtsExecutionModal.svelte -> src/lib/application/stores/episodeAddStore/ttsExecutionStore.svelte.ts
 - src/lib/presentation/components/TtsExecutionModal.svelte -> src/lib/application/stores/i18n.svelte.ts
 - src/lib/presentation/components/TtsModelDownloadModal.svelte -> src/lib/application/stores/episodeAddStore/ttsDownloadStore.svelte.ts
@@ -301,6 +308,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/stores/i18n.svelte.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/addNewEpisode.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/deleteEpisode.ts
+- src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/detectScriptLanguage.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/downloadTtsModel.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/executeTts.ts
 - src/routes/episode-list/[groupId]/+page.svelte -> src/lib/application/usecases/fetchAvailableTargetGroupsForEpisodeMove.ts

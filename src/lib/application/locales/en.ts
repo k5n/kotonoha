@@ -254,13 +254,18 @@ export const en = {
         titlePlaceholder: "Episode's title",
         audioFileLabel: 'Audio File',
         scriptFileLabel: 'Subtitle File (*.srt, *.vtt, *.sswt, *.tsv, *.txt)',
+        learningLanguageLabel: 'Learning Target Language',
         generateAudioLabel: 'Generate audio using Text-to-Speech (TTS)',
         errorTitleRequired: 'Please enter a title.',
         errorAudioRequired:
           'Please select an audio file or check the option to generate audio using TTS.',
         errorScriptFileRequired: 'Please select a script file.',
+        errorDetectLanguage: 'Failed to auto-detect language.',
         errorTsvParse: 'Failed to parse TSV file.',
         errorTsvColumnRequired: 'Please select the start time and text columns.',
+        noLanguageDetected: 'No language detected.',
+        languageNotTargeted:
+          'The language was detected as {{language}}, but it is not included in the learning target languages.',
       },
       youtubeEpisodeForm: {
         youtubeUrlLabel: 'YouTube URL',
@@ -295,10 +300,7 @@ export const en = {
         speakerLabel: 'Speaker',
         playSample: 'Play Sample',
         stopSample: 'Stop',
-        languageNotInTargets:
-          'Language was detected as {{detectedLanguage}}, but it is not included in the learning target languages.',
-        languageNotSupported:
-          'Language was detected as {{detectedLanguage}}, but it is not supported by TTS.',
+        languageNotSupported: 'The selected language is not supported by TTS.',
         failedToLoad: 'Failed to load TTS voices.',
         noVoices: 'No available TTS voices.',
         playbackError: 'Playback Error',

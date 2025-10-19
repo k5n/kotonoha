@@ -1,25 +1,14 @@
 <script lang="ts">
   import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Label, Select } from 'flowbite-svelte';
 
   let audioElement = $state<HTMLAudioElement | null>(null);
   let isPlayingSample = $state(false);
 
-  const languageOptions = $derived(
-    ttsConfigStore.learningTargetVoices
-      ?.map((voice) => voice.language)
-      .filter((lang, index, self) => self.findIndex((l) => l.family === lang.family) === index)
-      .map((lang) => ({
-        value: lang.family,
-        name: `${t(bcp47ToTranslationKey(lang.family)!)} (${bcp47ToLanguageName(lang.family)})`,
-      })) || []
-  );
-
   const selectedLanguageVoices = $derived(
     ttsConfigStore.learningTargetVoices?.filter(
-      (voice) => voice.language.family === ttsConfigStore.selectedLanguage
+      (voice) => voice.language.family === ttsConfigStore.language
     ) || []
   );
 
@@ -97,11 +86,7 @@
   }
 
   // NOTE: Flowbite Svelte's Select component supports two-way binding only. So we create proxies here.
-  type SelectableKeys =
-    | 'selectedLanguage'
-    | 'selectedQuality'
-    | 'selectedVoiceName'
-    | 'selectedSpeakerId';
+  type SelectableKeys = 'selectedQuality' | 'selectedVoiceName' | 'selectedSpeakerId';
 
   function createSelectionProxy<K extends SelectableKeys>(key: K) {
     type ValueType = (typeof ttsConfigStore)[K];
@@ -117,7 +102,6 @@
     };
   }
 
-  const language = createSelectionProxy('selectedLanguage');
   const quality = createSelectionProxy('selectedQuality');
   const voiceName = createSelectionProxy('selectedVoiceName');
   const speakerId = createSelectionProxy('selectedSpeakerId');
@@ -135,21 +119,7 @@
     <div class="text-sm text-red-600">
       {ttsConfigStore.errorMessage}
     </div>
-  {:else if (ttsConfigStore.learningTargetVoices || []).length > 0}
-    {#if ttsConfigStore.warningMessage}
-      <div class="text-sm text-yellow-600">
-        {ttsConfigStore.warningMessage}
-      </div>
-    {/if}
-
-    <!-- Language Selection -->
-    <div>
-      <Label class="mb-2 block" for="tts-language">
-        {t('components.ttsConfigSection.languageLabel')}
-      </Label>
-      <Select id="tts-language" items={languageOptions} bind:value={language.value} />
-    </div>
-
+  {:else if ttsConfigStore.language}
     <!-- Quality Selection -->
     {#if qualityOptions.length > 0}
       <div>

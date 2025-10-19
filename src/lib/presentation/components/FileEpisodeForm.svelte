@@ -5,15 +5,17 @@
   import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
   import TtsConfigSection from '$lib/presentation/components/TtsConfigSection.svelte';
-  import { Button, Checkbox, Input, Label } from 'flowbite-svelte';
+  import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
+  import { Button, Checkbox, Input, Label, Select } from 'flowbite-svelte';
 
   type Props = {
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onSubmit: () => Promise<void>;
     onTtsEnabled: () => Promise<void>;
+    onDetectScriptLanguage: () => Promise<void>;
   };
 
-  let { onTsvFileSelected, onSubmit, onTtsEnabled }: Props = $props();
+  let { onTsvFileSelected, onSubmit, onTtsEnabled, onDetectScriptLanguage }: Props = $props();
 
   let disabled = $derived(
     episodeAddStore.isSubmitting ||
@@ -35,21 +37,31 @@
     hasOnlyScriptFile &&
       (extension !== 'tsv' || fileEpisodeAddStore.tsv.tsvConfig.textColumnIndex >= 0)
   );
+  let learningTargetLanguageOptions = $derived(
+    fileEpisodeAddStore.learningTargetLanguages.map((lang) => ({
+      value: lang,
+      name: `${t(bcp47ToTranslationKey(lang)!)} (${bcp47ToLanguageName(lang)})`,
+    })) || []
+  );
 
   async function handleScriptFileChange(filePath: string | null) {
     fileEpisodeAddStore.scriptFilePath = filePath;
     if (filePath && filePath.toLowerCase().endsWith('.tsv')) {
+      await handleTtsCheckboxChange(false);
       await onTsvFileSelected(filePath);
     } else if (filePath && filePath.toLowerCase().endsWith('.txt')) {
       // immediate behavior: .txt files imply TTS generation
-      handleTtsCheckboxChange(true);
+      await handleTtsCheckboxChange(true);
+    } else {
+      await handleTtsCheckboxChange(false);
+      await onDetectScriptLanguage();
     }
   }
 
-  function handleTtsCheckboxChange(checked: boolean) {
+  async function handleTtsCheckboxChange(checked: boolean) {
     fileEpisodeAddStore.shouldGenerateAudio = checked;
     if (checked) {
-      onTtsEnabled();
+      await onTtsEnabled();
     }
   }
 
@@ -59,7 +71,7 @@
     }
   }
 
-  // Local validation moved from the store. Writes errors back into the store's errorMessage
+  // Local validation moved from the store. Writes errors back into the store's errorMessageKey
   function validateLocal(): boolean {
     const titleValue = (fileEpisodeAddStore.title || '').trim();
     const audioFilePathValue = fileEpisodeAddStore.audioFilePath;
@@ -86,7 +98,6 @@
       }
     }
 
-    // clear error (store's errorMessage remains authoritative for resets)
     fileEpisodeAddStore.errorMessage = '';
     return true;
   }
@@ -136,7 +147,25 @@
 </div>
 
 {#if fileEpisodeAddStore.tsv.scriptPreview}
-  <TsvConfigSection />
+  <TsvConfigSection {onDetectScriptLanguage} />
+{/if}
+
+{#if learningTargetLanguageOptions.length > 0}
+  <div class="mb-4">
+    <Label class="mb-2 block" for="learningLanguage">
+      {t('components.fileEpisodeForm.learningLanguageLabel')}
+    </Label>
+    {#if fileEpisodeAddStore.languageDetectionWarningMessage}
+      <div class="mb-2 text-sm text-yellow-600">
+        {fileEpisodeAddStore.languageDetectionWarningMessage}
+      </div>
+    {/if}
+    <Select
+      id="learningLanguage"
+      bind:value={fileEpisodeAddStore.selectedStudyLanguage}
+      items={learningTargetLanguageOptions}
+    ></Select>
+  </div>
 {/if}
 
 {#if shouldShowTtsSection}
