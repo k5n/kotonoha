@@ -12,10 +12,8 @@ export type FileEpisodeAddPayload = {
   readonly title: string;
   readonly audioFilePath: string;
   readonly scriptFilePath: string;
+  readonly learningLanguage: string;
   readonly tsvConfig?: TsvConfig;
-  readonly ttsLanguage?: string;
-  readonly ttsVoiceName?: string;
-  readonly ttsQuality?: string;
 };
 
 let title = $state('');
@@ -56,7 +54,7 @@ function failedLanguageDetection(errorKey: string, supportedLanguages: readonly 
 }
 
 function buildPayload(): FileEpisodeAddPayload | null {
-  if (!title.trim() || !audioFilePath || !scriptFilePath) {
+  if (!title.trim() || !audioFilePath || !scriptFilePath || !selectedStudyLanguage) {
     return null;
   }
 
@@ -77,18 +75,9 @@ function buildPayload(): FileEpisodeAddPayload | null {
     title: title.trim(),
     audioFilePath: audioFilePath,
     scriptFilePath: scriptFilePath,
+    learningLanguage: selectedStudyLanguage,
     tsvConfig: finalTsvConfig,
   };
-
-  // Add TTS configuration if audio generation is enabled
-  if (shouldGenerateAudio) {
-    return {
-      ...payload,
-      ttsLanguage: ttsConfigStore.selectedLanguage,
-      ttsVoiceName: ttsConfigStore.selectedVoiceName || undefined,
-      ttsQuality: ttsConfigStore.selectedQuality,
-    };
-  }
 
   return payload;
 }

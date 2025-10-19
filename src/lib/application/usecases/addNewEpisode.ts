@@ -21,6 +21,7 @@ interface AddNewEpisodeFromFilesParams {
   title: string;
   mediaFilePath: string;
   scriptFilePath: string;
+  learningLanguage: string;
   tsvConfig?: TsvConfig;
 }
 
@@ -68,6 +69,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
     title,
     mediaFilePath: audioFilePath,
     scriptFilePath,
+    learningLanguage,
     tsvConfig,
   } = params;
   const { audioFilename, scriptFilename, uuid } = await generateUniqueEpisodeFilenames(
@@ -82,7 +84,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
       displayOrder,
       title,
       mediaPath,
-      learningLanguage: 'English',
+      learningLanguage,
       explanationLanguage: 'Japanese',
     });
     try {
@@ -198,6 +200,7 @@ export async function addNewEpisode(
         title: payload.title,
         mediaFilePath: payload.audioFilePath,
         scriptFilePath: payload.scriptFilePath,
+        learningLanguage: payload.learningLanguage,
         tsvConfig: payload.tsvConfig,
       });
     } else if (payload.source === 'youtube') {
