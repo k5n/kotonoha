@@ -300,10 +300,7 @@ export const ja = {
         speakerLabel: '話者',
         playSample: 'サンプル再生',
         stopSample: '停止',
-        languageNotInTargets:
-          '言語は{{detectedLanguage}}と判定されましたが、学習対象言語に含まれていません。',
-        languageNotSupported:
-          '言語は{{detectedLanguage}}と判定されましたが、TTSではサポートされていません。',
+        languageNotSupported: '選択された言語はTTSではサポートされていません。',
         failedToLoad: 'TTS音声の読み込みに失敗しました。',
         noVoices: '利用可能なTTS音声がありません。',
         playbackError: '再生エラー',

@@ -1,6 +1,5 @@
 import { t } from '$lib/application/stores/i18n.svelte';
 import type { DefaultVoices, Speaker, Voice } from '$lib/domain/entities/voice';
-import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
 
 let fetchedParams = $state({
   allVoices: null as readonly Voice[] | null,
@@ -8,17 +7,14 @@ let fetchedParams = $state({
   defaultVoices: {} as DefaultVoices,
   isFetchingVoices: false,
 });
-let selectedLanguage = $state('en');
+let language = $state<string | null>(null);
 let selectedQuality = $state('');
 let selectedVoiceName = $state('');
 let selectedSpeakerId = $state(0);
 let errorMessage = $state('');
-let warningMessage = $state('');
 
 const selectedLanguageVoices = $derived(
-  fetchedParams.learningTargetVoices?.filter(
-    (voice) => voice.language.family === selectedLanguage
-  ) || []
+  fetchedParams.learningTargetVoices?.filter((voice) => voice.language.family === language) || []
 );
 
 const availableQualities = $derived(
@@ -79,11 +75,11 @@ function chooseVoiceAndSpeaker(
 
 /**
  * Select default voice configuration based on language and available voices
- * @param language BCP-47 language primary code
+ * @param lang BCP-47 language primary code
  * @returns VoiceConfig or null if no suitable default found
  */
-function selectDefaultVoiceConfig(language: string): VoiceConfig | null {
-  const defaultForLang = fetchedParams.defaultVoices[language];
+function selectDefaultVoiceConfig(lang: string): VoiceConfig | null {
+  const defaultForLang = fetchedParams.defaultVoices[lang];
 
   if (!defaultForLang || !availableQualities.includes(defaultForLang.quality)) {
     return null;
@@ -91,7 +87,7 @@ function selectDefaultVoiceConfig(language: string): VoiceConfig | null {
 
   const voices = fetchedParams.learningTargetVoices || [];
   const qualityVoices = voices.filter(
-    (v) => v.language.family === language && v.quality === defaultForLang.quality
+    (v) => v.language.family === lang && v.quality === defaultForLang.quality
   );
 
   const { voiceName, speakerId } = chooseVoiceAndSpeaker(
@@ -111,19 +107,6 @@ function applyVoiceConfig(config: VoiceConfig) {
   selectedQuality = config.quality;
   selectedVoiceName = config.voiceName;
   setSelectedSpeakerId(config.speakerId);
-}
-
-function setSelectedLanguage(language: string) {
-  selectedLanguage = language;
-
-  const config = selectDefaultVoiceConfig(language);
-
-  if (config) {
-    applyVoiceConfig(config);
-  } else {
-    // デフォルト設定がない場合は、最初の品質でsetSelectedQualityを呼ぶ
-    setSelectedQuality(availableQualities[0] || '');
-  }
 }
 
 function setSelectedQuality(quality: string) {
@@ -148,6 +131,36 @@ function setSelectedSpeakerId(id: number) {
   selectedSpeakerId = id;
 }
 
+function setLanguage(newLanguage: string | null) {
+  errorMessage = '';
+
+  if (!newLanguage) {
+    language = null;
+    return;
+  }
+
+  const allTtsVoices = fetchedParams.allVoices;
+  if (!allTtsVoices) {
+    // Voice data not loaded yet, do nothing.
+    // The language will be validated once data is available.
+    return;
+  }
+
+  const supportedLangs = allTtsVoices.map((v) => v.language.family);
+  if (supportedLangs.includes(newLanguage)) {
+    language = newLanguage;
+    const config = selectDefaultVoiceConfig(newLanguage);
+    if (config) {
+      applyVoiceConfig(config);
+    } else {
+      setSelectedQuality(availableQualities[0] || '');
+    }
+  } else {
+    language = null;
+    errorMessage = t('components.ttsConfigSection.languageNotSupported');
+  }
+}
+
 function resetFetchedParams() {
   fetchedParams = {
     allVoices: null,
@@ -170,11 +183,8 @@ export const ttsConfigStore = {
     return fetchedParams.isFetchingVoices;
   },
 
-  get selectedLanguage() {
-    return selectedLanguage;
-  },
-  set selectedLanguage(language: string) {
-    setSelectedLanguage(language);
+  get language() {
+    return language;
   },
 
   get selectedVoiceName() {
@@ -210,32 +220,21 @@ export const ttsConfigStore = {
     return errorMessage;
   },
 
-  get warningMessage() {
-    return warningMessage;
-  },
-
   startVoicesFetching() {
     fetchedParams.isFetchingVoices = true;
     errorMessage = '';
-    warningMessage = '';
   },
 
-  completeVoicesFetching({
+  setVoiceData({
     allVoices,
     learningTargetVoices,
     defaultVoices,
-    detectedLanguage,
   }: {
     allVoices: readonly Voice[];
     learningTargetVoices: readonly Voice[];
     defaultVoices: DefaultVoices;
-    detectedLanguage: string | null;
   }) {
-    // Check if detected language exists in learning target voices
-    const availableLanguages = allVoices.map((voice) => voice.language.family);
-    const learningTargetLanguages = learningTargetVoices.map((voice) => voice.language.family);
-    const fallbackLanguage = learningTargetVoices[0]?.language.family;
-    if (fallbackLanguage === undefined) {
+    if (learningTargetVoices.length === 0) {
       errorMessage = t('components.ttsConfigSection.noVoices');
       resetFetchedParams();
       return;
@@ -247,47 +246,21 @@ export const ttsConfigStore = {
       defaultVoices,
       isFetchingVoices: false,
     };
-
-    if (!detectedLanguage) {
-      setSelectedLanguage(fallbackLanguage);
-      return;
-    }
-
-    if (learningTargetLanguages.includes(detectedLanguage)) {
-      setSelectedLanguage(detectedLanguage);
-      return;
-    }
-
-    setSelectedLanguage(fallbackLanguage);
-    const translationKey = bcp47ToTranslationKey(detectedLanguage);
-    const detectedLanguageName = translationKey
-      ? t(translationKey)
-      : bcp47ToLanguageName(detectedLanguage) || detectedLanguage;
-
-    if (availableLanguages.includes(detectedLanguage)) {
-      warningMessage = t('components.ttsConfigSection.languageNotInTargets', {
-        detectedLanguage: detectedLanguageName,
-      });
-    } else {
-      setSelectedLanguage(fallbackLanguage);
-      warningMessage = t('components.ttsConfigSection.languageNotSupported', {
-        detectedLanguage: detectedLanguageName,
-      });
-    }
   },
 
-  failedVoicesFetching(errorMessageKey: string) {
+  setError(errorMessageKey: string) {
     errorMessage = t(errorMessageKey);
     resetFetchedParams();
   },
 
+  setLanguage,
+
   reset() {
     resetFetchedParams();
-    selectedLanguage = 'en';
+    language = null;
     selectedVoiceName = '';
     selectedQuality = '';
     selectedSpeakerId = 0;
     errorMessage = '';
-    warningMessage = '';
   },
 };

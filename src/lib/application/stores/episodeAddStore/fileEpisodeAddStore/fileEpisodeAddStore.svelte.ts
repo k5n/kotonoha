@@ -30,16 +30,20 @@ function completeLanguageDetection(
   detectedLanguageCode: string | null,
   supportedLanguages: readonly string[]
 ) {
+  if (supportedLanguages.length === 0) {
+    throw new Error('supportedLanguages must contain at least one language');
+  }
+
   detectedLanguage = detectedLanguageCode;
   learningTargetLanguages = supportedLanguages;
   if (detectedLanguageCode === null) {
-    selectedStudyLanguage = supportedLanguages.length > 0 ? supportedLanguages[0] : null;
+    setSelectedStudyLanguage(supportedLanguages[0]);
     languageDetectionWarningMessage = t('components.fileEpisodeForm.noLanguageDetected');
   } else if (supportedLanguages.includes(detectedLanguageCode)) {
-    selectedStudyLanguage = detectedLanguageCode;
+    setSelectedStudyLanguage(detectedLanguageCode);
     languageDetectionWarningMessage = '';
   } else {
-    selectedStudyLanguage = supportedLanguages.length > 0 ? supportedLanguages[0] : null;
+    setSelectedStudyLanguage(supportedLanguages[0]);
     languageDetectionWarningMessage = t('components.fileEpisodeForm.languageNotTargeted', {
       language: t(bcp47ToTranslationKey(detectedLanguageCode) || detectedLanguageCode),
     });
@@ -80,6 +84,11 @@ function buildPayload(): FileEpisodeAddPayload | null {
   };
 
   return payload;
+}
+
+function setSelectedStudyLanguage(language: string | null) {
+  selectedStudyLanguage = language;
+  ttsConfigStore.setLanguage(language);
 }
 
 function reset() {
@@ -127,7 +136,7 @@ export const fileEpisodeAddStore = {
     return selectedStudyLanguage;
   },
   set selectedStudyLanguage(value: string | null) {
-    selectedStudyLanguage = value;
+    setSelectedStudyLanguage(value);
   },
 
   get shouldGenerateAudio() {

@@ -29,7 +29,7 @@ export async function fetchTtsVoices(): Promise<void> {
     console.warn('TTS voices are already being fetched. Skipping duplicate request.');
     return;
   }
-  if (fileEpisodeAddStore.tts.learningTargetVoices) {
+  if (fileEpisodeAddStore.tts.allVoices) {
     console.log('TTS voices are already fetched. Skipping.');
     return;
   }
@@ -60,18 +60,21 @@ export async function fetchTtsVoices(): Promise<void> {
           )
         : filteredVoices;
 
-    fileEpisodeAddStore.tts.completeVoicesFetching({
+    fileEpisodeAddStore.tts.setVoiceData({
       allVoices: filteredVoices,
       learningTargetVoices: learningTargetVoices,
-      detectedLanguage: fileEpisodeAddStore.detectedLanguage,
       defaultVoices,
     });
+
+    // Trigger validation for the currently selected language
+    fileEpisodeAddStore.tts.setLanguage(fileEpisodeAddStore.selectedStudyLanguage);
+
     info(
       `Fetched ${filteredVoices.length} TTS voices, ${learningTargetVoices.length} match voices for learning target languages.`
     );
   } catch (err) {
     error(`Failed to fetch TTS voices: ${err}`);
-    fileEpisodeAddStore.tts.failedVoicesFetching('components.ttsConfigSection.failedToLoad');
+    fileEpisodeAddStore.tts.setError('components.ttsConfigSection.failedToLoad');
   }
   console.timeEnd('fetchTtsVoices');
 }

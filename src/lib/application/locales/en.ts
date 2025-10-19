@@ -300,10 +300,7 @@ export const en = {
         speakerLabel: 'Speaker',
         playSample: 'Play Sample',
         stopSample: 'Stop',
-        languageNotInTargets:
-          'Language was detected as {{detectedLanguage}}, but it is not included in the learning target languages.',
-        languageNotSupported:
-          'Language was detected as {{detectedLanguage}}, but it is not supported by TTS.',
+        languageNotSupported: 'The selected language is not supported by TTS.',
         failedToLoad: 'Failed to load TTS voices.',
         noVoices: 'No available TTS voices.',
         playbackError: 'Playback Error',

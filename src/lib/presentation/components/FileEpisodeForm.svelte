@@ -47,11 +47,13 @@
   async function handleScriptFileChange(filePath: string | null) {
     fileEpisodeAddStore.scriptFilePath = filePath;
     if (filePath && filePath.toLowerCase().endsWith('.tsv')) {
+      await handleTtsCheckboxChange(false);
       await onTsvFileSelected(filePath);
     } else if (filePath && filePath.toLowerCase().endsWith('.txt')) {
       // immediate behavior: .txt files imply TTS generation
       await handleTtsCheckboxChange(true);
     } else {
+      await handleTtsCheckboxChange(false);
       await onDetectScriptLanguage();
     }
   }
