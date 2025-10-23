@@ -1,7 +1,6 @@
 import { env } from '$env/dynamic/public';
 import { en } from '$lib/application/locales/en';
 import { ja } from '$lib/application/locales/ja';
-import { info } from '@tauri-apps/plugin-log';
 import i18next, { type TFunction } from 'i18next';
 
 let store = $state(i18next.t);
@@ -13,7 +12,7 @@ function isDebugMode(): boolean {
 
 export const i18nStore = {
   init(language: string) {
-    info('Initializing i18next ...');
+    console.info('Initializing i18next ...');
     i18next
       .init({
         lng: language,
@@ -25,16 +24,16 @@ export const i18nStore = {
         },
       })
       .then((t) => {
-        info('i18next initialized');
+        console.info('i18next initialized');
         store = t;
       });
   },
 
   changeLanguage(lang: string) {
-    info(`Changing language to ${lang}`);
+    console.info(`Changing language to ${lang}`);
     i18next.changeLanguage(lang).then((t) => {
       store = t;
-      info(`Language changed to ${lang}`);
+      console.info(`Language changed to ${lang}`);
     });
   },
 };

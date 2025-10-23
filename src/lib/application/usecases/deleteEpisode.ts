@@ -2,7 +2,6 @@ import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRep
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenceCardRepository';
-import { error } from '@tauri-apps/plugin-log';
 
 /**
  * エピソードを、関連するファイルやデータと共に削除します。
@@ -19,7 +18,7 @@ export async function deleteEpisode(episode: {
     if (uuid) {
       await fileRepository.deleteEpisodeData(uuid);
     } else {
-      error(
+      console.error(
         `Could not determine UUID for episode (id=${episode.id}: ${episode.title}) from path ${episode.mediaPath}`
       );
     }
@@ -30,7 +29,7 @@ export async function deleteEpisode(episode: {
     await dialogueRepository.deleteByEpisodeId(episode.id);
     await episodeRepository.deleteEpisode(episode.id);
   } catch (e) {
-    error(`Failed to delete episode ${episode.id}: ${e}`);
+    console.error(`Failed to delete episode ${episode.id}: ${e}`);
     throw e; // or handle error as needed
   }
 }

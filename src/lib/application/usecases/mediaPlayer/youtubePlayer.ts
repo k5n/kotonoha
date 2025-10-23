@@ -2,7 +2,6 @@
 import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelte';
 import type { MediaPlayer } from '$lib/application/usecases/mediaPlayer/mediaPlayer';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
-import { error, info } from '@tauri-apps/plugin-log';
 
 export const PLAYER_DIV_ID = 'youtube-player-div';
 
@@ -58,7 +57,7 @@ export class YoutubePlayer implements MediaPlayer {
 
   async listen(): Promise<() => void> {
     if (!this.videoId) {
-      error('No video ID provided to create YouTube player.');
+      console.error('No video ID provided to create YouTube player.');
       return () => {};
     }
 
@@ -76,7 +75,7 @@ export class YoutubePlayer implements MediaPlayer {
       events: {
         onReady: () => {
           mediaPlayerStore.isReady = true;
-          info('YouTube Player is ready.');
+          console.info('YouTube Player is ready.');
         },
         onStateChange: (event) => this.onPlayerStateChange(event),
       },

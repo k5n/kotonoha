@@ -5,7 +5,6 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import * as fs from '@tauri-apps/plugin-fs';
 import { fetch } from '@tauri-apps/plugin-http';
-import { error } from '@tauri-apps/plugin-log';
 
 /**
  * The result of a TTS operation.
@@ -206,12 +205,12 @@ export const ttsRepository = {
         newPathBaseDir: fs.BaseDirectory.AppLocalData,
       });
     } catch (err) {
-      error(`Error downloading model file (${fileInfo.url}): ${err}`);
+      console.error(`Error downloading model file (${fileInfo.url}): ${err}`);
       // Clean up temporary file on failure
       try {
         await fs.remove(tempPath, { baseDir: fs.BaseDirectory.AppLocalData });
       } catch (_removeError) {
-        error(`Failed to remove temp file: ${tempPath}`);
+        console.error(`Failed to remove temp file: ${tempPath}`);
         // Ignore cleanup errors
       }
       throw err;

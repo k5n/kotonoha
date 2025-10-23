@@ -3,7 +3,6 @@ import type { Voice } from '$lib/domain/entities/voice';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import { getSupportedLanguages } from '$lib/utils/language';
-import { error, info } from '@tauri-apps/plugin-log';
 import { detectScriptLanguage } from './detectScriptLanguage';
 
 async function getAvailableVoices(): Promise<readonly Voice[]> {
@@ -24,7 +23,7 @@ async function getAvailableVoices(): Promise<readonly Voice[]> {
  * and updates the episode add store with the results.
  */
 export async function fetchTtsVoices(): Promise<void> {
-  info('Fetching TTS voices...');
+  console.info('Fetching TTS voices...');
   if (fileEpisodeAddStore.tts.isFetchingVoices) {
     console.warn('TTS voices are already being fetched. Skipping duplicate request.');
     return;
@@ -69,11 +68,11 @@ export async function fetchTtsVoices(): Promise<void> {
     // Trigger validation for the currently selected language
     fileEpisodeAddStore.tts.setLanguage(fileEpisodeAddStore.selectedStudyLanguage);
 
-    info(
+    console.info(
       `Fetched ${filteredVoices.length} TTS voices, ${learningTargetVoices.length} match voices for learning target languages.`
     );
   } catch (err) {
-    error(`Failed to fetch TTS voices: ${err}`);
+    console.error(`Failed to fetch TTS voices: ${err}`);
     fileEpisodeAddStore.tts.setError('components.ttsConfigSection.failedToLoad');
   }
   console.timeEnd('fetchTtsVoices');
