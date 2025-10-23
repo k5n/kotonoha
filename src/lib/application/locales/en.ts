@@ -163,6 +163,11 @@ export const en = {
         add: 'Add Language',
         modalTitle: 'Select Learning Target Languages',
       },
+      explanationLanguages: {
+        label: 'Explanation Languages',
+        none: 'No explanation languages selected.',
+        add: 'Add Explanation Language',
+      },
     },
     groupPage: {
       title: 'Group List',

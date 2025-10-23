@@ -9,10 +9,12 @@ export const settingsRepository = {
     const store = await load(SETTINGS_FILENAME, { autoSave: false });
     const language = await store.get<string>('language');
     const learningTargetLanguages = await store.get<string[]>('learningTargetLanguages');
+    const explanationLanguages = await store.get<string[]>('explanationLanguages');
 
     return {
       language: language ?? DEFAULT_LANGUAGE,
       learningTargetLanguages: learningTargetLanguages ?? [],
+      explanationLanguages: explanationLanguages ?? [],
     };
   },
 
@@ -20,6 +22,7 @@ export const settingsRepository = {
     const store = await load(SETTINGS_FILENAME, { autoSave: false });
     await store.set('language', settings.language);
     await store.set('learningTargetLanguages', settings.learningTargetLanguages);
+    await store.set('explanationLanguages', settings.explanationLanguages);
     await store.save();
   },
 };

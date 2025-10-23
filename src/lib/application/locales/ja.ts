@@ -164,6 +164,11 @@ export const ja = {
         add: '言語を追加',
         modalTitle: '学習対象言語を選択',
       },
+      explanationLanguages: {
+        label: '説明言語',
+        none: '説明言語が選択されていません。',
+        add: '説明言語を追加',
+      },
     },
     groupPage: {
       title: 'グループ一覧',

@@ -16,9 +16,11 @@
   let successMessage = $state('');
   let isSaving = $state(false);
   let showLanguageModal = $state(false);
+  let showExplanationLanguageModal = $state(false);
 
   let language = $state(data.settings?.language ?? 'en');
   let learningTargetLanguages = $state(data.settings?.learningTargetLanguages ?? []);
+  let explanationLanguages = $state(data.settings?.explanationLanguages ?? []);
 
   let appInfo = $derived(data.appInfo);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
@@ -51,6 +53,20 @@
     learningTargetLanguages = learningTargetLanguages.filter((lang) => lang !== code);
   }
 
+  function handleExplanationLanguageSelection(code: string, checked: boolean) {
+    if (checked) {
+      if (!explanationLanguages.includes(code)) {
+        explanationLanguages = [...explanationLanguages, code];
+      }
+    } else {
+      explanationLanguages = explanationLanguages.filter((lang) => lang !== code);
+    }
+  }
+
+  function removeExplanationLanguage(code: string) {
+    explanationLanguages = explanationLanguages.filter((lang) => lang !== code);
+  }
+
   async function handleSave() {
     if (!data.settings) {
       errorMessage = t('settings.notifications.loadError');
@@ -64,6 +80,7 @@
         ...data.settings,
         language,
         learningTargetLanguages,
+        explanationLanguages,
       };
       await saveSettings(newSettings, geminiApiKeyInput, youtubeApiKeyInput);
       geminiApiKeyInput = '';
@@ -164,6 +181,30 @@
       </Button>
     </div>
 
+    <div class="mt-6">
+      <Label class="mb-2">{t('settings.explanationLanguages.label')}</Label>
+      <div class="mb-2 flex flex-wrap gap-2">
+        {#if explanationLanguages.length > 0}
+          {#each explanationLanguages as langCode (langCode)}
+            <Badge large color="indigo" class="flex items-center gap-1 p-2">
+              {bcp47ToLanguageName(langCode) ?? langCode}
+              <button
+                onclick={() => removeExplanationLanguage(langCode)}
+                class="hover:text-gray-400"
+              >
+                <CloseCircleSolid class="h-4 w-4" />
+              </button>
+            </Badge>
+          {/each}
+        {:else}
+          <p class="text-sm text-gray-500">{t('settings.explanationLanguages.none')}</p>
+        {/if}
+      </div>
+      <Button size="sm" color="light" onclick={() => (showExplanationLanguageModal = true)}>
+        {t('settings.explanationLanguages.add')}
+      </Button>
+    </div>
+
     <div class="mt-6 pt-6">
       <Button onclick={handleSave} disabled={isSaving}>
         {#if isSaving}
@@ -212,4 +253,11 @@
   selectedLanguages={learningTargetLanguages}
   onSelect={handleLanguageSelection}
   onClose={() => (showLanguageModal = false)}
+/>
+
+<LanguageSelectionModal
+  show={showExplanationLanguageModal}
+  selectedLanguages={explanationLanguages}
+  onSelect={handleExplanationLanguageSelection}
+  onClose={() => (showExplanationLanguageModal = false)}
 />
