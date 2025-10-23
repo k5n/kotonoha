@@ -186,7 +186,7 @@
       <div class="mb-2 flex flex-wrap gap-2">
         {#if explanationLanguages.length > 0}
           {#each explanationLanguages as langCode (langCode)}
-            <Badge large color="teal" class="flex items-center gap-1 p-2">
+            <Badge large color="indigo" class="flex items-center gap-1 p-2">
               {bcp47ToLanguageName(langCode) ?? langCode}
               <button
                 onclick={() => removeExplanationLanguage(langCode)}
