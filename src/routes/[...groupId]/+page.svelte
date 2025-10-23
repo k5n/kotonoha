@@ -15,7 +15,6 @@
   import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
   import GroupMoveModal from '$lib/presentation/components/GroupMoveModal.svelte';
   import GroupNameEditModal from '$lib/presentation/components/GroupNameEditModal.svelte';
-  import { error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { CogOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
@@ -62,7 +61,7 @@
       await updateEpisodeGroupsOrder(items);
       await invalidateAll();
     } catch (err) {
-      error(`Failed to update group order: ${err}`);
+      console.error(`Failed to update group order: ${err}`);
       errorMessage = err instanceof Error ? err.message : t('groupPage.errors.updateOrder');
     }
   }
@@ -86,7 +85,7 @@
       await invalidateAll();
       showGroupAdd = false;
     } catch (err) {
-      error(`Failed to add group: ${err}`);
+      console.error(`Failed to add group: ${err}`);
     } finally {
       isSubmitting = false;
     }
@@ -111,7 +110,7 @@
       showGroupNameEdit = false;
       editingGroup = null;
     } catch (err) {
-      error(`Failed to update group: ${err}`);
+      console.error(`Failed to update group: ${err}`);
       errorMessage = err instanceof Error ? err.message : t('groupPage.errors.updateName');
     } finally {
       isSubmitting = false;
@@ -126,7 +125,7 @@
       availableParentGroupsTree = await fetchAvailableParentGroups(group);
       showGroupMove = true;
     } catch (err) {
-      error(`Failed to fetch available parent groups: ${err}`);
+      console.error(`Failed to fetch available parent groups: ${err}`);
       errorMessage = err instanceof Error ? err.message : t('groupPage.errors.fetchParents');
     }
   }
@@ -142,7 +141,7 @@
       });
       await invalidateAll();
     } catch (err) {
-      error(`Failed to move group: ${err}`);
+      console.error(`Failed to move group: ${err}`);
       errorMessage = err instanceof Error ? err.message : t('groupPage.errors.moveGroup');
     } finally {
       showGroupMove = false;
@@ -166,7 +165,7 @@
       await deleteGroupRecursive(editingGroup);
       await invalidateAll(); // Refresh data
     } catch (err) {
-      error(`Failed to delete group: ${err}`);
+      console.error(`Failed to delete group: ${err}`);
       errorMessage = err instanceof Error ? err.message : t('groupPage.errors.deleteGroup');
     } finally {
       showConfirm = false;
