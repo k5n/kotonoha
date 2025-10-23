@@ -1,7 +1,6 @@
 import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { error } from '@tauri-apps/plugin-log';
 
 /**
  * Tauriのaudioコマンドを呼び出すためのリポジトリ
@@ -61,7 +60,7 @@ export const audioRepository = {
     const positionMsInt = Math.round(positionMs);
 
     if (isNaN(positionMsInt)) {
-      error('audioRepository.seek: positionMs is NaN');
+      console.error('audioRepository.seek: positionMs is NaN');
       return;
     }
 

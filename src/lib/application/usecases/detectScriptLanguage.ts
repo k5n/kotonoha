@@ -5,7 +5,6 @@ import { fileRepository } from '$lib/infrastructure/repositories/fileRepository'
 import { languageDetectionRepository } from '$lib/infrastructure/repositories/languageDetectionRepository';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 import { getSupportedLanguages } from '$lib/utils/language';
-import { error, info } from '@tauri-apps/plugin-log';
 
 const MAX_TEXT_LENGTH = 1000;
 
@@ -18,7 +17,7 @@ async function populateLearningTargetLanguages(): Promise<readonly string[]> {
       return getSupportedLanguages().map((l) => l.code);
     }
   } catch (e) {
-    error(`Failed to load settings for learning target languages: ${e}`);
+    console.error(`Failed to load settings for learning target languages: ${e}`);
     return getSupportedLanguages().map((l) => l.code);
   }
 }
@@ -29,7 +28,7 @@ async function populateLearningTargetLanguages(): Promise<readonly string[]> {
  * `fileEpisodeAddStore.learningTargetLanguages` from settings (or fallback).
  */
 export async function detectScriptLanguage(): Promise<void> {
-  info('Detecting script language...');
+  console.info('Detecting script language...');
   // Even if the detection fails, we want to set the learning target language list, so get it first
   const supportedLanguages = await populateLearningTargetLanguages();
 
@@ -49,10 +48,10 @@ export async function detectScriptLanguage(): Promise<void> {
     const truncated = text.substring(0, MAX_TEXT_LENGTH);
 
     const detected = await languageDetectionRepository.detectLanguage(truncated);
-    info(`Detected language: ${detected}`);
+    console.info(`Detected language: ${detected}`);
     fileEpisodeAddStore.completeLanguageDetection(detected, supportedLanguages);
   } catch (err) {
-    error(`Language detection failed: ${err}`);
+    console.error(`Language detection failed: ${err}`);
     fileEpisodeAddStore.failedLanguageDetection(
       'components.fileEpisodeForm.errorDetectLanguage',
       supportedLanguages

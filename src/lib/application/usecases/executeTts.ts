@@ -5,7 +5,6 @@ import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import type { UnlistenFn } from '@tauri-apps/api/event';
-import { error, info } from '@tauri-apps/plugin-log';
 import { tsvConfigStore } from '../stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
 
 /**
@@ -35,24 +34,26 @@ export async function executeTts(): Promise<void> {
 
     // Open the modal and start execution
     ttsExecutionStore.openModal();
-    info(`Starting TTS execution with voice: ${selectedVoice.name}, speaker: ${selectedSpeakerId}`);
+    console.info(
+      `Starting TTS execution with voice: ${selectedVoice.name}, speaker: ${selectedSpeakerId}`
+    );
 
     // Set up progress event listener
     progressUnlisten = await ttsRepository.listenTtsProgress((payload) => {
-      info(`TTS progress: ${payload.progress}% - ${payload.text}`);
+      console.info(`TTS progress: ${payload.progress}% - ${payload.text}`);
       ttsExecutionStore.updateProgress(payload);
     });
 
     // Start the TTS process and wait for completion
     const ttsResult = await ttsRepository.start(scriptContent, selectedVoice, selectedSpeakerId);
-    info(
+    console.info(
       `TTS completed successfully. Audio: ${ttsResult.audioPath}, Script: ${ttsResult.scriptPath}`
     );
     fileEpisodeAddStore.audioFilePath = ttsResult.audioPath;
     fileEpisodeAddStore.scriptFilePath = ttsResult.scriptPath;
     ttsExecutionStore.completeExecution();
   } catch (err) {
-    error(`Failed to execute TTS: ${err}`);
+    console.error(`Failed to execute TTS: ${err}`);
     if (!ttsExecutionStore.isCancelled) {
       ttsExecutionStore.failedExecution('components.ttsExecutionModal.error.failedToExecute');
     }
@@ -64,7 +65,7 @@ export async function executeTts(): Promise<void> {
 }
 
 export async function cancelTtsExecution(): Promise<void> {
-  info('TTS execution cancelled by user.');
+  console.info('TTS execution cancelled by user.');
   await ttsRepository.cancel();
   ttsExecutionStore.cancelExecution();
 }

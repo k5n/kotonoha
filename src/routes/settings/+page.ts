@@ -1,6 +1,5 @@
 import { fetchAppInfo } from '$lib/application/usecases/fetchAppInfo';
 import { fetchSettings } from '$lib/application/usecases/fetchSettings';
-import { error } from '@tauri-apps/plugin-log';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async () => {
@@ -15,7 +14,7 @@ export const load: PageLoad = async () => {
       errorKey: null,
     };
   } catch (e) {
-    error(`Failed to load API Key: ${e}`);
+    console.error(`Failed to load API Key: ${e}`);
     return {
       isGeminiApiKeySet: false,
       isYoutubeApiKeySet: false,

@@ -2,7 +2,6 @@ import { type AtomicDialogue } from '$lib/domain/entities/dialogue';
 import { type YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
-import { error } from '@tauri-apps/plugin-log';
 
 type YoutubeOEmbedData = {
   readonly title?: string;
@@ -36,13 +35,13 @@ async function getDefaultSubtitleLanguage(
   const url = `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${apiKey}`;
   const res = await fetch(url);
   if (!res.ok) {
-    error(`Failed to fetch captions: ${res.status}`);
+    console.error(`Failed to fetch captions: ${res.status}`);
     throw new Error(`Failed to fetch captions: ${res.status}`);
   }
 
   const data = await res.json();
   if (!data.items || data.items.length === 0) {
-    error(`No captions found for this video: ${videoId}`);
+    console.error(`No captions found for this video: ${videoId}`);
     throw new Error(`No captions found for this video: ${videoId}`);
   }
 
@@ -83,7 +82,7 @@ export const youtubeRepository = {
       });
       return result;
     } catch (err) {
-      error(`Failed to fetch subtitles: ${err}`);
+      console.error(`Failed to fetch subtitles: ${err}`);
       throw new Error(`Failed to fetch subtitles: ${err}`);
     }
   },

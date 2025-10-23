@@ -3,7 +3,6 @@ import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/
 import { extractYoutubeVideoId, isValidYoutubeUrl } from '$lib/domain/services/youtubeUrlValidator';
 import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
-import { error } from '@tauri-apps/plugin-log';
 
 async function ensureApiKey(): Promise<string | null> {
   const apiKey = apiKeyStore.youtube.value;
@@ -43,7 +42,7 @@ export async function fetchYoutubeMetadata(url: string): Promise<void> {
 
     const videoId = extractYoutubeVideoId(url);
     if (videoId === null) {
-      error(`Failed to get videoId: ${url}`);
+      console.error(`Failed to get videoId: ${url}`);
       youtubeEpisodeAddStore.failedMetadataFetching(
         'components.youtubeEpisodeForm.errorInvalidUrl'
       );
@@ -53,7 +52,7 @@ export async function fetchYoutubeMetadata(url: string): Promise<void> {
     const metadata = await youtubeRepository.fetchYoutubeMetadata(youtubeDataApiKey, videoId);
     youtubeEpisodeAddStore.completeMetadataFetching(metadata);
   } catch (err) {
-    error(`Failed to fetch YouTube metadata: ${err}`);
+    console.error(`Failed to fetch YouTube metadata: ${err}`);
     youtubeEpisodeAddStore.failedMetadataFetching('components.youtubeEpisodeForm.errorFetchFailed');
   }
 }

@@ -433,8 +433,8 @@ Work rules for tasks
 
 Additional Coding rules
 
-- Use Tauri's `log` plugin for logging output.
-  - In TypeScript use: `import { info, warn, error } from '@tauri-apps/plugin-log';`.
+- Use console for logging output in frontend code.
+  - In TypeScript, use console.log, console.info, console.warn, console.error.
   - In `src/lib/domain/services/*.ts` files, avoid logging so unit tests under Vitest remain clean.
   - In Rust code, use: `use log::{info, warn, error};`.
 

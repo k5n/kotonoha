@@ -1,5 +1,4 @@
 import { fetchEpisodeGroups } from '$lib/application/usecases/fetchEpisodeGroups';
-import { error } from '@tauri-apps/plugin-log';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
@@ -13,7 +12,7 @@ export const load: PageLoad = async ({ params }) => {
     const groups = await fetchEpisodeGroups(parentId);
     return { groups, errorKey: null };
   } catch (e) {
-    error(`Failed to fetch episode groups: ${e}`);
+    console.error(`Failed to fetch episode groups: ${e}`);
     return { groups: [], errorKey: 'groupPage.errors.fetchGroups' };
   }
 };

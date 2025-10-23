@@ -10,7 +10,6 @@ import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepos
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
 import { bcp47ToLanguageName } from '$lib/utils/language';
-import { error, info, warn } from '@tauri-apps/plugin-log';
 
 /**
  * ファイルから新しいエピソードを追加するためのパラメータ
@@ -46,7 +45,9 @@ async function generateUniqueEpisodeFilenames(
     audioFilename = audio;
     scriptFilename = script;
     uuid = generatedUuid;
-    info(`Generated filenames: audio=${audioFilename}, script=${scriptFilename}, uuid=${uuid}`);
+    console.info(
+      `Generated filenames: audio=${audioFilename}, script=${scriptFilename}, uuid=${uuid}`
+    );
     attempts++;
     if (attempts > maxAttempts) {
       throw new Error('Failed to generate a unique UUID. Please try again later.');
@@ -62,7 +63,7 @@ async function generateUniqueEpisodeFilenames(
  * @throws エピソードの追加に失敗した場合にエラーをスローする
  */
 async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Promise<void> {
-  info(`Adding new episode with params: ${JSON.stringify(params)}`);
+  console.info(`Adding new episode with params: ${JSON.stringify(params)}`);
   const {
     episodeGroupId,
     displayOrder,
@@ -99,7 +100,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
       const warnings = result.warnings;
 
       for (const warning of warnings) {
-        warn(`Script parsing warning for episode ${episode.id}: ${warning}`);
+        console.warn(`Script parsing warning for episode ${episode.id}: ${warning}`);
       }
 
       // NOTE: 本当はトランザクションでepisodeと一緒に入れるべきだけど・・・。実装の楽さを優先した。
@@ -109,7 +110,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
       throw err;
     }
   } catch (err) {
-    error(`Failed to add new episode: ${err instanceof Error ? err.stack : err}`);
+    console.error(`Failed to add new episode: ${err instanceof Error ? err.stack : err}`);
     await fileRepository.deleteEpisodeData(uuid);
     throw new Error('Failed to add new episode.');
   }
@@ -122,7 +123,7 @@ interface AddNewYoutubeEpisodeParams {
 }
 
 async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<void> {
-  info(`Adding new YouTube episode with params: ${JSON.stringify(params)}`);
+  console.info(`Adding new YouTube episode with params: ${JSON.stringify(params)}`);
   const { episodeGroupId, displayOrder, youtubeMetadata } = params;
   const { title, embedUrl, language, trackKind } = youtubeMetadata;
 
@@ -180,11 +181,11 @@ export async function addNewEpisode(
   episodeGroupId: number,
   existingEpisodes: readonly Episode[]
 ): Promise<void> {
-  info(`Adding episode from store for group ${episodeGroupId}`);
+  console.info(`Adding episode from store for group ${episodeGroupId}`);
 
   const payload = episodeAddStore.buildPayload();
   if (!payload) {
-    error('No valid payload to submit');
+    console.error('No valid payload to submit');
     throw new Error('Invalid form data');
   }
 
@@ -214,9 +215,9 @@ export async function addNewEpisode(
     }
 
     episodeAddStore.close();
-    info(`Successfully added episode for group ${episodeGroupId}`);
+    console.info(`Successfully added episode for group ${episodeGroupId}`);
   } catch (err) {
-    error(`Failed to add episode from store: ${err}`);
+    console.error(`Failed to add episode from store: ${err}`);
     episodeAddStore.close();
     throw err;
   }
