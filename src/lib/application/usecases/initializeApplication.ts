@@ -6,24 +6,19 @@ let initialized = false;
 
 function forwardConsole(
   consoleMethodName: 'log' | 'debug' | 'info' | 'warn' | 'error',
-  logFunction: (message: string) => Promise<void>,
-  outputOriginal: boolean
+  logFunction: (message: string) => Promise<void>
 ) {
-  const originalLogFunction = console[consoleMethodName];
   console[consoleMethodName] = (message) => {
-    if (outputOriginal) {
-      originalLogFunction(message);
-    }
     logFunction(message);
   };
 }
 
 function setupConsoleForwarding() {
-  forwardConsole('log', trace, true);
-  forwardConsole('debug', debug, true);
-  forwardConsole('info', info, true);
-  forwardConsole('warn', warn, true);
-  forwardConsole('error', error, true);
+  forwardConsole('log', trace);
+  forwardConsole('debug', debug);
+  forwardConsole('info', info);
+  forwardConsole('warn', warn);
+  forwardConsole('error', error);
 }
 
 async function setupI18nStore() {
@@ -36,8 +31,15 @@ export async function initializeApplication(): Promise<void> {
     return;
   }
 
-  info('Initializing application...');
-  setupConsoleForwarding();
+  const isBrowserMode = import.meta.env.VITE_RUN_MODE === 'browser';
+
+  if (isBrowserMode) {
+    console.info('Initializing application...');
+  } else {
+    info('Initializing application...');
+    setupConsoleForwarding();
+  }
+
   await setupI18nStore();
   console.info('Application initialized.');
 
