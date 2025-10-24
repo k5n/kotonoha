@@ -21,6 +21,8 @@ const audioState: AudioState = {
 
 const downloadProgressListeners: ((event: { payload: DownloadProgress }) => void)[] = [];
 
+const downloadStates: Map<string, { timerId: number | null; cancelled: boolean }> = new Map();
+
 export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   switch (cmd) {
     case 'get_stronghold_password':
@@ -110,38 +112,58 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
       // Mock: always return null for language detection in browser mode
       return Promise.resolve(null as T);
     case 'download_file_with_progress': {
-      const {
-        url: _url,
-        filePath,
-        downloadId,
-      } = args as { url: string; filePath: string; downloadId: string };
-      if (downloadProgressListeners.length === 0) {
-        throw new Error('No listeners for download_progress');
-      }
-      const totalBytes = 10 * 1024 * 1024; // 10MB
-      let progress = 0;
-      const interval = 200; // 200ms
-      const steps = 25; // 5秒 / 200ms = 25
-      let step = 0;
-      const timerId = window.setInterval(() => {
-        step++;
-        progress = Math.min(100, (step / steps) * 100);
-        const downloaded = Math.floor((progress / 100) * totalBytes);
-        downloadProgressListeners.forEach((listener) =>
-          listener({
-            payload: { downloadId, fileName: filePath, progress, downloaded, total: totalBytes },
-          })
-        );
-        if (step >= steps) {
-          clearInterval(timerId);
-          // Mark file as existing in virtual FS
-          writeFile(filePath, new Uint8Array(), { baseDir: BaseDirectory.AppLocalData });
+      return new Promise<T>((resolve, reject) => {
+        const {
+          url: _url,
+          filePath,
+          downloadId,
+        } = args as { url: string; filePath: string; downloadId: string };
+        if (downloadProgressListeners.length === 0) {
+          reject(new Error('No listeners for download_progress'));
+          return;
         }
-      }, interval);
-      return Promise.resolve(null as T);
+        const totalBytes = 10 * 1024 * 1024; // 10MB
+        let progress = 0;
+        const interval = 200; // 200ms
+        const steps = 25; // 5秒 / 200ms = 25
+        let step = 0;
+        const timerId = window.setInterval(() => {
+          const state = downloadStates.get(downloadId);
+          if (state?.cancelled) {
+            reject('Download cancelled');
+            clearInterval(timerId);
+            downloadStates.delete(downloadId);
+            return;
+          }
+          step++;
+          progress = Math.min(100, (step / steps) * 100);
+          const downloaded = Math.floor((progress / 100) * totalBytes);
+          downloadProgressListeners.forEach((listener) =>
+            listener({
+              payload: { downloadId, fileName: filePath, progress, downloaded, total: totalBytes },
+            })
+          );
+          if (step >= steps) {
+            clearInterval(timerId);
+            downloadStates.delete(downloadId);
+            // Mark file as existing in virtual FS
+            writeFile(filePath, new Uint8Array(), { baseDir: BaseDirectory.AppLocalData });
+            resolve(null as T);
+          }
+        }, interval);
+        downloadStates.set(downloadId, { timerId, cancelled: false });
+      });
     }
     case 'cancel_download': {
-      // No-op in mock
+      const { downloadId } = args as { downloadId: string };
+      const state = downloadStates.get(downloadId);
+      if (state) {
+        state.cancelled = true;
+        if (state.timerId !== null) {
+          clearInterval(state.timerId);
+        }
+        // Note: reject is handled in the timer callback
+      }
       return Promise.resolve(null as T);
     }
     default:
