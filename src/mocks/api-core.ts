@@ -1,7 +1,7 @@
 // Mock implementation of @tauri-apps/api/core for browser mode
 
 import { type DownloadProgress } from '$lib/domain/entities/ttsEvent';
-import { BaseDirectory, getKey } from './plugin-fs';
+import { BaseDirectory, writeFile } from './plugin-fs';
 
 interface AudioState {
   isPlaying: boolean;
@@ -135,8 +135,7 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
         if (step >= steps) {
           clearInterval(timerId);
           // Mark file as existing in virtual FS
-          const key = getKey(BaseDirectory.AppLocalData, filePath);
-          localStorage.setItem(key, 'file');
+          writeFile(filePath, new Uint8Array(), { baseDir: BaseDirectory.AppLocalData });
         }
       }, interval);
       return Promise.resolve(null as T);

@@ -1,52 +1,70 @@
 // Mock implementation of @tauri-apps/plugin-fs for browser mode
-// Simulates file system operations using localStorage as a virtual file system
+// Simulates file system operations using an in-memory tree structure
+
+type FsNode = { type: 'file' } | { type: 'dir'; children: Map<string, FsNode> };
 
 export enum BaseDirectory {
   AppLocalData = 'AppLocalData',
-  // Add other directories if needed in the future
 }
 
-const FS_PREFIX = 'plugin-fs:';
+const fsRoots = new Map<BaseDirectory, FsNode>();
 
-// Simple virtual file system using localStorage
-// Keys are prefixed with FS_PREFIX + baseDir + path
-// Values are 'file' for files, or JSON string for directories (object with sub-items)
-
-function getKey(baseDir: BaseDirectory, path: string): string {
-  return `${FS_PREFIX}${baseDir}:${path}`;
-}
-
-export { getKey };
-
-function isDirectory(value: string | null): boolean {
-  if (!value) return false;
-  try {
-    const parsed = JSON.parse(value);
-    return typeof parsed === 'object' && parsed !== null;
-  } catch {
-    return false;
+function getRoot(baseDir: BaseDirectory): FsNode {
+  let root = fsRoots.get(baseDir);
+  if (!root) {
+    root = { type: 'dir', children: new Map() };
+    fsRoots.set(baseDir, root);
   }
+  return root;
 }
 
-function getDirectoryContents(
+function resolvePath(
   baseDir: BaseDirectory,
   path: string
-): Record<string, unknown> | null {
-  const key = getKey(baseDir, path);
-  const value = localStorage.getItem(key);
-  if (!value || !isDirectory(value)) return null;
-  return JSON.parse(value);
+): { node: FsNode | null; parent: Map<string, FsNode> | null; name: string | null } {
+  const parts = path.split('/').filter((p) => p.length > 0);
+  for (const part of parts) {
+    if (part === '.' || part === '..') {
+      throw new Error(`Path contains invalid component '${part}': ${path}`);
+    }
+  }
+  let current: FsNode = getRoot(baseDir);
+  let parent: Map<string, FsNode> | null = null;
+  let name: string | null = null;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (current.type !== 'dir') {
+      return { node: null, parent: null, name: null };
+    }
+    parent = current.children;
+    name = part;
+    const next = current.children.get(part);
+    if (!next) {
+      return { node: null, parent, name };
+    }
+    current = next;
+  }
+  return { node: current, parent, name };
 }
 
-function removePath(baseDir: BaseDirectory, path: string): void {
-  const key = getKey(baseDir, path);
-  localStorage.removeItem(key);
-}
+function createDirectories(baseDir: BaseDirectory, path: string): void {
+  const parts = path.split('/').filter((p) => p.length > 0);
+  let current: FsNode = getRoot(baseDir);
 
-function listSubPaths(baseDir: BaseDirectory, path: string): string[] {
-  const contents = getDirectoryContents(baseDir, path);
-  if (!contents) return [];
-  return Object.keys(contents);
+  for (const part of parts) {
+    if (current.type !== 'dir') {
+      throw new Error(`Path is not a directory: ${path} (at '${part}')`);
+    }
+    let child = current.children.get(part);
+    if (!child) {
+      child = { type: 'dir', children: new Map() };
+      current.children.set(part, child);
+    } else if (child.type !== 'dir') {
+      throw new Error(`Path already exists as a file: ${path} (at '${part}')`);
+    }
+    current = child;
+  }
 }
 
 export async function exists(
@@ -54,8 +72,8 @@ export async function exists(
   options?: { baseDir?: BaseDirectory }
 ): Promise<boolean> {
   const baseDir = options?.baseDir ?? BaseDirectory.AppLocalData;
-  const key = getKey(baseDir, path);
-  return localStorage.getItem(key) !== null;
+  const { node } = resolvePath(baseDir, path);
+  return node !== null;
 }
 
 export async function remove(
@@ -64,32 +82,14 @@ export async function remove(
 ): Promise<void> {
   const baseDir = options?.baseDir ?? BaseDirectory.AppLocalData;
   const recursive = options?.recursive ?? false;
-
-  if (!(await exists(path, { baseDir }))) {
+  const { node, parent, name } = resolvePath(baseDir, path);
+  if (!node || !parent || !name) {
     throw new Error(`Path does not exist: ${path}`);
   }
-
-  const key = getKey(baseDir, path);
-  const value = localStorage.getItem(key);
-
-  if (isDirectory(value)) {
-    if (recursive) {
-      // Remove all sub-items recursively
-      const subPaths = listSubPaths(baseDir, path);
-      for (const subPath of subPaths) {
-        const fullSubPath = path.endsWith('/') ? `${path}${subPath}` : `${path}/${subPath}`;
-        await remove(fullSubPath, { baseDir, recursive: true });
-      }
-    } else {
-      // Check if directory is empty
-      const contents = getDirectoryContents(baseDir, path);
-      if (contents && Object.keys(contents).length > 0) {
-        throw new Error(`Directory is not empty: ${path}`);
-      }
-    }
+  if (node.type === 'dir' && node.children.size > 0 && !recursive) {
+    throw new Error(`Directory is not empty: ${path}`);
   }
-
-  removePath(baseDir, path);
+  parent.delete(name);
 }
 
 export async function rename(
@@ -101,27 +101,66 @@ export async function rename(
   }
 ): Promise<void> {
   const oldBaseDir = options?.oldPathBaseDir ?? BaseDirectory.AppLocalData;
-  const newBaseDir = options?.newPathBaseDir ?? BaseDirectory.AppLocalData;
-
-  if (!(await exists(oldPath, { baseDir: oldBaseDir }))) {
+  const newBaseDir = options?.newPathBaseDir ?? oldBaseDir;
+  const { node: oldNode, parent: oldParent, name: oldName } = resolvePath(oldBaseDir, oldPath);
+  if (!oldNode || !oldParent || !oldName) {
     throw new Error(`Old path does not exist: ${oldPath}`);
   }
-
-  if (await exists(newPath, { baseDir: newBaseDir })) {
+  if (oldBaseDir === newBaseDir && oldPath === newPath) {
+    return; // no-op
+  }
+  const { node: newNode } = resolvePath(newBaseDir, newPath);
+  if (newNode) {
     throw new Error(`New path already exists: ${newPath}`);
   }
+  // Create directories for new path
+  const newParts = newPath.split('/').filter((p) => p.length > 0);
+  const newDirPath = newParts.slice(0, -1).join('/');
+  if (newDirPath) {
+    createDirectories(newBaseDir, newDirPath);
+  }
+  const { parent: newParent, name: newName } = resolvePath(newBaseDir, newPath);
+  if (!newParent || !newName) {
+    throw new Error(`Invalid new path: ${newPath}`);
+  }
+  oldParent.delete(oldName);
+  newParent.set(newName, oldNode);
+}
 
-  // Get the value from old path
-  const oldKey = getKey(oldBaseDir, oldPath);
-  const value = localStorage.getItem(oldKey);
+function __mockCreateFile(path: string, options?: { baseDir?: BaseDirectory }): void {
+  const baseDir = options?.baseDir ?? BaseDirectory.AppLocalData;
+  const parts = path.split('/').filter((p) => p.length > 0);
+  const dirPath = parts.slice(0, -1).join('/');
+  if (dirPath) {
+    createDirectories(baseDir, dirPath);
+  }
+  const { node, parent, name } = resolvePath(baseDir, path);
+  if (node && node.type === 'dir') {
+    throw new Error(`Path is a directory: ${path}`);
+  }
+  if (!parent || !name) {
+    throw new Error(`Invalid path: ${path}`);
+  }
+  parent.set(name, { type: 'file' });
+}
 
-  // Set to new path
-  const newKey = getKey(newBaseDir, newPath);
-  localStorage.setItem(newKey, value!);
+export async function writeTextFile(
+  path: string,
+  contents: string,
+  options?: { baseDir?: BaseDirectory }
+): Promise<void> {
+  __mockCreateFile(path, options);
+}
 
-  // Remove old path
-  localStorage.removeItem(oldKey);
+export async function writeFile(
+  path: string,
+  contents: Uint8Array,
+  options?: { baseDir?: BaseDirectory }
+): Promise<void> {
+  __mockCreateFile(path, options);
+}
 
-  // If it's a directory, update parent references if needed
-  // For simplicity, assume paths are absolute and no parent updates needed
+// For testing purposes: reset the entire mock file system
+export function __reset(): void {
+  fsRoots.clear();
 }
