@@ -206,7 +206,7 @@ async function generateDependencyGraph() {
   let files = await glob('**/*.{ts,svelte.ts,svelte}', {
     cwd: srcDir,
     absolute: true,
-    ignore: ['**/*.test.ts'],
+    ignore: ['**/*.test.ts', 'mocks/**'],
   });
   // Additional filter for safety
   files = files.filter((file) => !file.endsWith('.test.ts'));

@@ -207,6 +207,31 @@ For a more detailed explanation of the architecture, please refer to [`doc/archi
    npm run tauri dev
    ```
 
+### Browser development (mocked Tauri APIs)
+
+You can run the frontend in a regular web browser without launching the Tauri runtime by using the repository's "browser-mode" which replaces many Tauri imports with local mock implementations. This is useful for fast UI development and component work when native Tauri features are not required.
+
+- Why use it:
+  - Faster iteration when you only work on the UI or Svelte components.
+  - No Rust/Tauri toolchain required for basic frontend development.
+- How it works:
+  - The Vite configuration enables an alias map when `VITE_RUN_MODE=browser` is set. The aliases replace Tauri and Tauri-plugin imports with mock modules under `src/mocks`.
+  - A convenience npm script is provided:
+    ```bash
+    npm run dev:browser
+    ```
+- Where the mocks live:
+  - Mock implementations are in `src/mocks/` (for example, `src/mocks/plugin-store.ts`, `src/mocks/plugin-stronghold.ts`, ...).
+  - The alias mapping that activates the mocks is in `vite.config.js`.
+- Limitations:
+  - Browser-mode stubs many native features; expect differences or missing functionality for native integrations.
+  - Use browser-mode mainly for UI and component work. For integration testing or features that depend on native behavior, run the full Tauri dev environment:
+    ```bash
+    npm run dev
+    ```
+
+If the UI needs additional mocked behavior, extend the modules under `src/mocks/` to match the API surface required by the frontend.
+
 ### Available Scripts
 
 - `npm run dev`: Starts the development server.

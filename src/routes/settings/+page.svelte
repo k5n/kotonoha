@@ -4,7 +4,6 @@
   import { saveSettings } from '$lib/application/usecases/saveSettings';
   import LanguageSelectionModal from '$lib/presentation/components/LanguageSelectionModal.svelte';
   import { bcp47ToLanguageName } from '$lib/utils/language';
-  import { error } from '@tauri-apps/plugin-log';
   import { Alert, Badge, Button, Input, Label, Select, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, CloseCircleSolid } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
@@ -29,7 +28,7 @@
     if (history.length > 1) {
       history.back();
     } else {
-      error('Cannot go back, navigate to the top page');
+      console.error('Cannot go back, navigate to the top page');
       window.location.href = '/';
     }
   }
@@ -89,7 +88,7 @@
       invalidateAll(); // Invalidate all data to refresh settings
     } catch (e) {
       errorMessage = t('settings.notifications.saveError');
-      error(`Failed to save settings: ${e}`);
+      console.error(`Failed to save settings: ${e}`);
     } finally {
       isSaving = false;
     }

@@ -28,7 +28,6 @@
   import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
   import TtsExecutionModal from '$lib/presentation/components/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '$lib/presentation/components/TtsModelDownloadModal.svelte';
-  import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ExclamationCircleOutline, FileOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
@@ -51,7 +50,6 @@
   }
 
   function handleBreadcrumbClick(targetIndex: number | null) {
-    debug(`Breadcrumb clicked: targetIndex=${targetIndex}`);
     if (groupPathStore.popTo(targetIndex)) {
       goto(groupPathStore.url);
     }
@@ -64,7 +62,7 @@
     try {
       await detectScriptLanguage();
     } catch (e) {
-      error(`Failed to detect script language: ${e}`);
+      console.error(`Failed to detect script language: ${e}`);
       return;
     }
   }
@@ -72,17 +70,17 @@
   async function handleEpisodeAddSubmit() {
     const episodeGroupId = data.episodeGroup?.id;
     if (!episodeGroupId) {
-      error('No group ID found, cannot add episode (this should not happen)');
+      console.error('No group ID found, cannot add episode (this should not happen)');
       return;
     }
 
     if (episodeAddStore.isTtsRequired()) {
-      debug('TTS is required for the new episode');
+      console.info('TTS is required for the new episode');
       try {
         await downloadTtsModel();
         await executeTts();
       } catch (e) {
-        error(`Failed during TTS preparation: ${e}`);
+        console.error(`Failed during TTS preparation: ${e}`);
         return;
       }
     }
@@ -91,7 +89,7 @@
       await addNewEpisode(episodeGroupId, episodes);
       await invalidateAll();
     } catch (e) {
-      error(`Failed to add new episode: ${e}`);
+      console.error(`Failed to add new episode: ${e}`);
       errorMessage = t('episodeListPage.errors.addEpisode');
     }
   }
@@ -106,7 +104,7 @@
       targetEpisode = episode;
       showEpisodeMove = true;
     } catch (e) {
-      error(`Failed to fetch album groups: ${e}`);
+      console.error(`Failed to fetch album groups: ${e}`);
       errorMessage = t('episodeListPage.errors.fetchAlbumGroups');
     }
   }
@@ -118,7 +116,7 @@
       await moveEpisode(targetEpisode.id, targetGroupId);
       await invalidateAll();
     } catch (e) {
-      error(`Failed to move episode: ${e}`);
+      console.error(`Failed to move episode: ${e}`);
       errorMessage = t('episodeListPage.errors.moveEpisode');
     } finally {
       showEpisodeMove = false;
@@ -141,7 +139,7 @@
       await deleteEpisode(targetEpisode);
       await invalidateAll();
     } catch (e) {
-      error(`Failed to delete episode: ${e}`);
+      console.error(`Failed to delete episode: ${e}`);
       errorMessage = t('episodeListPage.errors.deleteEpisode');
     } finally {
       showDeleteConfirm = false;
@@ -164,7 +162,7 @@
       await updateEpisodeName(targetEpisode.id, newName);
       await invalidateAll();
     } catch (e) {
-      error(`Failed to update episode name: ${e}`);
+      console.error(`Failed to update episode name: ${e}`);
       errorMessage = t('episodeListPage.errors.updateName');
     } finally {
       showEpisodeNameEdit = false;

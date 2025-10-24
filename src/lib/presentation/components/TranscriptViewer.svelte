@@ -50,7 +50,7 @@
   let editingOriginalText = $state('');
 
   let containerEl: HTMLElement | undefined = $state();
-  let itemEls: (HTMLElement | null)[] = [];
+  let itemEls: (HTMLElement | null)[] = $state([]);
 
   // currentTimeが変更されたら、activeIndexとpreviousActiveIndexを更新し、該当要素までスクロールする$effect
   $effect(() => {

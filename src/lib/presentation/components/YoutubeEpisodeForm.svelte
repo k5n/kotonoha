@@ -123,7 +123,7 @@
     disabled={episodeAddStore.isSubmitting || youtubeEpisodeAddStore.isMetadataFetching}
     onclick={episodeAddStore.close}
   >
-    {t('components.episodeAddModal.cancel')}
+    {t('common.cancel')}
   </Button>
   <Button
     onclick={handleSubmit}

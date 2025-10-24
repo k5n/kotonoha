@@ -4,7 +4,6 @@ import { analyzeAudio, AudioPlayer } from '$lib/application/usecases/mediaPlayer
 import type { MediaPlayer } from '$lib/application/usecases/mediaPlayer/mediaPlayer';
 import { YoutubePlayer } from '$lib/application/usecases/mediaPlayer/youtubePlayer';
 import type { AudioInfo } from '$lib/domain/entities/audioInfo';
-import { error } from '@tauri-apps/plugin-log';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
@@ -37,7 +36,7 @@ export const load: PageLoad = async ({ params }) => {
       errorKey: null,
     };
   } catch (e) {
-    error(`Failed to fetch episode detail or settings: ${e}`);
+    console.error(`Failed to fetch episode detail or settings: ${e}`);
     return { errorKey: 'episodeDetailPage.errors.fetchDetail' };
   }
 };

@@ -20,7 +20,6 @@
   import SentenceCardList from '$lib/presentation/components/SentenceCardList.svelte';
   import SentenceMiningModal from '$lib/presentation/components/SentenceMiningModal.svelte';
   import TranscriptViewer from '$lib/presentation/components/TranscriptViewer.svelte';
-  import { debug, error } from '@tauri-apps/plugin-log';
   import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import { onMount } from 'svelte';
@@ -73,18 +72,20 @@
     if (dialogue) {
       mediaPlayer?.seek(dialogue.startTimeMs);
     } else {
-      error(`Dialogue not found for sentence card: ${card.id}, dialogueId: ${card.dialogueId}`);
+      console.error(
+        `Dialogue not found for sentence card: ${card.id}, dialogueId: ${card.dialogueId}`
+      );
     }
   }
 
   async function openMiningModal(dialogue: Dialogue, context: readonly Dialogue[]) {
-    debug(`Open mining modal for dialogue: ${dialogue.id}, context size: ${context.length}`);
+    console.info(`Open mining modal for dialogue: ${dialogue.id}, context size: ${context.length}`);
     miningTarget = dialogue;
     isModalOpen = true;
     try {
       analysisResult = await analyzeDialogueForMining(dialogue, context);
     } catch (err) {
-      error(`Error analyzing dialogue for mining: ${err}`);
+      console.error(`Error analyzing dialogue for mining: ${err}`);
       errorMessage = t('episodeDetailPage.errors.analyzeFailed');
       resetMiningModalState();
     }
@@ -92,7 +93,7 @@
 
   async function createMiningCards(selectedItems: readonly SentenceAnalysisItem[]) {
     if (!miningTarget) {
-      debug('No mining target available.');
+      console.warn('No mining target available.');
       isModalOpen = false;
       return;
     }
@@ -102,7 +103,7 @@
       const selectedCardIds = selectedItems.map((item) => item.id);
       await addSentenceCards(selectedCardIds);
     } catch (err) {
-      error(`Error in createMiningCards: ${err}`);
+      console.error(`Error in createMiningCards: ${err}`);
       errorMessage = t('episodeDetailPage.errors.createCardsFailed');
     } finally {
       resetMiningModalState();
@@ -123,7 +124,7 @@
       await updateDialogue(dialogueId, correctedText);
       await invalidateAll();
     } catch (err) {
-      error(`Error updating dialogue: ${err}`);
+      console.error(`Error updating dialogue: ${err}`);
       errorMessage = t('episodeDetailPage.errors.updateDialogueFailed');
     }
   }
@@ -140,7 +141,7 @@
       await softDeleteDialogue(dialogueToDeleteId);
       await invalidateAll();
     } catch (err) {
-      error(`Error soft deleting dialogue: ${err}`);
+      console.error(`Error soft deleting dialogue: ${err}`);
       errorMessage = t('episodeDetailPage.errors.deleteDialogueFailed');
     } finally {
       isConfirmModalOpen = false;
@@ -153,7 +154,7 @@
       await undoSoftDeleteDialogue(dialogueId);
       await invalidateAll();
     } catch (err) {
-      error(`Error undoing soft delete for dialogue: ${err}`);
+      console.error(`Error undoing soft delete for dialogue: ${err}`);
       errorMessage = t('episodeDetailPage.errors.undoDeleteDialogueFailed');
     }
   }

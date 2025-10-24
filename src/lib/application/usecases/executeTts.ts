@@ -40,7 +40,6 @@ export async function executeTts(): Promise<void> {
 
     // Set up progress event listener
     progressUnlisten = await ttsRepository.listenTtsProgress((payload) => {
-      console.info(`TTS progress: ${payload.progress}% - ${payload.text}`);
       ttsExecutionStore.updateProgress(payload);
     });
 
