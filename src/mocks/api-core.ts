@@ -1,5 +1,6 @@
 // Mock implementation of @tauri-apps/api/core for browser mode
 
+import type { AtomicDialogue } from '$lib/domain/entities/dialogue';
 import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
 import { type DownloadProgress, type TtsProgress } from '$lib/domain/entities/ttsEvent';
 import { BaseDirectory, writeFile } from './plugin-fs';
@@ -42,6 +43,17 @@ const mockSentenceMiningResult: SentenceAnalysisResult = {
     },
   ],
 };
+
+const mockYoutubeSubtitles: readonly AtomicDialogue[] = [
+  { startTimeMs: 0, endTimeMs: 2000, originalText: 'Hello, how are you today?' },
+  {
+    startTimeMs: 2000,
+    endTimeMs: 4000,
+    originalText: "I'm doing well, thank you. What about you?",
+  },
+  { startTimeMs: 4000, endTimeMs: 6000, originalText: "I'm great, thanks for asking." },
+  { startTimeMs: 6000, endTimeMs: 8000, originalText: "That's good to hear. Have a nice day!" },
+];
 
 interface AudioState {
   isPlaying: boolean;
@@ -312,6 +324,12 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
         setTimeout(() => {
           resolve(mockSentenceMiningResult as T);
         }, 2000);
+      });
+    case 'fetch_youtube_subtitle':
+      return new Promise<T>((resolve) => {
+        setTimeout(() => {
+          resolve(mockYoutubeSubtitles as T);
+        }, 1000);
       });
     default:
       throw new Error(`Command '${cmd}' not implemented in browser mode`);

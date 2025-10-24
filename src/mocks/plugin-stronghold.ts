@@ -2,17 +2,14 @@
 // getKey always returns null, saveKey throws an error
 
 export class MockStore {
-  private setKeys: Set<string> = new Set();
+  private data: Map<string, Uint8Array> = new Map();
 
   async get(key: string): Promise<Uint8Array | null> {
-    if (this.setKeys.has(key)) {
-      return new TextEncoder().encode('dummy-api-key');
-    }
-    return null;
+    return this.data.get(key) || null;
   }
 
   async insert(key: string, _value: number[]): Promise<void> {
-    this.setKeys.add(key);
+    this.data.set(key, new Uint8Array(_value));
   }
 }
 
