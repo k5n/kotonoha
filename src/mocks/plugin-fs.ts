@@ -16,6 +16,8 @@ function getKey(baseDir: BaseDirectory, path: string): string {
   return `${FS_PREFIX}${baseDir}:${path}`;
 }
 
+export { getKey };
+
 function isDirectory(value: string | null): boolean {
   if (!value) return false;
   try {

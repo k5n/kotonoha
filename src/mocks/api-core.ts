@@ -1,13 +1,14 @@
 // Mock implementation of @tauri-apps/api/core for browser mode
 
-// Mock implementation of @tauri-apps/api/core for browser mode
+import { type DownloadProgress } from '$lib/domain/entities/ttsEvent';
+import { BaseDirectory, getKey } from './plugin-fs';
 
 interface AudioState {
   isPlaying: boolean;
   currentPosition: number;
   duration: number;
   timerId: number | null;
-  listeners: ((payload: { position: number }) => void)[];
+  listeners: ((event: { payload: { position: number } }) => void)[];
 }
 
 const audioState: AudioState = {
@@ -18,7 +19,9 @@ const audioState: AudioState = {
   listeners: [],
 };
 
-export async function invoke<T>(cmd: string, _args?: Record<string, unknown>): Promise<T> {
+const downloadProgressListeners: ((event: { payload: DownloadProgress }) => void)[] = [];
+
+export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   switch (cmd) {
     case 'get_stronghold_password':
       return 'mock_password' as T;
@@ -43,7 +46,7 @@ export async function invoke<T>(cmd: string, _args?: Record<string, unknown>): P
             audioState.timerId = null;
           }
           audioState.listeners.forEach((listener) =>
-            listener({ position: audioState.currentPosition })
+            listener({ payload: { position: audioState.currentPosition } })
           );
         }, 200);
       }
@@ -67,7 +70,7 @@ export async function invoke<T>(cmd: string, _args?: Record<string, unknown>): P
             audioState.timerId = null;
           }
           audioState.listeners.forEach((listener) =>
-            listener({ position: audioState.currentPosition })
+            listener({ payload: { position: audioState.currentPosition } })
           );
         }, 200);
       }
@@ -81,7 +84,7 @@ export async function invoke<T>(cmd: string, _args?: Record<string, unknown>): P
       }
       return Promise.resolve(null as T);
     case 'seek_audio': {
-      const position = (_args as { position_ms: number }).position_ms;
+      const position = (args as { position_ms: number }).position_ms;
       audioState.currentPosition = position;
       return Promise.resolve(null as T);
     }
@@ -103,25 +106,70 @@ export async function invoke<T>(cmd: string, _args?: Record<string, unknown>): P
       const text = await file.text();
       return text as T;
     }
+    case 'detect_language_from_text':
+      // Mock: always return null for language detection in browser mode
+      return Promise.resolve(null as T);
+    case 'download_file_with_progress': {
+      const {
+        url: _url,
+        filePath,
+        downloadId,
+      } = args as { url: string; filePath: string; downloadId: string };
+      if (downloadProgressListeners.length === 0) {
+        throw new Error('No listeners for download_progress');
+      }
+      const totalBytes = 10 * 1024 * 1024; // 10MB
+      let progress = 0;
+      const interval = 200; // 200ms
+      const steps = 25; // 5秒 / 200ms = 25
+      let step = 0;
+      const timerId = window.setInterval(() => {
+        step++;
+        progress = Math.min(100, (step / steps) * 100);
+        const downloaded = Math.floor((progress / 100) * totalBytes);
+        downloadProgressListeners.forEach((listener) =>
+          listener({
+            payload: { downloadId, fileName: filePath, progress, downloaded, total: totalBytes },
+          })
+        );
+        if (step >= steps) {
+          clearInterval(timerId);
+          // Mark file as existing in virtual FS
+          const key = getKey(BaseDirectory.AppLocalData, filePath);
+          localStorage.setItem(key, 'file');
+        }
+      }, interval);
+      return Promise.resolve(null as T);
+    }
+    case 'cancel_download': {
+      // No-op in mock
+      return Promise.resolve(null as T);
+    }
     default:
       throw new Error(`Command '${cmd}' not implemented in browser mode`);
   }
 }
 
-type UnlistenFn = () => void;
+export type UnlistenFn = () => void;
 
 export async function listen<T>(
   event: string,
   handler: (event: { payload: T }) => void
 ): Promise<UnlistenFn> {
   if (event === 'playback-position') {
-    const wrappedHandler = (payload: { position: number }) => handler({ payload: payload as T });
-    audioState.listeners.push(wrappedHandler);
+    const positionHandler = handler as (event: { payload: { position: number } }) => void;
+    audioState.listeners.push(positionHandler);
     return () => {
-      const index = audioState.listeners.indexOf(wrappedHandler);
-      if (index > -1) {
-        audioState.listeners.splice(index, 1);
-      }
+      const index = audioState.listeners.indexOf(positionHandler);
+      if (index > -1) audioState.listeners.splice(index, 1);
+    };
+  }
+  if (event === 'download_progress') {
+    const progressHandler = handler as (event: { payload: DownloadProgress }) => void;
+    downloadProgressListeners.push(progressHandler);
+    return () => {
+      const index = downloadProgressListeners.indexOf(progressHandler);
+      if (index > -1) downloadProgressListeners.splice(index, 1);
     };
   }
   throw new Error(`Event '${event}' not implemented in browser mode`);
