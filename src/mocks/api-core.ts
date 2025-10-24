@@ -1,6 +1,6 @@
 // Mock implementation of @tauri-apps/api/core for browser mode
 
-import { type DownloadProgress } from '$lib/domain/entities/ttsEvent';
+import { type DownloadProgress, type TtsProgress } from '$lib/domain/entities/ttsEvent';
 import { BaseDirectory, writeFile } from './plugin-fs';
 
 interface AudioState {
@@ -22,6 +22,10 @@ const audioState: AudioState = {
 const downloadProgressListeners: ((event: { payload: DownloadProgress }) => void)[] = [];
 
 const downloadStates: Map<string, { timerId: number | null; cancelled: boolean }> = new Map();
+
+const ttsProgressListeners: ((event: { payload: TtsProgress }) => void)[] = [];
+
+const ttsStates: Map<string, { timerId: number | null; cancelled: boolean }> = new Map();
 
 async function handlePlayAudio<T>(): Promise<T> {
   if (!audioState.isPlaying) {
@@ -157,6 +161,73 @@ async function handleCancelDownload<T>(args: Record<string, unknown>): Promise<T
   return Promise.resolve(null as T);
 }
 
+async function handleStartTts<T>(args: Record<string, unknown>): Promise<T> {
+  const {
+    transcript,
+    configPath: _configPath,
+    speakerId: _speakerId,
+  } = args as { transcript: string; configPath: string; speakerId: number };
+  const ttsId = 'tts';
+  if (ttsStates.has(ttsId)) {
+    throw new Error('TTS already in progress');
+  }
+  return new Promise<T>((resolve, reject) => {
+    const lines = transcript
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+    const totalLines = lines.length;
+    if (totalLines === 0) {
+      resolve({ audioPath: '/tmp/kotonoha_tts.ogg', scriptPath: '/tmp/kotonoha_tts.sswt' } as T);
+      return;
+    }
+    let currentMs = 0;
+    let lineIndex = 0;
+    const interval = 100; // ms per step
+    const timerId = window.setInterval(() => {
+      const state = ttsStates.get(ttsId);
+      if (state?.cancelled) {
+        reject('TTS cancelled');
+        clearInterval(timerId);
+        ttsStates.delete(ttsId);
+        return;
+      }
+      if (lineIndex >= totalLines) {
+        clearInterval(timerId);
+        ttsStates.delete(ttsId);
+        resolve({ audioPath: '/tmp/kotonoha_tts.ogg', scriptPath: '/tmp/kotonoha_tts.sswt' } as T);
+        return;
+      }
+      const line = lines[lineIndex];
+      const startMs = currentMs;
+      const durationMs = 2000; // 2 seconds per line
+      currentMs += durationMs;
+      const endMs = currentMs;
+      const progress = Math.floor(((lineIndex + 1) / totalLines) * 100);
+      ttsProgressListeners.forEach((listener) =>
+        listener({
+          payload: { progress, startMs, endMs, text: line },
+        })
+      );
+      lineIndex++;
+    }, interval);
+    ttsStates.set(ttsId, { timerId, cancelled: false });
+  });
+}
+
+async function handleCancelTts<T>(): Promise<T> {
+  const ttsId = 'tts';
+  const state = ttsStates.get(ttsId);
+  if (state) {
+    state.cancelled = true;
+    if (state.timerId !== null) {
+      clearInterval(state.timerId);
+    }
+    ttsStates.delete(ttsId);
+  }
+  return Promise.resolve(null as T);
+}
+
 export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   switch (cmd) {
     case 'get_stronghold_password':
@@ -194,6 +265,10 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
       return handleDownloadFileWithProgress<T>(args!);
     case 'cancel_download':
       return handleCancelDownload<T>(args!);
+    case 'start_tts':
+      return handleStartTts<T>(args!);
+    case 'cancel_tts':
+      return handleCancelTts<T>();
     default:
       throw new Error(`Command '${cmd}' not implemented in browser mode`);
   }
@@ -219,6 +294,14 @@ export async function listen<T>(
     return () => {
       const index = downloadProgressListeners.indexOf(progressHandler);
       if (index > -1) downloadProgressListeners.splice(index, 1);
+    };
+  }
+  if (event === 'tts-progress') {
+    const progressHandler = handler as (event: { payload: TtsProgress }) => void;
+    ttsProgressListeners.push(progressHandler);
+    return () => {
+      const index = ttsProgressListeners.indexOf(progressHandler);
+      if (index > -1) ttsProgressListeners.splice(index, 1);
     };
   }
   throw new Error(`Event '${event}' not implemented in browser mode`);
