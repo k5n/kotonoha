@@ -2,18 +2,25 @@
 // getKey always returns null, saveKey throws an error
 
 export class MockStore {
-  async get(_key: string): Promise<Uint8Array | null> {
+  private setKeys: Set<string> = new Set();
+
+  async get(key: string): Promise<Uint8Array | null> {
+    if (this.setKeys.has(key)) {
+      return new TextEncoder().encode('dummy-api-key');
+    }
     return null;
   }
 
-  async insert(_key: string, _value: number[]): Promise<void> {
-    throw new Error('Not implemented in browser mode');
+  async insert(key: string, _value: number[]): Promise<void> {
+    this.setKeys.add(key);
   }
 }
 
+const mockStoreInstance = new MockStore();
+
 export class MockClient {
   getStore(): MockStore {
-    return new MockStore();
+    return mockStoreInstance;
   }
 }
 
