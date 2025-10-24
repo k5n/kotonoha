@@ -86,8 +86,23 @@ export async function invoke<T>(cmd: string, _args?: Record<string, unknown>): P
       return Promise.resolve(null as T);
     }
     case 'copy_audio_file':
-      // ダミー: 成功を返す
+      // ブラウザモードでは音声ファイルのコピーは行わない
+      // エラーにせず成功として扱う（実際の音声再生はサポート外）
+      console.warn('copy_audio_file: not supported in browser mode');
       return Promise.resolve(null as T);
+    case 'read_text_file': {
+      // plugin-dialog で選択された File オブジェクトから内容を読み取る
+      const { getSelectedScriptFile } = await import('./plugin-dialog');
+      const file = getSelectedScriptFile();
+
+      if (!file) {
+        throw new Error('No script file selected');
+      }
+
+      // File オブジェクトをテキストとして読み込む
+      const text = await file.text();
+      return text as T;
+    }
     default:
       throw new Error(`Command '${cmd}' not implemented in browser mode`);
   }

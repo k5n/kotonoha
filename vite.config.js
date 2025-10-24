@@ -80,6 +80,10 @@ export default defineConfig(async () => ({
             find: '@tauri-apps/plugin-http',
             replacement: path.resolve(__dirname, 'src/mocks/plugin-http.ts'),
           },
+          {
+            find: '@tauri-apps/plugin-dialog',
+            replacement: path.resolve(__dirname, 'src/mocks/plugin-dialog.ts'),
+          },
         ]
       : [],
   },
