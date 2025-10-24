@@ -48,7 +48,7 @@ interface AudioState {
   currentPosition: number;
   duration: number;
   timerId: number | null;
-  listeners: ((event: { payload: { position: number } }) => void)[];
+  listeners: ((event: { payload: number }) => void)[];
 }
 
 const audioState: AudioState = {
@@ -78,9 +78,7 @@ async function handlePlayAudio<T>(): Promise<T> {
         clearInterval(audioState.timerId!);
         audioState.timerId = null;
       }
-      audioState.listeners.forEach((listener) =>
-        listener({ payload: { position: audioState.currentPosition } })
-      );
+      audioState.listeners.forEach((listener) => listener({ payload: audioState.currentPosition }));
     }, 200);
   }
   return Promise.resolve(null as T);
@@ -106,9 +104,7 @@ async function handleResumeAudio<T>(): Promise<T> {
         clearInterval(audioState.timerId!);
         audioState.timerId = null;
       }
-      audioState.listeners.forEach((listener) =>
-        listener({ payload: { position: audioState.currentPosition } })
-      );
+      audioState.listeners.forEach((listener) => listener({ payload: audioState.currentPosition }));
     }, 200);
   }
   return Promise.resolve(null as T);
@@ -125,8 +121,10 @@ async function handleStopAudio<T>(): Promise<T> {
 }
 
 async function handleSeekAudio<T>(args: Record<string, unknown>): Promise<T> {
-  const position = (args as { position_ms: number }).position_ms;
+  const position = (args as { positionMs: number }).positionMs;
   audioState.currentPosition = position;
+  console.log(`handleSeekAudio: positionMs=${position}`);
+  audioState.listeners.forEach((listener) => listener({ payload: audioState.currentPosition }));
   return Promise.resolve(null as T);
 }
 
@@ -327,7 +325,7 @@ export async function listen<T>(
   handler: (event: { payload: T }) => void
 ): Promise<UnlistenFn> {
   if (event === 'playback-position') {
-    const positionHandler = handler as (event: { payload: { position: number } }) => void;
+    const positionHandler = handler as (event: { payload: number }) => void;
     audioState.listeners.push(positionHandler);
     return () => {
       const index = audioState.listeners.indexOf(positionHandler);
