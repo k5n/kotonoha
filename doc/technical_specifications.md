@@ -372,6 +372,38 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 - `read_text_file(path: String) -> Result<String, String>`
   - 指定したテキストファイルを読み込み、その内容を返す。
 
+#### ブラウザ開発モード（Vite alias を利用した Tauri モック）
+
+フロントエンドの高速な UI 開発やブラウザ上での確認のため、本プロジェクトは Vite の alias 機能を使用して Tauri とそのプラグインをローカルのモック実装に置き換える「ブラウザ開発モード」を提供します。これは UI レイアウトの調整、コンポーネント単位の確認、軽量な統合テストに有用です。
+
+- 有効化方法:
+  - 次のスクリプトを実行します:
+    ```bash
+    npm run dev:browser
+    ```
+  - スクリプトは環境変数 `VITE_RUN_MODE=browser` を設定し、`vite.config.js` 内の alias マッピングが有効になります。
+- 置き換え対象の例:
+  - `vite.config.js` は多くの Tauri インポートを `src/mocks/*` にマッピングします。代表例:
+    - `@tauri-apps/plugin-store`
+    - `@tauri-apps/api/app`
+    - `@tauri-apps/plugin-stronghold`
+    - `@tauri-apps/api/core`
+    - `@tauri-apps/api/event`
+    - `@tauri-apps/api/path`
+    - `@tauri-apps/plugin-log`
+    - `@tauri-apps/plugin-sql`
+    - `@tauri-apps/plugin-fs`
+    - `@tauri-apps/plugin-http`
+    - `@tauri-apps/plugin-dialog`
+  - 正確な一覧は `vite.config.js` を参照してください。
+- モックの場所と拡張方法:
+  - モック実装は `src/mocks/` に置かれています。各ファイルはフロントエンドが期待する最小限の API をエミュレートします。必要に応じてこれらのファイルを編集して追加の振る舞いを実装できます。
+- 利用上の注意（制約）:
+ - 利用上の注意（制約）:
+  - ブラウザモードでは多くのネイティブ固有の機能が正確に再現されない可能性があります。これらを含む機能はフル Tauri 環境（`npm run dev`）での確認が必要です。
+
+---
+
 ### 4.3. データフェッチ・状態管理戦略
 
 本アプリケーションでは、データフェッチおよび状態管理に関して以下の戦略を採用する。

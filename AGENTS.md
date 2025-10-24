@@ -54,6 +54,36 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - Where to find full details
   - Use `doc/technical_specifications.md` for exhaustive DB schemas, mermaid diagrams, and full command descriptions. This summary is meant to be a compact reference for AI agents.
 
+## Browser-mode (Vite aliases and Tauri mocks)
+
+For fast frontend iteration and browser-based testing, this repository supports a "browser-mode" which replaces Tauri and plugin imports with local mock modules via Vite aliasing.
+
+- How to enable:
+  - Run the browser dev script:
+    ```bash
+    npm run dev:browser
+    ```
+  - This sets `VITE_RUN_MODE=browser` which activates alias mappings in `vite.config.js`.
+- What is mocked:
+  - The Vite config maps many Tauri imports to `src/mocks/*`. Examples include:
+    - `@tauri-apps/plugin-store`
+    - `@tauri-apps/api/app`
+    - `@tauri-apps/plugin-stronghold`
+    - `@tauri-apps/api/core`
+    - `@tauri-apps/api/event`
+    - `@tauri-apps/api/path`
+    - `@tauri-apps/plugin-log`
+    - `@tauri-apps/plugin-sql`
+    - `@tauri-apps/plugin-fs`
+    - `@tauri-apps/plugin-http`
+    - `@tauri-apps/plugin-dialog`
+  - See `vite.config.js` for the exact mapping.
+- Where to look / extend:
+  - Mock implementations live under `src/mocks/`. They provide minimal, frontend-friendly APIs used by the app. If a UI needs extra behavior, extend the mock file accordingly.
+- Agent guidance and limitations:
+  - Do not assume native Tauri behavior (secure Stronghold storage, native file system access, audio device control, OS-level dialogs) in browser-mode. These are stubbed or emulated.
+  - Use browser-mode for UI development, layout, and component tests. For features that require Rust/Tauri integration (LLM proxying, real DB access, secure key storage, native audio), run the full Tauri environment (`npm run dev`) or use integration tests that exercise the Rust side.
+
 ## Frontend dependency list
 
 <!-- DEP_GRAPH_START -->
@@ -426,9 +456,9 @@ Work rules for tasks
 
 - Start in "Plan mode" without making any file changes: summarize the work plan and open questions. After that, stop and wait for explicit instruction to proceed. (Do not modify files during Plan mode.)
 - After being instructed to start work, exit Plan mode and begin edits.
-- After creating or editing files, run `npm run format` to format code.
-- After creating or editing files, run `npm run lint` to check for linter errors.
-- After creating or editing files, run `npm run check` to detect SvelteKit type/check errors.
+- After creating or editing files under `src/`, run `npm run format` to format code.
+- After creating or editing files under `src/`, run `npm run lint` to check for linter errors.
+- After creating or editing files under `src/`, run `npm run check` to detect SvelteKit type/check errors.
 - When adding or modifying tests, first describe the test changes in natural language and stop (do not run tests yet). Then wait for explicit permission to proceed.
 
 Additional Coding rules
