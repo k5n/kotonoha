@@ -119,6 +119,7 @@ This section is **not** included in the actual prompt, as we use the Structured 
 
 ```json
 {
+  "sentence": "I had to pull an all-nighter to get it done, but it's almost there.",
   "translation": "それを終わらせるために徹夜しなければなりませんでしたが、もうほとんど出来ています。",
   "explanation": "この文は、2つの節が接続詞 'but' で繋がれた構造をしています。前半の 'I had to pull an all-nighter to get it done' は、「～するために徹夜しなければならなかった」という意味です。'had to' は義務を表し、'to get it done' は目的を表す不定詞句です。'pull an all-nighter' が「徹夜する」という重要なイディオムです。後半の 'it's almost there' は「もうすぐだ」「ゴールは近い」という意味の口語表現で、ここではレポートの完成が間近であることを示しています。これらを組み合わせることで、全体の意味が形成されます。",
   "items": [
