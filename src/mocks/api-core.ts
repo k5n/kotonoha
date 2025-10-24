@@ -23,149 +23,177 @@ const downloadProgressListeners: ((event: { payload: DownloadProgress }) => void
 
 const downloadStates: Map<string, { timerId: number | null; cancelled: boolean }> = new Map();
 
+async function handlePlayAudio<T>(): Promise<T> {
+  if (!audioState.isPlaying) {
+    audioState.isPlaying = true;
+    audioState.timerId = window.setInterval(() => {
+      audioState.currentPosition += 200;
+      if (audioState.currentPosition >= audioState.duration) {
+        audioState.currentPosition = audioState.duration;
+        audioState.isPlaying = false;
+        clearInterval(audioState.timerId!);
+        audioState.timerId = null;
+      }
+      audioState.listeners.forEach((listener) =>
+        listener({ payload: { position: audioState.currentPosition } })
+      );
+    }, 200);
+  }
+  return Promise.resolve(null as T);
+}
+
+async function handlePauseAudio<T>(): Promise<T> {
+  audioState.isPlaying = false;
+  if (audioState.timerId) {
+    clearInterval(audioState.timerId);
+    audioState.timerId = null;
+  }
+  return Promise.resolve(null as T);
+}
+
+async function handleResumeAudio<T>(): Promise<T> {
+  if (!audioState.isPlaying) {
+    audioState.isPlaying = true;
+    audioState.timerId = window.setInterval(() => {
+      audioState.currentPosition += 200;
+      if (audioState.currentPosition >= audioState.duration) {
+        audioState.currentPosition = audioState.duration;
+        audioState.isPlaying = false;
+        clearInterval(audioState.timerId!);
+        audioState.timerId = null;
+      }
+      audioState.listeners.forEach((listener) =>
+        listener({ payload: { position: audioState.currentPosition } })
+      );
+    }, 200);
+  }
+  return Promise.resolve(null as T);
+}
+
+async function handleStopAudio<T>(): Promise<T> {
+  audioState.isPlaying = false;
+  audioState.currentPosition = 0;
+  if (audioState.timerId) {
+    clearInterval(audioState.timerId);
+    audioState.timerId = null;
+  }
+  return Promise.resolve(null as T);
+}
+
+async function handleSeekAudio<T>(args: Record<string, unknown>): Promise<T> {
+  const position = (args as { position_ms: number }).position_ms;
+  audioState.currentPosition = position;
+  return Promise.resolve(null as T);
+}
+
+async function handleReadTextFile<T>(): Promise<T> {
+  // plugin-dialog で選択された File オブジェクトから内容を読み取る
+  const { getSelectedScriptFile } = await import('./plugin-dialog');
+  const file = getSelectedScriptFile();
+
+  if (!file) {
+    throw new Error('No script file selected');
+  }
+
+  // File オブジェクトをテキストとして読み込む
+  const text = await file.text();
+  return text as T;
+}
+
+async function handleDownloadFileWithProgress<T>(args: Record<string, unknown>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const {
+      url: _url,
+      filePath,
+      downloadId,
+    } = args as { url: string; filePath: string; downloadId: string };
+    if (downloadProgressListeners.length === 0) {
+      reject(new Error('No listeners for download_progress'));
+      return;
+    }
+    const totalBytes = 10 * 1024 * 1024; // 10MB
+    let progress = 0;
+    const interval = 200; // 200ms
+    const steps = 25; // 5秒 / 200ms = 25
+    let step = 0;
+    const timerId = window.setInterval(() => {
+      const state = downloadStates.get(downloadId);
+      if (state?.cancelled) {
+        reject('Download cancelled');
+        clearInterval(timerId);
+        downloadStates.delete(downloadId);
+        return;
+      }
+      step++;
+      progress = Math.min(100, (step / steps) * 100);
+      const downloaded = Math.floor((progress / 100) * totalBytes);
+      downloadProgressListeners.forEach((listener) =>
+        listener({
+          payload: { downloadId, fileName: filePath, progress, downloaded, total: totalBytes },
+        })
+      );
+      if (step >= steps) {
+        clearInterval(timerId);
+        downloadStates.delete(downloadId);
+        // Mark file as existing in virtual FS
+        writeFile(filePath, new Uint8Array(), { baseDir: BaseDirectory.AppLocalData });
+        resolve(null as T);
+      }
+    }, interval);
+    downloadStates.set(downloadId, { timerId, cancelled: false });
+  });
+}
+
+async function handleCancelDownload<T>(args: Record<string, unknown>): Promise<T> {
+  const { downloadId } = args as { downloadId: string };
+  const state = downloadStates.get(downloadId);
+  if (state) {
+    state.cancelled = true;
+    if (state.timerId !== null) {
+      clearInterval(state.timerId);
+    }
+    // Note: reject is handled in the timer callback
+  }
+  return Promise.resolve(null as T);
+}
+
 export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   switch (cmd) {
     case 'get_stronghold_password':
       return 'mock_password' as T;
     case 'open_audio':
-      // ダミー: 実際のファイルオープン不要
+      // Dummy: No need to actually open the file
       return Promise.resolve(null as T);
     case 'analyze_audio':
-      // ダミーの AudioInfo を返す
+      // Return dummy AudioInfo
       return Promise.resolve({
         duration: audioState.duration,
         peaks: new Array(100).fill(0.5),
       } as T);
     case 'play_audio':
-      if (!audioState.isPlaying) {
-        audioState.isPlaying = true;
-        audioState.timerId = window.setInterval(() => {
-          audioState.currentPosition += 200;
-          if (audioState.currentPosition >= audioState.duration) {
-            audioState.currentPosition = audioState.duration;
-            audioState.isPlaying = false;
-            clearInterval(audioState.timerId!);
-            audioState.timerId = null;
-          }
-          audioState.listeners.forEach((listener) =>
-            listener({ payload: { position: audioState.currentPosition } })
-          );
-        }, 200);
-      }
-      return Promise.resolve(null as T);
+      return handlePlayAudio<T>();
     case 'pause_audio':
-      audioState.isPlaying = false;
-      if (audioState.timerId) {
-        clearInterval(audioState.timerId);
-        audioState.timerId = null;
-      }
-      return Promise.resolve(null as T);
+      return handlePauseAudio<T>();
     case 'resume_audio':
-      if (!audioState.isPlaying) {
-        audioState.isPlaying = true;
-        audioState.timerId = window.setInterval(() => {
-          audioState.currentPosition += 200;
-          if (audioState.currentPosition >= audioState.duration) {
-            audioState.currentPosition = audioState.duration;
-            audioState.isPlaying = false;
-            clearInterval(audioState.timerId!);
-            audioState.timerId = null;
-          }
-          audioState.listeners.forEach((listener) =>
-            listener({ payload: { position: audioState.currentPosition } })
-          );
-        }, 200);
-      }
-      return Promise.resolve(null as T);
+      return handleResumeAudio<T>();
     case 'stop_audio':
-      audioState.isPlaying = false;
-      audioState.currentPosition = 0;
-      if (audioState.timerId) {
-        clearInterval(audioState.timerId);
-        audioState.timerId = null;
-      }
-      return Promise.resolve(null as T);
-    case 'seek_audio': {
-      const position = (args as { position_ms: number }).position_ms;
-      audioState.currentPosition = position;
-      return Promise.resolve(null as T);
-    }
+      return handleStopAudio<T>();
+    case 'seek_audio':
+      return handleSeekAudio<T>(args!);
     case 'copy_audio_file':
-      // ブラウザモードでは音声ファイルのコピーは行わない
-      // エラーにせず成功として扱う（実際の音声再生はサポート外）
+      // Do not copy audio files in browser mode
+      // Treat as success instead of error (actual audio playback is not supported)
       console.warn('copy_audio_file: not supported in browser mode');
       return Promise.resolve(null as T);
-    case 'read_text_file': {
-      // plugin-dialog で選択された File オブジェクトから内容を読み取る
-      const { getSelectedScriptFile } = await import('./plugin-dialog');
-      const file = getSelectedScriptFile();
-
-      if (!file) {
-        throw new Error('No script file selected');
-      }
-
-      // File オブジェクトをテキストとして読み込む
-      const text = await file.text();
-      return text as T;
-    }
+    case 'read_text_file':
+      return handleReadTextFile<T>();
     case 'detect_language_from_text':
       // Mock: always return null for language detection in browser mode
       return Promise.resolve(null as T);
-    case 'download_file_with_progress': {
-      return new Promise<T>((resolve, reject) => {
-        const {
-          url: _url,
-          filePath,
-          downloadId,
-        } = args as { url: string; filePath: string; downloadId: string };
-        if (downloadProgressListeners.length === 0) {
-          reject(new Error('No listeners for download_progress'));
-          return;
-        }
-        const totalBytes = 10 * 1024 * 1024; // 10MB
-        let progress = 0;
-        const interval = 200; // 200ms
-        const steps = 25; // 5秒 / 200ms = 25
-        let step = 0;
-        const timerId = window.setInterval(() => {
-          const state = downloadStates.get(downloadId);
-          if (state?.cancelled) {
-            reject('Download cancelled');
-            clearInterval(timerId);
-            downloadStates.delete(downloadId);
-            return;
-          }
-          step++;
-          progress = Math.min(100, (step / steps) * 100);
-          const downloaded = Math.floor((progress / 100) * totalBytes);
-          downloadProgressListeners.forEach((listener) =>
-            listener({
-              payload: { downloadId, fileName: filePath, progress, downloaded, total: totalBytes },
-            })
-          );
-          if (step >= steps) {
-            clearInterval(timerId);
-            downloadStates.delete(downloadId);
-            // Mark file as existing in virtual FS
-            writeFile(filePath, new Uint8Array(), { baseDir: BaseDirectory.AppLocalData });
-            resolve(null as T);
-          }
-        }, interval);
-        downloadStates.set(downloadId, { timerId, cancelled: false });
-      });
-    }
-    case 'cancel_download': {
-      const { downloadId } = args as { downloadId: string };
-      const state = downloadStates.get(downloadId);
-      if (state) {
-        state.cancelled = true;
-        if (state.timerId !== null) {
-          clearInterval(state.timerId);
-        }
-        // Note: reject is handled in the timer callback
-      }
-      return Promise.resolve(null as T);
-    }
+    case 'download_file_with_progress':
+      return handleDownloadFileWithProgress<T>(args!);
+    case 'cancel_download':
+      return handleCancelDownload<T>(args!);
     default:
       throw new Error(`Command '${cmd}' not implemented in browser mode`);
   }
