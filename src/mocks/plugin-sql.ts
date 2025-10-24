@@ -32,21 +32,24 @@ interface QueryResult {
 }
 
 class Database {
-  private db: initSqlJs.Database | null = null;
-  private initialized = false;
+  private static instance: Database | null = null;
+  private static db: initSqlJs.Database | null = null;
+  private static initialized = false;
 
   constructor(_path: string) {
+    if (Database.instance) return Database.instance;
+    Database.instance = this;
     // path is ignored in mock, but kept for API compatibility
   }
 
-  private async ensureInitialized(): Promise<void> {
-    if (this.initialized) return;
+  public static async ensureInitialized(): Promise<void> {
+    if (Database.initialized) return;
     await initializeSqlJs();
     if (!sqlJs) throw new Error('sql.js not initialized');
 
-    this.db = new sqlJs.Database();
-    this.db.run(INITIAL_SCHEMA);
-    this.initialized = true;
+    Database.db = new sqlJs.Database();
+    Database.db.run(INITIAL_SCHEMA);
+    Database.initialized = true;
   }
 
   private handleError(error: unknown): never {
@@ -55,11 +58,11 @@ class Database {
   }
 
   async select<T>(sql: string, bindValues?: initSqlJs.BindParams): Promise<T> {
-    await this.ensureInitialized();
-    if (!this.db) throw new SqliteError('Database not initialized');
+    await Database.ensureInitialized();
+    if (!Database.db) throw new SqliteError('Database not initialized');
 
     try {
-      const stmt = this.db.prepare(sql);
+      const stmt = Database.db.prepare(sql);
       if (bindValues) {
         stmt.bind(bindValues);
       }
@@ -76,17 +79,17 @@ class Database {
   }
 
   async execute(sql: string, bindValues?: initSqlJs.BindParams): Promise<QueryResult> {
-    await this.ensureInitialized();
-    if (!this.db) throw new SqliteError('Database not initialized');
+    await Database.ensureInitialized();
+    if (!Database.db) throw new SqliteError('Database not initialized');
 
     try {
       if (bindValues) {
-        this.db.run(sql, bindValues);
+        Database.db.run(sql, bindValues);
       } else {
-        this.db.run(sql);
+        Database.db.run(sql);
       }
 
-      const execRes = this.db.exec('SELECT last_insert_rowid() as id');
+      const execRes = Database.db.exec('SELECT last_insert_rowid() as id');
       const lastInsertId = execRes?.[0]?.values?.[0]?.[0] ? (execRes[0].values[0][0] as number) : 0;
 
       return { lastInsertId, rowsAffected: 1 };
@@ -96,10 +99,11 @@ class Database {
   }
 
   async close(): Promise<void> {
-    if (!this.initialized || !this.db) return;
+    await Database.ensureInitialized();
+    if (!Database.initialized || !Database.db) return;
 
     try {
-      this.db.close();
+      Database.db.close();
     } catch {
       // Ignore close errors
     }
