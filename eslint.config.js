@@ -69,14 +69,13 @@ export default tsEslint.config(
   },
   // Mocha plugin for e2e test files
   {
-    files: ['e2e-tests/specs/**/*.e2e.js'],
+    files: ['e2e-tests/specs/**/*.e2e.{js,ts}'],
     rules: {
       ...mochaPlugin.configs.recommended.rules,
     },
   },
-  // ...existing code...
-  // Node.js環境で利用される設定ファイル用
-  // .mjs 拡張子じゃなくて .js 拡張子を利用しても良いように。
+  // For configuration files used in Node.js environment
+  // You can now use the .js extension instead of the .mjs extension.
   {
     files: ['**/*.js'],
     languageOptions: {
@@ -87,6 +86,6 @@ export default tsEslint.config(
       },
     },
   },
-  // Prettierと競合するルールを無効化
+  // Disable rules that conflict with Prettier
   prettier
 );

@@ -1,3 +1,5 @@
+// cSpell:words Testrunner appimage
+import type { Options } from '@wdio/types';
 import { spawn } from 'child_process';
 import os from 'os';
 import path from 'path';
@@ -6,13 +8,20 @@ import { fileURLToPath, URL } from 'url';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 // keep track of the `tauri-driver` child process
-let tauriDriver;
+let tauriDriver: ReturnType<typeof spawn> | undefined;
 let exit = false;
 
-export const config = {
+export const config: Omit<Options.Testrunner, 'capabilities'> & {
+  capabilities: Array<{
+    maxInstances?: number;
+    'tauri:options': {
+      application: string;
+    };
+  }>;
+} = {
   hostname: '127.0.0.1',
   port: 4444,
-  specs: ['./specs/**/*.js'],
+  specs: ['./specs/**/*.ts'],
   maxInstances: 1,
   capabilities: [
     {
@@ -70,7 +79,7 @@ function closeTauriDriver() {
   tauriDriver?.kill();
 }
 
-function onShutdown(fn) {
+function onShutdown(fn: () => void) {
   const cleanup = () => {
     try {
       fn();
