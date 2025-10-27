@@ -2,6 +2,7 @@
 /doc/plans
 /doc/reviews
 .serena
+/target
 
 .DS_Store
 node_modules
