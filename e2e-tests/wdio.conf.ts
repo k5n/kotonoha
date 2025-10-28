@@ -1,11 +1,40 @@
 // cSpell:words Testrunner appimage
 import type { Options } from '@wdio/types';
 import { spawn } from 'child_process';
+import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { fileURLToPath, URL } from 'url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+// Load version from package.json
+const packageJsonPath = path.resolve(__dirname, '..', 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+const version = packageJson.version;
+
+// Construct AppImage path dynamically
+const appImagePath = path.resolve(
+  __dirname,
+  '..',
+  'src-tauri',
+  'target',
+  'release',
+  'bundle',
+  'appimage',
+  `kotonoha_${version}_amd64.AppImage`
+);
+
+// Verify AppImage exists
+if (!fs.existsSync(appImagePath)) {
+  console.error(`AppImage not found: ${appImagePath}`);
+  console.error(`Expected version: ${version} (from ${packageJsonPath})`);
+  console.error('Please build the release AppImage before running E2E tests.');
+  process.exit(1);
+}
+
+console.log(`Using AppImage: ${appImagePath}`);
+console.log(`Version: ${version}`);
 
 // keep track of the `tauri-driver` child process
 let tauriDriver: ReturnType<typeof spawn> | undefined;
@@ -28,7 +57,7 @@ export const config: Omit<Options.Testrunner, 'capabilities'> & {
       maxInstances: 1,
       'tauri:options': {
         // application: '../src-tauri/target/debug/kotonoha',
-        application: '../src-tauri/target/release/bundle/appimage/kotonoha_0.1.0_amd64.AppImage',
+        application: appImagePath,
       },
     },
   ],
