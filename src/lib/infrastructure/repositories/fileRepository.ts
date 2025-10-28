@@ -18,12 +18,12 @@ export const fileRepository = {
    * @returns ディレクトリが存在すればtrue、しなければfalse
    */
   async uuidFileExists(uuid: string): Promise<boolean> {
-    const dirPath = `${getMediaDir()}/${uuid}`;
+    const dirPath = `${await getMediaDir()}/${uuid}`;
     return await exists(dirPath, { baseDir: BaseDirectory.AppLocalData });
   },
 
   async saveAudioFile(absoluteFilePath: string, uuid: string, filename: string): Promise<string> {
-    const dir = `${getMediaDir()}/${uuid}`;
+    const dir = `${await getMediaDir()}/${uuid}`;
     const appLocalDataRelativePath = `${dir}/${filename}`;
     await invoke('copy_audio_file', { src: absoluteFilePath, dest: appLocalDataRelativePath });
     return appLocalDataRelativePath;
@@ -34,7 +34,7 @@ export const fileRepository = {
    * @param uuid 削除するエピソードのUUID
    */
   async deleteEpisodeData(uuid: string): Promise<void> {
-    const dirPath = `${getMediaDir()}/${uuid}`;
+    const dirPath = `${await getMediaDir()}/${uuid}`;
     if (await this.uuidFileExists(uuid)) {
       await remove(dirPath, { baseDir: BaseDirectory.AppLocalData, recursive: true });
     }

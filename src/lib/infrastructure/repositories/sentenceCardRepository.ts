@@ -42,7 +42,7 @@ export const sentenceCardRepository = {
     coreMeaning: string;
     status: 'active' | 'suspended';
   }): Promise<SentenceCard> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const now = new Date().toISOString();
     const result = await db.execute(
       `INSERT INTO sentence_cards (dialogue_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
@@ -70,7 +70,7 @@ export const sentenceCardRepository = {
    * 指定したエピソードIDに紐づく全てのSentence Cardを取得する
    */
   async getSentenceCardsByEpisodeId(episodeId: number): Promise<readonly SentenceCard[]> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select<SentenceCardRow[]>(
       `
       SELECT
@@ -89,7 +89,7 @@ export const sentenceCardRepository = {
    * 指定したダイアログIDに紐づく全てのSentence Cardを取得する
    */
   async getSentenceCardsByDialogueId(dialogueId: number): Promise<readonly SentenceCard[]> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select<SentenceCardRow[]>(
       'SELECT * FROM sentence_cards WHERE dialogue_id = ? ORDER BY created_at ASC',
       [dialogueId]
@@ -104,7 +104,7 @@ export const sentenceCardRepository = {
     dialogueId: number,
     items: readonly SentenceAnalysisItem[]
   ): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const now = new Date().toISOString();
     const values = items
       .map(
@@ -124,7 +124,7 @@ export const sentenceCardRepository = {
    */
   async activateCachedCards(cardIds: readonly number[]): Promise<void> {
     if (cardIds.length === 0) return;
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const placeholders = cardIds.map(() => '?').join(',');
     await db.execute(`UPDATE sentence_cards SET status = 'active' WHERE id IN (${placeholders})`, [
       ...cardIds,
@@ -135,7 +135,7 @@ export const sentenceCardRepository = {
    * Sentence Cardのステータスを更新する
    */
   async updateSentenceCardStatus(cardId: number, status: SentenceCardStatus): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('UPDATE sentence_cards SET status = ? WHERE id = ?', [status, cardId]);
   },
 
@@ -143,7 +143,7 @@ export const sentenceCardRepository = {
    * Sentence Cardを削除する
    */
   async deleteSentenceCard(cardId: number): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('DELETE FROM sentence_cards WHERE id = ?', [cardId]);
   },
 
@@ -151,7 +151,7 @@ export const sentenceCardRepository = {
    * 指定したエピソードIDに紐づく全てのSentence Cardを削除する
    */
   async deleteByEpisodeId(episodeId: number): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const dialogueIds = await db.select<{ id: number }[]>(
       'SELECT id FROM dialogues WHERE episode_id = ?',
       [episodeId]

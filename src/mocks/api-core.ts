@@ -280,6 +280,13 @@ async function handleCancelTts<T>(): Promise<T> {
 
 export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   switch (cmd) {
+    case 'get_env_prefix_command': {
+      // ブラウザモードではViteの環境変数を使う
+      const appEnv = import.meta.env.PUBLIC_APP_ENV;
+      if (appEnv === 'dev') return 'dev_' as T;
+      if (appEnv === 'e2e') return 'e2e_' as T;
+      return '' as T;
+    }
     case 'get_stronghold_password':
       return 'mock_password' as T;
     case 'open_audio':

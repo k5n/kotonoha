@@ -24,13 +24,26 @@ use stronghold::{create_salt_file_if_not_exists, get_stronghold_password};
 use tts::{cancel_tts, start_tts};
 use youtube::fetch_youtube_subtitle;
 
+fn get_env_prefix() -> String {
+    let app_env = env::var("PUBLIC_APP_ENV").unwrap_or_else(|_| String::new());
+    match app_env.as_str() {
+        "dev" => "dev_".to_string(),
+        "e2e" => "e2e_".to_string(),
+        _ => String::new(),
+    }
+}
+
+#[tauri::command]
+fn get_env_prefix_command() -> String {
+    get_env_prefix()
+}
+
 fn get_db_name() -> String {
     if cfg!(debug_assertions) {
         let _ = from_filename(".env.development");
-        env::var("PUBLIC_APP_DB_NAME").unwrap_or_else(|_| "app.db".to_string())
-    } else {
-        "app.db".to_string()
     }
+    let prefix = get_env_prefix();
+    format!("{}app.db", prefix)
 }
 
 #[tauri::command]
@@ -84,6 +97,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             analyze_sentence_with_llm,
             get_stronghold_password,
+            get_env_prefix_command,
             open_audio,
             analyze_audio,
             play_audio,

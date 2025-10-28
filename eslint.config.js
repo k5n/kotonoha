@@ -1,6 +1,7 @@
 import eslint from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
 import prettier from 'eslint-config-prettier';
+import mochaPlugin from 'eslint-plugin-mocha';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import svelteParser from 'svelte-eslint-parser';
@@ -66,10 +67,17 @@ export default tsEslint.config(
       },
     },
   },
-  // Node.js環境で利用される設定ファイル用
-  // .mjs 拡張子じゃなくて .js 拡張子を利用しても良いように。
+  // Mocha plugin for e2e test files
   {
-    files: ['*.js'],
+    files: ['e2e-tests/specs/**/*.e2e.{js,ts}'],
+    rules: {
+      ...mochaPlugin.configs.recommended.rules,
+    },
+  },
+  // For configuration files used in Node.js environment
+  // You can now use the .js extension instead of the .mjs extension.
+  {
+    files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -78,6 +86,6 @@ export default tsEslint.config(
       },
     },
   },
-  // Prettierと競合するルールを無効化
+  // Disable rules that conflict with Prettier
   prettier
 );

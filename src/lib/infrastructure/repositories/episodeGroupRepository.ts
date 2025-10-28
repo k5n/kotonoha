@@ -30,7 +30,7 @@ export const episodeGroupRepository = {
    * ツリー構造への組み立ては取得後に行う必要がある。
    */
   async getAllGroups(): Promise<readonly EpisodeGroup[]> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select('SELECT * FROM episode_groups');
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
     return rows.map(mapRowToEpisodeGroup);
@@ -47,7 +47,7 @@ export const episodeGroupRepository = {
     groupType: 'album' | 'folder';
     displayOrder: number;
   }): Promise<EpisodeGroup> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute(
       `INSERT INTO episode_groups (name, parent_group_id, group_type, display_order)
       VALUES (?, ?, ?, ?)`,
@@ -72,7 +72,7 @@ export const episodeGroupRepository = {
    * @param newName 新しいグループ名
    */
   async updateGroupName(groupId: number, newName: string): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute(`UPDATE episode_groups SET name = ? WHERE id = ?`, [newName, groupId]);
   },
 
@@ -82,7 +82,7 @@ export const episodeGroupRepository = {
    * @param newParentId 新しい親グループID (nullの場合はルート)
    */
   async updateGroupParent(groupId: number, newParentId: number | null): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('UPDATE episode_groups SET parent_group_id = ? WHERE id = ?', [
       newParentId,
       groupId,
@@ -95,7 +95,7 @@ export const episodeGroupRepository = {
    * @returns EpisodeGroupオブジェクト、存在しない場合はnull
    */
   async getGroupById(groupId: number): Promise<EpisodeGroup | null> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select('SELECT * FROM episode_groups WHERE id = ?', [groupId]);
     if (!Array.isArray(rows) || rows.length === 0) return null;
     return mapRowToEpisodeGroup(rows[0] as EpisodeGroupRow);
@@ -107,7 +107,7 @@ export const episodeGroupRepository = {
    * @returns 子グループの配列
    */
   async getGroups(parentId: number | null): Promise<readonly EpisodeGroup[]> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     let rows;
     if (parentId === null) {
       rows = await db.select(
@@ -128,7 +128,7 @@ export const episodeGroupRepository = {
    * @returns フラットなEpisodeGroupの配列
    */
   async findAlbumGroups(): Promise<readonly EpisodeGroup[]> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select<EpisodeGroupRow[]>(
       "SELECT * FROM episode_groups WHERE group_type = 'album'"
     );
@@ -140,7 +140,7 @@ export const episodeGroupRepository = {
    * @param groups グループIDと新しい表示順序のペアの配列
    */
   async updateOrders(groups: readonly { id: number; display_order: number }[]): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('BEGIN TRANSACTION');
     try {
       for (const group of groups) {
@@ -164,7 +164,7 @@ export const episodeGroupRepository = {
     if (groupIds.length === 0) {
       return;
     }
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const placeholders = groupIds.map(() => '?').join(',');
     await db.execute(`DELETE FROM episode_groups WHERE id IN (${placeholders})`, [...groupIds]);
   },

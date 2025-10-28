@@ -32,7 +32,7 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
 
 export const dialogueRepository = {
   async getDialogueById(dialogueId: number): Promise<Dialogue | null> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select<DialogueRow[]>('SELECT * FROM dialogues WHERE id = ?', [
       dialogueId,
     ]);
@@ -40,7 +40,7 @@ export const dialogueRepository = {
   },
 
   async getDialoguesByEpisodeId(episodeId: number): Promise<readonly Dialogue[]> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select<DialogueRow[]>(
       'SELECT * FROM dialogues WHERE episode_id = ? ORDER BY start_time_ms ASC',
       [episodeId]
@@ -49,7 +49,7 @@ export const dialogueRepository = {
   },
 
   async bulkInsertDialogues(episodeId: number, dialogues: readonly NewDialogue[]): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const values = dialogues
       .map(
         (d) =>
@@ -69,7 +69,7 @@ export const dialogueRepository = {
     explanation: string,
     sentence: string
   ): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute(
       'UPDATE dialogues SET translation = ?, explanation = ?, sentence = ? WHERE id = ?',
       [translation, explanation, sentence, dialogueId]
@@ -77,12 +77,12 @@ export const dialogueRepository = {
   },
 
   async deleteByEpisodeId(episodeId: number): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('DELETE FROM dialogues WHERE episode_id = ?', [episodeId]);
   },
 
   async updateDialogueText(dialogueId: number, correctedText: string | null): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('UPDATE dialogues SET corrected_text = ? WHERE id = ?', [
       correctedText,
       dialogueId,
@@ -90,13 +90,13 @@ export const dialogueRepository = {
   },
 
   async softDeleteDialogue(dialogueId: number): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const now = new Date().toISOString();
     await db.execute('UPDATE dialogues SET deleted_at = ? WHERE id = ?', [now, dialogueId]);
   },
 
   async undoSoftDeleteDialogue(dialogueId: number): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('UPDATE dialogues SET deleted_at = NULL WHERE id = ?', [dialogueId]);
   },
 };

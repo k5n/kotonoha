@@ -32,7 +32,7 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
 
 export const episodeRepository = {
   async getEpisodesWithCardCountByGroupId(groupId: number): Promise<readonly Episode[]> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select<EpisodeRow[]>(
       `
       SELECT
@@ -63,7 +63,7 @@ export const episodeRepository = {
     if (groupIds.length === 0) {
       return [];
     }
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const placeholders = groupIds.map(() => '?').join(',');
     const rows = await db.select<{ id: number; title: string; media_path: string }[]>(
       `SELECT id, title, media_path FROM episodes WHERE episode_group_id IN (${placeholders})`,
@@ -73,7 +73,7 @@ export const episodeRepository = {
   },
 
   async getEpisodeById(id: number): Promise<Episode | null> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const rows = await db.select<EpisodeRow[]>('SELECT * FROM episodes WHERE id = ?', [id]);
     if (rows.length === 0) {
       return null;
@@ -89,7 +89,7 @@ export const episodeRepository = {
     learningLanguage: string;
     explanationLanguage: string;
   }): Promise<Episode> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const now = new Date().toISOString();
     await db.execute(
       `INSERT INTO episodes (episode_group_id, display_order, title, media_path, learning_language, explanation_language, created_at, updated_at)
@@ -124,7 +124,7 @@ export const episodeRepository = {
       episodeGroupId?: number;
     }
   ): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     const updates: string[] = [];
     const values: (string | number)[] = [];
 
@@ -152,12 +152,12 @@ export const episodeRepository = {
   },
 
   async deleteEpisode(episodeId: number): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('DELETE FROM episodes WHERE id = ?', [episodeId]);
   },
 
   async updateGroupId(episodeId: number, targetGroupId: number): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('UPDATE episodes SET episode_group_id = ? WHERE id = ?', [
       targetGroupId,
       episodeId,
@@ -169,7 +169,7 @@ export const episodeRepository = {
    * @param episodes エピソードIDと新しい表示順序のペアの配列
    */
   async updateOrders(episodes: readonly { id: number; display_order: number }[]): Promise<void> {
-    const db = new Database(getDatabasePath());
+    const db = new Database(await getDatabasePath());
     await db.execute('BEGIN TRANSACTION');
     try {
       for (const episode of episodes) {

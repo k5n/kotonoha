@@ -84,6 +84,19 @@ For fast frontend iteration and browser-based testing, this repository supports 
   - Do not assume native Tauri behavior (secure Stronghold storage, native file system access, audio device control, OS-level dialogs) in browser-mode. These are stubbed or emulated.
   - Use browser-mode for UI development, layout, and component tests. For features that require Rust/Tauri integration (LLM proxying, real DB access, secure key storage, native audio), run the full Tauri environment (`npm run dev`) or use integration tests that exercise the Rust side.
 
+## E2E Testing
+
+For integration testing of the complete Tauri application, this repository provides an E2E test environment using WebdriverIO + Mocha.
+
+- Test framework: WebdriverIO with Mocha
+- Test location: `e2e-tests/` directory
+- Environment isolation: E2E tests run in a separate environment with dedicated data files to avoid conflicts with development or release environments.
+- Agent guidance:
+  - E2E tests exercise the full application stack (frontend + Tauri backend + Rust commands).
+  - Use E2E tests to verify critical user workflows end-to-end after making changes that span multiple layers.
+  - E2E tests are slower than unit or integration tests; keep the test suite focused on essential scenarios.
+  - For details on test implementation and troubleshooting, refer to `e2e-tests/README.md`.
+
 ## Frontend dependency list
 
 <!-- DEP_GRAPH_START -->
