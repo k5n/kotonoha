@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import * as fs from '@tauri-apps/plugin-fs';
 import { fetch } from '@tauri-apps/plugin-http';
+import { getModelsDir } from '../config';
 
 /**
  * The result of a TTS operation.
@@ -137,7 +138,7 @@ export const ttsRepository = {
 
     // Use the required `path` field to construct the configPath under models/
     const relativePath = configFile.path;
-    const configPath = `models/${relativePath}`;
+    const configPath = `${await getModelsDir()}/${relativePath}`;
 
     return await invoke('start_tts', { transcript, configPath, speakerId });
   },
@@ -178,7 +179,7 @@ export const ttsRepository = {
   },
 
   async isModelDownloaded(fileInfo: FileInfo): Promise<boolean> {
-    const checkPath = `models/${fileInfo.path}`;
+    const checkPath = `${await getModelsDir()}/${fileInfo.path}`;
     return await fs.exists(checkPath, { baseDir: fs.BaseDirectory.AppLocalData });
   },
 
@@ -190,8 +191,9 @@ export const ttsRepository = {
    * @param downloadId - The download ID for cancellation.
    */
   async downloadModel(fileInfo: FileInfo, downloadId: string): Promise<void> {
-    const tempPath = `models/${fileInfo.path}.tmp`;
-    const finalPath = `models/${fileInfo.path}`;
+    const modelsDir = await getModelsDir();
+    const tempPath = `${modelsDir}/${fileInfo.path}.tmp`;
+    const finalPath = `${modelsDir}/${fileInfo.path}`;
 
     try {
       // invoke download with the original URL (we kept url on FileInfo)

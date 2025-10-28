@@ -17,10 +17,10 @@ describe('Group page', () => {
     const groupGrid = await $('.grid'); // Assuming GroupGrid uses a CSS grid class
     await expect(groupGrid).toBeDisplayed();
 
-    // // Assert "Add New" button exists and is enabled (if not in album mode)
-    // const addButton = await $('button*=Add'); // Partial text match for button
-    // await expect(addButton).toBeDisplayed();
-    // await expect(addButton).toBeEnabled();
+    // Assert "Add New" button exists and is enabled (if not in album mode)
+    const addButton = await $('button*=Add'); // Partial text match for button
+    await expect(addButton).toBeDisplayed();
+    await expect(addButton).toBeEnabled();
 
     // Assert settings link (cog icon) exists
     const settingsLink = await $('a[href="/settings"]');

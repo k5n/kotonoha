@@ -1,12 +1,38 @@
-import { env } from '$env/dynamic/public';
+import { environmentRepository } from './repositories/environmentRepository';
 
-const DEFAULT_APP_DB_NAME = 'app.db';
-const DEFAULT_MEDIA_DIR = 'media';
+let cachedPrefix: string | null = null;
 
-export function getDatabasePath(): string {
-  return 'sqlite:' + (env.PUBLIC_APP_DB_NAME || DEFAULT_APP_DB_NAME);
+/**
+ * Get the prefix according to your environment.
+ * - Release environment: no prefix
+ * - Development environment (PUBLIC_APP_ENV=dev): 'dev_'
+ * - E2E test environment (PUBLIC_APP_ENV=e2e): 'e2e_'
+ */
+async function getEnvPrefix(): Promise<string> {
+  if (cachedPrefix !== null) {
+    return cachedPrefix;
+  }
+  cachedPrefix = await environmentRepository.getEnvPrefix();
+  return cachedPrefix;
 }
 
-export function getMediaDir(): string {
-  return env.PUBLIC_APP_MEDIA_DIR || DEFAULT_MEDIA_DIR;
+export async function getDatabasePath(): Promise<string> {
+  const prefix = await getEnvPrefix();
+  const dbName = `${prefix}app.db`;
+  return 'sqlite:' + dbName;
+}
+
+export async function getMediaDir(): Promise<string> {
+  const prefix = await getEnvPrefix();
+  return `${prefix}media`;
+}
+
+export async function getSettingsFilename(): Promise<string> {
+  const prefix = await getEnvPrefix();
+  return `${prefix}settings.json`;
+}
+
+export async function getModelsDir(): Promise<string> {
+  const prefix = await getEnvPrefix();
+  return `${prefix}models`;
 }

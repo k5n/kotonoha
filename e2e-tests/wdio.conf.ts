@@ -53,6 +53,10 @@ export const config: Omit<Options.Testrunner, 'capabilities'> & {
   beforeSession: () => {
     tauriDriver = spawn(path.resolve(os.homedir(), '.cargo', 'bin', 'tauri-driver'), [], {
       stdio: [null, process.stdout, process.stderr],
+      env: {
+        ...process.env,
+        PUBLIC_APP_ENV: 'e2e',
+      },
     });
 
     tauriDriver.on('error', (error) => {

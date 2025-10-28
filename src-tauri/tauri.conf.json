@@ -50,7 +50,7 @@
   },
   "plugins": {
     "sql": {
-      "preload": ["sqlite:app.db", "sqlite:dev.db"]
+      "preload": ["sqlite:app.db", "sqlite:dev_app.db", "sqlite:e2e_app.db"]
     }
   }
 }
