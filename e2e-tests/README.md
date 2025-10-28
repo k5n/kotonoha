@@ -14,29 +14,29 @@ E2E テスト実行時は、リリース版や開発版とは別の環境を使�
 | 設定ファイル     | `settings.json`          | `dev_settings.json`      | `e2e_settings.json`      |
 | Stronghold       | `salt.txt`, `vault.hold` | `salt.txt`, `vault.hold` | `salt.txt`, `vault.hold` |
 
-**注意**: API キーを保存する Stronghold 関連ファイルは全環境で共有されます。E2E テストで API キーが必要な場合は、事前に開発環境 (`npm run dev`) で設定画面からAPIキーを設定してください。
+**注意**: API キーを保存する Stronghold 関連ファイルは全環境で共有されます。E2E テストで API キーが必要なので、事前に開発環境 (`npm run dev`) で設定画面からAPIキーを設定してください。
 
 ## テストの実行
 
 ### 前提条件
 
+以下は本ディレクトリではなく、１つ上のプロジェクトルートで実行します。
+
 1. リリースビルドを作成しておく：
 
    ```bash
-   cd ..
    docker compose up
    ```
 
-2. AppImage のパスを `wdio.conf.ts` の `capabilities[0]['tauri:options'].application` に設定する
-
-3. (オプション) API キーが必要なテストを行う場合は、開発環境で API キーを設定：
+2. 開発環境で API キーを設定：
    ```bash
-   cd ..
    npm run dev
    # 設定画面でAPIキーを入力
    ```
 
 ### テスト実行
+
+以下は本ディレクトリで実行します。
 
 ```bash
 # 通常のテスト実行（前回のデータが残っている場合があります）

@@ -242,15 +242,27 @@ If the UI needs additional mocked behavior, extend the modules under `src/mocks/
 - `npm run format`: Formats the code.
 - `npm run generate:graph`: Generates dependency graph diagrams and lists and saves them to [`doc/dependency-graph.md`](./doc/dependency-graph.md) and [`AGENTS.md`](./AGENTS.md).
 
-### Database Usage
+### Environment Isolation
 
-Kotonoha uses different database files depending on the build environment:
+Kotonoha uses different database files depending on the environment:
 
-- **Development build**: `dev.db`
-- **Release build**: `app.db`
+- **Development environment**: `dev_app.db`
+- **Release environment**: `app.db`
+- **E2E test environment**: `e2e_app.db`
 
-This is controlled by the `PUBLIC_APP_DB_NAME` variable set in `.env.development`. Both the TypeScript and Rust sides of the application read this variable and switch the database file accordingly.  
-This ensures that development and production data are kept separate.
+The environment is determined by the `PUBLIC_APP_ENV` variable:
+
+- Set to `dev` in `.env.development` for development builds
+- Set to `e2e` by the E2E test runner for test execution
+- Unset (or empty) for release builds
+
+This environment separation extends to other resources as well:
+
+- Media files: `dev_media/`, `media/`, `e2e_media/`
+- TTS models: `dev_models/`, `models/`, `e2e_models/`
+- Settings: `dev_settings.json`, `settings.json`, `e2e_settings.json`
+
+Both the TypeScript frontend and Rust backend read this variable and apply the appropriate prefix to ensure that development, release, and test data remain isolated.
 
 ### Building AppImage Locally on Linux (for Developers)
 

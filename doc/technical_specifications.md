@@ -372,36 +372,6 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 - `read_text_file(path: String) -> Result<String, String>`
   - 指定したテキストファイルを読み込み、その内容を返す。
 
-#### ブラウザ開発モード（Vite alias を利用した Tauri モック）
-
-フロントエンドの高速な UI 開発やブラウザ上での確認のため、本プロジェクトは Vite の alias 機能を使用して Tauri とそのプラグインをローカルのモック実装に置き換える「ブラウザ開発モード」を提供します。これは UI レイアウトの調整、コンポーネント単位の確認、軽量な統合テストに有用です。
-
-- 有効化方法:
-  - 次のスクリプトを実行します:
-    ```bash
-    npm run dev:browser
-    ```
-  - スクリプトは環境変数 `VITE_RUN_MODE=browser` を設定し、`vite.config.js` 内の alias マッピングが有効になります。
-- 置き換え対象の例:
-  - `vite.config.js` は多くの Tauri インポートを `src/mocks/*` にマッピングします。代表例:
-    - `@tauri-apps/plugin-store`
-    - `@tauri-apps/api/app`
-    - `@tauri-apps/plugin-stronghold`
-    - `@tauri-apps/api/core`
-    - `@tauri-apps/api/event`
-    - `@tauri-apps/api/path`
-    - `@tauri-apps/plugin-log`
-    - `@tauri-apps/plugin-sql`
-    - `@tauri-apps/plugin-fs`
-    - `@tauri-apps/plugin-http`
-    - `@tauri-apps/plugin-dialog`
-  - 正確な一覧は `vite.config.js` を参照してください。
-- モックの場所と拡張方法:
-  - モック実装は `src/mocks/` に置かれています。各ファイルはフロントエンドが期待する最小限の API をエミュレートします。必要に応じてこれらのファイルを編集して追加の振る舞いを実装できます。
-- 利用上の注意（制約）:
- - 利用上の注意（制約）:
-  - ブラウザモードでは多くのネイティブ固有の機能が正確に再現されない可能性があります。これらを含む機能はフル Tauri 環境（`npm run dev`）での確認が必要です。
-
 ---
 
 ### 4.3. データフェッチ・状態管理戦略
@@ -445,3 +415,58 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 - `deleteEpisode` ユースケースは、まずデータベース上のレコードを削除する。
 - データベースの削除が成功したら、続けて `media/{UUID}` ディレクトリを**再帰的に**物理削除する。これにより、関連する音声ファイルやスクリプトファイルが一括でクリーンアップされる。
+
+---
+
+### 4.4 動作確認環境
+
+#### 開発モード
+
+- **コマンド**: `npm run dev`
+- **説明**: Tauri 開発モードでアプリケーションを起動
+
+#### ブラウザ開発モード（Vite alias を利用した Tauri モック）
+
+フロントエンドの高速な UI 開発やブラウザ上での確認のため、本プロジェクトは Vite の alias 機能を使用して Tauri とそのプラグインをローカルのモック実装に置き換える「ブラウザ開発モード」を提供する。これは UI レイアウトの調整、コンポーネント単位の確認、軽量な統合テストに有用である。
+
+- 有効化方法:
+  - 次のスクリプトを実行:
+    ```bash
+    npm run dev:browser
+    ```
+  - スクリプトは環境変数 `VITE_RUN_MODE=browser` を設定し、`vite.config.js` 内の alias マッピングが有効になる。
+- 置き換え対象の例:
+  - `vite.config.js` は多くの Tauri インポートを `src/mocks/*` にマッピング。代表例:
+    - `@tauri-apps/plugin-store`
+    - `@tauri-apps/api/app`
+    - `@tauri-apps/plugin-stronghold`
+    - `@tauri-apps/api/core`
+    - `@tauri-apps/api/event`
+    - `@tauri-apps/api/path`
+    - `@tauri-apps/plugin-log`
+    - `@tauri-apps/plugin-sql`
+    - `@tauri-apps/plugin-fs`
+    - `@tauri-apps/plugin-http`
+    - `@tauri-apps/plugin-dialog`
+  - 正確な一覧は `vite.config.js` を参照。
+- モックの場所と拡張方法:
+  - モック実装は `src/mocks/` に配置。各ファイルはフロントエンドが期待する最小限の API をエミュレート。必要に応じてこれらのファイルを編集して追加の振る舞いを実装。
+- 利用上の注意（制約）:
+ - 利用上の注意（制約）:
+  - ブラウザモードでは多くのネイティブ固有の機能が正確に再現されない可能性がある。これらを含む機能はフル Tauri 環境（`npm run dev`）での確認が必要。
+
+#### E2Eテスト環境 (End-to-End Testing Environment)
+
+アプリケーション全体の統合テストを行うため、WebdriverIO + Mocha を使用した E2E テスト環境を提供する。
+
+- **テストフレームワーク**: WebdriverIO + Mocha
+- **テストコードの配置**: `e2e-tests/` ディレクトリ
+- **環境分離**: E2E テスト実行時は、リリース版や開発版とは別の環境を使用し、データファイルの競合を防ぐ。
+
+- **E2E テストの目的と範囲**:
+  - フロントエンド + Tauri バックエンド + Rust コマンドを含む完全なアプリケーションスタックの動作を検証する。
+  - 複数レイヤーにまたがる変更を行った後、重要なユーザーワークフローをエンドツーエンドで確認するために使用する。
+  - E2E テストは単体テストや統合テストよりも実行時間が長いため、テストスイートは必須シナリオに絞って構成する。
+
+- **詳細情報**:
+  - 詳細については、`e2e-tests/README.md` を参照。
