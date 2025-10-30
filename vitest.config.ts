@@ -1,11 +1,8 @@
-import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [sveltekit()],
   test: {
-    environment: 'jsdom',
-    globals: true,
-    include: ['**/*.test.ts'],
+    // Define multiple projects for unit tests and browser tests
+    projects: ['./vitest.config.unit.ts', './vitest.config.browser.ts'],
   },
 });
