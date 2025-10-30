@@ -1,4 +1,5 @@
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+// import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { webdriverio } from '@vitest/browser-webdriverio';
 import path from 'path';
@@ -9,7 +10,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineProject({
-  plugins: [tailwindcss(), svelte()],
+  // plugins: [tailwindcss(), svelte()],
+  plugins: [tailwindcss(), sveltekit()],
   resolve: {
     alias: {
       $src: path.resolve(__dirname, './src'),
@@ -28,5 +30,8 @@ export default defineProject({
     // globals: true,
     include: ['**/*.browser.test.ts'],
     exclude: ['**/node_modules/**', '**/e2e-tests/**'],
+  },
+  build: {
+    ssr: false,
   },
 });
