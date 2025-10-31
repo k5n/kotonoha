@@ -84,19 +84,6 @@ For fast frontend iteration and browser-based testing, this repository supports 
   - Do not assume native Tauri behavior (secure Stronghold storage, native file system access, audio device control, OS-level dialogs) in browser-mode. These are stubbed or emulated.
   - Use browser-mode for UI development, layout, and component tests. For features that require Rust/Tauri integration (LLM proxying, real DB access, secure key storage, native audio), run the full Tauri environment (`npm run dev`) or use integration tests that exercise the Rust side.
 
-## E2E Testing
-
-For integration testing of the complete Tauri application, this repository provides an E2E test environment using WebdriverIO + Mocha.
-
-- Test framework: WebdriverIO with Mocha
-- Test location: `e2e-tests/` directory
-- Environment isolation: E2E tests run in a separate environment with dedicated data files to avoid conflicts with development or release environments.
-- Agent guidance:
-  - E2E tests exercise the full application stack (frontend + Tauri backend + Rust commands).
-  - Use E2E tests to verify critical user workflows end-to-end after making changes that span multiple layers.
-  - E2E tests are slower than unit or integration tests; keep the test suite focused on essential scenarios.
-  - For details on test implementation and troubleshooting, refer to `e2e-tests/README.md`.
-
 ## Frontend dependency list
 
 <!-- DEP_GRAPH_START -->
@@ -257,6 +244,7 @@ For integration testing of the complete Tauri application, this repository provi
 - src/lib/domain/services/parseTsvToDialogues.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/domain/services/parseTsvToText.ts -> src/lib/domain/entities/tsvConfig.ts
 - src/lib/domain/services/parseVttToDialogues.ts -> src/lib/domain/entities/dialogue.ts
+- src/lib/infrastructure/config.ts -> src/lib/infrastructure/repositories/environmentRepository.ts
 - src/lib/infrastructure/repositories/appInfoRepository.ts -> src/lib/domain/entities/appInfo.ts
 - src/lib/infrastructure/repositories/audioRepository.ts -> src/lib/domain/entities/audioInfo.ts
 - src/lib/infrastructure/repositories/dialogueRepository.ts -> src/lib/domain/entities/dialogue.ts
@@ -271,8 +259,10 @@ For integration testing of the complete Tauri application, this repository provi
 - src/lib/infrastructure/repositories/sentenceCardRepository.ts -> src/lib/domain/entities/sentenceCard.ts
 - src/lib/infrastructure/repositories/sentenceCardRepository.ts -> src/lib/infrastructure/config.ts
 - src/lib/infrastructure/repositories/settingsRepository.ts -> src/lib/domain/entities/settings.ts
+- src/lib/infrastructure/repositories/settingsRepository.ts -> src/lib/infrastructure/config.ts
 - src/lib/infrastructure/repositories/ttsRepository.ts -> src/lib/domain/entities/ttsEvent.ts
 - src/lib/infrastructure/repositories/ttsRepository.ts -> src/lib/domain/entities/voice.ts
+- src/lib/infrastructure/repositories/ttsRepository.ts -> src/lib/infrastructure/config.ts
 - src/lib/infrastructure/repositories/ttsRepository.ts -> src/lib/utils/language.ts
 - src/lib/infrastructure/repositories/youtubeRepository.ts -> src/lib/domain/entities/dialogue.ts
 - src/lib/infrastructure/repositories/youtubeRepository.ts -> src/lib/domain/entities/youtubeMetadata.ts
@@ -447,12 +437,47 @@ When producing or validating TypeScript in this repo follow these rules.
 
 ## Testing Guidelines
 
-- Placement: Keep frontend test files next to the code they test. Place a test file named `*.test.ts` alongside the corresponding `*.ts` source file under `src/`.
-- Framework: Use Vitest for tests. The repository is configured to enable Vitest `globals`, so tests can use `describe`, `it`, `test`, and `expect` without importing them.
-- Minimal scope for agents: When adding or updating tests, keep them focused and small (happy path plus 1–2 edge cases). Prefer unit tests for `src/lib/domain` services and lightweight integration tests for application logic.
-- Reporting: When you update or add tests, include which cases are covered (happy path, empty input, error path) and any assumptions.
+Three test layers are provided:
 
-These guidelines keep test code predictable and make it easy for automated agents to reason about and run tests in this repository.
+### 1. Unit Tests (`*.test.ts`)
+
+- **Location**: Next to the code being tested
+- **Target**: Domain services, pure functions
+- **Environment**: Node.js (jsdom)
+- **Run**: `npm run test:unit`
+- **Scope**: Small, focused tests (happy path + 1-2 edge cases)
+
+### 2. Browser Mode Tests (`*.browser.test.ts`)
+
+- **Location**:
+  - Component tests: next to components
+  - **Route integration tests** (primary focus): `integration.browser.test.ts` in each route directory
+- **Target**: Frontend integration, page-level workflows
+- **Environment**: Real browser (Chrome via WebdriverIO)
+- **Run**: `npm run test:browser`
+- **Mocking**: Tauri (Rust) modules mocked via Vitest's `vi.mock()`. Use shared factories from `src/lib/testing/mockFactories.ts`.
+
+**Requirements:**
+
+- Import `$src/app.css` for styling
+- Reset stores/mocks in `beforeEach`
+- **Always** call `await page.screenshot()` at end of each test
+
+### 3. E2E Tests (`*.e2e.ts`)
+
+For integration testing of the complete Tauri application, this repository provides an E2E test environment using WebdriverIO + Mocha.
+
+- **Location**: `e2e-tests/specs/`
+- **Target**: Full app stack (frontend + Tauri backend + Rust commands)
+- **Environment**: Real Tauri application
+- **Details**: See `e2e-tests/README.md`
+
+### Test Selection Guide
+
+- Domain logic → Unit tests
+- Frontend integration (page workflows) → Browser mode integration tests
+- Individual components → Browser mode component tests
+- Full stack validation → E2E tests
 
 ## AI Agent Guidelines
 
@@ -462,7 +487,9 @@ Commands
 - Lint: `npm run lint`
 - Check: `npm run check`
 - Format: `npm run format`
-- Test all: `npm run test`
+- Test unit: `npm run test:unit`
+- Test browser: `npm run test:browser`
+- Test all: `npm run test:all`
 - Test single file: `npx vitest <path_to_test_file> run` (example: `npx vitest src/lib/domain/services/buildEpisodeGroupTree.test.ts run`)
 
 Work rules for tasks

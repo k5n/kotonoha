@@ -104,6 +104,7 @@ graph LR
                     src_lib_infrastructure_repositories_appInfoRepository_ts["appInfoRepository.ts"]
                     src_lib_infrastructure_repositories_audioRepository_ts["audioRepository.ts"]
                     src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository.ts"]
+                    src_lib_infrastructure_repositories_environmentRepository_ts["environmentRepository.ts"]
                     src_lib_infrastructure_repositories_episodeGroupRepository_ts["episodeGroupRepository.ts"]
                     src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository.ts"]
                     src_lib_infrastructure_repositories_fileRepository_ts["fileRepository.ts"]
@@ -146,6 +147,9 @@ graph LR
                 subgraph "utils"
                     src_lib_presentation_utils_dateFormatter_ts["dateFormatter.ts"]
                 end
+            end
+            subgraph "testing"
+                src_lib_testing_mockFactories_ts["mockFactories.ts"]
             end
             subgraph "utils"
                 src_lib_utils_language_ts["language.ts"]
@@ -331,6 +335,7 @@ src_lib_domain_services_parseTsvToDialogues_ts --> src_lib_domain_entities_dialo
 src_lib_domain_services_parseTsvToDialogues_ts --> src_lib_domain_entities_tsvConfig_ts
 src_lib_domain_services_parseTsvToText_ts --> src_lib_domain_entities_tsvConfig_ts
 src_lib_domain_services_parseVttToDialogues_ts --> src_lib_domain_entities_dialogue_ts
+src_lib_infrastructure_config_ts --> src_lib_infrastructure_repositories_environmentRepository_ts
 src_lib_infrastructure_repositories_appInfoRepository_ts --> src_lib_domain_entities_appInfo_ts
 src_lib_infrastructure_repositories_audioRepository_ts --> src_lib_domain_entities_audioInfo_ts
 src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_dialogue_ts
@@ -345,8 +350,10 @@ src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceCard_ts
 src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_settingsRepository_ts --> src_lib_domain_entities_settings_ts
+src_lib_infrastructure_repositories_settingsRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_ttsEvent_ts
 src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_voice_ts
+src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_infrastructure_config_ts
 src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_utils_language_ts
 src_lib_infrastructure_repositories_youtubeRepository_ts --> src_lib_domain_entities_dialogue_ts
 src_lib_infrastructure_repositories_youtubeRepository_ts --> src_lib_domain_entities_youtubeMetadata_ts
