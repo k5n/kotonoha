@@ -242,6 +242,61 @@ If the UI needs additional mocked behavior, extend the modules under `src/mocks/
 - `npm run format`: Formats the code.
 - `npm run generate:graph`: Generates dependency graph diagrams and lists and saves them to [`doc/dependency-graph.md`](./doc/dependency-graph.md) and [`AGENTS.md`](./AGENTS.md).
 
+### Testing
+
+Kotonoha uses a multi-layered testing approach:
+
+#### Unit Tests
+
+Test pure domain logic and services without external dependencies.
+
+```bash
+npm run test:unit
+```
+
+- Location: `*.test.ts` files next to the code being tested
+- Framework: Vitest with jsdom
+
+#### Browser Mode Integration Tests
+
+Test frontend integration and page-level workflows in a real browser environment.
+
+```bash
+npm run test:browser
+```
+
+- Location:
+  - Component tests: `*.browser.test.ts` next to components
+  - **Route integration tests**: `integration.browser.test.ts` in each route directory
+- Framework: Vitest Browser Mode with WebdriverIO (Chrome)
+- Mocking: Tauri (Rust) modules are mocked using Vitest's `vi.mock()` with shared mock factories in `src/lib/testing/`
+
+#### E2E Tests
+
+Test the complete application stack including Tauri backend and Rust commands.
+
+```bash
+cd e2e-tests
+npm install
+npm test
+```
+
+- Location: `e2e-tests/specs/*.e2e.ts`
+- Framework: WebdriverIO + Mocha
+- See `e2e-tests/README.md` for details
+
+#### Run All Tests
+
+```bash
+npm run test:all
+```
+
+#### When to Use Each Test Type
+
+- **Unit tests**: Domain services and pure functions
+- **Browser mode integration tests**: Frontend workflows, page-level integration (Rust mocked)
+- **E2E tests**: Full application stack validation (frontend + backend)
+
 ### Environment Isolation
 
 Kotonoha uses different database files depending on the environment:
