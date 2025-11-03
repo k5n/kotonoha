@@ -4,6 +4,7 @@
 .serena
 /target
 __screenshots__
+/coverage
 
 .DS_Store
 node_modules
