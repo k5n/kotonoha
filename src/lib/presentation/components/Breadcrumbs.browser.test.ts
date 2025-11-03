@@ -1,5 +1,4 @@
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
-import { beforeEach, expect, test } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import Component from './Breadcrumbs.svelte';

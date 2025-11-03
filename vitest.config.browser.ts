@@ -4,14 +4,32 @@ import tailwindcss from '@tailwindcss/vite';
 import { webdriverio } from '@vitest/browser-webdriverio';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import istanbul from 'vite-plugin-istanbul';
 import { defineProject } from 'vitest/config';
+import type { BrowserCommand } from 'vitest/node';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const getCoverage: BrowserCommand<[], string | undefined> = async (ctx) => {
+  if (ctx.provider.name === 'webdriverio') {
+    const coverage = await ctx.browser.execute(() => window.__coverage__);
+    return JSON.stringify(coverage);
+  }
+};
+
 export default defineProject({
   // plugins: [tailwindcss(), svelte()],
-  plugins: [tailwindcss(), sveltekit()],
+  plugins: [
+    tailwindcss(),
+    sveltekit(),
+    istanbul({
+      include: 'src/*',
+      exclude: ['node_modules', '**/*.test.ts', '**/*.browser.test.ts'],
+      extension: ['.ts', '.svelte'],
+      forceBuildInstrument: true,
+    }),
+  ],
   resolve: {
     alias: {
       $src: path.resolve(__dirname, './src'),
@@ -26,8 +44,9 @@ export default defineProject({
       enabled: true,
       provider: webdriverio(),
       instances: [{ browser: 'chrome' }],
+      commands: { getCoverage },
     },
-    // globals: true,
+    globals: true,
     include: ['**/*.browser.test.ts'],
     exclude: ['**/node_modules/**', '**/e2e-tests/**'],
   },
