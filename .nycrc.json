@@ -1,0 +1,9 @@
+{
+  "all": true,
+  "include": ["src/**/*.ts", "src/**/*.svelte"],
+  "exclude": ["**/**.browser.test.ts", "**/**.test.ts", "src/mocks/**", "src/lib/testing/**"],
+  "reporter": ["text", "html"],
+  "report-dir": "./coverage",
+  "temp-dir": ".nyc_output",
+  "sourceMap": true
+}
