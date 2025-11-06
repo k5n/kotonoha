@@ -6,17 +6,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import istanbul from 'vite-plugin-istanbul';
 import { defineProject } from 'vitest/config';
-import type { BrowserCommand } from 'vitest/node';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const getCoverage: BrowserCommand<[], string | undefined> = async (ctx) => {
-  if (ctx.provider.name === 'webdriverio') {
-    const coverage = await ctx.browser.execute(() => window.__coverage__);
-    return JSON.stringify(coverage);
-  }
-};
 
 export default defineProject({
   // plugins: [tailwindcss(), svelte()],
@@ -44,7 +36,7 @@ export default defineProject({
       enabled: true,
       provider: webdriverio(),
       instances: [{ browser: 'chrome' }],
-      commands: { getCoverage },
+      headless: true,
     },
     globals: true,
     include: ['**/*.browser.test.ts'],

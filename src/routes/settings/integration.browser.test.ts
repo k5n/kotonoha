@@ -3,7 +3,7 @@ import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import { getCoverage, writeFile } from '$lib/testing/browserCommands';
 import { createMockStore, setupStrongholdMock } from '$lib/testing/mockFactories';
 import { render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { commands, page } from 'vitest/browser';
 import type { PageData } from './$types';
 import { load } from './+page';
 import Component from './+page.svelte';
@@ -32,10 +32,16 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+declare global {
+  interface Window {
+    __coverage__?: Record<string, unknown>;
+  }
+}
+
 afterAll(async () => {
-  const coverage = await getCoverage();
+  const coverage = window.__coverage__;
   if (coverage) {
-    writeFile('coverage/settings-integration.json', coverage);
+    commands.writeFile('coverage/settings-integration.json', JSON.stringify(coverage));
   }
 });
 
