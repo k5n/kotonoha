@@ -436,7 +436,7 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
     ```
   - スクリプトは環境変数 `VITE_RUN_MODE=browser` を設定し、`vite.config.js` 内の alias マッピングが有効になる。
 - 置き換え対象の例:
-  - `vite.config.js` は多くの Tauri インポートを `src/mocks/*` にマッピング。代表例:
+  - `vite.config.js` は多くの Tauri インポートを `src/lib/infrastructure/mocks/*` にマッピング。代表例:
     - `@tauri-apps/plugin-store`
     - `@tauri-apps/api/app`
     - `@tauri-apps/plugin-stronghold`
@@ -450,7 +450,7 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
     - `@tauri-apps/plugin-dialog`
   - 正確な一覧は `vite.config.js` を参照。
 - モックの場所と拡張方法:
-  - モック実装は `src/mocks/` に配置。各ファイルはフロントエンドが期待する最小限の API をエミュレート。必要に応じてこれらのファイルを編集して追加の振る舞いを実装。
+  - モック実装は `src/lib/infrastructure/mocks/` に配置。各ファイルはフロントエンドが期待する最小限の API をエミュレート。必要に応じてこれらのファイルを編集して追加の振る舞いを実装。
 - 利用上の注意（制約）:
  - 利用上の注意（制約）:
   - ブラウザモードでは多くのネイティブ固有の機能が正確に再現されない可能性がある。これらを含む機能はフル Tauri 環境（`npm run dev`）での確認が必要。

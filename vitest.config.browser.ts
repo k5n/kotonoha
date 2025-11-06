@@ -26,7 +26,10 @@ export default defineProject({
     alias: {
       $src: path.resolve(__dirname, './src'),
       $lib: path.resolve(__dirname, './src/lib'),
-      '$env/dynamic/public': path.resolve(__dirname, './src/mocks/env-dynamic-public.ts'),
+      '$env/dynamic/public': path.resolve(
+        __dirname,
+        './src/lib/infrastructure/mocks/env-dynamic-public.ts'
+      ),
     },
   },
   test: {
@@ -37,6 +40,7 @@ export default defineProject({
       provider: webdriverio(),
       instances: [{ browser: 'chrome' }],
       headless: true,
+      viewport: { width: 800, height: 1024 },
     },
     globals: true,
     include: ['**/*.browser.test.ts'],

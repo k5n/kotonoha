@@ -148,9 +148,6 @@ graph LR
                     src_lib_presentation_utils_dateFormatter_ts["dateFormatter.ts"]
                 end
             end
-            subgraph "testing"
-                src_lib_testing_mockFactories_ts["mockFactories.ts"]
-            end
             subgraph "utils"
                 src_lib_utils_language_ts["language.ts"]
             end
