@@ -2,10 +2,11 @@ import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episode
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
+import { outputCoverage } from '$lib/testing/outputCoverage';
 import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 import { render } from 'vitest-browser-svelte';
-import { commands, page } from 'vitest/browser';
+import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
@@ -14,12 +15,6 @@ import '$src/app.css';
 
 vi.mock('@tauri-apps/plugin-sql', () => ({ __esModule: true, default: mockDatabase }));
 vi.mock('@tauri-apps/api/core');
-
-declare global {
-  interface Window {
-    __coverage__?: Record<string, unknown>;
-  }
-}
 
 const DATABASE_URL = 'dummy';
 
@@ -84,10 +79,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  const coverage = window.__coverage__;
-  if (coverage) {
-    await commands.writeFile('coverage/episode-list-integration.json', JSON.stringify(coverage));
-  }
+  await outputCoverage('episode-list-integration');
 });
 
 test('success: episode list loads and displays episodes for the selected group', async () => {
