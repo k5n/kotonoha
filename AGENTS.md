@@ -503,6 +503,7 @@ Work rules for tasks
 - After creating or editing files under `src/`, run `npm run format` to format code.
 - After creating or editing files under `src/`, run `npm run lint` to check for linter errors.
 - After creating or editing files under `src/`, run `npm run check` to detect SvelteKit type/check errors.
+- When setting up a fresh Git worktree environment as an AI agent, install dependencies with `npm ci` (not `npm install`) to keep `package-lock.json` unchanged.
 - When adding or modifying tests, first describe the test changes in natural language and stop (do not run tests yet). Then wait for explicit permission to proceed.
 
 Additional Coding rules
