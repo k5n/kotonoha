@@ -36,10 +36,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - Language Detection command: `detect_language_from_text(text: String) -> Option<String>`
   - Utility: `read_text_file(path: String) -> Result<String, String>`
 
-## Agent workflow notes
-
-- When creating a fresh Git worktree environment as an AI Agent, run `npm ci` instead of `npm install` so that `package-lock.json` remains unchanged.
-- Database overview
+## Database overview
   - Tables:
     - `episode_groups`: hierarchical groups (self-referential `parent_group_id` nullable). Key fields: `id` (PK), `name`, `display_order`, `parent_group_id`, `group_type` (`album`|`folder`). Root default group: name="Default", `group_type`=`album`.
     - `episodes`: one row per episode (audio + transcript). Key fields: `id`, `episode_group_id` (FK), `display_order`, `title`, `media_path` (relative path under app data), `learning_language`, `explanation_language`, `created_at`, `updated_at`.
