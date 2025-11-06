@@ -36,6 +36,7 @@ export default defineProject({
       enabled: true,
       provider: webdriverio(),
       instances: [{ browser: 'chrome' }],
+      headless: true,
     },
     globals: true,
     include: ['**/*.browser.test.ts'],
