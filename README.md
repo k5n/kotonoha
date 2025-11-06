@@ -215,13 +215,13 @@ You can run the frontend in a regular web browser without launching the Tauri ru
   - Faster iteration when you only work on the UI or Svelte components.
   - No Rust/Tauri toolchain required for basic frontend development.
 - How it works:
-  - The Vite configuration enables an alias map when `VITE_RUN_MODE=browser` is set. The aliases replace Tauri and Tauri-plugin imports with mock modules under `src/mocks`.
+  - The Vite configuration enables an alias map when `VITE_RUN_MODE=browser` is set. The aliases replace Tauri and Tauri-plugin imports with mock modules under `src/lib/infrastructure/mocks`.
   - A convenience npm script is provided:
     ```bash
     npm run dev:browser
     ```
 - Where the mocks live:
-  - Mock implementations are in `src/mocks/` (for example, `src/mocks/plugin-store.ts`, `src/mocks/plugin-stronghold.ts`, ...).
+  - Mock implementations are in `src/lib/infrastructure/mocks/` (for example, `src/lib/infrastructure/mocks/plugin-store.ts`, `src/lib/infrastructure/mocks/plugin-stronghold.ts`, ...).
   - The alias mapping that activates the mocks is in `vite.config.js`.
 - Limitations:
   - Browser-mode stubs many native features; expect differences or missing functionality for native integrations.
@@ -230,7 +230,7 @@ You can run the frontend in a regular web browser without launching the Tauri ru
     npm run dev
     ```
 
-If the UI needs additional mocked behavior, extend the modules under `src/mocks/` to match the API surface required by the frontend.
+If the UI needs additional mocked behavior, extend the modules under `src/lib/infrastructure/mocks/` to match the API surface required by the frontend.
 
 ### Available Scripts
 
@@ -267,7 +267,7 @@ npm run test:browser
 
 - Location:
   - Component tests: `*.browser.test.ts` next to components
-  - **Route integration tests**: `integration.browser.test.ts` in each route directory
+  - **Route integration tests**: `src/integration-tests/*.browser.test.ts`
 - Framework: Vitest Browser Mode with WebdriverIO (Chrome)
 - Mocking: Tauri (Rust) modules are mocked using Vitest's `vi.mock()` with shared mock factories in `src/lib/testing/`
 

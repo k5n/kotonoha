@@ -1,12 +1,11 @@
 import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
-import { getCoverage, writeFile } from '$lib/testing/browserCommands';
 import { createMockStore, setupStrongholdMock } from '$lib/testing/mockFactories';
 import { render } from 'vitest-browser-svelte';
 import { commands, page } from 'vitest/browser';
-import type { PageData } from './$types';
-import { load } from './+page';
-import Component from './+page.svelte';
+import type { PageData } from '../routes/settings/$types';
+import { load } from '../routes/settings/+page';
+import Component from '../routes/settings/+page.svelte';
 
 import '$src/app.css';
 

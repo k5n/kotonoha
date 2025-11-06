@@ -1,14 +1,14 @@
 import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
-import mockDatabase from '$src/mocks/plugin-sql';
+import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 import { render } from 'vitest-browser-svelte';
 import { commands, page } from 'vitest/browser';
-import type { PageData } from './$types';
-import { load } from './+page';
-import Component from './+page.svelte';
+import type { PageData } from '../routes/episode-list/[groupId]/$types';
+import { load } from '../routes/episode-list/[groupId]/+page';
+import Component from '../routes/episode-list/[groupId]/+page.svelte';
 
 import '$src/app.css';
 
@@ -21,7 +21,7 @@ declare global {
   }
 }
 
-const DATABASE_URL = 'sqlite:app.db';
+const DATABASE_URL = 'dummy';
 
 async function clearDatabase(): Promise<void> {
   const db = new Database(DATABASE_URL);
@@ -129,9 +129,7 @@ test('error: error message is shown when episode fetching fails due to database 
 
     render(Component, { data: result, params: { groupId: '999' } });
 
-    await expect
-      .element(page.getByText('Failed to fetch episodes.'))
-      .toBeInTheDocument();
+    await expect.element(page.getByText('Failed to fetch episodes.')).toBeInTheDocument();
     await expect.element(page.getByText('Loading...')).toBeInTheDocument();
 
     await page.screenshot();

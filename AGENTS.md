@@ -28,7 +28,7 @@ Kotonoha is a desktop application that helps language learners transform audio/v
     - The caller provides a `download_id` (string) to correlate progress events and cancellation. Progress is emitted via the `download_progress` event.
   - Cancel download command: `cancel_download(download_id: String) -> Result<(), String>`
 - TTS command: `start_tts(transcript: String, config_path: String, speaker_id: u32) -> Result<{ audio_path: String, script_path: String }, String>`
-    - Runs TTS using the given transcript and config. Returns both the temporary OGG `audio_path` and an SSWT `script_path`. Progress is reported via the `tts-progress` event.
+  - Runs TTS using the given transcript and config. Returns both the temporary OGG `audio_path` and an SSWT `script_path`. Progress is reported via the `tts-progress` event.
   - Cancel TTS: `cancel_tts() -> Result<(), String>`
     - Cancels an in-progress TTS operation.
   - YouTube subtitle: `fetch_youtube_subtitle(video_id: String, language: String, track_kind: String) -> Result<Vec<AtomicDialogue>, String>`
@@ -65,7 +65,7 @@ For fast frontend iteration and browser-based testing, this repository supports 
     ```
   - This sets `VITE_RUN_MODE=browser` which activates alias mappings in `vite.config.js`.
 - What is mocked:
-  - The Vite config maps many Tauri imports to `src/mocks/*`. Examples include:
+  - The Vite config maps many Tauri imports to `src/lib/infrastructure/mocks/*`. Examples include:
     - `@tauri-apps/plugin-store`
     - `@tauri-apps/api/app`
     - `@tauri-apps/plugin-stronghold`
@@ -79,7 +79,7 @@ For fast frontend iteration and browser-based testing, this repository supports 
     - `@tauri-apps/plugin-dialog`
   - See `vite.config.js` for the exact mapping.
 - Where to look / extend:
-  - Mock implementations live under `src/mocks/`. They provide minimal, frontend-friendly APIs used by the app. If a UI needs extra behavior, extend the mock file accordingly.
+  - Mock implementations live under `src/lib/infrastructure/mocks/`. They provide minimal, frontend-friendly APIs used by the app. If a UI needs extra behavior, extend the mock file accordingly.
 - Agent guidance and limitations:
   - Do not assume native Tauri behavior (secure Stronghold storage, native file system access, audio device control, OS-level dialogs) in browser-mode. These are stubbed or emulated.
   - Use browser-mode for UI development, layout, and component tests. For features that require Rust/Tauri integration (LLM proxying, real DB access, secure key storage, native audio), run the full Tauri environment (`npm run dev`) or use integration tests that exercise the Rust side.
@@ -451,7 +451,7 @@ Three test layers are provided:
 
 - **Location**:
   - Component tests: next to components
-  - **Route integration tests** (primary focus): `integration.browser.test.ts` in each route directory
+  - **Route integration tests** (primary focus): `/src/integration-tests/`
 - **Target**: Frontend integration, page-level workflows
 - **Environment**: Real browser (Chrome via WebdriverIO)
 - **Run**: `npm run test:browser`

@@ -39,52 +39,22 @@ export default defineConfig(async () => ({
   // 4. Alias for browser mode
   resolve: {
     alias: isBrowserMode
-      ? [
-          {
-            find: '@tauri-apps/plugin-store',
-            replacement: path.resolve(__dirname, 'src/mocks/plugin-store.ts'),
-          },
-          {
-            find: '@tauri-apps/api/app',
-            replacement: path.resolve(__dirname, 'src/mocks/api-app.ts'),
-          },
-          {
-            find: '@tauri-apps/plugin-stronghold',
-            replacement: path.resolve(__dirname, 'src/mocks/plugin-stronghold.ts'),
-          },
-          {
-            find: '@tauri-apps/api/core',
-            replacement: path.resolve(__dirname, 'src/mocks/api-core.ts'),
-          },
-          {
-            find: '@tauri-apps/api/event',
-            replacement: path.resolve(__dirname, 'src/mocks/api-event.ts'),
-          },
-          {
-            find: '@tauri-apps/api/path',
-            replacement: path.resolve(__dirname, 'src/mocks/api-path.ts'),
-          },
-          {
-            find: '@tauri-apps/plugin-log',
-            replacement: path.resolve(__dirname, 'src/mocks/plugin-log.ts'),
-          },
-          {
-            find: '@tauri-apps/plugin-sql',
-            replacement: path.resolve(__dirname, 'src/mocks/plugin-sql.ts'),
-          },
-          {
-            find: '@tauri-apps/plugin-fs',
-            replacement: path.resolve(__dirname, 'src/mocks/plugin-fs.ts'),
-          },
-          {
-            find: '@tauri-apps/plugin-http',
-            replacement: path.resolve(__dirname, 'src/mocks/plugin-http.ts'),
-          },
-          {
-            find: '@tauri-apps/plugin-dialog',
-            replacement: path.resolve(__dirname, 'src/mocks/plugin-dialog.ts'),
-          },
-        ]
-      : [],
+      ? (() => {
+          const mockDir = path.resolve(__dirname, 'src/lib/infrastructure/mocks');
+          return {
+            '@tauri-apps/plugin-store': path.resolve(mockDir, 'plugin-store.ts'),
+            '@tauri-apps/api/app': path.resolve(mockDir, 'api-app.ts'),
+            '@tauri-apps/plugin-stronghold': path.resolve(mockDir, 'plugin-stronghold.ts'),
+            '@tauri-apps/api/core': path.resolve(mockDir, 'api-core.ts'),
+            '@tauri-apps/api/event': path.resolve(mockDir, 'api-event.ts'),
+            '@tauri-apps/api/path': path.resolve(mockDir, 'api-path.ts'),
+            '@tauri-apps/plugin-log': path.resolve(mockDir, 'plugin-log.ts'),
+            '@tauri-apps/plugin-sql': path.resolve(mockDir, 'plugin-sql.ts'),
+            '@tauri-apps/plugin-fs': path.resolve(mockDir, 'plugin-fs.ts'),
+            '@tauri-apps/plugin-http': path.resolve(mockDir, 'plugin-http.ts'),
+            '@tauri-apps/plugin-dialog': path.resolve(mockDir, 'plugin-dialog.ts'),
+          };
+        })()
+      : {},
   },
 }));
