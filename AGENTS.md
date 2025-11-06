@@ -35,7 +35,6 @@ Kotonoha is a desktop application that helps language learners transform audio/v
     - Fetches transcript segments from YouTube; returns a list of `AtomicDialogue` records with `start_time_ms`, optional `end_time_ms`, and `original_text`.
 - Language Detection command: `detect_language_from_text(text: String) -> Option<String>`
   - Utility: `read_text_file(path: String) -> Result<String, String>`
-
 - Database overview
   - Tables:
     - `episode_groups`: hierarchical groups (self-referential `parent_group_id` nullable). Key fields: `id` (PK), `name`, `display_order`, `parent_group_id`, `group_type` (`album`|`folder`). Root default group: name="Default", `group_type`=`album`.
