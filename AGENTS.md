@@ -27,14 +27,18 @@ Kotonoha is a desktop application that helps language learners transform audio/v
   - Download command: `download_file_with_progress(url: String, file_path: String, download_id: String) -> Result<(), String>`
     - The caller provides a `download_id` (string) to correlate progress events and cancellation. Progress is emitted via the `download_progress` event.
   - Cancel download command: `cancel_download(download_id: String) -> Result<(), String>`
-  - TTS command: `start_tts(transcript: String, config_path: String, speaker_id: u32) -> Result<{ audio_path: String, script_path: String }, String>`
+- TTS command: `start_tts(transcript: String, config_path: String, speaker_id: u32) -> Result<{ audio_path: String, script_path: String }, String>`
     - Runs TTS using the given transcript and config. Returns both the temporary OGG `audio_path` and an SSWT `script_path`. Progress is reported via the `tts-progress` event.
   - Cancel TTS: `cancel_tts() -> Result<(), String>`
     - Cancels an in-progress TTS operation.
   - YouTube subtitle: `fetch_youtube_subtitle(video_id: String, language: String, track_kind: String) -> Result<Vec<AtomicDialogue>, String>`
     - Fetches transcript segments from YouTube; returns a list of `AtomicDialogue` records with `start_time_ms`, optional `end_time_ms`, and `original_text`.
-  - Language Detection command: `detect_language_from_text(text: String) -> Option<String>`
+- Language Detection command: `detect_language_from_text(text: String) -> Option<String>`
   - Utility: `read_text_file(path: String) -> Result<String, String>`
+
+## Agent workflow notes
+
+- When creating a fresh Git worktree environment as an AI Agent, run `npm ci` instead of `npm install` so that `package-lock.json` remains unchanged.
 - Database overview
   - Tables:
     - `episode_groups`: hierarchical groups (self-referential `parent_group_id` nullable). Key fields: `id` (PK), `name`, `display_order`, `parent_group_id`, `group_type` (`album`|`folder`). Root default group: name="Default", `group_type`=`album`.
