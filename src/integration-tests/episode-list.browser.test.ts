@@ -185,6 +185,9 @@ test('success: user can rename an existing episode from the action menu', async 
     expect(invalidateAllMock).toHaveBeenCalledTimes(1);
   });
 
+  await expect.element(page.getByText('Episode 1 Updated')).toBeInTheDocument();
+  await expect.element(page.getByText('Edit Episode Name')).not.toBeInTheDocument();
+
   const updatedTitle = await getEpisodeTitle(episodeId);
   expect(updatedTitle).toBe('Episode 1 Updated');
 
@@ -214,6 +217,9 @@ test('error: rename failure displays an error alert and keeps the original title
 
     await expect.element(page.getByText('Failed to update episode name')).toBeInTheDocument();
     expect(invalidateAllMock).not.toHaveBeenCalled();
+
+    await expect.element(page.getByText('Episode 1 Updated')).not.toBeInTheDocument();
+    await expect.element(page.getByText('Episode 1')).toBeInTheDocument();
 
     const storedTitle = await getEpisodeTitle(episodeId);
     expect(storedTitle).toBe('Episode 1');
@@ -249,6 +255,8 @@ test('success: user can delete an episode after confirming the dialog', async ()
     expect(invalidateAllMock).toHaveBeenCalledTimes(1);
   });
 
+  await expect.element(page.getByText('Episode 1')).not.toBeInTheDocument();
+
   const deletedTitle = await getEpisodeTitle(episodeId);
   expect(deletedTitle).toBeNull();
 
@@ -274,6 +282,8 @@ test('error: delete failure surfaces the error banner and keeps the record', asy
 
     await expect.element(page.getByText('Failed to delete episode')).toBeInTheDocument();
     expect(invalidateAllMock).not.toHaveBeenCalled();
+
+    await expect.element(page.getByText('Episode 1')).toBeInTheDocument();
 
     const remainingTitle = await getEpisodeTitle(episodeId);
     expect(remainingTitle).toBe('Episode 1');
