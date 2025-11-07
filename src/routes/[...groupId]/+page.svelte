@@ -217,6 +217,31 @@
     />
   {/if}
 
+  {#if import.meta.env.MODE === 'test'}
+    <div class="mt-4 space-y-1 text-xs text-gray-400" aria-hidden="true">
+      {#each displayedGroups as group (group.id)}
+        <div class="space-x-2" data-testid={`test-group-actions-${group.id}`}>
+          <button
+            type="button"
+            class="rounded border border-dashed px-2 py-1"
+            data-testid={`test-open-rename-${group.id}`}
+            onclick={() => handleChangeGroupName(group)}
+          >
+            Rename (test)
+          </button>
+          <button
+            type="button"
+            class="rounded border border-dashed px-2 py-1"
+            data-testid={`test-open-delete-${group.id}`}
+            onclick={() => handleDeleteGroup(group)}
+          >
+            Delete (test)
+          </button>
+        </div>
+      {/each}
+    </div>
+  {/if}
+
   <GroupAddModal
     show={showGroupAdd}
     {isSubmitting}

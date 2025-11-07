@@ -2,7 +2,7 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
-  import { Button, Dropdown, DropdownItem, Heading } from 'flowbite-svelte';
+import { Button, Dropdown, DropdownItem, Heading } from 'flowbite-svelte';
   import {
     DotsVerticalOutline,
     FolderOutline,
@@ -64,7 +64,8 @@
     newOrder.splice(targetIndex, 0, removed);
 
     onOrderChange(newOrder);
-  }
+}
+
 </script>
 
 <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -103,6 +104,8 @@
             type="button"
             id={`card-menu-button-${group.id}`}
             class="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+            aria-label={t('components.groupGrid.menuButtonLabel', { groupName: group.name })}
+            data-testid={`group-menu-${group.id}`}
             onclick={(e: MouseEvent) => {
               e.stopPropagation(); // イベント伝播を停止
             }}
@@ -127,6 +130,7 @@
               {t('common.delete')}
             </DropdownItem>
           </Dropdown>
+
         </div>
       </div>
     {/each}
