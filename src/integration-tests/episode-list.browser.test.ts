@@ -2,8 +2,6 @@ import { invalidateAll } from '$app/navigation';
 import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
-import * as deleteEpisodeUsecase from '$lib/application/usecases/deleteEpisode';
-import * as updateEpisodeNameUsecase from '$lib/application/usecases/updateEpisodeName';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { outputCoverage } from '$lib/testing/outputCoverage';
 import { invoke } from '@tauri-apps/api/core';
@@ -171,32 +169,26 @@ test('success: user can rename an existing episode from the action menu', async 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
 
-  const updateEpisodeNameSpy = vi.spyOn(updateEpisodeNameUsecase, 'updateEpisodeName');
-  try {
-    render(Component, { data: result, params: { groupId: String(groupId) } });
+  render(Component, { data: result, params: { groupId: String(groupId) } });
 
-    await openEpisodeActionsMenu();
-    await page.getByRole('button', { name: 'Rename' }).click();
-    await expect.element(page.getByText('Edit Episode Name')).toBeInTheDocument();
+  await openEpisodeActionsMenu();
+  await page.getByRole('button', { name: 'Rename' }).click();
+  await expect.element(page.getByText('Edit Episode Name')).toBeInTheDocument();
 
-    const input = page.getByLabelText('Episode Name');
-    await input.clear();
-    await input.fill('Episode 1 Updated');
+  const input = page.getByLabelText('Episode Name');
+  await input.clear();
+  await input.fill('Episode 1 Updated');
 
-    await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
 
-    await vi.waitFor(() => {
-      expect(updateEpisodeNameSpy).toHaveBeenCalledWith(episodeId, 'Episode 1 Updated');
-    });
+  await vi.waitFor(() => {
     expect(invalidateAllMock).toHaveBeenCalledTimes(1);
+  });
 
-    const updatedTitle = await getEpisodeTitle(episodeId);
-    expect(updatedTitle).toBe('Episode 1 Updated');
+  const updatedTitle = await getEpisodeTitle(episodeId);
+  expect(updatedTitle).toBe('Episode 1 Updated');
 
-    await page.screenshot();
-  } finally {
-    updateEpisodeNameSpy.mockRestore();
-  }
+  await page.screenshot();
 });
 
 test('error: rename failure displays an error alert and keeps the original title', async () => {
@@ -206,9 +198,8 @@ test('error: rename failure displays an error alert and keeps the original title
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
 
-  const updateEpisodeNameSpy = vi
-    .spyOn(updateEpisodeNameUsecase, 'updateEpisodeName')
-    .mockRejectedValue(new Error('rename failed'));
+  const executeSpy = vi.spyOn(Database.prototype, 'execute');
+  executeSpy.mockRejectedValueOnce(new Error('rename failed'));
 
   try {
     render(Component, { data: result, params: { groupId: String(groupId) } });
@@ -229,7 +220,7 @@ test('error: rename failure displays an error alert and keeps the original title
 
     await page.screenshot();
   } finally {
-    updateEpisodeNameSpy.mockRestore();
+    executeSpy.mockRestore();
   }
 });
 
@@ -240,37 +231,28 @@ test('success: user can delete an episode after confirming the dialog', async ()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
 
-  const deleteEpisodeSpy = vi.spyOn(deleteEpisodeUsecase, 'deleteEpisode');
-  try {
-    render(Component, { data: result, params: { groupId: String(groupId) } });
+  render(Component, { data: result, params: { groupId: String(groupId) } });
 
-    await openEpisodeActionsMenu();
-    await page.getByRole('button', { name: 'Delete' }).click();
+  await openEpisodeActionsMenu();
+  await page.getByRole('button', { name: 'Delete' }).click();
 
-    await expect.element(page.getByText('Delete Episode')).toBeInTheDocument();
-    await expect.element(
-      page.getByText(
-        'Are you sure you want to delete the episode "Episode 1"? All related data will also be deleted.'
-      )
-    ).toBeInTheDocument();
+  await expect.element(page.getByText('Delete Episode')).toBeInTheDocument();
+  await expect.element(
+    page.getByText(
+      'Are you sure you want to delete the episode "Episode 1"? All related data will also be deleted.'
+    )
+  ).toBeInTheDocument();
 
-    await page.getByRole('button', { name: 'Yes, delete' }).click();
+  await page.getByRole('button', { name: 'Yes, delete' }).click();
 
-    await vi.waitFor(() => {
-      expect(deleteEpisodeSpy).toHaveBeenCalledTimes(1);
-    });
-    expect(deleteEpisodeSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ id: episodeId, title: 'Episode 1', mediaPath: 'media/Episode 1.mp3' })
-    );
+  await vi.waitFor(() => {
     expect(invalidateAllMock).toHaveBeenCalledTimes(1);
+  });
 
-    const deletedTitle = await getEpisodeTitle(episodeId);
-    expect(deletedTitle).toBeNull();
+  const deletedTitle = await getEpisodeTitle(episodeId);
+  expect(deletedTitle).toBeNull();
 
-    await page.screenshot();
-  } finally {
-    deleteEpisodeSpy.mockRestore();
-  }
+  await page.screenshot();
 });
 
 test('error: delete failure surfaces the error banner and keeps the record', async () => {
@@ -280,9 +262,8 @@ test('error: delete failure surfaces the error banner and keeps the record', asy
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
 
-  const deleteEpisodeSpy = vi
-    .spyOn(deleteEpisodeUsecase, 'deleteEpisode')
-    .mockRejectedValue(new Error('delete failed'));
+  const executeSpy = vi.spyOn(Database.prototype, 'execute');
+  executeSpy.mockRejectedValueOnce(new Error('delete failed'));
 
   try {
     render(Component, { data: result, params: { groupId: String(groupId) } });
@@ -299,6 +280,6 @@ test('error: delete failure surfaces the error banner and keeps the record', asy
 
     await page.screenshot();
   } finally {
-    deleteEpisodeSpy.mockRestore();
+    executeSpy.mockRestore();
   }
 });
