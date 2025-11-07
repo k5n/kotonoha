@@ -61,6 +61,7 @@
     "timecodes",
     "TOEIC",
     "Unlisten",
+    "usecase",
     "usecases",
     "usize",
     "Uyghur",
@@ -68,6 +69,7 @@
     "vorbis",
     "wdio",
     "WEBVTT",
+    "worktree",
     "youtu"
   ],
   "todohighlight.isCaseSensitive": true,

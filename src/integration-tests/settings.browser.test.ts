@@ -33,7 +33,7 @@ beforeEach(() => {
 });
 
 afterAll(async () => {
-  await outputCoverage('settings-integration');
+  await outputCoverage(import.meta.url);
 });
 
 test('success: settings and API keys are loaded and displayed correctly', async () => {

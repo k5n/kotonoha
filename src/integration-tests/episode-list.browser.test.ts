@@ -79,7 +79,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await outputCoverage('episode-list-integration');
+  await outputCoverage(import.meta.url);
 });
 
 test('success: episode list loads and displays episodes for the selected group', async () => {
