@@ -13,7 +13,7 @@
     TableHead,
     TableHeadCell,
   } from 'flowbite-svelte';
-  import { DotsHorizontalOutline } from 'flowbite-svelte-icons';
+  import { AlignJustifyOutline, DotsHorizontalOutline } from 'flowbite-svelte-icons';
   import { flip } from 'svelte/animate';
 
   type Props = {
@@ -58,6 +58,9 @@
 <div class="mt-6 overflow-hidden rounded-lg border">
   <Table hoverable={true}>
     <TableHead>
+      <TableHeadCell class="w-10 p-4 text-center">
+        <span class="sr-only">Drag</span>
+      </TableHeadCell>
       <TableHeadCell>{t('components.episodeListTable.title')}</TableHeadCell>
       <TableHeadCell>{t('components.episodeListTable.addDate')}</TableHeadCell>
       <TableHeadCell class="text-center">{t('components.episodeListTable.cards')}</TableHeadCell>
@@ -67,9 +70,8 @@
     </TableHead>
     <TableBody>
       {#each episodes as episode (episode.id)}
-        <!-- TableBodyRow を利用すると、use:draggable がエラーとなるため、直接 <tr> を使用 -->
+        <!-- TableBodyRow を利用すると、use:droppable がエラーとなるため、直接 <tr> を使用 -->
         <tr
-          use:draggable={{ container: 'episodes', dragData: episode }}
           use:droppable={{
             container: 'episodes',
             callbacks: {
@@ -78,7 +80,9 @@
           }}
           animate:flip={{ duration: 300 }}
           class="cursor-pointer border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
-          onclick={() => onEpisodeClick(episode.id)}
+          onclick={() => {
+            onEpisodeClick(episode.id);
+          }}
           onkeydown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
@@ -86,12 +90,23 @@
             }
           }}
         >
+          <!-- TableBodyCell を利用すると、use:draggable がエラーとなるため、直接 <td> を使用 -->
+          <td
+            class="w-10 cursor-move p-4 text-center"
+            data-non-clickable
+            use:draggable={{ container: 'episodes', dragData: episode }}
+            onclick={(e: MouseEvent) => e.stopPropagation()}
+            onkeydown={(e: KeyboardEvent) => e.stopPropagation()}
+          >
+            <AlignJustifyOutline class="inline-block h-4 w-4" />
+          </td>
           <TableBodyCell class="font-semibold">{episode.title}</TableBodyCell>
           <TableBodyCell>{formatDate(episode.createdAt)}</TableBodyCell>
           <TableBodyCell class="text-center">{episode.sentenceCardCount}</TableBodyCell>
           <TableBodyCell>
             <div class="flex justify-center">
               <Button
+                data-testid={`episode-actions-button-${episode.id}`}
                 size="xs"
                 pill
                 color="alternative"
@@ -106,6 +121,7 @@
               </Button>
               <Dropdown simple>
                 <DropdownItem
+                  data-testid={`episode-action-rename-${episode.id}`}
                   onclick={(e: MouseEvent) => {
                     e.stopPropagation();
                     onEpisodeRenameClick(episode);
@@ -114,6 +130,7 @@
                   {t('components.episodeListTable.rename')}
                 </DropdownItem>
                 <DropdownItem
+                  data-testid={`episode-action-move-${episode.id}`}
                   onclick={(e: MouseEvent) => {
                     e.stopPropagation();
                     onEpisodeMoveClick(episode);
@@ -122,6 +139,7 @@
                   {t('components.episodeListTable.move')}
                 </DropdownItem>
                 <DropdownItem
+                  data-testid={`episode-action-delete-${episode.id}`}
                   class="text-red-600"
                   onclick={(e: MouseEvent) => {
                     e.stopPropagation();
