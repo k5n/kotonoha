@@ -33,7 +33,12 @@
 </script>
 
 {#snippet footer()}
-  <Button color="red" disabled={isSubmitting} onclick={handleConfirm}>
+  <Button
+    data-testid="confirm-delete-button"
+    color="red"
+    disabled={isSubmitting}
+    onclick={handleConfirm}
+  >
     {isSubmitting
       ? t('components.confirmModal.processing')
       : t('components.confirmModal.confirmDelete')}
