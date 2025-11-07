@@ -1,6 +1,9 @@
+import { invalidateAll } from '$app/navigation';
 import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
+import * as deleteEpisodeUsecase from '$lib/application/usecases/deleteEpisode';
+import * as updateEpisodeNameUsecase from '$lib/application/usecases/updateEpisodeName';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { outputCoverage } from '$lib/testing/outputCoverage';
 import { invoke } from '@tauri-apps/api/core';
@@ -15,8 +18,18 @@ import '$src/app.css';
 
 vi.mock('@tauri-apps/plugin-sql', () => ({ __esModule: true, default: mockDatabase }));
 vi.mock('@tauri-apps/api/core');
+vi.mock('@tauri-apps/plugin-fs', () => ({
+  BaseDirectory: { AppLocalData: 'appData' },
+  exists: vi.fn().mockResolvedValue(false),
+  remove: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('$app/navigation', () => ({
+  goto: vi.fn(),
+  invalidateAll: vi.fn().mockResolvedValue(undefined),
+}));
 
 const DATABASE_URL = 'dummy';
+const invalidateAllMock = vi.mocked(invalidateAll);
 
 async function clearDatabase(): Promise<void> {
   const db = new Database(DATABASE_URL);
@@ -49,7 +62,7 @@ async function insertEpisode(params: {
   episodeGroupId: number;
   title: string;
   displayOrder: number;
-}): Promise<void> {
+}): Promise<number> {
   const { episodeGroupId, title, displayOrder } = params;
   const now = new Date().toISOString();
   const db = new Database(DATABASE_URL);
@@ -58,9 +71,28 @@ async function insertEpisode(params: {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [episodeGroupId, displayOrder, title, `media/${title}.mp3`, 'ja', 'en', now, now]
   );
+
+  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
+  return rows[0]?.id ?? 0;
+}
+
+async function getEpisodeTitle(episodeId: number): Promise<string | null> {
+  const db = new Database(DATABASE_URL);
+  const rows = await db.select<{ title: string }[]>(
+    'SELECT title FROM episodes WHERE id = ?',
+    [episodeId]
+  );
+  return rows[0]?.title ?? null;
+}
+
+async function openEpisodeActionsMenu(): Promise<void> {
+  await expect.element(page.getByRole('button', { name: 'dots horizontal outline' })).toBeVisible();
+  await page.getByRole('button', { name: 'dots horizontal outline' }).click();
 }
 
 beforeEach(async () => {
+  vi.clearAllMocks();
+
   const invokeMock = vi.mocked(invoke);
   invokeMock.mockReset();
   invokeMock.mockImplementation(async (command) => {
@@ -70,10 +102,12 @@ beforeEach(async () => {
     throw new Error(`Unhandled Tauri command: ${command as string}`);
   });
 
+  invalidateAllMock.mockReset();
+  invalidateAllMock.mockResolvedValue(undefined);
+
   groupPathStore.reset();
   episodeAddStore.close();
   i18nStore.init('en');
-  vi.clearAllMocks();
 
   await clearDatabase();
 });
@@ -127,5 +161,144 @@ test('error: error message is shown when episode fetching fails due to database 
     await page.screenshot();
   } finally {
     selectSpy.mockRestore();
+  }
+});
+
+test('success: user can rename an existing episode from the action menu', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  const episodeId = await insertEpisode({ episodeGroupId: groupId, title: 'Episode 1', displayOrder: 1 });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+
+  const updateEpisodeNameSpy = vi.spyOn(updateEpisodeNameUsecase, 'updateEpisodeName');
+  try {
+    render(Component, { data: result, params: { groupId: String(groupId) } });
+
+    await openEpisodeActionsMenu();
+    await page.getByRole('button', { name: 'Rename' }).click();
+    await expect.element(page.getByText('Edit Episode Name')).toBeInTheDocument();
+
+    const input = page.getByLabelText('Episode Name');
+    await input.clear();
+    await input.fill('Episode 1 Updated');
+
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await vi.waitFor(() => {
+      expect(updateEpisodeNameSpy).toHaveBeenCalledWith(episodeId, 'Episode 1 Updated');
+    });
+    expect(invalidateAllMock).toHaveBeenCalledTimes(1);
+
+    const updatedTitle = await getEpisodeTitle(episodeId);
+    expect(updatedTitle).toBe('Episode 1 Updated');
+
+    await page.screenshot();
+  } finally {
+    updateEpisodeNameSpy.mockRestore();
+  }
+});
+
+test('error: rename failure displays an error alert and keeps the original title', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  const episodeId = await insertEpisode({ episodeGroupId: groupId, title: 'Episode 1', displayOrder: 1 });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+
+  const updateEpisodeNameSpy = vi
+    .spyOn(updateEpisodeNameUsecase, 'updateEpisodeName')
+    .mockRejectedValue(new Error('rename failed'));
+
+  try {
+    render(Component, { data: result, params: { groupId: String(groupId) } });
+
+    await openEpisodeActionsMenu();
+    await page.getByRole('button', { name: 'Rename' }).click();
+    const input = page.getByLabelText('Episode Name');
+    await input.clear();
+    await input.fill('Episode 1 Updated');
+
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    await expect.element(page.getByText('Failed to update episode name')).toBeInTheDocument();
+    expect(invalidateAllMock).not.toHaveBeenCalled();
+
+    const storedTitle = await getEpisodeTitle(episodeId);
+    expect(storedTitle).toBe('Episode 1');
+
+    await page.screenshot();
+  } finally {
+    updateEpisodeNameSpy.mockRestore();
+  }
+});
+
+test('success: user can delete an episode after confirming the dialog', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  const episodeId = await insertEpisode({ episodeGroupId: groupId, title: 'Episode 1', displayOrder: 1 });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+
+  const deleteEpisodeSpy = vi.spyOn(deleteEpisodeUsecase, 'deleteEpisode');
+  try {
+    render(Component, { data: result, params: { groupId: String(groupId) } });
+
+    await openEpisodeActionsMenu();
+    await page.getByRole('button', { name: 'Delete' }).click();
+
+    await expect.element(page.getByText('Delete Episode')).toBeInTheDocument();
+    await expect.element(
+      page.getByText(
+        'Are you sure you want to delete the episode "Episode 1"? All related data will also be deleted.'
+      )
+    ).toBeInTheDocument();
+
+    await page.getByRole('button', { name: 'Yes, delete' }).click();
+
+    await vi.waitFor(() => {
+      expect(deleteEpisodeSpy).toHaveBeenCalledTimes(1);
+    });
+    expect(deleteEpisodeSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ id: episodeId, title: 'Episode 1', mediaPath: 'media/Episode 1.mp3' })
+    );
+    expect(invalidateAllMock).toHaveBeenCalledTimes(1);
+
+    const deletedTitle = await getEpisodeTitle(episodeId);
+    expect(deletedTitle).toBeNull();
+
+    await page.screenshot();
+  } finally {
+    deleteEpisodeSpy.mockRestore();
+  }
+});
+
+test('error: delete failure surfaces the error banner and keeps the record', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  const episodeId = await insertEpisode({ episodeGroupId: groupId, title: 'Episode 1', displayOrder: 1 });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+
+  const deleteEpisodeSpy = vi
+    .spyOn(deleteEpisodeUsecase, 'deleteEpisode')
+    .mockRejectedValue(new Error('delete failed'));
+
+  try {
+    render(Component, { data: result, params: { groupId: String(groupId) } });
+
+    await openEpisodeActionsMenu();
+    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: 'Yes, delete' }).click();
+
+    await expect.element(page.getByText('Failed to delete episode')).toBeInTheDocument();
+    expect(invalidateAllMock).not.toHaveBeenCalled();
+
+    const remainingTitle = await getEpisodeTitle(episodeId);
+    expect(remainingTitle).toBe('Episode 1');
+
+    await page.screenshot();
+  } finally {
+    deleteEpisodeSpy.mockRestore();
   }
 });
