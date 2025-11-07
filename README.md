@@ -240,6 +240,8 @@ If the UI needs additional mocked behavior, extend the modules under `src/lib/in
 - `npm run lint`: Lints the codebase for errors.
 - `npm run check`: Run svelte-check to validate Svelte components.
 - `npm run format`: Formats the code.
+- `npm run test:browser`: Runs browser mode integration tests.
+- `npm run test:all`: Runs all tests (unit, browser mode).
 - `npm run generate:graph`: Generates dependency graph diagrams and lists and saves them to [`doc/dependency-graph.md`](./doc/dependency-graph.md) and [`AGENTS.md`](./AGENTS.md).
 
 ### Testing

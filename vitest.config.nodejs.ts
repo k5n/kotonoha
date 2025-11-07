@@ -4,7 +4,7 @@ import { defineProject } from 'vitest/config';
 export default defineProject({
   plugins: [sveltekit()],
   test: {
-    name: 'unit',
+    name: 'nodejs',
     environment: 'jsdom',
     globals: true,
     include: ['**/*.test.ts'],

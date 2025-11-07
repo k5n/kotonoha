@@ -1,4 +1,3 @@
-// import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { webdriverio } from '@vitest/browser-webdriverio';
@@ -11,12 +10,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineProject({
-  // plugins: [tailwindcss(), svelte()],
   plugins: [
     tailwindcss(),
     sveltekit(),
     istanbul({
-      include: 'src/*',
+      include: 'src/**/*',
       exclude: ['node_modules', '**/*.test.ts', '**/*.browser.test.ts'],
       extension: ['.ts', '.svelte'],
       forceBuildInstrument: true,
@@ -25,7 +23,6 @@ export default defineProject({
   resolve: {
     alias: {
       $src: path.resolve(__dirname, './src'),
-      $lib: path.resolve(__dirname, './src/lib'),
       '$env/dynamic/public': path.resolve(
         __dirname,
         './src/lib/infrastructure/mocks/env-dynamic-public.ts'
@@ -43,8 +40,7 @@ export default defineProject({
       viewport: { width: 800, height: 1024 },
     },
     globals: true,
-    include: ['**/*.browser.test.ts'],
-    exclude: ['**/node_modules/**', '**/e2e-tests/**'],
+    include: ['src/**/*.browser.test.ts'],
   },
   build: {
     ssr: false,
