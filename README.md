@@ -178,7 +178,7 @@ This application employs a layered architecture to separate concerns and enhance
 - **`domain`**: The core of the application, containing business logic and entities.
 - **`infrastructure`**: The infrastructure layer, responsible for communication with external systems like databases and APIs.
 
-For a more detailed explanation of the architecture, please refer to [`doc/architecture.md`](./doc/architecture.md).
+For a more detailed explanation of the architecture, please refer to [`doc/technical_specifications.md`](./doc/technical_specifications.md).
 
 ### Development Setup
 
@@ -270,12 +270,14 @@ npm run test:browser
 - Location:
   - Component tests: `*.browser.test.ts` next to components
   - **Route integration tests**: `src/integration-tests/*.browser.test.ts`
-- Framework: Vitest Browser Mode with WebdriverIO (Chrome)
+- Framework: Vitest Browser Mode with Playwright (Chromium)
 - Mocking: Tauri (Rust) modules are mocked using Vitest's `vi.mock()` with shared mock factories in `src/integration-tests/lib/`
 
 #### E2E Tests
 
 Test the complete application stack including Tauri backend and Rust commands.
+
+Currently, E2E tests are supported only on Linux. You have to build the Tauri app (AppImage) first before running E2E tests.
 
 ```bash
 cd e2e-tests

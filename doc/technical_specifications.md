@@ -26,7 +26,7 @@ Tauriの標準構成とフロントエンドのレイヤードアーキテクチ
 
 ```plaintext
 /
-├── src/                                # SvelteKit フロントエンド
+├── src/                              # SvelteKit フロントエンド
 │   ├── lib/
 │   │   ├── presentation/             # UI層: SvelteコンポーネントとUIロジック
 │   │   │   ├── components/           # 再利用可能なUIコンポーネント

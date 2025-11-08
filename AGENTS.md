@@ -453,7 +453,7 @@ Three test layers are provided:
   - Component tests: next to components
   - **Route integration tests** (primary focus): `src/integration-tests/`
 - **Target**: Frontend integration, page-level workflows
-- **Environment**: Real browser (Chrome via WebdriverIO)
+- **Environment**: Real browser (Chromium via Playwright)
 - **Run**: `npm run test:browser`
 - **Mocking**: Tauri (Rust) modules mocked via Vitest's `vi.mock()`. Use shared factories from `src/integration-tests/lib/mockFactories.ts`.
 
