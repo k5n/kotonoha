@@ -1,9 +1,9 @@
+import { goto, invalidateAll } from '$app/navigation';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import * as pluginFs from '$lib/infrastructure/mocks/plugin-fs';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { outputCoverage } from '$lib/testing/outputCoverage';
-import { goto, invalidateAll } from '$app/navigation';
 import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 import { render } from 'vitest-browser-svelte';
@@ -99,6 +99,12 @@ async function countEpisodes(): Promise<number> {
   return rows[0]?.count ?? 0;
 }
 
+async function openGroupActionsMenu(episodeId: string): Promise<void> {
+  const element = page.getByTestId(`group-actions-button-${episodeId}`);
+  await expect.element(element).toBeVisible();
+  await element.click();
+}
+
 async function loadPageData(groupId: string = ROOT_GROUP_PARAM): Promise<PageData> {
   return (await load({ params: { groupId } } as never)) as PageData;
 }
@@ -160,9 +166,7 @@ test('empty: shows empty state when no episode groups exist', async () => {
   await expect
     .element(page.getByText("Let's add the first group to organize your content."))
     .toBeInTheDocument();
-  await expect
-    .element(page.getByRole('button', { name: 'Add First Group' }))
-    .toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Add First Group' })).toBeInTheDocument();
 
   await page.screenshot();
 });
@@ -208,14 +212,20 @@ test('interaction: user can add a new album group via the modal', async () => {
     await renderResult.rerender({ data: refreshed, params });
   });
 
+  await page.screenshot();
   await page.getByRole('button', { name: 'Add New' }).click();
   await expect.element(page.getByRole('heading', { name: 'Add New Group' })).toBeInTheDocument();
+  await page.screenshot();
 
   const nameInput = page.getByLabelText('Group Name');
   await nameInput.fill('New Audio Album');
   await page.getByLabelText('Album').click();
+  await page.screenshot();
   await page.getByRole('button', { name: 'Create' }).click();
 
+  await expect
+    .element(page.getByRole('heading', { name: 'Add New Group' }))
+    .not.toBeInTheDocument();
   await expect.element(page.getByText('New Audio Album')).toBeInTheDocument();
 
   const groups = await selectAllGroups();
@@ -240,20 +250,23 @@ test('interaction: user can rename an existing group', async () => {
     await renderResult.rerender({ data: refreshed, params });
   });
 
-  const renameTestButton = page.getByTestId(`test-open-rename-${groupId}`);
-  await expect.element(renameTestButton).toBeInTheDocument();
-  const renameElement = await renameTestButton.element();
-  expect(renameElement).not.toBeNull();
-  renameElement?.click();
-  await expect
-    .element(page.getByRole('heading', { name: 'Edit Group Name' }))
-    .toBeInTheDocument();
+  await page.screenshot();
+  await openGroupActionsMenu(groupId.toString());
+  const renameButton = page.getByTestId(`group-action-rename-${groupId}`);
+  await expect.element(renameButton).toBeVisible();
+  await renameButton.click();
+  await expect.element(page.getByRole('heading', { name: 'Edit Group Name' })).toBeInTheDocument();
+  await page.screenshot();
 
   const input = page.getByLabelText('Group Name');
   await input.clear();
   await input.fill('Updated Reading Club');
+  await page.screenshot();
   await page.getByRole('button', { name: 'Save' }).click();
 
+  await expect
+    .element(page.getByRole('heading', { name: 'Edit Group Name' }))
+    .not.toBeInTheDocument();
   await expect.element(page.getByText('Updated Reading Club')).toBeInTheDocument();
 
   const groups = await selectAllGroups();
@@ -274,16 +287,18 @@ test('interaction: user can delete a group and its episodes', async () => {
     await renderResult.rerender({ data: refreshed, params });
   });
 
-  const deleteTestButton = page.getByTestId(`test-open-delete-${groupId}`);
-  const deleteElement = await deleteTestButton.element();
-  expect(deleteElement).not.toBeNull();
-  deleteElement?.click();
-  await expect
-    .element(page.getByText(/delete the group "Archive Folder"/))
-    .toBeInTheDocument();
+  await page.screenshot();
+  await openGroupActionsMenu(groupId.toString());
+  const deleteButton = page.getByTestId(`group-action-delete-${groupId}`);
+  await expect.element(deleteButton).toBeVisible();
+  await page.screenshot();
+  await deleteButton.click();
 
+  await expect.element(page.getByText(/delete the group "Archive Folder"/)).toBeInTheDocument();
+  await page.screenshot();
   await page.getByRole('button', { name: 'Yes, delete' }).click();
 
+  await expect.element(page.getByText(/delete the group "Archive Folder"/)).not.toBeInTheDocument();
   await expect.element(page.getByText('No Groups')).toBeInTheDocument();
 
   const groups = await selectAllGroups();
