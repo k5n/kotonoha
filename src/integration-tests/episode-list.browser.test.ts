@@ -88,6 +88,23 @@ async function openEpisodeActionsMenu(episodeId: string): Promise<void> {
   await element.click();
 }
 
+async function loadPageData(groupId: string): Promise<PageData> {
+  return (await load({ params: { groupId } } as never)) as PageData;
+}
+
+type RouteParams = { groupId: string };
+
+function createRouteParams(groupId: string): RouteParams {
+  return { groupId };
+}
+
+async function setupPage(groupId: string) {
+  const params = createRouteParams(groupId);
+  const data = await loadPageData(groupId);
+  const renderResult = render(Component, { data, params });
+  return { data, params, renderResult };
+}
+
 beforeEach(async () => {
   vi.clearAllMocks();
 
@@ -119,14 +136,11 @@ test('success: episode list loads and displays episodes for the selected group',
   await insertEpisode({ episodeGroupId: groupId, title: 'Episode 1', displayOrder: 1 });
   await insertEpisode({ episodeGroupId: groupId, title: 'Episode 2', displayOrder: 2 });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+  const { data } = await setupPage(String(groupId));
 
-  expect(result.errorKey).toBeNull();
-  expect(result.episodeGroup?.name).toBe('Beginner Course');
-  expect(result.episodes).toHaveLength(2);
-
-  render(Component, { data: result, params: { groupId: String(groupId) } });
+  expect(data.errorKey).toBeNull();
+  expect(data.episodeGroup?.name).toBe('Beginner Course');
+  expect(data.episodes).toHaveLength(2);
 
   await expect.element(page.getByRole('heading', { name: 'Beginner Course' })).toBeInTheDocument();
   await expect.element(page.getByText('Add Episode')).toBeInTheDocument();
@@ -166,14 +180,16 @@ test('success: user can rename an existing episode from the action menu', async 
   const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
   const episodeId = await insertEpisode({
     episodeGroupId: groupId,
-    title: 'Episode 1',
+    title: 'Episode 1 Original',
     displayOrder: 1,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+  const { params, renderResult } = await setupPage(String(groupId));
 
-  render(Component, { data: result, params: { groupId: String(groupId) } });
+  vi.mocked(invalidateAll).mockImplementation(async () => {
+    const refreshed = await loadPageData(params.groupId);
+    await renderResult.rerender({ data: refreshed, params });
+  });
 
   await openEpisodeActionsMenu(episodeId.toString());
   await expect.element(page.getByTestId(`episode-action-rename-${episodeId}`)).toBeVisible();
@@ -190,7 +206,11 @@ test('success: user can rename an existing episode from the action menu', async 
     expect(invalidateAllMock).toHaveBeenCalledTimes(1);
   });
 
-  // invalidateAll refreshes the screen, but it doesn't happen in the test environment, so just check the data
+  // Check that the screen has been updated
+  await expect.element(page.getByText('Episode 1 Updated')).toBeInTheDocument();
+  await expect.element(page.getByText('Episode 1 Original')).not.toBeInTheDocument();
+
+  // Also check the database
   const updatedTitle = await getEpisodeTitle(episodeId);
   expect(updatedTitle).toBe('Episode 1 Updated');
 
@@ -201,19 +221,21 @@ test('error: rename failure displays an error alert and keeps the original title
   const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
   const episodeId = await insertEpisode({
     episodeGroupId: groupId,
-    title: 'Episode 1',
+    title: 'Episode 1 Original',
     displayOrder: 1,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+  const { params, renderResult } = await setupPage(String(groupId));
+
+  vi.mocked(invalidateAll).mockImplementation(async () => {
+    const refreshed = await loadPageData(params.groupId);
+    await renderResult.rerender({ data: refreshed, params });
+  });
 
   const executeSpy = vi.spyOn(Database.prototype, 'execute');
   executeSpy.mockRejectedValueOnce(new Error('rename failed'));
 
   try {
-    render(Component, { data: result, params: { groupId: String(groupId) } });
-
     await openEpisodeActionsMenu(episodeId.toString());
     await expect.element(page.getByTestId(`episode-action-rename-${episodeId}`)).toBeVisible();
     await page.getByTestId(`episode-action-rename-${episodeId}`).click();
@@ -226,11 +248,12 @@ test('error: rename failure displays an error alert and keeps the original title
     await expect.element(page.getByText('Failed to update episode name')).toBeInTheDocument();
     expect(invalidateAllMock).not.toHaveBeenCalled();
 
+    // Screen should not be updated
     await expect.element(page.getByText('Episode 1 Updated')).not.toBeInTheDocument();
-    await expect.element(page.getByText('Episode 1')).toBeInTheDocument();
+    await expect.element(page.getByText('Episode 1 Original')).toBeInTheDocument();
 
     const storedTitle = await getEpisodeTitle(episodeId);
-    expect(storedTitle).toBe('Episode 1');
+    expect(storedTitle).toBe('Episode 1 Original');
 
     await page.screenshot();
   } finally {
@@ -246,10 +269,12 @@ test('success: user can delete an episode after confirming the dialog', async ()
     displayOrder: 1,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+  const { params, renderResult } = await setupPage(String(groupId));
 
-  render(Component, { data: result, params: { groupId: String(groupId) } });
+  vi.mocked(invalidateAll).mockImplementation(async () => {
+    const refreshed = await loadPageData(params.groupId);
+    await renderResult.rerender({ data: refreshed, params });
+  });
 
   await openEpisodeActionsMenu(episodeId.toString());
   await expect.element(page.getByTestId(`episode-action-delete-${episodeId}`)).toBeVisible();
@@ -271,7 +296,10 @@ test('success: user can delete an episode after confirming the dialog', async ()
     expect(invalidateAllMock).toHaveBeenCalledTimes(1);
   });
 
-  // invalidateAll refreshes the screen, but it doesn't happen in the test environment, so just check the data
+  // Check that the screen has been updated
+  await expect.element(page.getByText('Episode 1')).not.toBeInTheDocument();
+
+  // Also check the database
   const deletedTitle = await getEpisodeTitle(episodeId);
   expect(deletedTitle).toBeNull();
 
@@ -286,15 +314,17 @@ test('error: delete failure surfaces the error banner and keeps the record', asy
     displayOrder: 1,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = (await load({ params: { groupId: String(groupId) } } as any)) as PageData;
+  const { params, renderResult } = await setupPage(String(groupId));
+
+  vi.mocked(invalidateAll).mockImplementation(async () => {
+    const refreshed = await loadPageData(params.groupId);
+    await renderResult.rerender({ data: refreshed, params });
+  });
 
   const executeSpy = vi.spyOn(Database.prototype, 'execute');
   executeSpy.mockRejectedValueOnce(new Error('delete failed'));
 
   try {
-    render(Component, { data: result, params: { groupId: String(groupId) } });
-
     await openEpisodeActionsMenu(episodeId.toString());
     await expect.element(page.getByTestId(`episode-action-delete-${episodeId}`)).toBeVisible();
     await page.getByTestId(`episode-action-delete-${episodeId}`).click();
@@ -304,6 +334,7 @@ test('error: delete failure surfaces the error banner and keeps the record', asy
     await expect.element(page.getByText('Failed to delete episode')).toBeInTheDocument();
     expect(invalidateAllMock).not.toHaveBeenCalled();
 
+    // Screen should not be updated
     await expect.element(page.getByText('Episode 1')).toBeInTheDocument();
 
     const remainingTitle = await getEpisodeTitle(episodeId);

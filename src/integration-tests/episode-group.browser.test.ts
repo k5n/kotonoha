@@ -123,10 +123,11 @@ async function setupPage(groupId: string = ROOT_GROUP_PARAM) {
 }
 
 beforeEach(async () => {
+  vi.clearAllMocks();
+
   groupPathStore.reset();
   i18nStore.init('en');
   pluginFs.__reset();
-  vi.clearAllMocks();
 
   const invokeMock = vi.mocked(invoke);
   invokeMock.mockReset();
