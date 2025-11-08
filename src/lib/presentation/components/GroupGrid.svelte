@@ -4,6 +4,7 @@
   import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
   import { Button, Dropdown, DropdownItem, Heading } from 'flowbite-svelte';
   import {
+    AlignJustifyOutline,
     DotsVerticalOutline,
     FolderOutline,
     FolderPlusOutline,
@@ -71,7 +72,6 @@
   {#if groups.length > 0}
     {#each groups as group (group.id)}
       <div
-        use:draggable={{ container: 'groups', dragData: group }}
         use:droppable={{
           container: 'groups',
           callbacks: {
@@ -98,11 +98,16 @@
         {/if}
         <span class="font-semibold text-gray-800 dark:text-gray-200">{group.name}</span>
 
+        <div class="absolute top-2 left-2" use:draggable={{ container: 'groups', dragData: group }}>
+          <AlignJustifyOutline class="h-5 w-5" />
+        </div>
         <div class="absolute top-2 right-2">
           <button
             type="button"
             id={`card-menu-button-${group.id}`}
             class="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+            aria-label={t('components.groupGrid.menuButtonLabel', { groupName: group.name })}
+            data-testid={`group-actions-button-${group.id}`}
             onclick={(e: MouseEvent) => {
               e.stopPropagation(); // イベント伝播を停止
             }}
@@ -114,13 +119,20 @@
           </button>
 
           <Dropdown simple triggeredBy={`#card-menu-button-${group.id}`}>
-            <DropdownItem onclick={(e: MouseEvent) => handleChangeName(e, group)}>
+            <DropdownItem
+              data-testid={`group-action-rename-${group.id}`}
+              onclick={(e: MouseEvent) => handleChangeName(e, group)}
+            >
               {t('components.groupGrid.rename')}
             </DropdownItem>
-            <DropdownItem onclick={(e: MouseEvent) => handleMoveGroup(e, group)}>
+            <DropdownItem
+              data-testid={`group-action-move-${group.id}`}
+              onclick={(e: MouseEvent) => handleMoveGroup(e, group)}
+            >
               {t('components.groupGrid.move')}
             </DropdownItem>
             <DropdownItem
+              data-testid={`group-action-delete-${group.id}`}
               onclick={(e: MouseEvent) => handleDeleteGroup(e, group)}
               class="text-red-600 dark:text-red-500"
             >
