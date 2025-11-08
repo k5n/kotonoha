@@ -14,8 +14,14 @@ export default defineProject({
     tailwindcss(),
     sveltekit(),
     istanbul({
-      include: 'src/**/*',
-      exclude: ['node_modules', '**/*.test.ts', '**/*.browser.test.ts'],
+      include: 'src/**',
+      exclude: [
+        'node_modules',
+        '**/*.test.ts',
+        '**/*.browser.test.ts',
+        '**/mocks/**',
+        'src/integration-tests/**',
+      ],
       extension: ['.ts', '.svelte'],
       forceBuildInstrument: true,
     }),

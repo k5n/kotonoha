@@ -3,7 +3,6 @@ import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episode
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
-import { outputCoverage } from '$lib/testing/outputCoverage';
 import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 import { render } from 'vitest-browser-svelte';
@@ -11,6 +10,7 @@ import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
+import { outputCoverage } from './lib/outputCoverage';
 
 import '$src/app.css';
 

@@ -271,7 +271,7 @@ npm run test:browser
   - Component tests: `*.browser.test.ts` next to components
   - **Route integration tests**: `src/integration-tests/*.browser.test.ts`
 - Framework: Vitest Browser Mode with WebdriverIO (Chrome)
-- Mocking: Tauri (Rust) modules are mocked using Vitest's `vi.mock()` with shared mock factories in `src/lib/testing/`
+- Mocking: Tauri (Rust) modules are mocked using Vitest's `vi.mock()` with shared mock factories in `src/integration-tests/lib/`
 
 #### E2E Tests
 
