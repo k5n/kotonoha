@@ -350,7 +350,6 @@ export const ja = {
       groupGrid: {
         rename: '名前の変更',
         move: '移動',
-        menuButtonLabel: '{{groupName}} の操作',
         noGroups: 'このフォルダーにはグループがありません。',
         emptyState: {
           title: 'グループがありません',

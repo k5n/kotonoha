@@ -350,7 +350,6 @@ export const en = {
       groupGrid: {
         rename: 'Rename',
         move: 'Move',
-        menuButtonLabel: 'Actions for {{groupName}}',
         noGroups: 'There are no groups in this folder.',
         emptyState: {
           title: 'No Groups',
