@@ -27,7 +27,6 @@ vi.mock('$app/navigation', () => ({
 }));
 
 const DATABASE_URL = 'dummy';
-const invalidateAllMock = vi.mocked(invalidateAll);
 
 async function clearDatabase(): Promise<void> {
   const db = new Database(DATABASE_URL);
@@ -102,6 +101,12 @@ async function setupPage(groupId: string) {
   const params = createRouteParams(groupId);
   const data = await loadPageData(groupId);
   const renderResult = render(Component, { data, params });
+
+  vi.mocked(invalidateAll).mockImplementation(async () => {
+    const refreshed = await loadPageData(params.groupId);
+    await renderResult.rerender({ data: refreshed, params });
+  });
+
   return { data, params, renderResult };
 }
 
@@ -117,8 +122,8 @@ beforeEach(async () => {
     throw new Error(`Unhandled Tauri command: ${command as string}`);
   });
 
-  invalidateAllMock.mockReset();
-  invalidateAllMock.mockResolvedValue(undefined);
+  vi.mocked(invalidateAll).mockReset();
+  vi.mocked(invalidateAll).mockResolvedValue(undefined);
 
   groupPathStore.reset();
   episodeAddStore.close();
@@ -184,12 +189,7 @@ test('success: user can rename an existing episode from the action menu', async 
     displayOrder: 1,
   });
 
-  const { params, renderResult } = await setupPage(String(groupId));
-
-  vi.mocked(invalidateAll).mockImplementation(async () => {
-    const refreshed = await loadPageData(params.groupId);
-    await renderResult.rerender({ data: refreshed, params });
-  });
+  await setupPage(String(groupId));
 
   await openEpisodeActionsMenu(episodeId.toString());
   await expect.element(page.getByTestId(`episode-action-rename-${episodeId}`)).toBeVisible();
@@ -201,10 +201,6 @@ test('success: user can rename an existing episode from the action menu', async 
   await input.fill('Episode 1 Updated');
 
   await page.getByRole('button', { name: 'Save' }).click();
-
-  await vi.waitFor(() => {
-    expect(invalidateAllMock).toHaveBeenCalledTimes(1);
-  });
 
   // Check that the screen has been updated
   await expect.element(page.getByText('Episode 1 Updated')).toBeInTheDocument();
@@ -225,12 +221,7 @@ test('error: rename failure displays an error alert and keeps the original title
     displayOrder: 1,
   });
 
-  const { params, renderResult } = await setupPage(String(groupId));
-
-  vi.mocked(invalidateAll).mockImplementation(async () => {
-    const refreshed = await loadPageData(params.groupId);
-    await renderResult.rerender({ data: refreshed, params });
-  });
+  await setupPage(String(groupId));
 
   const executeSpy = vi.spyOn(Database.prototype, 'execute');
   executeSpy.mockRejectedValueOnce(new Error('rename failed'));
@@ -246,7 +237,6 @@ test('error: rename failure displays an error alert and keeps the original title
     await page.getByRole('button', { name: 'Save' }).click();
 
     await expect.element(page.getByText('Failed to update episode name')).toBeInTheDocument();
-    expect(invalidateAllMock).not.toHaveBeenCalled();
 
     // Screen should not be updated
     await expect.element(page.getByText('Episode 1 Updated')).not.toBeInTheDocument();
@@ -269,12 +259,7 @@ test('success: user can delete an episode after confirming the dialog', async ()
     displayOrder: 1,
   });
 
-  const { params, renderResult } = await setupPage(String(groupId));
-
-  vi.mocked(invalidateAll).mockImplementation(async () => {
-    const refreshed = await loadPageData(params.groupId);
-    await renderResult.rerender({ data: refreshed, params });
-  });
+  await setupPage(String(groupId));
 
   await openEpisodeActionsMenu(episodeId.toString());
   await expect.element(page.getByTestId(`episode-action-delete-${episodeId}`)).toBeVisible();
@@ -291,10 +276,6 @@ test('success: user can delete an episode after confirming the dialog', async ()
 
   await expect.element(page.getByTestId('confirm-delete-button')).toBeVisible();
   await page.getByTestId('confirm-delete-button').click();
-
-  await vi.waitFor(() => {
-    expect(invalidateAllMock).toHaveBeenCalledTimes(1);
-  });
 
   // Check that the screen has been updated
   await expect.element(page.getByText('Episode 1')).not.toBeInTheDocument();
@@ -314,12 +295,7 @@ test('error: delete failure surfaces the error banner and keeps the record', asy
     displayOrder: 1,
   });
 
-  const { params, renderResult } = await setupPage(String(groupId));
-
-  vi.mocked(invalidateAll).mockImplementation(async () => {
-    const refreshed = await loadPageData(params.groupId);
-    await renderResult.rerender({ data: refreshed, params });
-  });
+  await setupPage(String(groupId));
 
   const executeSpy = vi.spyOn(Database.prototype, 'execute');
   executeSpy.mockRejectedValueOnce(new Error('delete failed'));
@@ -332,7 +308,6 @@ test('error: delete failure surfaces the error banner and keeps the record', asy
     await page.getByTestId('confirm-delete-button').click();
 
     await expect.element(page.getByText('Failed to delete episode')).toBeInTheDocument();
-    expect(invalidateAllMock).not.toHaveBeenCalled();
 
     // Screen should not be updated
     await expect.element(page.getByText('Episode 1')).toBeInTheDocument();

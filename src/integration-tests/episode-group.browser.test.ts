@@ -118,7 +118,14 @@ function createRouteParams(groupId: string = ROOT_GROUP_PARAM): RouteParams {
 async function setupPage(groupId: string = ROOT_GROUP_PARAM) {
   const params = createRouteParams(groupId);
   const data = await loadPageData(groupId);
+
   const renderResult = render(Component, { data, params });
+
+  vi.mocked(invalidateAll).mockImplementation(async () => {
+    const refreshed = await loadPageData(params.groupId);
+    await renderResult.rerender({ data: refreshed, params });
+  });
+
   return { data, params, renderResult };
 }
 
@@ -206,12 +213,7 @@ test('error: shows translated error when fetching groups fails', async () => {
 });
 
 test('interaction: user can add a new album group via the modal', async () => {
-  const { params, renderResult } = await setupPage();
-
-  vi.mocked(invalidateAll).mockImplementation(async () => {
-    const refreshed = await loadPageData(params.groupId);
-    await renderResult.rerender({ data: refreshed, params });
-  });
+  await setupPage();
 
   await page.screenshot();
   await page.getByRole('button', { name: 'Add New' }).click();
@@ -244,12 +246,7 @@ test('interaction: user can rename an existing group', async () => {
   const initialName = 'Reading Club';
   const groupId = await insertEpisodeGroup({ name: initialName, groupType: 'folder' });
 
-  const { params, renderResult } = await setupPage();
-
-  vi.mocked(invalidateAll).mockImplementation(async () => {
-    const refreshed = await loadPageData(params.groupId);
-    await renderResult.rerender({ data: refreshed, params });
-  });
+  await setupPage();
 
   await page.screenshot();
   await openGroupActionsMenu(groupId.toString());
@@ -281,12 +278,7 @@ test('interaction: user can delete a group and its episodes', async () => {
   const groupId = await insertEpisodeGroup({ name: groupName, groupType: 'folder' });
   await insertEpisode({ episodeGroupId: groupId, title: 'Episode 1' });
 
-  const { params, renderResult } = await setupPage();
-
-  vi.mocked(invalidateAll).mockImplementation(async () => {
-    const refreshed = await loadPageData(params.groupId);
-    await renderResult.rerender({ data: refreshed, params });
-  });
+  await setupPage();
 
   await page.screenshot();
   await openGroupActionsMenu(groupId.toString());
