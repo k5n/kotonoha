@@ -11,7 +11,7 @@ import type { PageData } from '../routes/[...groupId]/$types';
 import { load } from '../routes/[...groupId]/+page';
 import Component from '../routes/[...groupId]/+page.svelte';
 import { outputCoverage } from './lib/outputCoverage';
-import { waitFor } from './lib/utils';
+import { waitForFadeTransition } from './lib/utils';
 
 import '$src/app.css';
 
@@ -219,7 +219,7 @@ test('interaction: user can add a new album group via the modal', async () => {
   await page.screenshot();
   await page.getByRole('button', { name: 'Add New' }).click();
   await expect.element(page.getByRole('heading', { name: 'Add New Group' })).toBeInTheDocument();
-  await waitFor(100);
+  await waitForFadeTransition();
   await page.screenshot();
 
   const nameInput = page.getByLabelText('Group Name');
@@ -256,7 +256,7 @@ test('interaction: user can rename an existing group', async () => {
   await expect.element(renameButton).toBeVisible();
   await renameButton.click();
   await expect.element(page.getByRole('heading', { name: 'Edit Group Name' })).toBeInTheDocument();
-  await waitFor(100);
+  await waitForFadeTransition();
   await page.screenshot();
 
   const input = page.getByLabelText('Group Name');
@@ -287,12 +287,12 @@ test('interaction: user can delete a group and its episodes', async () => {
   await openGroupActionsMenu(groupId.toString());
   const deleteButton = page.getByTestId(`group-action-delete-${groupId}`);
   await expect.element(deleteButton).toBeVisible();
-  await waitFor(100);
+  await waitForFadeTransition();
   await page.screenshot();
   await deleteButton.click();
 
   await expect.element(page.getByText(/delete the group "Archive Folder"/)).toBeInTheDocument();
-  await waitFor(100);
+  await waitForFadeTransition();
   await page.screenshot();
   await page.getByRole('button', { name: 'Yes, delete' }).click();
 
