@@ -3,7 +3,6 @@ import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episode
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
-import { outputCoverage } from '$lib/testing/outputCoverage';
 import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 import { render } from 'vitest-browser-svelte';
@@ -11,6 +10,8 @@ import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
+import { outputCoverage } from './lib/outputCoverage';
+import { waitForFadeTransition } from './lib/utils';
 
 import '$src/app.css';
 
@@ -193,13 +194,18 @@ test('success: user can rename an existing episode from the action menu', async 
 
   await openEpisodeActionsMenu(episodeId.toString());
   await expect.element(page.getByTestId(`episode-action-rename-${episodeId}`)).toBeVisible();
+  await waitForFadeTransition();
+  await page.screenshot();
   await page.getByTestId(`episode-action-rename-${episodeId}`).click();
+
   await expect.element(page.getByText('Edit Episode Name')).toBeInTheDocument();
+  await waitForFadeTransition();
+  await page.screenshot();
 
   const input = page.getByLabelText('Episode Name');
   await input.clear();
   await input.fill('Episode 1 Updated');
-
+  await page.screenshot();
   await page.getByRole('button', { name: 'Save' }).click();
 
   // Check that the screen has been updated
@@ -210,6 +216,7 @@ test('success: user can rename an existing episode from the action menu', async 
   const updatedTitle = await getEpisodeTitle(episodeId);
   expect(updatedTitle).toBe('Episode 1 Updated');
 
+  await waitForFadeTransition();
   await page.screenshot();
 });
 
@@ -263,6 +270,8 @@ test('success: user can delete an episode after confirming the dialog', async ()
 
   await openEpisodeActionsMenu(episodeId.toString());
   await expect.element(page.getByTestId(`episode-action-delete-${episodeId}`)).toBeVisible();
+  await waitForFadeTransition();
+  await page.screenshot();
   await page.getByTestId(`episode-action-delete-${episodeId}`).click();
 
   await expect.element(page.getByText('Delete Episode')).toBeInTheDocument();
@@ -273,8 +282,9 @@ test('success: user can delete an episode after confirming the dialog', async ()
       )
     )
     .toBeInTheDocument();
-
   await expect.element(page.getByTestId('confirm-delete-button')).toBeVisible();
+  await waitForFadeTransition();
+  await page.screenshot();
   await page.getByTestId('confirm-delete-button').click();
 
   // Check that the screen has been updated
@@ -284,6 +294,7 @@ test('success: user can delete an episode after confirming the dialog', async ()
   const deletedTitle = await getEpisodeTitle(episodeId);
   expect(deletedTitle).toBeNull();
 
+  await waitForFadeTransition();
   await page.screenshot();
 });
 

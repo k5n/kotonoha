@@ -1,12 +1,12 @@
 import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
-import { createMockStore, setupStrongholdMock } from '$lib/testing/mockFactories';
-import { outputCoverage } from '$lib/testing/outputCoverage';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import type { PageData } from '../routes/settings/$types';
 import { load } from '../routes/settings/+page';
 import Component from '../routes/settings/+page.svelte';
+import { createMockStore, setupStrongholdMock } from './lib/mockFactories';
+import { outputCoverage } from './lib/outputCoverage';
 
 import '$src/app.css';
 

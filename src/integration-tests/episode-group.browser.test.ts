@@ -3,7 +3,6 @@ import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import * as pluginFs from '$lib/infrastructure/mocks/plugin-fs';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
-import { outputCoverage } from '$lib/testing/outputCoverage';
 import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 import { render } from 'vitest-browser-svelte';
@@ -11,6 +10,8 @@ import { page } from 'vitest/browser';
 import type { PageData } from '../routes/[...groupId]/$types';
 import { load } from '../routes/[...groupId]/+page';
 import Component from '../routes/[...groupId]/+page.svelte';
+import { outputCoverage } from './lib/outputCoverage';
+import { waitForFadeTransition } from './lib/utils';
 
 import '$src/app.css';
 
@@ -218,6 +219,7 @@ test('interaction: user can add a new album group via the modal', async () => {
   await page.screenshot();
   await page.getByRole('button', { name: 'Add New' }).click();
   await expect.element(page.getByRole('heading', { name: 'Add New Group' })).toBeInTheDocument();
+  await waitForFadeTransition();
   await page.screenshot();
 
   const nameInput = page.getByLabelText('Group Name');
@@ -254,6 +256,7 @@ test('interaction: user can rename an existing group', async () => {
   await expect.element(renameButton).toBeVisible();
   await renameButton.click();
   await expect.element(page.getByRole('heading', { name: 'Edit Group Name' })).toBeInTheDocument();
+  await waitForFadeTransition();
   await page.screenshot();
 
   const input = page.getByLabelText('Group Name');
@@ -284,10 +287,12 @@ test('interaction: user can delete a group and its episodes', async () => {
   await openGroupActionsMenu(groupId.toString());
   const deleteButton = page.getByTestId(`group-action-delete-${groupId}`);
   await expect.element(deleteButton).toBeVisible();
+  await waitForFadeTransition();
   await page.screenshot();
   await deleteButton.click();
 
   await expect.element(page.getByText(/delete the group "Archive Folder"/)).toBeInTheDocument();
+  await waitForFadeTransition();
   await page.screenshot();
   await page.getByRole('button', { name: 'Yes, delete' }).click();
 

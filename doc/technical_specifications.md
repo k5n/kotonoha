@@ -26,7 +26,7 @@ Tauriの標準構成とフロントエンドのレイヤードアーキテクチ
 
 ```plaintext
 /
-├── src/                                # SvelteKit フロントエンド
+├── src/                              # SvelteKit フロントエンド
 │   ├── lib/
 │   │   ├── presentation/             # UI層: SvelteコンポーネントとUIロジック
 │   │   │   ├── components/           # 再利用可能なUIコンポーネント
@@ -500,7 +500,7 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 **モック戦略:**
 
 - Tauri (Rust) 部分は Vitest のモック機能を使用してモック化
-- 共通のモックヘルパー関数を `src/lib/testing/` に配置
+- 共通のモックヘルパー関数を `src/integration-tests/lib/` に配置
   - `mockFactories.ts`: Tauri プラグイン (Store, Stronghold など) のモックファクトリー関数を提供
   - 各テストでは、これらのファクトリーもうまく使いつつ必要なモックを構成する
 

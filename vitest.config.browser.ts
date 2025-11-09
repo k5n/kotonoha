@@ -1,6 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { webdriverio } from '@vitest/browser-webdriverio';
+import { playwright } from '@vitest/browser-playwright';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import istanbul from 'vite-plugin-istanbul';
@@ -14,8 +14,14 @@ export default defineProject({
     tailwindcss(),
     sveltekit(),
     istanbul({
-      include: 'src/**/*',
-      exclude: ['node_modules', '**/*.test.ts', '**/*.browser.test.ts'],
+      include: 'src/**',
+      exclude: [
+        'node_modules',
+        '**/*.test.ts',
+        '**/*.browser.test.ts',
+        '**/mocks/**',
+        'src/integration-tests/**',
+      ],
       extension: ['.ts', '.svelte'],
       forceBuildInstrument: true,
     }),
@@ -34,10 +40,10 @@ export default defineProject({
     setupFiles: ['vitest-browser-svelte'],
     browser: {
       enabled: true,
-      provider: webdriverio(),
-      instances: [{ browser: 'chrome' }],
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }],
       headless: true,
-      viewport: { width: 800, height: 1024 },
+      viewport: { width: 800, height: 800 },
     },
     globals: true,
     include: ['src/**/*.browser.test.ts'],
