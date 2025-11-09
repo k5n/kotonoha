@@ -5,6 +5,7 @@
 /target
 __screenshots__
 /coverage
+.agent.md
 
 .DS_Store
 node_modules
