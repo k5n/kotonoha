@@ -1,6 +1,6 @@
 {
   "context": {
-    "filename": "AGENTS.md"
+    "filename": ["AGENTS.md", "GEMINI.md"]
   },
   "mcpServers": {
     "context7": {
