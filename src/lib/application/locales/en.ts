@@ -160,8 +160,7 @@ export const en = {
       learningTargetLanguages: {
         label: 'Learning Target Languages',
         none: 'None (All languages are targeted)',
-        add: 'Add Language',
-        modalTitle: 'Select Learning Target Languages',
+        add: 'Add Learning Target Language',
       },
       explanationLanguages: {
         label: 'Explanation Languages',

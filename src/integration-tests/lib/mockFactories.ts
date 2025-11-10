@@ -32,6 +32,56 @@ export function createMockStore(overrides?: {
 }
 
 /**
+ * Create a stateful mock Tauri plugin-store instance.
+ * - Persists values in-memory across multiple `load()` calls in tests.
+ * - Allows tests to toggle save success/failure.
+ */
+export function createStatefulStore(initial?: {
+  language?: string;
+  learningTargetLanguages?: readonly string[];
+  explanationLanguages?: readonly string[];
+}) {
+  const state = new Map<string, unknown>();
+  if (initial?.language !== undefined) state.set('language', initial.language);
+  if (initial?.learningTargetLanguages !== undefined)
+    state.set('learningTargetLanguages', [...initial.learningTargetLanguages]);
+  if (initial?.explanationLanguages !== undefined)
+    state.set('explanationLanguages', [...initial.explanationLanguages]);
+
+  let failNextSave = false;
+  let saveDelayMs = 0;
+
+  return {
+    /** Get a value from the store */
+    get: vi.fn(async (key: string) => {
+      if (!state.has(key)) return null;
+      return state.get(key) as unknown;
+    }),
+    /** Set a value in the store */
+    set: vi.fn(async (key: string, value: unknown) => {
+      state.set(key, value);
+    }),
+    /** Save the store (can be configured to fail) */
+    save: vi.fn(async () => {
+      if (saveDelayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, saveDelayMs));
+      }
+      if (failNextSave) {
+        failNextSave = false; // consume the failure flag
+        throw new Error('Simulated save failure');
+      }
+    }),
+    /** Utilities for tests */
+    __setFailNextSave(flag: boolean) {
+      failNextSave = flag;
+    },
+    __setSaveDelay(ms: number) {
+      saveDelayMs = ms;
+    },
+  };
+}
+
+/**
  * Create a mock Stronghold store with configurable API keys.
  */
 export function createMockStrongholdStore(apiKeys?: {
