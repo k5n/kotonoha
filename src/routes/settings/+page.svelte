@@ -3,7 +3,7 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { saveSettings } from '$lib/application/usecases/saveSettings';
   import LanguageSelectionModal from '$lib/presentation/components/LanguageSelectionModal.svelte';
-  import { bcp47ToLanguageName } from '$lib/utils/language';
+  import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Alert, Badge, Button, Input, Label, Select, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, CloseCircleSolid } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
@@ -164,9 +164,20 @@
       <div class="mb-2 flex flex-wrap gap-2">
         {#if learningTargetLanguages.length > 0}
           {#each learningTargetLanguages as langCode (langCode)}
-            <Badge large color="indigo" class="flex items-center gap-1 p-2">
-              {bcp47ToLanguageName(langCode) ?? langCode}
-              <button onclick={() => removeLanguage(langCode)} class="hover:text-gray-400">
+            <Badge
+              large
+              color="indigo"
+              class="flex items-center gap-1 p-2"
+              data-testid={`learning-target-badge-${langCode}`}
+            >
+              {t(bcp47ToTranslationKey(langCode) ?? '') ??
+                bcp47ToLanguageName(langCode) ??
+                langCode}
+              <button
+                aria-label={`Remove ${bcp47ToLanguageName(langCode) ?? langCode}`}
+                onclick={() => removeLanguage(langCode)}
+                class="hover:text-gray-400"
+              >
                 <CloseCircleSolid class="h-4 w-4" />
               </button>
             </Badge>
@@ -185,9 +196,17 @@
       <div class="mb-2 flex flex-wrap gap-2">
         {#if explanationLanguages.length > 0}
           {#each explanationLanguages as langCode (langCode)}
-            <Badge large color="indigo" class="flex items-center gap-1 p-2">
-              {bcp47ToLanguageName(langCode) ?? langCode}
+            <Badge
+              large
+              color="indigo"
+              class="flex items-center gap-1 p-2"
+              data-testid={`explanation-language-badge-${langCode}`}
+            >
+              {t(bcp47ToTranslationKey(langCode) ?? '') ??
+                bcp47ToLanguageName(langCode) ??
+                langCode}
               <button
+                aria-label={`Remove ${bcp47ToLanguageName(langCode) ?? langCode}`}
                 onclick={() => removeExplanationLanguage(langCode)}
                 class="hover:text-gray-400"
               >

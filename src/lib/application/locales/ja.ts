@@ -161,8 +161,7 @@ export const ja = {
       learningTargetLanguages: {
         label: '学習対象言語',
         none: '未設定（全ての言語が対象）',
-        add: '言語を追加',
-        modalTitle: '学習対象言語を選択',
+        add: '学習対象言語を追加',
       },
       explanationLanguages: {
         label: '説明言語',
