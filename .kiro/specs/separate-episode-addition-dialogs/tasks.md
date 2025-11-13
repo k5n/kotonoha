@@ -36,8 +36,8 @@
   - 既存`fileEpisodeAddStore`との状態連携
   - _Requirements: 要件2_
 
-- [ ] 3. YouTubeエピソード追加モーダルの実装 (P)
-- [ ] 3.1 (P) YouTube専用追加ダイアログの作成
+- [x] 3. YouTubeエピソード追加モーダルの実装 (P)
+- [x] 3.1 (P) YouTube専用追加ダイアログの作成
 
   - YouTubeベースエピソード追加に特化したモーダルUI
   - URL入力とメタデータ取得機能のみを含む構造
@@ -45,7 +45,7 @@
   - `YoutubeEpisodeForm`コンポーネントとの統合
   - _Requirements: 要件3_
 
-- [ ] 3.2 (P) YouTube追加機能とメタデータ処理の統合
+- [x] 3.2 (P) YouTube追加機能とメタデータ処理の統合
 
   - 自動字幕取得、言語設定、品質選択機能の組み込み
   - YouTube動画追加完了時のエピソード作成とダイアログクローズ

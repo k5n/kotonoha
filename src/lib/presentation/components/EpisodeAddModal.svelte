@@ -48,7 +48,12 @@
     {/if}
 
     {#if episodeAddStore.sourceType === 'youtube'}
-      <YoutubeEpisodeForm {onYoutubeUrlChanged} {onSubmit} />
+      <YoutubeEpisodeForm
+        isSubmitting={episodeAddStore.isSubmitting}
+        onClose={episodeAddStore.close}
+        {onYoutubeUrlChanged}
+        {onSubmit}
+      />
     {/if}
   </div>
 </Modal>

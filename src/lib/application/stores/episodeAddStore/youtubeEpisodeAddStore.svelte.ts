@@ -73,19 +73,23 @@ export const youtubeEpisodeAddStore = {
     isFetching = false;
   },
 
+  setErrorMessage(key: string) {
+    errorMessageKey = key;
+  },
+
   validate(): boolean {
     const title = metadata?.title?.trim() || '';
     const currentUrl = url.trim();
     if (!title) {
-      errorMessageKey = 'components.episodeAddModal.errorTitleRequired';
+      errorMessageKey = 'components.youtubeEpisodeForm.errorTitleRequired';
       return false;
     }
     if (!currentUrl) {
-      errorMessageKey = 'components.episodeAddModal.errorYoutubeUrlRequired';
+      errorMessageKey = 'components.youtubeEpisodeForm.errorYoutubeUrlRequired';
       return false;
     }
     if (!isLanguageSupported) {
-      errorMessageKey = 'components.episodeAddModal.errorUnsupportedLanguage';
+      errorMessageKey = 'components.youtubeEpisodeForm.errorUnsupportedLanguage';
       return false;
     }
     return true;

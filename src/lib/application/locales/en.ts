@@ -289,11 +289,13 @@ export const en = {
         titlePlaceholder: "Episode's title",
         videoLanguageLabel: 'Video Language',
         automaticSubtitlesLabel: 'Automatic Subtitles (ASR)',
+        errorTitleRequired: 'Please enter a title.',
         errorYoutubeUrlRequired: 'Please enter a YouTube URL.',
         errorUnsupportedLanguage: 'This video language is not supported.',
         errorApiKeyNotSet: 'YouTube Data API key is not set.',
         errorInvalidUrl: 'Invalid YouTube URL.',
         errorFetchFailed: 'Failed to fetch YouTube metadata.',
+        errorSubmissionFailed: 'Failed to submit episode. Please try again.',
       },
       tsvConfigSection: {
         tsvSettingsTitle: 'TSV Column Settings',
