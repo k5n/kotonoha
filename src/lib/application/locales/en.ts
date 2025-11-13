@@ -253,6 +253,16 @@ export const en = {
         submitting: 'Creating...',
         submit: 'Create',
       },
+      episodeSourceSelectionModal: {
+        title: 'Select how to add an episode',
+        description: 'Choose a source to continue with the appropriate setup flow.',
+        fileOptionTitle: 'Add from files',
+        fileOptionDescription: 'Upload an audio file and script to create an episode.',
+        fileOptionLabel: 'Select the file-based episode workflow',
+        youtubeOptionTitle: 'Add from YouTube',
+        youtubeOptionDescription: 'Use a YouTube URL and auto-fetch subtitles.',
+        youtubeOptionLabel: 'Select the YouTube episode workflow',
+      },
       fileEpisodeForm: {
         titleLabel: 'Title',
         titlePlaceholder: "Episode's title",

@@ -253,6 +253,17 @@ export const ja = {
         submitting: '作成中...',
         submit: '作成',
       },
+      episodeSourceSelectionModal: {
+        title: 'エピソード追加方法の選択',
+        description: '利用したいソースを選ぶと、対応する設定フローへ進みます。',
+        fileOptionTitle: 'ファイルから追加',
+        fileOptionDescription: '音声ファイルとスクリプトをアップロードしてエピソードを作成します。',
+        fileOptionLabel: 'ファイル追加フローを選択',
+        youtubeOptionTitle: 'YouTubeから追加',
+        youtubeOptionDescription:
+          'YouTubeのURLを入力し、自動字幕を取得してエピソードを作成します。',
+        youtubeOptionLabel: 'YouTube追加フローを選択',
+      },
       fileEpisodeForm: {
         titleLabel: 'タイトル',
         titlePlaceholder: 'エピソードのタイトル',
