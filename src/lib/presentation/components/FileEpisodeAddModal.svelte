@@ -11,7 +11,7 @@
   type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmitRequested: (payload: FileEpisodeAddPayload) => Promise<void>;
+    onSubmitRequested: (payload: FileEpisodeAddPayload | null) => Promise<void>;
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onTtsEnabled: () => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
@@ -134,13 +134,9 @@
       return;
     }
 
-    const payload = fileEpisodeAddStore.buildPayload();
-    if (!payload) {
-      return;
-    }
-
     try {
       isSubmitting = true;
+      const payload = fileEpisodeAddStore.buildPayload();
       await onSubmitRequested(payload);
       handleClose();
     } catch (error) {

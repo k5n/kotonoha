@@ -1,4 +1,5 @@
-import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
+import type { FileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
+import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
 import type { Episode } from '$lib/domain/entities/episode';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
@@ -10,6 +11,8 @@ import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepos
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
 import { bcp47ToLanguageName } from '$lib/utils/language';
+
+type EpisodeAddPayload = FileEpisodeAddPayload | YoutubeEpisodeAddPayload;
 
 /**
  * ファイルから新しいエピソードを追加するためのパラメータ
@@ -178,47 +181,37 @@ function calculateMaxDisplayOrder(episodes: readonly Episode[]): number {
  * @throws エピソードの追加に失敗した場合にエラーをスローする
  */
 export async function addNewEpisode(
+  payload: EpisodeAddPayload,
   episodeGroupId: number,
   existingEpisodes: readonly Episode[]
 ): Promise<void> {
-  console.info(`Adding episode from store for group ${episodeGroupId}`);
+  console.info(`Adding episode for group ${episodeGroupId}`);
 
-  const payload = episodeAddStore.buildPayload();
-  if (!payload) {
-    console.error('No valid payload to submit');
-    throw new Error('Invalid form data');
+  const displayOrder = calculateMaxDisplayOrder(existingEpisodes) + 1;
+
+  if (payload.source === 'file') {
+    await addNewEpisodeFromFiles({
+      episodeGroupId,
+      displayOrder,
+      title: payload.title,
+      mediaFilePath: payload.audioFilePath,
+      scriptFilePath: payload.scriptFilePath,
+      learningLanguage: payload.learningLanguage,
+      tsvConfig: payload.tsvConfig,
+    });
+    console.info(`Successfully added file episode for group ${episodeGroupId}`);
+    return;
   }
 
-  episodeAddStore.startSubmitting();
-
-  try {
-    const displayOrder = calculateMaxDisplayOrder(existingEpisodes) + 1;
-
-    if (payload.source === 'file') {
-      await addNewEpisodeFromFiles({
-        episodeGroupId,
-        displayOrder,
-        title: payload.title,
-        mediaFilePath: payload.audioFilePath,
-        scriptFilePath: payload.scriptFilePath,
-        learningLanguage: payload.learningLanguage,
-        tsvConfig: payload.tsvConfig,
-      });
-    } else if (payload.source === 'youtube') {
-      await addYoutubeEpisode({
-        episodeGroupId,
-        displayOrder,
-        youtubeMetadata: payload.metadata,
-      });
-    } else {
-      throw new Error(`Unknown payload source: ${JSON.stringify(payload)}`);
-    }
-
-    episodeAddStore.close();
-    console.info(`Successfully added episode for group ${episodeGroupId}`);
-  } catch (err) {
-    console.error(`Failed to add episode from store: ${err}`);
-    episodeAddStore.close();
-    throw err;
+  if (payload.source === 'youtube') {
+    await addYoutubeEpisode({
+      episodeGroupId,
+      displayOrder,
+      youtubeMetadata: payload.metadata,
+    });
+    console.info(`Successfully added YouTube episode for group ${episodeGroupId}`);
+    return;
   }
+
+  throw new Error(`Unknown payload source: ${JSON.stringify(payload)}`);
 }
