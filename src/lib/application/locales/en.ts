@@ -277,6 +277,7 @@ export const en = {
         errorDetectLanguage: 'Failed to auto-detect language.',
         errorTsvParse: 'Failed to parse TSV file.',
         errorTsvColumnRequired: 'Please select the start time and text columns.',
+        errorSubmissionFailed: 'Failed to submit episode. Please try again.',
         noLanguageDetected: 'No language detected.',
         languageNotTargeted:
           'The language was detected as {{language}}, but it is not included in the learning target languages.',

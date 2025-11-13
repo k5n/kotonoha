@@ -278,6 +278,7 @@ export const ja = {
         errorDetectLanguage: '言語の自動判定に失敗しました。',
         errorTsvParse: 'TSVファイルの解析に失敗しました。',
         errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
+        errorSubmissionFailed: 'エピソードの作成に失敗しました。もう一度お試しください。',
         noLanguageDetected: '言語が検出されませんでした。',
         languageNotTargeted:
           '言語は{{language}}と判定されましたが、学習対象言語に含まれていません。',
