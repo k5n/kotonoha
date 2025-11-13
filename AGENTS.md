@@ -28,7 +28,8 @@ Commands
 - Test unit: `npm run test`
 - Test browser: `npm run test:browser`
 - Test all (unit + browser): `npm run test:all`
-- Test single unit test file: `npx vitest <path_to_test_file> run` (example: `npx vitest src/lib/domain/services/buildEpisodeGroupTree.test.ts run`)
+- Test single nodejs test file: `npm run test:nodejs -- <path_to_test_file>` (example: `npm run test -- src/lib/domain/services/buildEpisodeGroupTree.test.ts`)
+- Test single browser test file: `npm run test:browser -- <path_to_test_file>` (example: `npm run test:browser -- src/integration-tests/episode-list.file.browser.test.ts`)
 
 Work rules for tasks
 

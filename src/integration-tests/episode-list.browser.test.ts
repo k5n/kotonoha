@@ -1,5 +1,4 @@
 import { invalidateAll } from '$app/navigation';
-import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
@@ -127,7 +126,6 @@ beforeEach(async () => {
   vi.mocked(invalidateAll).mockResolvedValue(undefined);
 
   groupPathStore.reset();
-  episodeAddStore.close();
   i18nStore.init('en');
 
   await clearDatabase();

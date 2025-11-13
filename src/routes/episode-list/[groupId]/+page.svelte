@@ -1,8 +1,10 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import type { FileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
+  import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
+  import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import { detectScriptLanguage } from '$lib/application/usecases/detectScriptLanguage';
@@ -22,10 +24,12 @@
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
-  import EpisodeAddModal from '$lib/presentation/components/EpisodeAddModal.svelte';
+  import EpisodeSourceSelectionModal from '$lib/presentation/components/EpisodeSourceSelectionModal.svelte';
+  import FileEpisodeAddModal from '$lib/presentation/components/FileEpisodeAddModal.svelte';
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
   import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
+  import YoutubeEpisodeAddModal from '$lib/presentation/components/YoutubeEpisodeAddModal.svelte';
   import TtsExecutionModal from '$lib/presentation/components/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '$lib/presentation/components/TtsModelDownloadModal.svelte';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
@@ -39,6 +43,11 @@
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
+  type EpisodeModalType = 'none' | 'source-selection' | 'file' | 'youtube';
+  let activeEpisodeModal = $state<EpisodeModalType>('none');
+  let showSourceSelectionModal = $derived(activeEpisodeModal === 'source-selection');
+  let showFileEpisodeModal = $derived(activeEpisodeModal === 'file');
+  let showYoutubeEpisodeModal = $derived(activeEpisodeModal === 'youtube');
 
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
@@ -57,6 +66,18 @@
 
   // === Add episode ===
 
+  function handleAddEpisodeClick() {
+    activeEpisodeModal = 'source-selection';
+  }
+
+  function handleEpisodeSourceSelected(source: 'file' | 'youtube') {
+    activeEpisodeModal = source === 'file' ? 'file' : 'youtube';
+  }
+
+  function handleEpisodeModalClose() {
+    activeEpisodeModal = 'none';
+  }
+
   // Route wrapper for detection usecase (components must call through the route)
   async function handleDetectScriptLanguage(): Promise<void> {
     try {
@@ -67,30 +88,59 @@
     }
   }
 
-  async function handleEpisodeAddSubmit() {
-    const episodeGroupId = data.episodeGroup?.id;
-    if (!episodeGroupId) {
-      console.error('No group ID found, cannot add episode (this should not happen)');
-      return;
+  async function ensureFileEpisodePayload(
+    payload: FileEpisodeAddPayload | null
+  ): Promise<FileEpisodeAddPayload> {
+    if (fileEpisodeAddStore.shouldGenerateAudio && !fileEpisodeAddStore.audioFilePath) {
+      console.info('TTS is required for the new episode');
+      await downloadTtsModel();
+      await executeTts();
     }
 
-    if (episodeAddStore.isTtsRequired()) {
-      console.info('TTS is required for the new episode');
-      try {
-        await downloadTtsModel();
-        await executeTts();
-      } catch (e) {
-        console.error(`Failed during TTS preparation: ${e}`);
-        return;
-      }
+    const finalPayload = payload ?? fileEpisodeAddStore.buildPayload();
+    if (!finalPayload) {
+      throw new Error('File episode payload is not ready');
+    }
+    return finalPayload;
+  }
+
+  async function handleFileEpisodeSubmit(payload: FileEpisodeAddPayload | null): Promise<void> {
+    const episodeGroupId = data.episodeGroup?.id;
+    if (!episodeGroupId) {
+      throw new Error('No group ID found, cannot add episode');
+    }
+
+    let finalPayload: FileEpisodeAddPayload;
+    try {
+      finalPayload = await ensureFileEpisodePayload(payload);
+    } catch (e) {
+      console.error(`Failed to prepare file episode payload: ${e}`);
+      throw e;
     }
 
     try {
-      await addNewEpisode(episodeGroupId, episodes);
+      await addNewEpisode(finalPayload, episodeGroupId, episodes);
       await invalidateAll();
     } catch (e) {
-      console.error(`Failed to add new episode: ${e}`);
+      console.error(`Failed to add file-based episode: ${e}`);
       errorMessage = t('episodeListPage.errors.addEpisode');
+      throw e;
+    }
+  }
+
+  async function handleYoutubeEpisodeSubmit(payload: YoutubeEpisodeAddPayload): Promise<void> {
+    const episodeGroupId = data.episodeGroup?.id;
+    if (!episodeGroupId) {
+      throw new Error('No group ID found, cannot add episode');
+    }
+
+    try {
+      await addNewEpisode(payload, episodeGroupId, episodes);
+      await invalidateAll();
+    } catch (e) {
+      console.error(`Failed to add YouTube episode: ${e}`);
+      errorMessage = t('episodeListPage.errors.addEpisode');
+      throw e;
     }
   }
 
@@ -185,7 +235,7 @@
       <div>
         <Heading tag="h1" class="text-3xl font-bold">{data.episodeGroup.name}</Heading>
       </div>
-      <Button onclick={episodeAddStore.open}>
+      <Button onclick={handleAddEpisodeClick}>
         <PlusOutline class="me-2 h-5 w-5" />
         {t('episodeListPage.addNewButton')}
       </Button>
@@ -202,7 +252,7 @@
           >{t('episodeListPage.emptyState.title')}</Heading
         >
         <p class="mb-4 text-gray-500">{t('episodeListPage.emptyState.message')}</p>
-        <Button color="alternative" onclick={episodeAddStore.open}>
+        <Button color="alternative" onclick={handleAddEpisodeClick}>
           <PlusOutline class="me-2 h-5 w-5" />
           {t('episodeListPage.emptyState.addButton')}
         </Button>
@@ -228,12 +278,26 @@
   {/if}
 </div>
 
-<EpisodeAddModal
+<EpisodeSourceSelectionModal
+  open={showSourceSelectionModal}
+  onClose={handleEpisodeModalClose}
+  onSourceSelected={handleEpisodeSourceSelected}
+/>
+
+<FileEpisodeAddModal
+  open={showFileEpisodeModal}
+  onClose={handleEpisodeModalClose}
+  onSubmitRequested={handleFileEpisodeSubmit}
   onTsvFileSelected={previewScriptFile}
-  onYoutubeUrlChanged={fetchYoutubeMetadata}
-  onSubmit={handleEpisodeAddSubmit}
   onTtsEnabled={fetchTtsVoices}
   onDetectScriptLanguage={handleDetectScriptLanguage}
+/>
+
+<YoutubeEpisodeAddModal
+  open={showYoutubeEpisodeModal}
+  onClose={handleEpisodeModalClose}
+  onSubmitRequested={handleYoutubeEpisodeSubmit}
+  onYoutubeUrlChanged={fetchYoutubeMetadata}
 />
 
 <EpisodeMoveModal

@@ -1,4 +1,4 @@
-import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
+import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
 import { parseScriptPreview } from '$lib/domain/services/parseScriptPreview';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 
@@ -7,15 +7,13 @@ import { fileRepository } from '$lib/infrastructure/repositories/fileRepository'
  * @param filePath The path to the script file.
  */
 export async function previewScriptFile(filePath: string): Promise<void> {
-  episodeAddStore.file.tsv.startScriptPreviewFetching();
+  fileEpisodeAddStore.tsv.startScriptPreviewFetching();
   try {
     const content = await fileRepository.readTextFileByAbsolutePath(filePath);
     const preview = parseScriptPreview(content, 5);
-    episodeAddStore.file.tsv.completeScriptPreviewFetching(preview);
+    fileEpisodeAddStore.tsv.completeScriptPreviewFetching(preview);
   } catch (e) {
-    episodeAddStore.file.tsv.failedScriptPreviewFetching(
-      'components.fileEpisodeForm.errorTsvParse'
-    );
+    fileEpisodeAddStore.tsv.failedScriptPreviewFetching('components.fileEpisodeForm.errorTsvParse');
     throw e;
   }
 }

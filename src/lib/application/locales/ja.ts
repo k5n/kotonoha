@@ -253,6 +253,17 @@ export const ja = {
         submitting: '作成中...',
         submit: '作成',
       },
+      episodeSourceSelectionModal: {
+        title: 'エピソード追加方法の選択',
+        description: '利用したいソースを選ぶと、対応する設定フローへ進みます。',
+        fileOptionTitle: 'ファイルから追加',
+        fileOptionDescription: '音声ファイルとスクリプトをアップロードしてエピソードを作成します。',
+        fileOptionLabel: 'ファイル追加フローを選択',
+        youtubeOptionTitle: 'YouTubeから追加',
+        youtubeOptionDescription:
+          'YouTubeのURLを入力し、自動字幕を取得してエピソードを作成します。',
+        youtubeOptionLabel: 'YouTube追加フローを選択',
+      },
       fileEpisodeForm: {
         titleLabel: 'タイトル',
         titlePlaceholder: 'エピソードのタイトル',
@@ -267,6 +278,7 @@ export const ja = {
         errorDetectLanguage: '言語の自動判定に失敗しました。',
         errorTsvParse: 'TSVファイルの解析に失敗しました。',
         errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
+        errorSubmissionFailed: 'エピソードの作成に失敗しました。もう一度お試しください。',
         noLanguageDetected: '言語が検出されませんでした。',
         languageNotTargeted:
           '言語は{{language}}と判定されましたが、学習対象言語に含まれていません。',
@@ -278,11 +290,13 @@ export const ja = {
         titlePlaceholder: 'エピソードのタイトル',
         videoLanguageLabel: '動画の言語',
         automaticSubtitlesLabel: '自動字幕 (ASR)',
+        errorTitleRequired: 'タイトルを入力してください。',
         errorYoutubeUrlRequired: 'YouTubeのURLを入力してください。',
         errorUnsupportedLanguage: 'この動画の言語はサポートされていません。',
         errorApiKeyNotSet: 'YouTube Data APIキーが設定されていません。',
         errorInvalidUrl: '無効なYouTube URLです。',
         errorFetchFailed: 'YouTubeメタデータの取得に失敗しました。',
+        errorSubmissionFailed: 'エピソードの作成に失敗しました。もう一度お試しください。',
       },
       tsvConfigSection: {
         tsvSettingsTitle: 'TSVカラム設定',

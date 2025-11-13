@@ -1,15 +1,18 @@
 <script lang="ts">
-  import { episodeAddStore } from '$lib/application/stores/episodeAddStore/episodeAddStore.svelte';
   import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Checkbox, Input, Label, Spinner } from 'flowbite-svelte';
 
   type Props = {
+    isSubmitting: boolean;
+    onClose: () => void;
     onSubmit: () => Promise<void>;
     onYoutubeUrlChanged: (url: string) => Promise<void>;
   };
-  let { onSubmit, onYoutubeUrlChanged }: Props = $props();
+  let { isSubmitting = false, onClose, onSubmit, onYoutubeUrlChanged }: Props = $props();
+
+  let isFormBusy = $derived(isSubmitting || youtubeEpisodeAddStore.isMetadataFetching);
 
   let languageName = $derived.by(() => {
     const metadata = youtubeEpisodeAddStore.metadata;
@@ -24,7 +27,7 @@
 
   async function handleSubmit() {
     if (
-      episodeAddStore.isSubmitting ||
+      isSubmitting ||
       youtubeEpisodeAddStore.isMetadataFetching ||
       !youtubeEpisodeAddStore.metadata
     ) {
@@ -32,7 +35,7 @@
     }
 
     if (youtubeEpisodeAddStore.validate()) {
-      onSubmit();
+      await onSubmit();
     }
   }
 </script>
@@ -118,20 +121,11 @@
 {/if}
 
 <div class="flex justify-end gap-2">
-  <Button
-    color="gray"
-    disabled={episodeAddStore.isSubmitting || youtubeEpisodeAddStore.isMetadataFetching}
-    onclick={episodeAddStore.close}
-  >
+  <Button color="gray" disabled={isFormBusy} onclick={onClose}>
     {t('common.cancel')}
   </Button>
-  <Button
-    onclick={handleSubmit}
-    disabled={episodeAddStore.isSubmitting ||
-      youtubeEpisodeAddStore.isMetadataFetching ||
-      !youtubeEpisodeAddStore.metadata}
-  >
-    {episodeAddStore.isSubmitting
+  <Button onclick={handleSubmit} disabled={isFormBusy || !youtubeEpisodeAddStore.metadata}>
+    {isSubmitting
       ? t('components.episodeAddModal.submitting')
       : t('components.episodeAddModal.submit')}
   </Button>

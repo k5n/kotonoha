@@ -253,6 +253,16 @@ export const en = {
         submitting: 'Creating...',
         submit: 'Create',
       },
+      episodeSourceSelectionModal: {
+        title: 'Select how to add an episode',
+        description: 'Choose a source to continue with the appropriate setup flow.',
+        fileOptionTitle: 'Add from files',
+        fileOptionDescription: 'Upload an audio file and script to create an episode.',
+        fileOptionLabel: 'Select the file-based episode workflow',
+        youtubeOptionTitle: 'Add from YouTube',
+        youtubeOptionDescription: 'Use a YouTube URL and auto-fetch subtitles.',
+        youtubeOptionLabel: 'Select the YouTube episode workflow',
+      },
       fileEpisodeForm: {
         titleLabel: 'Title',
         titlePlaceholder: "Episode's title",
@@ -267,6 +277,7 @@ export const en = {
         errorDetectLanguage: 'Failed to auto-detect language.',
         errorTsvParse: 'Failed to parse TSV file.',
         errorTsvColumnRequired: 'Please select the start time and text columns.',
+        errorSubmissionFailed: 'Failed to submit episode. Please try again.',
         noLanguageDetected: 'No language detected.',
         languageNotTargeted:
           'The language was detected as {{language}}, but it is not included in the learning target languages.',
@@ -278,11 +289,13 @@ export const en = {
         titlePlaceholder: "Episode's title",
         videoLanguageLabel: 'Video Language',
         automaticSubtitlesLabel: 'Automatic Subtitles (ASR)',
+        errorTitleRequired: 'Please enter a title.',
         errorYoutubeUrlRequired: 'Please enter a YouTube URL.',
         errorUnsupportedLanguage: 'This video language is not supported.',
         errorApiKeyNotSet: 'YouTube Data API key is not set.',
         errorInvalidUrl: 'Invalid YouTube URL.',
         errorFetchFailed: 'Failed to fetch YouTube metadata.',
+        errorSubmissionFailed: 'Failed to submit episode. Please try again.',
       },
       tsvConfigSection: {
         tsvSettingsTitle: 'TSV Column Settings',
