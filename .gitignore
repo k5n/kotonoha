@@ -6,6 +6,7 @@
 __screenshots__
 /coverage
 .agent.md
+.rovodev
 
 .DS_Store
 node_modules
