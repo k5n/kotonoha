@@ -15,7 +15,6 @@
   let { open = false, onClose, onSubmitRequested, onYoutubeUrlChanged }: Props = $props();
 
   let isSubmitting = $state(false);
-  let previousOpen = false;
 
   let isFormBusy = $derived(isSubmitting || youtubeEpisodeAddStore.isMetadataFetching);
 
@@ -33,20 +32,6 @@
   function resetFormState() {
     youtubeEpisodeAddStore.reset();
   }
-
-  $effect(() => {
-    if (open && !previousOpen) {
-      resetFormState();
-      isSubmitting = false;
-    }
-
-    if (!open && previousOpen) {
-      resetFormState();
-      isSubmitting = false;
-    }
-
-    previousOpen = open;
-  });
 
   function handleClose() {
     resetFormState();
