@@ -2,12 +2,17 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import type { FileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
-  import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
+  import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
+  import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
+  import type { TtsEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
+  import { ttsEpisodeAddStore } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
   import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
-  import { detectScriptLanguage } from '$lib/application/usecases/detectScriptLanguage';
+  import {
+    detectScriptLanguage,
+    type LanguageDetectionStore,
+  } from '$lib/application/usecases/detectScriptLanguage';
   import {
     cancelTtsModelDownload,
     downloadTtsModel,
@@ -25,11 +30,12 @@
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
   import EpisodeSourceSelectionModal from '$lib/presentation/components/EpisodeSourceSelectionModal.svelte';
-  import FileEpisodeAddModal from '$lib/presentation/components/FileEpisodeAddModal.svelte';
+  import AudioScriptFileEpisodeAddModal from '$lib/presentation/components/AudioScriptFileEpisodeAddModal.svelte';
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
   import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
   import YoutubeEpisodeAddModal from '$lib/presentation/components/YoutubeEpisodeAddModal.svelte';
+  import TtsEpisodeAddModal from '$lib/presentation/components/TtsEpisodeAddModal.svelte';
   import TtsExecutionModal from '$lib/presentation/components/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '$lib/presentation/components/TtsModelDownloadModal.svelte';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
@@ -43,11 +49,13 @@
   let targetEpisode = $state<Episode | null>(null);
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
-  type EpisodeModalType = 'none' | 'source-selection' | 'file' | 'youtube';
-  type EpisodeSourceSelectionEvent = 'file' | 'youtube' | 'audio-script' | 'script-tts';
+  type FileDetailType = 'audio-script' | 'script-tts';
+  type EpisodeModalType = 'none' | 'source-selection' | 'youtube';
+  type EpisodeSourceSelectionEvent = 'file' | 'youtube' | FileDetailType;
   let activeEpisodeModal = $state<EpisodeModalType>('none');
+  let showAudioScriptFileModal = $state(false);
+  let showTtsEpisodeModal = $state(false);
   let showSourceSelectionModal = $derived(activeEpisodeModal === 'source-selection');
-  let showFileEpisodeModal = $derived(activeEpisodeModal === 'file');
   let showYoutubeEpisodeModal = $derived(activeEpisodeModal === 'youtube');
 
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
@@ -68,58 +76,111 @@
   // === Add episode ===
 
   function handleAddEpisodeClick() {
+    showAudioScriptFileModal = false;
+    showTtsEpisodeModal = false;
     activeEpisodeModal = 'source-selection';
   }
 
   function handleEpisodeSourceSelected(source: EpisodeSourceSelectionEvent) {
-    if (source === 'audio-script' || source === 'script-tts') {
-      activeEpisodeModal = 'file';
+    if (source === 'audio-script') {
+      showAudioScriptFileModal = true;
+      showTtsEpisodeModal = false;
+      activeEpisodeModal = 'none';
       return;
     }
-    activeEpisodeModal = source === 'file' ? 'file' : 'youtube';
+    if (source === 'script-tts') {
+      showTtsEpisodeModal = true;
+      showAudioScriptFileModal = false;
+      activeEpisodeModal = 'none';
+      return;
+    }
+    activeEpisodeModal = source === 'youtube' ? 'youtube' : 'source-selection';
   }
 
   function handleEpisodeModalClose() {
     activeEpisodeModal = 'none';
   }
 
-  // Route wrapper for detection usecase (components must call through the route)
-  async function handleDetectScriptLanguage(): Promise<void> {
+  function handleAudioScriptModalClose() {
+    showAudioScriptFileModal = false;
+  }
+
+  function handleTtsEpisodeModalClose() {
+    showTtsEpisodeModal = false;
+  }
+
+  async function runLanguageDetection(
+    store: LanguageDetectionStore,
+    context: FileDetailType
+  ): Promise<void> {
     try {
-      await detectScriptLanguage();
+      await detectScriptLanguage(store);
     } catch (e) {
-      console.error(`Failed to detect script language: ${e}`);
-      return;
+      console.error(`Failed to detect script language for ${context}: ${e}`);
     }
   }
 
-  async function ensureFileEpisodePayload(
-    payload: FileEpisodeAddPayload | null
-  ): Promise<FileEpisodeAddPayload> {
-    if (fileEpisodeAddStore.shouldGenerateAudio && !fileEpisodeAddStore.audioFilePath) {
-      console.info('TTS is required for the new episode');
-      await downloadTtsModel();
-      await executeTts();
-    }
+  async function handleAudioScriptLanguageDetection(): Promise<void> {
+    await runLanguageDetection(audioScriptFileEpisodeAddStore, 'audio-script');
+  }
 
-    const finalPayload = payload ?? fileEpisodeAddStore.buildPayload();
+  async function handleTtsLanguageDetection(): Promise<void> {
+    await runLanguageDetection(ttsEpisodeAddStore, 'script-tts');
+  }
+
+  async function handleTtsSetup(): Promise<void> {
+    try {
+      await fetchTtsVoices(ttsEpisodeAddStore);
+    } catch (e) {
+      console.error(`Failed to prepare TTS voices: ${e}`);
+    }
+  }
+
+  function buildAudioScriptPayload(
+    payload: AudioScriptFileEpisodeAddPayload | null
+  ): AudioScriptFileEpisodeAddPayload {
+    const finalPayload = payload ?? audioScriptFileEpisodeAddStore.buildPayload();
     if (!finalPayload) {
-      throw new Error('File episode payload is not ready');
+      throw new Error('Audio-script episode payload is not ready');
     }
     return finalPayload;
   }
 
-  async function handleFileEpisodeSubmit(payload: FileEpisodeAddPayload | null): Promise<void> {
+  async function ensureTtsEpisodePayload(
+    payload: TtsEpisodeAddPayload | null
+  ): Promise<TtsEpisodeAddPayload> {
+    if (payload) {
+      return payload;
+    }
+
+    if (!ttsEpisodeAddStore.scriptFilePath) {
+      throw new Error('Script file path is required before generating TTS audio');
+    }
+
+    console.info('TTS audio generation required for the new episode');
+    await downloadTtsModel();
+    await executeTts(ttsEpisodeAddStore);
+
+    const finalPayload = ttsEpisodeAddStore.buildPayload();
+    if (!finalPayload) {
+      throw new Error('TTS episode payload is not ready');
+    }
+    return finalPayload;
+  }
+
+  async function handleAudioScriptEpisodeSubmit(
+    payload: AudioScriptFileEpisodeAddPayload | null
+  ): Promise<void> {
     const episodeGroupId = data.episodeGroup?.id;
     if (!episodeGroupId) {
       throw new Error('No group ID found, cannot add episode');
     }
 
-    let finalPayload: FileEpisodeAddPayload;
+    let finalPayload: AudioScriptFileEpisodeAddPayload;
     try {
-      finalPayload = await ensureFileEpisodePayload(payload);
+      finalPayload = buildAudioScriptPayload(payload);
     } catch (e) {
-      console.error(`Failed to prepare file episode payload: ${e}`);
+      console.error(`Failed to prepare audio+script episode payload: ${e}`);
       throw e;
     }
 
@@ -128,6 +189,30 @@
       await invalidateAll();
     } catch (e) {
       console.error(`Failed to add file-based episode: ${e}`);
+      errorMessage = t('episodeListPage.errors.addEpisode');
+      throw e;
+    }
+  }
+
+  async function handleTtsEpisodeSubmit(payload: TtsEpisodeAddPayload | null): Promise<void> {
+    const episodeGroupId = data.episodeGroup?.id;
+    if (!episodeGroupId) {
+      throw new Error('No group ID found, cannot add episode');
+    }
+
+    let finalPayload: TtsEpisodeAddPayload;
+    try {
+      finalPayload = await ensureTtsEpisodePayload(payload);
+    } catch (e) {
+      console.error(`Failed to prepare TTS episode payload: ${e}`);
+      throw e;
+    }
+
+    try {
+      await addNewEpisode(finalPayload, episodeGroupId, episodes);
+      await invalidateAll();
+    } catch (e) {
+      console.error(`Failed to add TTS-based episode: ${e}`);
       errorMessage = t('episodeListPage.errors.addEpisode');
       throw e;
     }
@@ -289,13 +374,21 @@
   onSourceSelected={handleEpisodeSourceSelected}
 />
 
-<FileEpisodeAddModal
-  open={showFileEpisodeModal}
-  onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleFileEpisodeSubmit}
+<AudioScriptFileEpisodeAddModal
+  open={showAudioScriptFileModal}
+  onClose={handleAudioScriptModalClose}
+  onSubmitRequested={handleAudioScriptEpisodeSubmit}
   onTsvFileSelected={previewScriptFile}
-  onTtsEnabled={fetchTtsVoices}
-  onDetectScriptLanguage={handleDetectScriptLanguage}
+  onDetectScriptLanguage={handleAudioScriptLanguageDetection}
+/>
+
+<TtsEpisodeAddModal
+  open={showTtsEpisodeModal}
+  onClose={handleTtsEpisodeModalClose}
+  onSubmitRequested={handleTtsEpisodeSubmit}
+  onTsvFileSelected={previewScriptFile}
+  onDetectScriptLanguage={handleTtsLanguageDetection}
+  onTtsEnabled={handleTtsSetup}
 />
 
 <YoutubeEpisodeAddModal

@@ -35,7 +35,7 @@
   - ペイロード構築とフォームバリデーション機能
   - _Requirements: 2.1, 4.1, 4.2_
 
-- [ ] 3. TTS音声生成エピソード追加ダイアログの実装
+- [x] 3. TTS音声生成エピソード追加ダイアログの実装
 - [x] 3.1 (P) TtsEpisodeAddModalコンポーネントの作成
 
   - スクリプトファイル選択の入力要素（音声ファイル選択は除外）
@@ -52,15 +52,15 @@
   - TTS生成ペイロード構築とフォームバリデーション機能
   - _Requirements: 3.1, 4.1, 4.2_
 
-- [ ] 4. Episode List Pageのモーダル制御拡張
-- [ ] 4.1 新しいモーダル状態管理の実装
+- [x] 4. Episode List Pageのモーダル制御拡張
+- [x] 4.1 新しいモーダル状態管理の実装
 
   - audioScriptFileModalOpenとttsModalOpenの状態追加
   - selectedFileType（audio-script/script-tts）の管理
   - モーダル間遷移制御ロジックの実装
   - _Requirements: 1.1, 2.1, 3.1_
 
-- [ ] 4.2 新しいダイアログとの統合
+- [x] 4.2 新しいダイアログとの統合
 
   - AudioScriptFileEpisodeAddModalとTtsEpisodeAddModalの表示制御
   - 各ダイアログからのペイロード受け取りとaddNewEpisodeユースケース呼び出し

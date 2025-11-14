@@ -1,38 +1,43 @@
 import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
+import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
 import type { Voice } from '$lib/domain/entities/voice';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import { getSupportedLanguages } from '$lib/utils/language';
-import { detectScriptLanguage } from './detectScriptLanguage';
+import { detectScriptLanguage, type LanguageDetectionStore } from './detectScriptLanguage';
 
-async function getAvailableVoices(): Promise<readonly Voice[]> {
-  if (fileEpisodeAddStore.detectedLanguage === null) {
+type TtsVoiceStore = LanguageDetectionStore & {
+  readonly detectedLanguage: string | null;
+  readonly selectedStudyLanguage: string | null;
+};
+
+async function getAvailableVoices(store: TtsVoiceStore): Promise<readonly Voice[]> {
+  if (store.detectedLanguage === null) {
     const [_, voices] = await Promise.all([
-      detectScriptLanguage(),
+      detectScriptLanguage(store),
       ttsRepository.getAvailableVoices(),
     ]);
     return voices;
-  } else {
-    const voices = await ttsRepository.getAvailableVoices();
-    return voices;
   }
+
+  return ttsRepository.getAvailableVoices();
 }
 
 /**
  * Fetches available TTS voices filtered by Gemini-supported languages
  * and updates the episode add store with the results.
  */
-export async function fetchTtsVoices(): Promise<void> {
+export async function fetchTtsVoices(store: TtsVoiceStore = fileEpisodeAddStore): Promise<void> {
   console.info('Fetching TTS voices...');
-  if (fileEpisodeAddStore.tts.isFetchingVoices) {
+  if (ttsConfigStore.isFetchingVoices) {
     console.warn('TTS voices are already being fetched. Skipping duplicate request.');
     return;
   }
-  if (fileEpisodeAddStore.tts.allVoices) {
+  if (ttsConfigStore.allVoices) {
     console.log('TTS voices are already fetched. Skipping.');
     return;
   }
-  const scriptFilePath = fileEpisodeAddStore.scriptFilePath;
+  const scriptFilePath = store.scriptFilePath;
   if (!scriptFilePath) {
     console.error('Script file path is not set. This must not happen.');
     return;
@@ -41,9 +46,9 @@ export async function fetchTtsVoices(): Promise<void> {
   console.time('fetchTtsVoices');
 
   try {
-    fileEpisodeAddStore.tts.startVoicesFetching();
+    ttsConfigStore.startVoicesFetching();
 
-    const voices = await getAvailableVoices();
+    const voices = await getAvailableVoices(store);
     const supportedLanguageCodes = getSupportedLanguages().map((lang) => lang.code);
     const filteredVoices: Voice[] = voices.filter((voice) => {
       return supportedLanguageCodes.includes(voice.language.family);
@@ -59,21 +64,21 @@ export async function fetchTtsVoices(): Promise<void> {
           )
         : filteredVoices;
 
-    fileEpisodeAddStore.tts.setVoiceData({
+    ttsConfigStore.setVoiceData({
       allVoices: filteredVoices,
       learningTargetVoices: learningTargetVoices,
       defaultVoices,
     });
 
     // Trigger validation for the currently selected language
-    fileEpisodeAddStore.tts.setLanguage(fileEpisodeAddStore.selectedStudyLanguage);
+    ttsConfigStore.setLanguage(store.selectedStudyLanguage);
 
     console.info(
       `Fetched ${filteredVoices.length} TTS voices, ${learningTargetVoices.length} match voices for learning target languages.`
     );
   } catch (err) {
     console.error(`Failed to fetch TTS voices: ${err}`);
-    fileEpisodeAddStore.tts.setError('components.ttsConfigSection.failedToLoad');
+    ttsConfigStore.setError('components.ttsConfigSection.failedToLoad');
   }
   console.timeEnd('fetchTtsVoices');
 }

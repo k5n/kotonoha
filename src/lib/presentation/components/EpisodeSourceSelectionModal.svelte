@@ -136,7 +136,7 @@
       </div>
     {:else}
       <div class="grid gap-4 sm:grid-cols-2">
-        {#each detailOptions as option}
+        {#each detailOptions as option (option.type)}
           <button
             type="button"
             class={`${optionButtonBaseClasses} ${selectedFileType === option.type ? optionSelectedClasses : ''}`}
