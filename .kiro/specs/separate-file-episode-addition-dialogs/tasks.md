@@ -18,8 +18,8 @@
   - 適切なイベントハンドリングとモーダル遷移制御
   - _Requirements: 1.1_
 
-- [ ] 2. 音声ファイル付きエピソード追加ダイアログの実装
-- [ ] 2.1 (P) AudioScriptFileEpisodeAddModalコンポーネントの作成
+- [x] 2. 音声ファイル付きエピソード追加ダイアログの実装
+- [x] 2.1 (P) AudioScriptFileEpisodeAddModalコンポーネントの作成
 
   - 音声ファイル選択とスクリプトファイル選択の入力要素
   - TSV設定セクションとスクリプト言語検出機能の統合
@@ -27,7 +27,7 @@
   - 既存のFileSelectとTsvConfigSectionコンポーネントの再利用
   - _Requirements: 2.1, 2.2_
 
-- [ ] 2.2 (P) audioScriptFileEpisodeAddStoreの実装
+- [x] 2.2 (P) audioScriptFileEpisodeAddStoreの実装
 
   - 音声ファイルパス、スクリプトファイルパス、学習言語選択の状態管理
   - TSV設定サブストアの統合

@@ -58,7 +58,10 @@
           id="startTimeColumn"
           value={tsvConfigStore.tsvConfig.startTimeColumnIndex}
           onchange={(e) =>
-            tsvConfigStore.updateConfig('startTimeColumnIndex', parseInt(e.currentTarget.value))}
+            tsvConfigStore.updateConfig(
+              'startTimeColumnIndex',
+              parseInt((e.currentTarget as HTMLSelectElement).value)
+            )}
           items={columnOptions}
         />
       </div>
@@ -81,7 +84,10 @@
           id="endTimeColumn"
           value={tsvConfigStore.tsvConfig.endTimeColumnIndex}
           onchange={(e) =>
-            tsvConfigStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
+            tsvConfigStore.updateConfig(
+              'endTimeColumnIndex',
+              parseInt((e.currentTarget as HTMLSelectElement).value)
+            )}
           items={endTimeColumnOptions}
         />
       </div>
