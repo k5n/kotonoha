@@ -262,6 +262,20 @@ export const en = {
         youtubeOptionTitle: 'Add from YouTube',
         youtubeOptionDescription: 'Use a YouTube URL and auto-fetch subtitles.',
         youtubeOptionLabel: 'Select the YouTube episode workflow',
+        fileDetailTitle: 'Choose your file workflow',
+        fileDetailDescription: 'Select the option that matches the files you prepared.',
+        audioScriptOptionTitle: 'Audio + script files',
+        audioScriptOptionDescription:
+          'Use when you already have both the recorded audio and the transcript.',
+        audioScriptOptionHelper:
+          'Requires a transcript that already contains timestamps so each line can align with the audio.',
+        audioScriptOptionLabel: 'Open the audio + script workflow',
+        scriptTtsOptionTitle: 'Script file + TTS generation',
+        scriptTtsOptionDescription:
+          'Use when you only have the script and need to generate audio with TTS.',
+        scriptTtsOptionHelper:
+          'Guides you through Text-to-Speech configuration and audio generation before creating the episode.',
+        scriptTtsOptionLabel: 'Open the script + TTS workflow',
       },
       fileEpisodeForm: {
         titleLabel: 'Title',

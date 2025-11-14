@@ -44,6 +44,7 @@
   let availableTargetGroups = $state<readonly EpisodeGroup[]>([]);
   let isSubmitting = $state(false);
   type EpisodeModalType = 'none' | 'source-selection' | 'file' | 'youtube';
+  type EpisodeSourceSelectionEvent = 'file' | 'youtube' | 'audio-script' | 'script-tts';
   let activeEpisodeModal = $state<EpisodeModalType>('none');
   let showSourceSelectionModal = $derived(activeEpisodeModal === 'source-selection');
   let showFileEpisodeModal = $derived(activeEpisodeModal === 'file');
@@ -70,7 +71,11 @@
     activeEpisodeModal = 'source-selection';
   }
 
-  function handleEpisodeSourceSelected(source: 'file' | 'youtube') {
+  function handleEpisodeSourceSelected(source: EpisodeSourceSelectionEvent) {
+    if (source === 'audio-script' || source === 'script-tts') {
+      activeEpisodeModal = 'file';
+      return;
+    }
     activeEpisodeModal = source === 'file' ? 'file' : 'youtube';
   }
 
