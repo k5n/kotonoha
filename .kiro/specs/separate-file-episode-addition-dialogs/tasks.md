@@ -36,7 +36,7 @@
   - _Requirements: 2.1, 4.1, 4.2_
 
 - [ ] 3. TTS音声生成エピソード追加ダイアログの実装
-- [ ] 3.1 (P) TtsEpisodeAddModalコンポーネントの作成
+- [x] 3.1 (P) TtsEpisodeAddModalコンポーネントの作成
 
   - スクリプトファイル選択の入力要素（音声ファイル選択は除外）
   - TSV設定セクション、TTS設定セクション、言語検出機能の統合
@@ -44,7 +44,7 @@
   - TTS音声生成とエピソード作成の実行機能
   - _Requirements: 3.1, 3.2_
 
-- [ ] 3.2 (P) ttsEpisodeAddStoreの実装
+- [x] 3.2 (P) ttsEpisodeAddStoreの実装
 
   - スクリプトファイルパス、学習言語選択の状態管理
   - TSV設定とTTS設定サブストアの統合
