@@ -67,15 +67,15 @@
   - エラーハンドリングと適切なメッセージ表示
   - _Requirements: 2.1, 2.2, 3.1, 3.2, 6.1_
 
-- [ ] 5. 既存FileEpisodeAddModalからの段階的移行
-- [ ] 5.1 既存統合型コンポーネントの削除準備
+- [x] 5. 既存FileEpisodeAddModalからの段階的移行
+- [x] 5.1 既存統合型コンポーネントの削除準備
 
   - FileEpisodeAddModal.svelteの使用箇所特定
   - fileEpisodeAddStore.svelte.tsの依存関係分析
   - 新しいダイアログへの切り替え前の最終確認
   - _Requirements: 5.1, 5.2_
 
-- [ ] 5.2 不要ファイルの削除と清理
+- [x] 5.2 不要ファイルの削除と清理
 
   - FileEpisodeAddModal.svelteの削除
   - fileEpisodeAddStore.svelte.tsの削除

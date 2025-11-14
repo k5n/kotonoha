@@ -1,4 +1,3 @@
-import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
 import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
 import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
@@ -33,12 +32,10 @@ async function populateLearningTargetLanguages(): Promise<readonly string[]> {
 
 /**
  * Detects the language of the currently selected script file and stores
- * the result into `fileEpisodeAddStore.detectedLanguage` and populates
- * `fileEpisodeAddStore.learningTargetLanguages` from settings (or fallback).
+ * the result into the provided store, which must expose detection helpers
+ * and language selection APIs compatible with the legacy file episode form.
  */
-export async function detectScriptLanguage(
-  store: LanguageDetectionStore = fileEpisodeAddStore
-): Promise<void> {
+export async function detectScriptLanguage(store: LanguageDetectionStore): Promise<void> {
   console.info('Detecting script language...');
   // Even if the detection fails, we want to set the learning target language list, so get it first
   const supportedLanguages = await populateLearningTargetLanguages();

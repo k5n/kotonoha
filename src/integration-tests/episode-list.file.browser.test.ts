@@ -1,5 +1,5 @@
 import { invalidateAll } from '$app/navigation';
-import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
+import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
@@ -79,6 +79,17 @@ async function setupPage(groupId: string) {
   return { data, params, renderResult };
 }
 
+async function openAudioScriptEpisodeModal() {
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await waitForFadeTransition();
+
+  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
+  await waitForFadeTransition();
+
+  await page.getByRole('button', { name: 'Open the audio + script workflow' }).click();
+  await waitForFadeTransition();
+}
+
 beforeEach(async () => {
   vi.clearAllMocks();
 
@@ -118,13 +129,7 @@ test('renders file episode form', async () => {
 
   await setupPage(String(groupId));
 
-  // Click the add episode button to open the source selection modal
-  await page.getByRole('button', { name: 'Add Episode' }).click();
-  await waitForFadeTransition();
-
-  // Click the file selection button
-  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
-  await waitForFadeTransition();
+  await openAudioScriptEpisodeModal();
 
   // Check that the file episode modal is open and renders the form
   await expect.element(page.getByText('Add New Episode')).toBeInTheDocument();
@@ -142,17 +147,14 @@ test('handles file selection and language detection', async () => {
 
   await setupPage(String(groupId));
 
-  // Open the file modal
-  await page.getByRole('button', { name: 'Add Episode' }).click();
-  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
-  await waitForFadeTransition();
+  await openAudioScriptEpisodeModal();
 
   // Mock file selection by directly setting the store values
-  fileEpisodeAddStore.audioFilePath = '/path/to/audio.mp3';
-  fileEpisodeAddStore.scriptFilePath = '/path/to/script.srt';
+  audioScriptFileEpisodeAddStore.audioFilePath = '/path/to/audio.mp3';
+  audioScriptFileEpisodeAddStore.scriptFilePath = '/path/to/script.srt';
 
   // Trigger language detection by calling the store method
-  fileEpisodeAddStore.completeLanguageDetection('en', ['en', 'ja']);
+  audioScriptFileEpisodeAddStore.completeLanguageDetection('en', ['en', 'ja']);
 
   // Check that language is detected and selected
   const languageSelect = page.getByLabelText('Learning Target Language');
@@ -166,16 +168,13 @@ test('handles TSV configuration', async () => {
 
   await setupPage(String(groupId));
 
-  // Open the file modal
-  await page.getByRole('button', { name: 'Add Episode' }).click();
-  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
-  await waitForFadeTransition();
+  await openAudioScriptEpisodeModal();
 
   // Set TSV file path directly
-  fileEpisodeAddStore.scriptFilePath = '/path/to/script.tsv';
+  audioScriptFileEpisodeAddStore.scriptFilePath = '/path/to/script.tsv';
 
   // Mock TSV preview data
-  fileEpisodeAddStore.tsv.completeScriptPreviewFetching({
+  audioScriptFileEpisodeAddStore.tsv.completeScriptPreviewFetching({
     headers: ['start', 'end', 'text'],
     rows: [['00:00:00', '00:00:05', 'Hello world']],
   });
@@ -193,17 +192,14 @@ test('handles submit request with valid payload', async () => {
 
   await setupPage(String(groupId));
 
-  // Open the file modal
-  await page.getByRole('button', { name: 'Add Episode' }).click();
-  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
-  await waitForFadeTransition();
+  await openAudioScriptEpisodeModal();
 
   // Fill in the form by setting store values directly
-  fileEpisodeAddStore.title = 'Test Episode';
-  fileEpisodeAddStore.audioFilePath = '/path/to/audio.mp3';
-  fileEpisodeAddStore.scriptFilePath = '/path/to/script.srt';
-  fileEpisodeAddStore.completeLanguageDetection('en', ['en', 'ja']);
-  fileEpisodeAddStore.selectedStudyLanguage = 'en';
+  audioScriptFileEpisodeAddStore.title = 'Test Episode';
+  audioScriptFileEpisodeAddStore.audioFilePath = '/path/to/audio.mp3';
+  audioScriptFileEpisodeAddStore.scriptFilePath = '/path/to/script.srt';
+  audioScriptFileEpisodeAddStore.completeLanguageDetection('en', ['en', 'ja']);
+  audioScriptFileEpisodeAddStore.selectedStudyLanguage = 'en';
 
   // Click submit
   await page.getByRole('button', { name: 'Create' }).click();
@@ -222,13 +218,10 @@ test('handles form validation errors', async () => {
 
   await setupPage(String(groupId));
 
-  // Open the file modal
-  await page.getByRole('button', { name: 'Add Episode' }).click();
-  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
-  await waitForFadeTransition();
+  await openAudioScriptEpisodeModal();
 
   // Set title but not audio file
-  fileEpisodeAddStore.title = 'Test Episode';
+  audioScriptFileEpisodeAddStore.title = 'Test Episode';
 
   // Try to submit without filling required fields
   const createButton = page.getByRole('button', { name: 'Create' });
@@ -249,10 +242,7 @@ test('closes on cancel', async () => {
 
   await setupPage(String(groupId));
 
-  // Open the file modal
-  await page.getByRole('button', { name: 'Add Episode' }).click();
-  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
-  await waitForFadeTransition();
+  await openAudioScriptEpisodeModal();
 
   // Check modal is open
   await expect.element(page.getByRole('heading', { name: 'Add New Episode' })).toBeInTheDocument();

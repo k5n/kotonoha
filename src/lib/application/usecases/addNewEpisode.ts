@@ -1,4 +1,5 @@
-import type { FileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
+import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
+import type { TtsEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
 import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
 import type { Episode } from '$lib/domain/entities/episode';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
@@ -12,7 +13,9 @@ import { fileRepository } from '$lib/infrastructure/repositories/fileRepository'
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
 import { bcp47ToLanguageName } from '$lib/utils/language';
 
-type EpisodeAddPayload = FileEpisodeAddPayload | YoutubeEpisodeAddPayload;
+type FileBasedEpisodePayload = AudioScriptFileEpisodeAddPayload | TtsEpisodeAddPayload;
+
+type EpisodeAddPayload = FileBasedEpisodePayload | YoutubeEpisodeAddPayload;
 
 /**
  * ファイルから新しいエピソードを追加するためのパラメータ
