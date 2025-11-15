@@ -3,14 +3,15 @@
 `src/` 以下の各ファイルの import 依存関係を解析した結果グラフ。
 
 ```mermaid
+%%| fig-width: 15
 graph LR
-        subgraph "lib"
-            subgraph "application"
-                subgraph "locales"
+        subgraph sg_lib ["lib"]
+            subgraph sg_lib_application ["application"]
+                subgraph sg_lib_application_locales ["locales"]
                     src_lib_application_locales_en_ts["en.ts"]
                     src_lib_application_locales_ja_ts["ja.ts"]
                 end
-                subgraph "stores"
+                subgraph sg_lib_application_stores ["stores"]
                     src_lib_application_stores_apiKeyStore_svelte_ts["apiKeyStore.svelte.ts"]
                     src_lib_application_stores_audioInfoCacheStore_svelte_ts["audioInfoCacheStore.svelte.ts"]
                     src_lib_application_stores_audioScriptFileEpisodeAddStore_svelte_ts["audioScriptFileEpisodeAddStore.svelte.ts"]
@@ -24,7 +25,7 @@ graph LR
                     src_lib_application_stores_ttsExecutionStore_svelte_ts["ttsExecutionStore.svelte.ts"]
                     src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts["youtubeEpisodeAddStore.svelte.ts"]
                 end
-                subgraph "usecases"
+                subgraph sg_lib_application_usecases ["usecases"]
                     src_lib_application_usecases_addEpisodeGroup_ts["addEpisodeGroup.ts"]
                     src_lib_application_usecases_addNewEpisode_ts["addNewEpisode.ts"]
                     src_lib_application_usecases_addSentenceCards_ts["addSentenceCards.ts"]
@@ -55,15 +56,15 @@ graph LR
                     src_lib_application_usecases_updateEpisodeGroupsOrder_ts["updateEpisodeGroupsOrder.ts"]
                     src_lib_application_usecases_updateEpisodeName_ts["updateEpisodeName.ts"]
                     src_lib_application_usecases_updateEpisodesOrder_ts["updateEpisodesOrder.ts"]
-                    subgraph "mediaPlayer"
+                    subgraph sg_lib_application_usecases_mediaPlayer ["mediaPlayer"]
                         src_lib_application_usecases_mediaPlayer_audioPlayer_ts["audioPlayer.ts"]
                         src_lib_application_usecases_mediaPlayer_mediaPlayer_ts["mediaPlayer.ts"]
                         src_lib_application_usecases_mediaPlayer_youtubePlayer_ts["youtubePlayer.ts"]
                     end
                 end
             end
-            subgraph "domain"
-                subgraph "entities"
+            subgraph sg_lib_domain ["domain"]
+                subgraph sg_lib_domain_entities ["entities"]
                     src_lib_domain_entities_appInfo_ts["appInfo.ts"]
                     src_lib_domain_entities_audioInfo_ts["audioInfo.ts"]
                     src_lib_domain_entities_dialogue_ts["dialogue.ts"]
@@ -78,7 +79,7 @@ graph LR
                     src_lib_domain_entities_voice_ts["voice.ts"]
                     src_lib_domain_entities_youtubeMetadata_ts["youtubeMetadata.ts"]
                 end
-                subgraph "services"
+                subgraph sg_lib_domain_services ["services"]
                     src_lib_domain_services_buildEpisodeGroupTree_ts["buildEpisodeGroupTree.ts"]
                     src_lib_domain_services_extractScriptText_ts["extractScriptText.ts"]
                     src_lib_domain_services_generateEpisodeFilenames_ts["generateEpisodeFilenames.ts"]
@@ -93,9 +94,9 @@ graph LR
                     src_lib_domain_services_youtubeUrlValidator_ts["youtubeUrlValidator.ts"]
                 end
             end
-            subgraph "infrastructure"
+            subgraph sg_lib_infrastructure ["infrastructure"]
                 src_lib_infrastructure_config_ts["config.ts"]
-                subgraph "repositories"
+                subgraph sg_lib_infrastructure_repositories ["repositories"]
                     src_lib_infrastructure_repositories_apiKeyRepository_ts["apiKeyRepository.ts"]
                     src_lib_infrastructure_repositories_appInfoRepository_ts["appInfoRepository.ts"]
                     src_lib_infrastructure_repositories_audioRepository_ts["audioRepository.ts"]
@@ -112,41 +113,41 @@ graph LR
                     src_lib_infrastructure_repositories_youtubeRepository_ts["youtubeRepository.ts"]
                 end
             end
-            subgraph "presentation"
-                subgraph "actions"
+            subgraph sg_lib_presentation ["presentation"]
+                subgraph sg_lib_presentation_actions ["actions"]
                     src_lib_presentation_actions_keyboardShortcuts_ts["keyboardShortcuts.ts"]
                 end
-                subgraph "components"
-                    subgraph "presentational"
+                subgraph sg_lib_presentation_components ["components"]
+                    subgraph sg_lib_presentation_components_presentational ["presentational"]
                         src_lib_presentation_components_presentational_Breadcrumbs_svelte["Breadcrumbs.svelte"]
                         src_lib_presentation_components_presentational_ConfirmModal_svelte["ConfirmModal.svelte"]
                         src_lib_presentation_components_presentational_FileSelect_svelte["FileSelect.svelte"]
                     end
                 end
-                subgraph "utils"
+                subgraph sg_lib_presentation_utils ["utils"]
                     src_lib_presentation_utils_dateFormatter_ts["dateFormatter.ts"]
                 end
             end
-            subgraph "utils"
+            subgraph sg_lib_utils ["utils"]
                 src_lib_utils_language_ts["language.ts"]
             end
         end
-        subgraph "routes"
-            subgraph "[...groupId]"
+        subgraph sg_routes ["routes"]
+            subgraph sg_routes_____groupId_ ["[...groupId]"]
                 src_routes_____groupId___page_svelte["+page.svelte"]
                 src_routes_____groupId___page_ts["+page.ts"]
-                subgraph "presentational"
+                subgraph sg_routes_____groupId__presentational ["presentational"]
                     src_routes_____groupId__presentational_GroupAddModal_svelte["GroupAddModal.svelte"]
                     src_routes_____groupId__presentational_GroupGrid_svelte["GroupGrid.svelte"]
                     src_routes_____groupId__presentational_GroupMoveModal_svelte["GroupMoveModal.svelte"]
                     src_routes_____groupId__presentational_GroupNameEditModal_svelte["GroupNameEditModal.svelte"]
                 end
             end
-            subgraph "episode"
-                subgraph "[id]"
+            subgraph sg_routes_episode ["episode"]
+                subgraph sg_routes_episode__id_ ["[id]"]
                     src_routes_episode__id___page_svelte["+page.svelte"]
                     src_routes_episode__id___page_ts["+page.ts"]
-                    subgraph "presentational"
+                    subgraph sg_routes_episode__id__presentational ["presentational"]
                         src_routes_episode__id__presentational_AudioPlayer_svelte["AudioPlayer.svelte"]
                         src_routes_episode__id__presentational_SentenceCardList_svelte["SentenceCardList.svelte"]
                         src_routes_episode__id__presentational_SentenceMiningModal_svelte["SentenceMiningModal.svelte"]
@@ -154,11 +155,11 @@ graph LR
                     end
                 end
             end
-            subgraph "episode-list"
-                subgraph "[groupId]"
+            subgraph sg_routes_episode_list ["episode-list"]
+                subgraph sg_routes_episode_list__groupId_ ["[groupId]"]
                     src_routes_episode_list__groupId___page_svelte["+page.svelte"]
                     src_routes_episode_list__groupId___page_ts["+page.ts"]
-                    subgraph "presentational"
+                    subgraph sg_routes_episode_list__groupId__presentational ["presentational"]
                         src_routes_episode_list__groupId__presentational_AudioScriptFileEpisodeAddModal_svelte["AudioScriptFileEpisodeAddModal.svelte"]
                         src_routes_episode_list__groupId__presentational_EpisodeListTable_svelte["EpisodeListTable.svelte"]
                         src_routes_episode_list__groupId__presentational_EpisodeMoveModal_svelte["EpisodeMoveModal.svelte"]
@@ -175,11 +176,13 @@ graph LR
             end
             src_routes__layout_svelte["+layout.svelte"]
             src_routes__layout_ts["+layout.ts"]
-            subgraph "settings"
+            subgraph sg_routes_settings ["settings"]
                 src_routes_settings__page_svelte["+page.svelte"]
                 src_routes_settings__page_ts["+page.ts"]
-                subgraph "presentational"
+                subgraph sg_routes_settings_presentational ["presentational"]
+                    src_routes_settings_presentational_AppInfoComponent_svelte["AppInfoComponent.svelte"]
                     src_routes_settings_presentational_LanguageSelectionModal_svelte["LanguageSelectionModal.svelte"]
+                    src_routes_settings_presentational_SettingsComponent_svelte["SettingsComponent.svelte"]
                 end
             end
         end
@@ -488,12 +491,18 @@ src_routes_episode__id__presentational_TranscriptViewer_svelte --> src_lib_appli
 src_routes_episode__id__presentational_TranscriptViewer_svelte --> src_lib_domain_entities_dialogue_ts
 src_routes_settings__page_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes_settings__page_svelte --> src_lib_application_usecases_saveSettings_ts
-src_routes_settings__page_svelte --> src_lib_utils_language_ts
-src_routes_settings__page_svelte --> src_routes_settings_presentational_LanguageSelectionModal_svelte
+src_routes_settings__page_svelte --> src_lib_domain_entities_settings_ts
+src_routes_settings__page_svelte --> src_routes_settings_presentational_AppInfoComponent_svelte
+src_routes_settings__page_svelte --> src_routes_settings_presentational_SettingsComponent_svelte
 src_routes_settings__page_ts --> src_lib_application_usecases_fetchAppInfo_ts
 src_routes_settings__page_ts --> src_lib_application_usecases_fetchSettings_ts
+src_routes_settings_presentational_AppInfoComponent_svelte --> src_lib_domain_entities_appInfo_ts
 src_routes_settings_presentational_LanguageSelectionModal_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes_settings_presentational_LanguageSelectionModal_svelte --> src_lib_utils_language_ts
+src_routes_settings_presentational_SettingsComponent_svelte --> src_lib_application_stores_i18n_svelte_ts
+src_routes_settings_presentational_SettingsComponent_svelte --> src_lib_domain_entities_settings_ts
+src_routes_settings_presentational_SettingsComponent_svelte --> src_lib_utils_language_ts
+src_routes_settings_presentational_SettingsComponent_svelte --> src_routes_settings_presentational_LanguageSelectionModal_svelte
 ```
 
 # Src Folder-level Dependency Graph
@@ -502,22 +511,22 @@ src_routes_settings_presentational_LanguageSelectionModal_svelte --> src_lib_uti
 
 ```mermaid
 graph LR
-        subgraph "src"
+        subgraph sg_src ["src"]
             src_routes["routes"]
-            subgraph "lib"
-                subgraph "application"
+            subgraph sg_src_lib ["lib"]
+                subgraph sg_src_lib_application ["application"]
                     src_lib_application_locales["locales"]
                     src_lib_application_stores["stores"]
                     src_lib_application_usecases["usecases"]
                 end
-                subgraph "domain"
+                subgraph sg_src_lib_domain ["domain"]
                     src_lib_domain_entities["entities"]
                     src_lib_domain_services["services"]
                 end
-                subgraph "infrastructure"
+                subgraph sg_src_lib_infrastructure ["infrastructure"]
                     src_lib_infrastructure_repositories["repositories"]
                 end
-                subgraph "presentation"
+                subgraph sg_src_lib_presentation ["presentation"]
                     src_lib_presentation_actions["actions"]
                     src_lib_presentation_components["components"]
                     src_lib_presentation_utils["utils"]

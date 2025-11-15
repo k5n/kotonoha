@@ -257,6 +257,12 @@ async function generateDependencyGraph() {
     return filePath.replace(/[^a-zA-Z0-9_]/g, '_');
   };
 
+  // Helper to generate a unique subgraph ID
+  const getSubgraphId = (posixPath: string) => `sg_${getNodeMermaidId(posixPath)}`;
+
+  // Helper to escape labels for Mermaid
+  const escapeLabel = (label: string) => label.replace(/"/g, '\\"');
+
   const fileTree: FileNode = {};
   files.forEach((file) => {
     const relativePath = path.relative(srcDir, file);
@@ -297,14 +303,16 @@ async function generateDependencyGraph() {
           });
         }
       } else {
-        const subPath = path.join(currentPath, key);
+        const subPath = path.posix.join(currentPath, key);
         const subgraphTitle = key; // Use directory name as subgraph title
 
         const nextLevel = level[key];
         if (typeof nextLevel === 'object' && nextLevel !== null && !Array.isArray(nextLevel)) {
           const innerContent = generateSubgraphs(nextLevel as FileNode, subPath, indent + '    ');
           if (innerContent) {
-            subgraphContent += `${indent}    subgraph "${subgraphTitle}"\n`;
+            const subgraphId = getSubgraphId(subPath);
+            const subgraphLabel = escapeLabel(subgraphTitle);
+            subgraphContent += `${indent}    subgraph ${subgraphId} ["${subgraphLabel}"]\n`;
             subgraphContent += innerContent;
             subgraphContent += `${indent}    end\n`;
           }
@@ -375,15 +383,14 @@ async function generateDependencyGraph() {
           });
         }
       } else {
+        const subPath = path.posix.join(currentPath, key);
+        const subgraphId = getSubgraphId(subPath);
+        const subgraphLabel = escapeLabel(key);
         const nextLevel = level[key];
         if (typeof nextLevel === 'object' && nextLevel !== null && !Array.isArray(nextLevel)) {
-          const inner = generateFolderSubgraphs(
-            nextLevel as FileNode,
-            path.posix.join(currentPath, key),
-            indent + '    '
-          );
+          const inner = generateFolderSubgraphs(nextLevel as FileNode, subPath, indent + '    ');
           if (inner) {
-            subgraphContent += `${indent}    subgraph "${key}"\n`;
+            subgraphContent += `${indent}    subgraph ${subgraphId} ["${subgraphLabel}"]\n`;
             subgraphContent += inner;
             subgraphContent += `${indent}    end\n`;
           }
