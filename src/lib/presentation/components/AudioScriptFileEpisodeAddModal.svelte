@@ -139,6 +139,7 @@
           audioScriptFileEpisodeAddStore.audioFilePath = null;
         }}
         id="audioFile"
+        dataTestId="audio-file-select"
       />
     </div>
 
@@ -152,6 +153,7 @@
         onFileSelected={(file) => handleScriptFileChange(file)}
         onClear={() => handleScriptFileChange(null)}
         id="scriptFile"
+        dataTestId="script-file-select"
       />
     </div>
 

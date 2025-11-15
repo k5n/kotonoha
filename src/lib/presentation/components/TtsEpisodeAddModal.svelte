@@ -140,6 +140,7 @@
         onFileSelected={(file) => handleScriptFileChange(file)}
         onClear={() => handleScriptFileChange(null)}
         id="tts-script-file"
+        dataTestId="tts-script-file-select"
       />
     </div>
 

@@ -144,9 +144,14 @@ test('handles file source selection', async () => {
   // Check that the source selection modal is closed
   await expect.element(page.getByText('Select how to add an episode')).not.toBeInTheDocument();
 
-  // Check that the file episode modal is now open
-  await expect.element(page.getByText('Add New Episode')).toBeInTheDocument();
-  await expect.element(page.getByLabelText('Audio File')).toBeInTheDocument();
+  // Check that the file workflow selection modal is now open
+  await expect.element(page.getByText('Choose your file workflow')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Open the audio + script workflow' }))
+    .toBeInTheDocument();
+  await expect
+    .element(page.getByRole('button', { name: 'Open the script + TTS workflow' }))
+    .toBeInTheDocument();
 
   await page.screenshot();
 });
