@@ -29,10 +29,13 @@ Tauriの標準構成とフロントエンドのレイヤードアーキテクチ
 ├── src/                              # SvelteKit フロントエンド
 │   ├── lib/
 │   │   ├── presentation/             # UI層: SvelteコンポーネントとUIロジック
-│   │   │   ├── components/           # 再利用可能なUIコンポーネント
-│   │   │   │   ├── AudioPlayer.svelte
-│   │   │   │   ├── Breadcrumbs.svelte
-│   │   │   │   └── ...
+│   │   │   ├── components/           # 共有の再利用可能なUIコンポーネント
+│   │   │   │   ├── container/        # ユースケース呼び出し可能なコンテナコンポーネント (共有)
+│   │   │   │   │   ├── AudioPlayer.svelte
+│   │   │   │   │   └── ...
+│   │   │   │   ├── presentational/   # 純粋UIコンポーネント (共有)
+│   │   │   │   │   ├── Breadcrumbs.svelte
+│   │   │   │   │   └── ...
 │   │   │   ├── utils/                # UIで利用するユーティリティ関数
 │   │   │   │   ├── dateFormatter.ts
 │   │   │   │   └── ...
@@ -65,12 +68,43 @@ Tauriの標準構成とフロントエンドのレイヤードアーキテクチ
 │   │   ├── +layout.svelte
 │   │   ├── [...groupId]/
 │   │   │   ├── +page.svelte
-│   │   │   └── +page.ts
+│   │   │   ├── +page.ts
+│   │   │   ├── components/
+│   │   │   │   ├── container/        # ルート固有のコンテナコンポーネント
+│   │   │   │   │   ├── EpisodeGroupContainer.svelte
+│   │   │   │   │   └── ...
+│   │   │   │   └── presentational/   # ルート固有の純粋UIコンポーネント
+│   │   │   │       ├── EpisodeGroupList.svelte
+│   │   │   │       └── ...
 │   │   ├── episode/[id]/
+│   │   │   ├── +page.svelte
+│   │   │   ├── +page.ts
+│   │   │   ├── components/
+│   │   │   │   ├── container/
+│   │   │   │   └── presentational/
 │   │   │   └── ...
 │   │   ├── episode-list/[groupId]/
+│   │   │   ├── +page.svelte
+│   │   │   ├── +page.ts
+│   │   │   ├── components/
+│   │   │   │   ├── container/
+│   │   │   │   │   ├── EpisodeListContainer.svelte
+│   │   │   │   │   └── ...
+│   │   │   │   └── presentational/
+│   │   │   │       ├── EpisodeItem.svelte
+│   │   │   │       └── ...
 │   │   │   └── ...
 │   │   └── settings/
+│   │       ├── +page.svelte
+│   │       ├── +page.ts
+│   │       ├── components/
+│   │       │   ├── container/
+│   │       │   │   ├── AppInfo.svelte
+│   │       │   │   ├── Settings.svelte
+│   │       │   │   └── ...
+│   │       │   └── presentational/
+│   │       │       ├── LanguageSelectionModal.svelte
+│   │       │       └── ...
 │   │       └── ...
 │   └── app.html
 ├── src-tauri/                        # Rust バックエンド
@@ -96,7 +130,8 @@ graph TD
     User([User]):::cssExternal
 
     subgraph Presentation
-        components[components]:::cssComponents
+        container[container]:::cssComponents
+        presentational[presentational]:::cssComponents
         routes[routes]:::cssComponents
         actions[actions]:::cssPure
     end
@@ -117,23 +152,29 @@ graph TD
 
     ExternalSystems([External Systems]):::cssExternal
 
-    User ---> components
-    routes --> components
+    User ---> Presentation
     routes ----> usecases
+    routes --> container
+    routes --> presentational
     routes --> stores
     routes --> actions
-    routes ---> entities
-    components --> actions
-    components ---> stores
-    components ---> entities
-    actions ---> entities
+    routes -.-> entities
+    container ----> usecases
+    container --> actions
+    container --> stores
+    container -.-> entities
+    container --> presentational
+    presentational ---> stores
+    presentational -.-> entities
+    actions -.-> entities
+    actions ---> usecases
     usecases --> stores
-    usecases ---> entities
+    usecases -.-> entities
     usecases --> services
     usecases ---> repositories
-    stores ---> entities
-    services ---> entities
-    repositories ---> entities
+    stores -.-> entities
+    services -.-> entities
+    repositories -.-> entities
     repositories --> ExternalSystems
 
     Components:::cssComponents
@@ -141,10 +182,11 @@ graph TD
     TypeDefinitions[Type Definitions]:::cssTypes
 ```
 
-- routes は SvelteKit のルーティング機能を利用した画面単位のコンポーネント群で、components の画面部品を束ねる。ビジネスロジックはできるだけ Application レイヤーの usecases に委譲する。
-- components には各画面の個々の部品を格納し、ビジネスロジックを持たせない。usecases の呼び出しは routes から行う。ただし Props のバケツリレーを避けるため、stores への直接アクセスは許容する。
+- routes は SvelteKit のルーティング機能を利用した画面単位のコンポーネント群で、container の画面部品を束ねる。ビジネスロジックはできるだけ Application レイヤーの usecases に委譲する。
+- container には各画面の個々のある程度の塊の機能単位部品を格納し、ビジネスロジックはできるだけ Application レイヤーの usecases に委譲し、表示は presentational に委譲する。ルート固有の container は `routes/[route]/components/container/` に、共有の container は `lib/presentation/components/container/` に配置する。
+- presentational には純粋なUIコンポーネントを格納し、ビジネスロジックを持たせない。usecases の呼び出しは禁止する。ただし props のバケツリレーを避けるため、stores への直接アクセスを許容する。ルート固有の presentational は `routes/[route]/components/presentational/` に、共有の presentational は `lib/presentation/components/presentational/` に配置する。
 - stores はアプリケーション全体の状態管理を担う。特に複数のコンポーネントにまたがる UI 状態を管理する役割を果たす。あくまで状態管理に専念し、ビジネスロジックは持たせず、usecases を呼び出すことはしない。
-- usecases はアプリケーションのユースケースを実装し、処理全体のオーケストレーションを担う。Domain レイヤーの services や Infrastructure レイヤーの repositories を呼び出す。routes 経由でのバケツリレーを避けるため、stores への直接アクセスを許容する。
+- usecases はアプリケーションのユースケースを実装し、処理全体のオーケストレーションを担う。Domain レイヤーの services や Infrastructure レイヤーの repositories を呼び出す。routes や container 経由でのバケツリレーを避けるため、stores への直接アクセスを許容する。
 - entities は純粋なデータ型定義のみを含み、ロジックを持たせない。
 - services は純粋関数として entities にのみ依存するロジックを実装する。
 - repositories は Tauri コマンドの呼び出しや DB 操作、ファイルシステム操作、HTTP 通信などを実装する。Infrastructure レイヤーに外部システムとの通信ロジックを集約する。
@@ -297,7 +339,7 @@ Sentence Miningによって作成されたカードを管理する。
 
 ### 4.1. フロントエンド レイヤー別責務
 
-- **Presentation (`src/routes`, `src/lib/presentation/`)**: Svelteコンポーネントで構成。ユーザーからの入力を受け取り、`Application`層のユースケースを呼び出す。ユースケースから返された結果や`stores`の状態を画面に描画することに専念する。
+- **Presentation (`src/routes`, `src/lib/presentation/`)**: Svelteコンポーネントで構成。ユーザーからの入力を受け取り、`Application`層のユースケースを呼び出す。ユースケースから返された結果や`stores`の状態を画面に描画することに専念する。`container`コンポーネントがユースケース呼び出しを担い、`presentational`コンポーネントは純粋UIに限定する。
 - **Application (`src/lib/application/`)**: ユースケースを実装する層。ユースケースは、`Domain`のデータ構造やサービスを使い、`Infrastructure`のリポジトリを呼び出して永続化を行う、といった一連の処理フローを定義する。`stores`を用いてUIにまたがる状態を管理する。
 - **Domain (`src/lib/domain/`)**: アプリケーションのビジネスロジックの核。外部のライブラリやフレームワークに依存しない、純粋なTypeScriptで記述される。
   - **`entities/`**: アプリケーションの核となるデータ型、エンティティ（例: `Episode`, `SentenceCard`）の型定義。
