@@ -283,3 +283,55 @@ test('closes on cancel', async () => {
 
   await page.screenshot();
 });
+
+test('resets state on reopen after cancel', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  // Mock the invoke for YouTube metadata
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command, _args) => {
+    if (command === 'fetch_youtube_metadata') {
+      return {
+        title: 'Test Video',
+        language: 'en',
+        trackKind: 'asr',
+        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      };
+    }
+    if (command === 'get_env_prefix_command') {
+      return '';
+    }
+    if (command === 'fetch_youtube_subtitle') {
+      return [];
+    }
+    throw new Error(`Unhandled Tauri command: ${command as string}`);
+  });
+
+  // First open: Input URL and modify title
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(1000);
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Modified Title');
+  await page.screenshot();
+
+  // Cancel and close
+  await page.getByRole('button', { name: 'Cancel' }).click();
+
+  // Reopen the modal
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+  await waitForFadeTransition();
+
+  // Check that state is reset: URL and title should be empty/default
+  await expect.element(urlInput).toHaveValue('');
+  await expect.element(titleInput).toHaveValue('');
+
+  await page.screenshot();
+});
