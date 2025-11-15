@@ -1,5 +1,5 @@
 import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
-import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
+import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
 import { extractYoutubeVideoId, isValidYoutubeUrl } from '$lib/domain/services/youtubeUrlValidator';
 import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';

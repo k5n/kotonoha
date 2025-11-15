@@ -1,12 +1,12 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
+  import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
+  import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
   import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
-  import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
-  import type { TtsEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
-  import { ttsEpisodeAddStore } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
-  import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
+  import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
+  import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
+  import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import { deleteEpisode } from '$lib/application/usecases/deleteEpisode';
   import {
@@ -27,17 +27,17 @@
   import { updateEpisodesOrder } from '$lib/application/usecases/updateEpisodesOrder';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
+  import AudioScriptFileEpisodeAddModal from '$lib/presentation/components/AudioScriptFileEpisodeAddModal.svelte';
   import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
-  import EpisodeSourceSelectionModal from '$lib/presentation/components/EpisodeSourceSelectionModal.svelte';
-  import AudioScriptFileEpisodeAddModal from '$lib/presentation/components/AudioScriptFileEpisodeAddModal.svelte';
   import EpisodeListTable from '$lib/presentation/components/EpisodeListTable.svelte';
   import EpisodeMoveModal from '$lib/presentation/components/EpisodeMoveModal.svelte';
   import EpisodeNameEditModal from '$lib/presentation/components/EpisodeNameEditModal.svelte';
-  import YoutubeEpisodeAddModal from '$lib/presentation/components/YoutubeEpisodeAddModal.svelte';
+  import EpisodeSourceSelectionModal from '$lib/presentation/components/EpisodeSourceSelectionModal.svelte';
   import TtsEpisodeAddModal from '$lib/presentation/components/TtsEpisodeAddModal.svelte';
   import TtsExecutionModal from '$lib/presentation/components/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '$lib/presentation/components/TtsModelDownloadModal.svelte';
+  import YoutubeEpisodeAddModal from '$lib/presentation/components/YoutubeEpisodeAddModal.svelte';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { ExclamationCircleOutline, FileOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';

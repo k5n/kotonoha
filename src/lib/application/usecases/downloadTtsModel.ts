@@ -1,5 +1,5 @@
-import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
-import { ttsDownloadStore } from '$lib/application/stores/episodeAddStore/ttsDownloadStore.svelte';
+import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
+import { ttsDownloadStore } from '$lib/application/stores/ttsDownloadStore.svelte';
 import type { FileInfo, Voice } from '$lib/domain/entities/voice';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 

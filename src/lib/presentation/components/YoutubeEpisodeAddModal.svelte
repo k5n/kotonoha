@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
-  import { youtubeEpisodeAddStore } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
+  import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import YoutubeEpisodeForm from '$lib/presentation/components/YoutubeEpisodeForm.svelte';
   import { Heading, Modal } from 'flowbite-svelte';
 

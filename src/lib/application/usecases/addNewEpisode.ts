@@ -1,6 +1,6 @@
-import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
-import type { TtsEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
-import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/youtubeEpisodeAddStore.svelte';
+import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
+import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
+import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
 import type { Episode } from '$lib/domain/entities/episode';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';

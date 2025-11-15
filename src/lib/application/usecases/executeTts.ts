@@ -1,11 +1,11 @@
-import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
-import { ttsEpisodeAddStore } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
-import { ttsExecutionStore } from '$lib/application/stores/episodeAddStore/ttsExecutionStore.svelte';
+import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
+import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
+import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.svelte';
 import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import type { UnlistenFn } from '@tauri-apps/api/event';
-import { tsvConfigStore } from '../stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
+import { tsvConfigStore } from '../stores/tsvConfigStore.svelte';
 
 export type TtsTargetStore = {
   scriptFilePath: string | null;

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { TtsEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
-  import { ttsEpisodeAddStore } from '$lib/application/stores/episodeAddStore/ttsEpisodeAddStore/ttsEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
+  import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
   import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
   import TtsConfigSection from '$lib/presentation/components/TtsConfigSection.svelte';

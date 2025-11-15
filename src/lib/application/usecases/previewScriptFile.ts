@@ -1,4 +1,4 @@
-import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
+import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
 import { parseScriptPreview } from '$lib/domain/services/parseScriptPreview';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 

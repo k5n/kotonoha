@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
-  import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/audioScriptFileEpisodeAddStore/audioScriptFileEpisodeAddStore.svelte';
+  import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
+  import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import FileSelect from '$lib/presentation/components/FileSelect.svelte';
   import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';

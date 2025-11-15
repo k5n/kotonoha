@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import {
     Heading,
     Label,

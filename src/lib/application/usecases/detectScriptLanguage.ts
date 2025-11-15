@@ -1,4 +1,4 @@
-import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
+import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
 import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { languageDetectionRepository } from '$lib/infrastructure/repositories/languageDetectionRepository';
