@@ -1,22 +1,27 @@
-import { fileEpisodeAddStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/fileEpisodeAddStore.svelte';
-import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
-import { ttsExecutionStore } from '$lib/application/stores/episodeAddStore/ttsExecutionStore.svelte';
+import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
+import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
+import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.svelte';
 import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import type { UnlistenFn } from '@tauri-apps/api/event';
-import { tsvConfigStore } from '../stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
+import { tsvConfigStore } from '../stores/tsvConfigStore.svelte';
+
+export type TtsTargetStore = {
+  scriptFilePath: string | null;
+  audioFilePath: string | null;
+};
 
 /**
  * Execute TTS generation with progress tracking
  * Gets script content from episodeAddStore and generates audio
  */
-export async function executeTts(): Promise<void> {
+export async function executeTts(store: TtsTargetStore = ttsEpisodeAddStore): Promise<void> {
   let progressUnlisten: UnlistenFn | null = null;
 
   try {
     // Read script content from file
-    const scriptFilePath = fileEpisodeAddStore.scriptFilePath;
+    const scriptFilePath = store.scriptFilePath;
     if (!scriptFilePath) {
       throw new Error('Script file path is not set (this must not happen)');
     }
@@ -48,8 +53,9 @@ export async function executeTts(): Promise<void> {
     console.info(
       `TTS completed successfully. Audio: ${ttsResult.audioPath}, Script: ${ttsResult.scriptPath}`
     );
-    fileEpisodeAddStore.audioFilePath = ttsResult.audioPath;
-    fileEpisodeAddStore.scriptFilePath = ttsResult.scriptPath;
+    // NOTE: scriptFilePath setter clears audioFilePath, so assign script first then audio.
+    store.scriptFilePath = ttsResult.scriptPath;
+    store.audioFilePath = ttsResult.audioPath;
     ttsExecutionStore.completeExecution();
   } catch (err) {
     console.error(`Failed to execute TTS: ${err}`);

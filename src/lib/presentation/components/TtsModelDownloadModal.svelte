@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { ttsDownloadStore } from '$lib/application/stores/episodeAddStore/ttsDownloadStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { ttsDownloadStore } from '$lib/application/stores/ttsDownloadStore.svelte';
   import { Button, Modal, Progressbar } from 'flowbite-svelte';
 
   type Props = {

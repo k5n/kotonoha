@@ -21,6 +21,15 @@
     "**/.cargo/git/checkouts/**/*.rs": true,
     "**/lib/rustlib/src/rust/library/**/*.rs": true
   },
+  "files.watcherExclude": {
+    "**/.git/**": true,
+    "**/src-tauri/target/**": true,
+    "**/target/**": true,
+    "**/node_modules/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true,
+    ".*/**": true
+  },
   "cSpell.words": [
     "Anki",
     "APPLOCALDATA",

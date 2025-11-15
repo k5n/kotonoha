@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { ttsConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/ttsConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
   import { Button, Label, Select } from 'flowbite-svelte';
 
   let audioElement = $state<HTMLAudioElement | null>(null);

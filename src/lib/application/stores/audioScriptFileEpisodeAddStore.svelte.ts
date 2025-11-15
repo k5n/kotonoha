@@ -1,13 +1,9 @@
 import { t } from '$lib/application/stores/i18n.svelte';
+import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import { bcp47ToTranslationKey } from '$lib/utils/language';
-import { tsvConfigStore } from './tsvConfigStore.svelte';
-import { ttsConfigStore } from './ttsConfigStore.svelte';
 
-/**
- * ファイルベースのエピソード追加ペイロード
- */
-export type FileEpisodeAddPayload = {
+export type AudioScriptFileEpisodeAddPayload = {
   readonly source: 'file';
   readonly title: string;
   readonly audioFilePath: string;
@@ -19,12 +15,17 @@ export type FileEpisodeAddPayload = {
 let title = $state('');
 let audioFilePath = $state<string | null>(null);
 let scriptFilePath = $state<string | null>(null);
-let shouldGenerateAudio = $state(false);
 let errorMessage = $state('');
 let languageDetectionWarningMessage = $state('');
 let detectedLanguage = $state<string | null>(null);
 let learningTargetLanguages = $state<readonly string[]>([]);
 let selectedStudyLanguage = $state<string | null>(null);
+
+const tsvStore = tsvConfigStore;
+
+function setSelectedStudyLanguage(language: string | null) {
+  selectedStudyLanguage = language;
+}
 
 function completeLanguageDetection(
   detectedLanguageCode: string | null,
@@ -36,6 +37,7 @@ function completeLanguageDetection(
 
   detectedLanguage = detectedLanguageCode;
   learningTargetLanguages = supportedLanguages;
+
   if (detectedLanguageCode === null) {
     setSelectedStudyLanguage(supportedLanguages[0]);
     languageDetectionWarningMessage = t('components.fileEpisodeForm.noLanguageDetected');
@@ -57,12 +59,12 @@ function failedLanguageDetection(errorKey: string, supportedLanguages: readonly 
   learningTargetLanguages = supportedLanguages;
 }
 
-function buildPayload(): FileEpisodeAddPayload | null {
+function buildPayload(): AudioScriptFileEpisodeAddPayload | null {
   if (!title.trim() || !audioFilePath || !scriptFilePath || !selectedStudyLanguage) {
     return null;
   }
 
-  const tsvConfig = tsvConfigStore.tsvConfig;
+  const tsvConfig = tsvStore.tsvConfig;
   const finalTsvConfig =
     tsvConfig.startTimeColumnIndex !== -1 && tsvConfig.textColumnIndex !== -1
       ? {
@@ -74,76 +76,64 @@ function buildPayload(): FileEpisodeAddPayload | null {
         }
       : undefined;
 
-  const payload: FileEpisodeAddPayload = {
+  return {
     source: 'file',
     title: title.trim(),
-    audioFilePath: audioFilePath,
-    scriptFilePath: scriptFilePath,
+    audioFilePath,
+    scriptFilePath,
     learningLanguage: selectedStudyLanguage,
     tsvConfig: finalTsvConfig,
-  };
-
-  return payload;
+  } satisfies AudioScriptFileEpisodeAddPayload;
 }
 
-function setSelectedStudyLanguage(language: string | null) {
-  selectedStudyLanguage = language;
-  ttsConfigStore.setLanguage(language);
+function validateForm(): boolean {
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle) {
+    errorMessage = t('components.fileEpisodeForm.errorTitleRequired');
+    return false;
+  }
+
+  if (!audioFilePath) {
+    errorMessage = t('components.fileEpisodeForm.errorAudioRequired');
+    return false;
+  }
+
+  if (!scriptFilePath) {
+    errorMessage = t('components.fileEpisodeForm.errorScriptFileRequired');
+    return false;
+  }
+
+  const scriptPreview = tsvStore.scriptPreview;
+  const tsvConfig = tsvStore.tsvConfig;
+  if (scriptPreview && scriptPreview.rows.length > 0) {
+    if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
+      errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
+      return false;
+    }
+  }
+
+  errorMessage = '';
+  return true;
 }
 
 function reset() {
   title = '';
   audioFilePath = null;
   scriptFilePath = null;
-  shouldGenerateAudio = false;
-  languageDetectionWarningMessage = '';
   errorMessage = '';
+  languageDetectionWarningMessage = '';
   detectedLanguage = null;
-  selectedStudyLanguage = null;
   learningTargetLanguages = [];
-  tsvConfigStore.reset();
-  ttsConfigStore.reset();
+  selectedStudyLanguage = null;
+  tsvStore.reset();
 }
 
-export const fileEpisodeAddStore = {
+export const audioScriptFileEpisodeAddStore = {
   get title() {
     return title;
   },
   set title(value: string) {
     title = value;
-  },
-
-  get languageDetectionWarningMessage() {
-    return languageDetectionWarningMessage;
-  },
-
-  get errorMessage() {
-    return errorMessage;
-  },
-  set errorMessage(value: string) {
-    errorMessage = value;
-  },
-
-  get detectedLanguage() {
-    return detectedLanguage;
-  },
-
-  get learningTargetLanguages() {
-    return learningTargetLanguages;
-  },
-
-  get selectedStudyLanguage() {
-    return selectedStudyLanguage;
-  },
-  set selectedStudyLanguage(value: string | null) {
-    setSelectedStudyLanguage(value);
-  },
-
-  get shouldGenerateAudio() {
-    return shouldGenerateAudio;
-  },
-  set shouldGenerateAudio(value: boolean) {
-    shouldGenerateAudio = value;
   },
 
   get audioFilePath() {
@@ -160,13 +150,37 @@ export const fileEpisodeAddStore = {
     scriptFilePath = path;
   },
 
-  // methods
+  get errorMessage() {
+    return errorMessage;
+  },
+  set errorMessage(value: string) {
+    errorMessage = value;
+  },
+
+  get languageDetectionWarningMessage() {
+    return languageDetectionWarningMessage;
+  },
+
+  get learningTargetLanguages() {
+    return learningTargetLanguages;
+  },
+
+  get selectedStudyLanguage() {
+    return selectedStudyLanguage;
+  },
+  set selectedStudyLanguage(language: string | null) {
+    setSelectedStudyLanguage(language);
+  },
+
+  get detectedLanguage() {
+    return detectedLanguage;
+  },
+
   completeLanguageDetection,
   failedLanguageDetection,
   buildPayload,
+  validateForm,
   reset,
 
-  // Sub stores
-  tsv: tsvConfigStore,
-  tts: ttsConfigStore,
-};
+  tsv: tsvStore,
+} as const;

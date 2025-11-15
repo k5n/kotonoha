@@ -9,11 +9,20 @@
     multiple?: boolean;
     disabled?: boolean;
     id?: string;
+    dataTestId?: string;
     value: string | null;
     onFileSelected: (file: string | null) => void;
     onClear: () => void;
   };
-  let { accept = '*', disabled = false, id, value, onFileSelected, onClear }: Props = $props();
+  let {
+    accept = '*',
+    disabled = false,
+    id,
+    dataTestId,
+    value,
+    onFileSelected,
+    onClear,
+  }: Props = $props();
 
   // acceptプロパティからTauriのfiltersを生成
   function createFilters(accept: string) {
@@ -88,6 +97,7 @@
       color="light"
       class="flex w-full items-center justify-start gap-2 bg-gray-50"
       {id}
+      data-testid={dataTestId}
     >
       <FolderOpenOutline class="h-4 w-4" />
       {value || t('components.fileSelect.placeholder')}

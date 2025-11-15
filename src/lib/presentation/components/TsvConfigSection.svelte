@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { tsvConfigStore } from '$lib/application/stores/episodeAddStore/fileEpisodeAddStore/tsvConfigStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import {
     Heading,
     Label,
@@ -58,7 +58,10 @@
           id="startTimeColumn"
           value={tsvConfigStore.tsvConfig.startTimeColumnIndex}
           onchange={(e) =>
-            tsvConfigStore.updateConfig('startTimeColumnIndex', parseInt(e.currentTarget.value))}
+            tsvConfigStore.updateConfig(
+              'startTimeColumnIndex',
+              parseInt((e.currentTarget as HTMLSelectElement).value)
+            )}
           items={columnOptions}
         />
       </div>
@@ -81,7 +84,10 @@
           id="endTimeColumn"
           value={tsvConfigStore.tsvConfig.endTimeColumnIndex}
           onchange={(e) =>
-            tsvConfigStore.updateConfig('endTimeColumnIndex', parseInt(e.currentTarget.value))}
+            tsvConfigStore.updateConfig(
+              'endTimeColumnIndex',
+              parseInt((e.currentTarget as HTMLSelectElement).value)
+            )}
           items={endTimeColumnOptions}
         />
       </div>
