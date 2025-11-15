@@ -15,15 +15,15 @@
   } from '$lib/domain/entities/sentenceAnalysisResult';
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
   import { keyboardShortcuts } from '$lib/presentation/actions/keyboardShortcuts';
-  import AudioPlayer from '$lib/presentation/components/AudioPlayer.svelte';
-  import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
-  import SentenceCardList from '$lib/presentation/components/SentenceCardList.svelte';
-  import SentenceMiningModal from '$lib/presentation/components/SentenceMiningModal.svelte';
-  import TranscriptViewer from '$lib/presentation/components/TranscriptViewer.svelte';
+  import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
   import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import { onMount } from 'svelte';
   import type { PageProps } from './$types';
+  import AudioPlayer from './presentational/AudioPlayer.svelte';
+  import SentenceCardList from './presentational/SentenceCardList.svelte';
+  import SentenceMiningModal from './presentational/SentenceMiningModal.svelte';
+  import TranscriptViewer from './presentational/TranscriptViewer.svelte';
 
   const contextBefore = 5; // コンテキストに含める注目セリフの前のセリフ件数
   const contextAfter = 3; // コンテキストに含める注目セリフの後のセリフ件数

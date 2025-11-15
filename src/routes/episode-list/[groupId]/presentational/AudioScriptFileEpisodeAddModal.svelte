@@ -2,10 +2,10 @@
   import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
   import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import FileSelect from '$lib/presentation/components/FileSelect.svelte';
-  import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
+  import FileSelect from '$lib/presentation/components/presentational/FileSelect.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Heading, Input, Label, Modal, Select } from 'flowbite-svelte';
+  import TsvConfigSection from './TsvConfigSection.svelte';
 
   type Props = {
     open: boolean;

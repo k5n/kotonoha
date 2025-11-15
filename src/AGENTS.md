@@ -103,12 +103,20 @@ When generating or validating Svelte code for this project, produce concise code
 
 - Structure: Four-layer architecture with specific flow: Presentation → Application → Infrastructure. Domain layer (entities/services) is shared across all layers.
 - Layer responsibilities:
-  - **Presentation** (routes, components): Routes are page-level components that compose UI parts and delegate business logic to usecases. Components are individual UI parts without business logic. Routes invoke usecases; components may access stores directly to avoid prop drilling.
+  - **Presentation** (routes, components): Routes are page-level components that compose container components and delegate business logic. Container components invoke usecases and compose presentational components. Presentational components are pure UI parts without business logic. Routes and container components may access stores directly to avoid prop drilling.
   - **Application** (usecases, stores): Usecases orchestrate workflows by calling domain services and infrastructure repositories. Stores manage cross-component UI state only (no business logic, no usecase invocation). Usecases may access stores directly to avoid prop drilling, but not vice versa.
   - **Domain** (entities, services): Entities are pure data types (no logic). Services are pure functions depending only on entities. Only usecases invoke services.
   - **Infrastructure** (repositories): Handles external system communication: Tauri commands, DB operations, file system access, HTTP requests, etc. Repositories consolidate external system communication.
 - Dependency flow: While labeled as four layers, the actual processing hierarchy is three-tier (Presentation → Application → Infrastructure). All layers depend on Domain entities; only usecases depend on Domain services. No dependency inversion is used - repositories are called directly by usecases (not Clean Architecture style).
 - Rationale: Keeps UI separate from business rules and infrastructure, makes domain logic testable, and allows backend evolution independent of frontend UI.
+
+## Directory Structure
+
+- `src/lib/presentation/`: UI components. Shared components in `components/container/` and `components/presentational/`.
+- `src/lib/application/`: Usecases in `usecases/`, stores in `stores/`.
+- `src/lib/domain/`: Entities in `entities/`, services in `services/`.
+- `src/lib/infrastructure/`: Repositories in `repositories/`.
+- `src/routes/`: SvelteKit pages with `+page.svelte` and `+page.ts`, and route-specific components. Route-specific components in `routes/[route]/container/` and `routes/[route]/presentational/`.
 
 ## Data & state strategy
 

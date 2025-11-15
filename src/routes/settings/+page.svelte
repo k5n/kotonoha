@@ -2,11 +2,11 @@
   import { invalidateAll } from '$app/navigation';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { saveSettings } from '$lib/application/usecases/saveSettings';
-  import LanguageSelectionModal from '$lib/presentation/components/LanguageSelectionModal.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Alert, Badge, Button, Input, Label, Select, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, CloseCircleSolid } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
+  import LanguageSelectionModal from './presentational/LanguageSelectionModal.svelte';
 
   let { data }: PageProps = $props();
 

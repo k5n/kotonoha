@@ -2,11 +2,11 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
   import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
-  import FileSelect from '$lib/presentation/components/FileSelect.svelte';
-  import TsvConfigSection from '$lib/presentation/components/TsvConfigSection.svelte';
-  import TtsConfigSection from '$lib/presentation/components/TtsConfigSection.svelte';
+  import FileSelect from '$lib/presentation/components/presentational/FileSelect.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Heading, Input, Label, Modal, Select } from 'flowbite-svelte';
+  import TsvConfigSection from './TsvConfigSection.svelte';
+  import TtsConfigSection from './TtsConfigSection.svelte';
 
   type Props = {
     open: boolean;

@@ -9,15 +9,15 @@
   import { updateEpisodeGroupName } from '$lib/application/usecases/updateEpisodeGroupName';
   import { updateEpisodeGroupsOrder } from '$lib/application/usecases/updateEpisodeGroupsOrder';
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
-  import Breadcrumbs from '$lib/presentation/components/Breadcrumbs.svelte';
-  import ConfirmModal from '$lib/presentation/components/ConfirmModal.svelte';
-  import GroupAddModal from '$lib/presentation/components/GroupAddModal.svelte';
-  import GroupGrid from '$lib/presentation/components/GroupGrid.svelte';
-  import GroupMoveModal from '$lib/presentation/components/GroupMoveModal.svelte';
-  import GroupNameEditModal from '$lib/presentation/components/GroupNameEditModal.svelte';
+  import Breadcrumbs from '$lib/presentation/components/presentational/Breadcrumbs.svelte';
+  import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
   import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
   import { CogOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
+  import GroupAddModal from './presentational/GroupAddModal.svelte';
+  import GroupGrid from './presentational/GroupGrid.svelte';
+  import GroupMoveModal from './presentational/GroupMoveModal.svelte';
+  import GroupNameEditModal from './presentational/GroupNameEditModal.svelte';
 
   // --- ページデータ受け取り ---
   let { data }: PageProps = $props();
