@@ -14,9 +14,16 @@
 
 ### Presentation Components
 
-**Location**: `src/lib/presentation/components/`
-**Purpose**: 再利用可能な UI ピース。ビジネスロジックを持たず、ストアと i18n から表示専用データを取得。
-**Example**: `EpisodeAddModal.svelte` が `episodeAddStore` と i18n テキストをバインド。
+**Location**: `src/lib/presentation/components/` (共有コンポーネント), `src/routes/*/presentational/` (画面固有)
+**Purpose**: UI コンポーネントを機能と用途で分離。`container` はユースケース呼び出し可能、`presentational` は純粋 UI 専用。
+**Organization**:
+- **Shared Container** (`src/lib/presentation/components/container/`): 複数画面で再利用可能なユースケース呼び出し対応コンポーネント
+- **Shared Presentational** (`src/lib/presentation/components/presentational/`): 再利用可能な純粋 UI コンポーネント
+- **Route-Specific** (`src/routes/[route]/presentational/`): 特定画面でのみ利用される UI コンポーネント
+
+**Example**: 
+- 共有: `Breadcrumbs.svelte`, `ConfirmModal.svelte` → `src/lib/presentation/components/presentational/`
+- 画面固有: `EpisodeListTable.svelte`, `SentenceMiningModal.svelte` → `src/routes/episode-list/[groupId]/presentational/`, `src/routes/episode/[id]/presentational/`
 
 ### Application Layer
 
@@ -66,11 +73,12 @@ import { onMount } from 'svelte';
 ## Code Organization Principles
 
 - プレゼンテーション層はユースケース/ストアのみを呼び出し、直接リポジトリやドメインサービスを触れない。
-- プレゼンテーション層でユースケースを呼び出せるのは `src/routes` 以下のみ。
+- ユースケース呼び出しが可能なのは `src/routes` と `container` コンポーネントのみ。`presentational` コンポーネントはユースケース呼び出し禁止。
+- `presentational` コンポーネントは純粋 UI 専用。プロップスのバケツリレー回避のためストア直接アクセスは許容。
 - ストアは UI 状態を保持してもビジネスロジックは禁止。副作用はユースケースかインフラ層で実施。
 - ドメインサービスは純粋関数 (副作用なし) を徹底し、テスト容易性を担保。
 - リポジトリは外部システムごとに分割し、Tauri コマンド名や DB スキーマを一元化。
-- 新しい機能は「ルート → ユースケース → リポジトリ → Tauri」という依存方向を崩さないこと。
+- 新しい機能は「ルート/container → ユースケース → リポジトリ → Tauri」という依存方向を崩さないこと。
 
 ---
 
