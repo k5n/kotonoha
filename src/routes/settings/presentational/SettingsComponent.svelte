@@ -1,11 +1,7 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { Settings } from '$lib/domain/entities/settings';
-  import {
-    bcp47ToLanguageName,
-    bcp47ToTranslationKey,
-    getSupportedLanguages,
-  } from '$lib/utils/language';
+  import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Alert, Badge, Button, Input, Label, Select } from 'flowbite-svelte';
   import { CloseCircleSolid } from 'flowbite-svelte-icons';
   import LanguageSelectionModal from './LanguageSelectionModal.svelte';
@@ -35,8 +31,6 @@
 
   let showLanguageModal = $state(false);
   let showExplanationLanguageModal = $state(false);
-
-  const allLanguages = getSupportedLanguages();
 
   function translatedName(code: string): string {
     const key = bcp47ToTranslationKey(code) ?? `languages.${code}`;
