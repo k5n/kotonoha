@@ -309,11 +309,7 @@ test('interaction: user can delete a group and its episodes', async () => {
 test('interaction: user can move a group to another folder (success)', async () => {
   // DB setup
   const parentId = await insertEpisodeGroup({ name: 'Parent Folder', groupType: 'folder' });
-  const childId = await insertEpisodeGroup({
-    name: 'Child Folder',
-    groupType: 'folder',
-    parentId: null,
-  });
+  const childId = await insertEpisodeGroup({ name: 'Child Folder', groupType: 'folder' });
 
   // Setup page
   await setupPage();
@@ -463,6 +459,60 @@ test('interaction error: shows error when deleting group fails', async () => {
     expect(await countEpisodes()).toBe(1);
 
     await page.screenshot();
+  } finally {
+    executeSpy.mockRestore();
+  }
+});
+
+test('interaction error: shows error when moving group fails', async () => {
+  // DB setup
+  await insertEpisodeGroup({ name: 'Parent Folder', groupType: 'folder' });
+  const childId = await insertEpisodeGroup({ name: 'Child Folder', groupType: 'folder' });
+
+  const executeSpy = vi.spyOn(Database.prototype, 'execute');
+  executeSpy.mockImplementation(async (sql: string) => {
+    if (sql.includes('UPDATE episode_groups SET parent_group_id')) {
+      throw new Error('Database update failed');
+    }
+    return { lastInsertId: 0, rowsAffected: 0 };
+  });
+
+  try {
+    // Setup page
+    await setupPage();
+    await expect.element(page.getByText('Parent Folder')).toBeInTheDocument();
+    await expect.element(page.getByText('Child Folder')).toBeInTheDocument();
+
+    // Open actions menu for child
+    await openGroupActionsMenu(childId.toString());
+    const moveButton = page.getByTestId(`group-action-move-${childId}`);
+    await expect.element(moveButton).toBeVisible();
+    await page.screenshot();
+    await moveButton.click();
+    await waitForFadeTransition();
+    await expect.element(page.getByRole('heading', { name: 'Move Group' })).toBeInTheDocument();
+    await page.screenshot();
+
+    // Select parent
+    const selectElement = page.getByTestId('parent-group-select');
+    await userEvent.selectOptions(selectElement, 'Parent Folder');
+    await page.screenshot();
+
+    // Submit
+    await page.getByTestId('move-group-submit').click();
+    await waitForFadeTransition();
+    await page.screenshot();
+
+    // Assert error message is shown
+    await expect.element(page.getByText('Failed to move group.')).toBeInTheDocument();
+
+    // Assert DB is not updated
+    const groups = await selectAllGroups();
+    const movedGroup = groups.find((g) => g.id === childId);
+    expect(movedGroup?.parent_group_id).toBeNull();
+
+    // Assert UI still shows the group
+    await expect.element(page.getByText('Child Folder')).toBeInTheDocument();
   } finally {
     executeSpy.mockRestore();
   }
