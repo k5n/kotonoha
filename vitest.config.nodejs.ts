@@ -7,7 +7,7 @@ export default defineProject({
     name: 'nodejs',
     environment: 'jsdom',
     globals: true,
-    include: ['**/*.test.ts'],
-    exclude: ['**/*.browser.test.ts', '**/node_modules/**', '**/e2e-tests/**'],
+    include: ['src/**/*.test.ts'],
+    exclude: ['**/*.browser.test.ts', '**/node_modules/**', '**/e2e-tests/**', '**/src-tauri/**'],
   },
 });

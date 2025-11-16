@@ -21,6 +21,7 @@ export default defineProject({
         '**/*.browser.test.ts',
         '**/mocks/**',
         'src/integration-tests/**',
+        '**/src-tauri/**',
       ],
       extension: ['.ts', '.svelte'],
       forceBuildInstrument: true,
@@ -50,5 +51,6 @@ export default defineProject({
   },
   build: {
     ssr: false,
+    sourcemap: true,
   },
 });
