@@ -44,11 +44,7 @@
 
   function handleGroupClick(selectedGroup: EpisodeGroup) {
     groupPathStore.pushGroup(selectedGroup);
-    if (selectedGroup.groupType == 'album') {
-      goto(`/episode-list/${selectedGroup.id}`);
-    } else {
-      goto(groupPathStore.url);
-    }
+    goto(groupPathStore.url);
   }
 
   function handleBreadcrumbClick(targetIndex: number | null) {

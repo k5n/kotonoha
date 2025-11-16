@@ -15,6 +15,9 @@ export const groupPathStore = {
 
   // 現在のURLパス
   get url() {
+    if (this.current?.groupType === 'album') {
+      return `/episode-list/${this.current.id}`;
+    }
     return '/' + path.map((g) => g.id).join('/');
   },
 
