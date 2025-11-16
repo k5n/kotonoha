@@ -84,11 +84,11 @@
         siblings: displayedGroups,
       });
       await invalidateAll();
-      showGroupAdd = false;
     } catch (err) {
       console.error(`Failed to add group: ${err}`);
       errorMessage = t('groupPage.errors.addGroup');
     } finally {
+      showGroupAdd = false;
       isSubmitting = false;
     }
   }
@@ -109,12 +109,12 @@
         newName,
       });
       await invalidateAll();
-      showGroupNameEdit = false;
       editingGroup = null;
     } catch (err) {
       console.error(`Failed to update group: ${err}`);
       errorMessage = t('groupPage.errors.updateName');
     } finally {
+      showGroupNameEdit = false;
       isSubmitting = false;
     }
   }
@@ -198,7 +198,7 @@
   </div>
 
   {#if errorMessage}
-    <Toast color={undefined} class="bg-red-100 text-red-500 dark:bg-red-800 dark:text-red-200">
+    <Toast color={undefined} class="mb-8 bg-red-100 text-red-500 dark:bg-red-800 dark:text-red-200">
       {#snippet icon()}
         <ExclamationCircleSolid class="h-5 w-5" />
       {/snippet}

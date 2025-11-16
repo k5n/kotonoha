@@ -305,3 +305,122 @@ test('interaction: user can delete a group and its episodes', async () => {
 
   await page.screenshot();
 });
+
+test('interaction error: shows error when adding group fails', async () => {
+  const executeSpy = vi.spyOn(Database.prototype, 'execute');
+  executeSpy.mockImplementation(async (sql: string) => {
+    if (sql.includes('INSERT INTO episode_groups')) {
+      throw new Error('Database insert failed');
+    }
+    return { lastInsertId: 0, rowsAffected: 0 };
+  });
+
+  try {
+    await setupPage();
+
+    await page.getByRole('button', { name: 'Add New' }).click();
+    await expect.element(page.getByRole('heading', { name: 'Add New Group' })).toBeInTheDocument();
+
+    const nameInput = page.getByLabelText('Group Name');
+    await nameInput.fill('New Album');
+    await page.getByLabelText('Album').click();
+    await page.getByRole('button', { name: 'Create' }).click();
+    await waitForFadeTransition();
+
+    await expect.element(page.getByText('Failed to add new group.')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Add New Group' }))
+      .not.toBeInTheDocument();
+
+    const groups = await selectAllGroups();
+    expect(groups).toHaveLength(0);
+
+    await page.screenshot();
+  } finally {
+    executeSpy.mockRestore();
+  }
+});
+
+test('interaction error: shows error when renaming group fails', async () => {
+  const initialName = 'Reading Club';
+  const groupId = await insertEpisodeGroup({ name: initialName, groupType: 'folder' });
+
+  const executeSpy = vi.spyOn(Database.prototype, 'execute');
+  executeSpy.mockImplementation(async (sql: string) => {
+    if (sql.includes('UPDATE episode_groups SET name')) {
+      throw new Error('Database update failed');
+    }
+    return { lastInsertId: 0, rowsAffected: 0 };
+  });
+
+  try {
+    await setupPage();
+
+    await openGroupActionsMenu(groupId.toString());
+    const renameButton = page.getByTestId(`group-action-rename-${groupId}`);
+    await expect.element(renameButton).toBeVisible();
+    await renameButton.click();
+    await expect
+      .element(page.getByRole('heading', { name: 'Edit Group Name' }))
+      .toBeInTheDocument();
+
+    const input = page.getByLabelText('Group Name');
+    await input.clear();
+    await input.fill('Updated Reading Club');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await waitForFadeTransition();
+
+    await expect.element(page.getByText('Failed to update group name.')).toBeInTheDocument();
+    await expect
+      .element(page.getByRole('heading', { name: 'Edit Group Name' }))
+      .not.toBeInTheDocument();
+
+    const groups = await selectAllGroups();
+    expect(groups[0]?.name).toBe(initialName);
+
+    await page.screenshot();
+  } finally {
+    executeSpy.mockRestore();
+  }
+});
+
+test('interaction error: shows error when deleting group fails', async () => {
+  const groupName = 'Archive Folder';
+  const groupId = await insertEpisodeGroup({ name: groupName, groupType: 'folder' });
+  await insertEpisode({ episodeGroupId: groupId, title: 'Episode 1' });
+
+  const executeSpy = vi.spyOn(Database.prototype, 'execute');
+  executeSpy.mockImplementation(async (sql: string) => {
+    if (sql.includes('DELETE FROM episode_groups')) {
+      throw new Error('Database delete failed');
+    }
+    return { lastInsertId: 0, rowsAffected: 0 };
+  });
+
+  try {
+    await setupPage();
+
+    await openGroupActionsMenu(groupId.toString());
+    const deleteButton = page.getByTestId(`group-action-delete-${groupId}`);
+    await expect.element(deleteButton).toBeVisible();
+    await deleteButton.click();
+    await waitForFadeTransition();
+    await page.screenshot();
+
+    await expect.element(page.getByText(/delete the group "Archive Folder"/)).toBeInTheDocument();
+    await page.getByRole('button', { name: 'Yes, delete' }).click();
+    await waitForFadeTransition(); // disappearance of modal
+    await waitForFadeTransition(); // appearance of error toast
+
+    await expect.element(page.getByText('Failed to delete group.')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Yes, delete' })).not.toBeInTheDocument();
+
+    const groups = await selectAllGroups();
+    expect(groups).toHaveLength(1);
+    expect(await countEpisodes()).toBe(1);
+
+    await page.screenshot();
+  } finally {
+    executeSpy.mockRestore();
+  }
+});
