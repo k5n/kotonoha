@@ -173,6 +173,7 @@ export const en = {
       addNewButton: 'Add New',
       errorPrefix: 'Error:',
       errors: {
+        addGroup: 'Failed to add new group.',
         updateOrder: 'Failed to update group order.',
         updateName: 'Failed to update group name.',
         fetchParents: 'Failed to fetch destination groups.',

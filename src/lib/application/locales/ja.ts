@@ -174,6 +174,7 @@ export const ja = {
       addNewButton: '新規追加',
       errorPrefix: 'エラー:',
       errors: {
+        addGropu: '新しいグループの追加に失敗しました。',
         updateOrder: 'グループの並び替えに失敗しました。',
         updateName: 'グループ名の更新に失敗しました。',
         fetchParents: '移動先グループの取得に失敗しました。',
