@@ -6,7 +6,7 @@ import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 import { render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import type { PageData } from '../routes/[...groupId]/$types';
 import { load } from '../routes/[...groupId]/+page';
 import Component from '../routes/[...groupId]/+page.svelte';
@@ -304,6 +304,49 @@ test('interaction: user can delete a group and its episodes', async () => {
   expect(await countEpisodes()).toBe(0);
 
   await page.screenshot();
+});
+
+test('interaction: user can move a group to another folder (success)', async () => {
+  // DB setup
+  const parentId = await insertEpisodeGroup({ name: 'Parent Folder', groupType: 'folder' });
+  const childId = await insertEpisodeGroup({
+    name: 'Child Folder',
+    groupType: 'folder',
+    parentId: null,
+  });
+
+  // Setup page
+  await setupPage();
+  await expect.element(page.getByText('Parent Folder')).toBeInTheDocument();
+  await expect.element(page.getByText('Child Folder')).toBeInTheDocument();
+
+  // Open actions menu for child
+  await openGroupActionsMenu(childId.toString());
+  const moveButton = page.getByTestId(`group-action-move-${childId}`);
+  await expect.element(moveButton).toBeVisible();
+  await page.screenshot();
+  await moveButton.click();
+  await waitForFadeTransition();
+  await expect.element(page.getByRole('heading', { name: 'Move Group' })).toBeInTheDocument();
+  await page.screenshot();
+
+  // Select parent
+  const selectElement = page.getByTestId('parent-group-select');
+  await userEvent.selectOptions(selectElement, 'Parent Folder');
+  await page.screenshot();
+
+  // Submit
+  await page.getByTestId('move-group-submit').click();
+  await waitForFadeTransition();
+  await page.screenshot();
+
+  // Assert DB
+  const groups = await selectAllGroups();
+  const movedGroup = groups.find((g) => g.id === childId);
+  expect(movedGroup?.parent_group_id).toBe(parentId);
+
+  // Optional UI assert
+  await expect.element(page.getByText('Child Folder')).not.toBeInTheDocument();
 });
 
 test('interaction error: shows error when adding group fails', async () => {

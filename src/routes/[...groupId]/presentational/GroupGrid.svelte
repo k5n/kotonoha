@@ -83,7 +83,9 @@
     ${group.groupType === 'album' ? 'bg-blue-50 dark:bg-blue-900' : ''}`}
         tabindex="0"
         role="button"
-        onclick={() => onGroupClick(group)}
+        onclick={() => {
+          onGroupClick(group);
+        }}
         onkeydown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
