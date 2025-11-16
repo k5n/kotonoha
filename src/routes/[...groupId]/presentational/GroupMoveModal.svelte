@@ -74,6 +74,8 @@
         {t('components.groupMoveModal.targetGroupLabel')}
       </Label>
       <Select
+        id="parentGroup"
+        data-testid="parent-group-select"
         items={flattenedOptions}
         bind:value={selectedParentId}
         disabled={isSubmitting}
@@ -89,7 +91,7 @@
 
     <div class="flex justify-end gap-2">
       <Button color="gray" onclick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>
-      <Button onclick={handleSubmit} disabled={isSubmitting}>
+      <Button data-testid="move-group-submit" onclick={handleSubmit} disabled={isSubmitting}>
         {isSubmitting
           ? t('components.groupMoveModal.submitting')
           : t('components.groupMoveModal.submit')}

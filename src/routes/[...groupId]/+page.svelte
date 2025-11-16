@@ -11,8 +11,8 @@
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/presentational/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
-  import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
-  import { CogOutline, PlusOutline } from 'flowbite-svelte-icons';
+  import { Alert, Button, Heading, Spinner, Toast } from 'flowbite-svelte';
+  import { CogOutline, ExclamationCircleSolid, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
   import GroupAddModal from './presentational/GroupAddModal.svelte';
   import GroupGrid from './presentational/GroupGrid.svelte';
@@ -22,9 +22,10 @@
   // --- ページデータ受け取り ---
   let { data }: PageProps = $props();
   let displayedGroups = $derived(data.groups);
+  let loadErrorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
 
   // --- State Management ---
-  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
+  let errorMessage = $state('');
   let showGroupAdd = $state(false);
   let showGroupNameEdit = $state(false);
   let showGroupMove = $state(false);
@@ -62,13 +63,13 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Failed to update group order: ${err}`);
-      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.updateOrder');
+      errorMessage = t('groupPage.errors.updateOrder');
     }
   }
 
   // === グループ追加 ===
 
-  function handleAddNewEpisode() {
+  function handleAddNewGroup() {
     showGroupAdd = true;
   }
 
@@ -83,10 +84,11 @@
         siblings: displayedGroups,
       });
       await invalidateAll();
-      showGroupAdd = false;
     } catch (err) {
       console.error(`Failed to add group: ${err}`);
+      errorMessage = t('groupPage.errors.addGroup');
     } finally {
+      showGroupAdd = false;
       isSubmitting = false;
     }
   }
@@ -107,12 +109,12 @@
         newName,
       });
       await invalidateAll();
-      showGroupNameEdit = false;
       editingGroup = null;
     } catch (err) {
       console.error(`Failed to update group: ${err}`);
-      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.updateName');
+      errorMessage = t('groupPage.errors.updateName');
     } finally {
+      showGroupNameEdit = false;
       isSubmitting = false;
     }
   }
@@ -126,7 +128,7 @@
       showGroupMove = true;
     } catch (err) {
       console.error(`Failed to fetch available parent groups: ${err}`);
-      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.fetchParents');
+      errorMessage = t('groupPage.errors.fetchParents');
     }
   }
 
@@ -142,7 +144,7 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Failed to move group: ${err}`);
-      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.moveGroup');
+      errorMessage = t('groupPage.errors.moveGroup');
     } finally {
       showGroupMove = false;
       isSubmitting = false;
@@ -166,7 +168,7 @@
       await invalidateAll(); // Refresh data
     } catch (err) {
       console.error(`Failed to delete group: ${err}`);
-      errorMessage = err instanceof Error ? err.message : t('groupPage.errors.deleteGroup');
+      errorMessage = t('groupPage.errors.deleteGroup');
     } finally {
       showConfirm = false;
       isSubmitting = false;
@@ -179,7 +181,7 @@
   <div class="mb-4 flex items-center justify-between">
     <Heading tag="h1" class="text-3xl font-bold">{t('groupPage.title')}</Heading>
     <div class="flex items-center space-x-2">
-      <Button onclick={handleAddNewEpisode} disabled={currentGroupType === 'album'}>
+      <Button onclick={handleAddNewGroup} disabled={currentGroupType === 'album'}>
         <PlusOutline class="me-2 h-5 w-5" />
         {t('groupPage.addNewButton')}
       </Button>
@@ -195,15 +197,24 @@
     <Breadcrumbs {path} onNavigate={handleBreadcrumbClick} />
   </div>
 
+  {#if errorMessage}
+    <Toast color={undefined} class="mb-8 bg-red-100 text-red-500 dark:bg-red-800 dark:text-red-200">
+      {#snippet icon()}
+        <ExclamationCircleSolid class="h-5 w-5" />
+      {/snippet}
+      {errorMessage}
+    </Toast>
+  {/if}
+
   {#if currentGroupType === 'album'}
     <div class="flex justify-center py-12">
       <!-- Show spinner until page navigation -->
       <Spinner size="16" />
     </div>
-  {:else if errorMessage}
+  {:else if loadErrorMessage}
     <Alert color="red">
       <span class="font-medium">{t('groupPage.errorPrefix')}</span>
-      {errorMessage}
+      {loadErrorMessage}
     </Alert>
   {:else}
     <GroupGrid
@@ -213,7 +224,7 @@
       onGroupMove={handleMoveGroup}
       onGroupDelete={handleDeleteGroup}
       onOrderChange={handleGroupOrderChange}
-      onAddGroup={handleAddNewEpisode}
+      onAddGroup={handleAddNewGroup}
     />
   {/if}
 
