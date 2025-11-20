@@ -5,6 +5,7 @@ export const en = {
       cancel: 'Cancel',
       delete: 'Delete',
       undo: 'Undo',
+      errorPrefix: 'Error:',
     },
     languages: {
       af: 'Afrikaans',
@@ -169,9 +170,7 @@ export const en = {
       },
     },
     groupPage: {
-      title: 'Group List',
       addNewButton: 'Add New',
-      errorPrefix: 'Error:',
       errors: {
         addGroup: 'Failed to add new group.',
         updateOrder: 'Failed to update group order.',
@@ -188,7 +187,6 @@ export const en = {
     },
     episodeListPage: {
       addNewButton: 'Add Episode',
-      errorPrefix: 'Error:',
       loading: 'Loading...',
       emptyState: {
         title: 'No Episodes',
@@ -211,7 +209,6 @@ export const en = {
     },
     episodeDetailPage: {
       backButton: 'Back',
-      errorPrefix: 'Error:',
       playbackTime: 'Duration: {{minutes}}min {{seconds}}s',
       scriptTitle: 'Transcript',
       sentenceCardsTitle: 'Sentence Cards',

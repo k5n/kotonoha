@@ -29,8 +29,10 @@
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/presentational/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
-  import { Alert, Button, Heading, Spinner } from 'flowbite-svelte';
-  import { ExclamationCircleOutline, FileOutline, PlusOutline } from 'flowbite-svelte-icons';
+  import ErrorWarningToast from '$lib/presentation/components/presentational/ErrorWarningToast.svelte';
+  import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
+  import { Button, Heading, Spinner } from 'flowbite-svelte';
+  import { FileOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
   import AudioScriptFileEpisodeAddModal from './presentational/AudioScriptFileEpisodeAddModal.svelte';
   import EpisodeListTable from './presentational/EpisodeListTable.svelte';
@@ -43,6 +45,7 @@
   import YoutubeEpisodeAddModal from './presentational/YoutubeEpisodeAddModal.svelte';
 
   let { data }: PageProps = $props();
+  let errorMessage = $state('');
   let showEpisodeMove = $state(false);
   let showEpisodeNameEdit = $state(false);
   let showDeleteConfirm = $state(false);
@@ -58,8 +61,9 @@
   let showSourceSelectionModal = $derived(activeEpisodeModal === 'source-selection');
   let showYoutubeEpisodeModal = $derived(activeEpisodeModal === 'youtube');
 
-  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
+  let loadErrorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let episodes = $derived(data.episodes);
+  let currentGroupName = $derived(groupPathStore.current?.name ?? 'Home');
 
   // === Page transition ===
 
@@ -313,28 +317,31 @@
 </script>
 
 <div class="p-4 md:p-6">
+  <div class="mb-4 flex items-center justify-between">
+    <div>
+      <Heading tag="h1" class="text-3xl font-bold">{currentGroupName}</Heading>
+    </div>
+    <Button onclick={handleAddEpisodeClick} disabled={data.errorKey !== null || isSubmitting}>
+      <PlusOutline class="me-2 h-5 w-5" />
+      {t('episodeListPage.addNewButton')}
+    </Button>
+  </div>
+
+  <div class="mb-6">
+    <Breadcrumbs path={groupPathStore.path} onNavigate={handleBreadcrumbClick} />
+  </div>
+
   {#if errorMessage}
-    <Alert color="red" class="mb-6">
-      <ExclamationCircleOutline class="h-5 w-5" />
-      <span class="font-medium">{t('episodeListPage.errorPrefix')}</span>
-      {errorMessage}
-    </Alert>
+    <div class="mb-8">
+      <ErrorWarningToast type="error" {errorMessage} />
+    </div>
   {/if}
-  {#if data.episodeGroup}
-    <div class="mb-4 flex items-center justify-between">
-      <div>
-        <Heading tag="h1" class="text-3xl font-bold">{data.episodeGroup.name}</Heading>
-      </div>
-      <Button onclick={handleAddEpisodeClick}>
-        <PlusOutline class="me-2 h-5 w-5" />
-        {t('episodeListPage.addNewButton')}
-      </Button>
-    </div>
 
-    <div class="mb-6">
-      <Breadcrumbs path={groupPathStore.path} onNavigate={handleBreadcrumbClick} />
+  {#if loadErrorMessage}
+    <div class="mb-8">
+      <LoadErrorAlert errorMessage={loadErrorMessage} />
     </div>
-
+  {:else if data.episodeGroup}
     {#if episodes.length === 0}
       <div class="mt-8 rounded-lg border-2 border-dashed px-6 py-16 text-center">
         <FileOutline class="mx-auto mb-4 h-12 w-12 text-gray-400" />

@@ -11,8 +11,10 @@
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/presentational/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
-  import { Alert, Button, Heading, Spinner, Toast } from 'flowbite-svelte';
-  import { CogOutline, ExclamationCircleSolid, PlusOutline } from 'flowbite-svelte-icons';
+  import ErrorWarningToast from '$lib/presentation/components/presentational/ErrorWarningToast.svelte';
+  import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
+  import { Button, Heading, Spinner } from 'flowbite-svelte';
+  import { CogOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
   import GroupAddModal from './presentational/GroupAddModal.svelte';
   import GroupGrid from './presentational/GroupGrid.svelte';
@@ -35,8 +37,8 @@
   let availableParentGroupsTree: readonly EpisodeGroup[] = $state([]);
 
   // --- Computed State ---
-  let path = $derived(groupPathStore.path);
   let currentGroupType = $derived(groupPathStore.current?.groupType ?? 'folder');
+  let currentGroupName = $derived(groupPathStore.current?.name ?? 'Home');
 
   // --- Event Handlers ---
 
@@ -175,9 +177,12 @@
 
 <div class="p-4 md:p-6">
   <div class="mb-4 flex items-center justify-between">
-    <Heading tag="h1" class="text-3xl font-bold">{t('groupPage.title')}</Heading>
+    <Heading tag="h1" class="text-3xl font-bold">{currentGroupName}</Heading>
     <div class="flex items-center space-x-2">
-      <Button onclick={handleAddNewGroup} disabled={currentGroupType === 'album'}>
+      <Button
+        onclick={handleAddNewGroup}
+        disabled={currentGroupType === 'album' || isSubmitting || loadErrorMessage}
+      >
         <PlusOutline class="me-2 h-5 w-5" />
         {t('groupPage.addNewButton')}
       </Button>
@@ -190,16 +195,13 @@
   </div>
 
   <div class="mb-6">
-    <Breadcrumbs {path} onNavigate={handleBreadcrumbClick} />
+    <Breadcrumbs path={groupPathStore.path} onNavigate={handleBreadcrumbClick} />
   </div>
 
   {#if errorMessage}
-    <Toast color={undefined} class="mb-8 bg-red-100 text-red-500 dark:bg-red-800 dark:text-red-200">
-      {#snippet icon()}
-        <ExclamationCircleSolid class="h-5 w-5" />
-      {/snippet}
-      {errorMessage}
-    </Toast>
+    <div class="mb-8">
+      <ErrorWarningToast type="error" {errorMessage} />
+    </div>
   {/if}
 
   {#if currentGroupType === 'album'}
@@ -208,10 +210,9 @@
       <Spinner size="16" />
     </div>
   {:else if loadErrorMessage}
-    <Alert color="red">
-      <span class="font-medium">{t('groupPage.errorPrefix')}</span>
-      {loadErrorMessage}
-    </Alert>
+    <div class="mb-8">
+      <LoadErrorAlert errorMessage={loadErrorMessage} />
+    </div>
   {:else}
     <GroupGrid
       groups={displayedGroups}

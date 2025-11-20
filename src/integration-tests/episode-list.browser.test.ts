@@ -55,6 +55,17 @@ async function insertEpisodeGroup(params: {
   return rows[0]?.id ?? 0;
 }
 
+function pushGroupToPath(groupId: number, name: string): void {
+  groupPathStore.pushGroup({
+    id: groupId,
+    name,
+    groupType: 'album',
+    parentId: null,
+    displayOrder: 1,
+    children: [],
+  });
+}
+
 async function insertEpisode(params: {
   episodeGroupId: number;
   title: string;
@@ -137,6 +148,7 @@ afterAll(async () => {
 
 test('success: episode list loads and displays episodes for the selected group', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  pushGroupToPath(groupId, 'Beginner Course');
   await insertEpisode({ episodeGroupId: groupId, title: 'Episode 1', displayOrder: 1 });
   await insertEpisode({ episodeGroupId: groupId, title: 'Episode 2', displayOrder: 2 });
 
@@ -172,7 +184,7 @@ test('error: error message is shown when episode fetching fails due to database 
     render(Component, { data: result, params: { groupId: '999' } });
 
     await expect.element(page.getByText('Failed to fetch episodes.')).toBeInTheDocument();
-    await expect.element(page.getByText('Loading...')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Add Episode' })).toBeDisabled();
 
     await page.screenshot();
   } finally {
@@ -182,6 +194,7 @@ test('error: error message is shown when episode fetching fails due to database 
 
 test('success: user can rename an existing episode from the action menu', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  pushGroupToPath(groupId, 'Beginner Course');
   const episodeId = await insertEpisode({
     episodeGroupId: groupId,
     title: 'Episode 1 Original',
@@ -220,6 +233,7 @@ test('success: user can rename an existing episode from the action menu', async 
 
 test('error: rename failure displays an error alert and keeps the original title', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  pushGroupToPath(groupId, 'Beginner Course');
   const episodeId = await insertEpisode({
     episodeGroupId: groupId,
     title: 'Episode 1 Original',
@@ -250,6 +264,7 @@ test('error: rename failure displays an error alert and keeps the original title
     const storedTitle = await getEpisodeTitle(episodeId);
     expect(storedTitle).toBe('Episode 1 Original');
 
+    await waitForFadeTransition();
     await page.screenshot();
   } finally {
     executeSpy.mockRestore();
@@ -258,6 +273,7 @@ test('error: rename failure displays an error alert and keeps the original title
 
 test('success: user can delete an episode after confirming the dialog', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  pushGroupToPath(groupId, 'Beginner Course');
   const episodeId = await insertEpisode({
     episodeGroupId: groupId,
     title: 'Episode 1',
@@ -298,6 +314,7 @@ test('success: user can delete an episode after confirming the dialog', async ()
 
 test('error: delete failure surfaces the error banner and keeps the record', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Beginner Course' });
+  pushGroupToPath(groupId, 'Beginner Course');
   const episodeId = await insertEpisode({
     episodeGroupId: groupId,
     title: 'Episode 1',

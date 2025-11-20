@@ -170,7 +170,7 @@ test('empty: shows empty state when no episode groups exist', async () => {
   expect(data.groups).toHaveLength(0);
   expect(data.errorKey).toBeNull();
 
-  await expect.element(page.getByRole('heading', { name: 'Group List' })).toBeInTheDocument();
+  await expect.element(page.getByRole('heading', { name: 'Home' })).toBeInTheDocument();
   await expect.element(page.getByText('No Groups')).toBeInTheDocument();
   await expect
     .element(page.getByText("Let's add the first group to organize your content."))
@@ -207,6 +207,7 @@ test('error: shows translated error when fetching groups fails', async () => {
     expect(data.errorKey).toBe('groupPage.errors.fetchGroups');
 
     await expect.element(page.getByText('Failed to fetch groups.')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Add New' })).toBeDisabled();
     await page.screenshot();
   } finally {
     selectSpy.mockRestore();

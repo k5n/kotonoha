@@ -5,6 +5,7 @@ export const ja = {
       cancel: 'キャンセル',
       delete: '削除',
       undo: '元に戻す',
+      errorPrefix: 'エラー:',
     },
     languages: {
       af: 'アフリカーンス語',
@@ -170,11 +171,9 @@ export const ja = {
       },
     },
     groupPage: {
-      title: 'グループ一覧',
       addNewButton: '新規追加',
-      errorPrefix: 'エラー:',
       errors: {
-        addGropu: '新しいグループの追加に失敗しました。',
+        addGroup: '新しいグループの追加に失敗しました。',
         updateOrder: 'グループの並び替えに失敗しました。',
         updateName: 'グループ名の更新に失敗しました。',
         fetchParents: '移動先グループの取得に失敗しました。',
@@ -189,7 +188,6 @@ export const ja = {
     },
     episodeListPage: {
       addNewButton: 'エピソードを追加',
-      errorPrefix: 'エラー:',
       loading: '読み込み中...',
       emptyState: {
         title: 'エピソードがありません',
@@ -211,7 +209,6 @@ export const ja = {
     },
     episodeDetailPage: {
       backButton: '戻る',
-      errorPrefix: 'エラー:',
       playbackTime: '再生時間: {{minutes}}分 {{seconds}}秒',
       scriptTitle: 'スクリプト',
       sentenceCardsTitle: '作成したカード',
