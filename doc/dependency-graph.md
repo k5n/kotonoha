@@ -124,6 +124,7 @@ graph LR
                         src_lib_presentation_components_presentational_ErrorWarningToast_svelte["ErrorWarningToast.svelte"]
                         src_lib_presentation_components_presentational_FileSelect_svelte["FileSelect.svelte"]
                         src_lib_presentation_components_presentational_LoadErrorAlert_svelte["LoadErrorAlert.svelte"]
+                        src_lib_presentation_components_presentational_PageLoadingSpinner_svelte["PageLoadingSpinner.svelte"]
                     end
                 end
                 subgraph sg_lib_presentation_utils ["utils"]
@@ -390,6 +391,7 @@ src_routes_____groupId___page_svelte --> src_lib_presentation_components_present
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_EmptyStateDisplay_svelte
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_ErrorWarningToast_svelte
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_LoadErrorAlert_svelte
+src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_PageLoadingSpinner_svelte
 src_routes_____groupId___page_svelte --> src_routes_____groupId__presentational_GroupAddModal_svelte
 src_routes_____groupId___page_svelte --> src_routes_____groupId__presentational_GroupGrid_svelte
 src_routes_____groupId___page_svelte --> src_routes_____groupId__presentational_GroupMoveModal_svelte
@@ -426,6 +428,7 @@ src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_componen
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_EmptyStateDisplay_svelte
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_ErrorWarningToast_svelte
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_LoadErrorAlert_svelte
+src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_PageLoadingSpinner_svelte
 src_routes_episode_list__groupId___page_svelte --> src_routes_episode_list__groupId__presentational_AudioScriptFileEpisodeAddModal_svelte
 src_routes_episode_list__groupId___page_svelte --> src_routes_episode_list__groupId__presentational_EpisodeListTable_svelte
 src_routes_episode_list__groupId___page_svelte --> src_routes_episode_list__groupId__presentational_EpisodeMoveModal_svelte

@@ -32,7 +32,8 @@
   import EmptyStateDisplay from '$lib/presentation/components/presentational/EmptyStateDisplay.svelte';
   import ErrorWarningToast from '$lib/presentation/components/presentational/ErrorWarningToast.svelte';
   import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
-  import { Button, Heading, Spinner } from 'flowbite-svelte';
+  import PageLoadingSpinner from '$lib/presentation/components/presentational/PageLoadingSpinner.svelte';
+  import { Button, Heading } from 'flowbite-svelte';
   import { FileOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
   import AudioScriptFileEpisodeAddModal from './presentational/AudioScriptFileEpisodeAddModal.svelte';
@@ -344,10 +345,7 @@
     {#if loadErrorMessage}
       <LoadErrorAlert errorMessage={loadErrorMessage} />
     {:else if isTransitioning}
-      <div class="flex items-center justify-center py-20">
-        <Spinner size="8" />
-        <span class="ms-4 text-gray-500">{t('episodeListPage.loading')}</span>
-      </div>
+      <PageLoadingSpinner message={t('common.loading')} />
     {:else if episodes.length === 0}
       <EmptyStateDisplay
         title={t('episodeListPage.emptyState.title')}

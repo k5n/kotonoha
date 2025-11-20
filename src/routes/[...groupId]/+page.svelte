@@ -14,7 +14,8 @@
   import EmptyStateDisplay from '$lib/presentation/components/presentational/EmptyStateDisplay.svelte';
   import ErrorWarningToast from '$lib/presentation/components/presentational/ErrorWarningToast.svelte';
   import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
-  import { Button, Heading, Spinner } from 'flowbite-svelte';
+  import PageLoadingSpinner from '$lib/presentation/components/presentational/PageLoadingSpinner.svelte';
+  import { Button, Heading } from 'flowbite-svelte';
   import { CogOutline, FolderPlusOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
   import GroupAddModal from './presentational/GroupAddModal.svelte';
@@ -207,10 +208,8 @@
 
   <div class="mb-8">
     {#if currentGroupType === 'album'}
-      <div class="flex justify-center py-12">
-        <!-- Show spinner until page navigation -->
-        <Spinner size="16" />
-      </div>
+      <!-- Show spinner until page navigation -->
+      <PageLoadingSpinner message={t('common.loading')} />
     {:else if loadErrorMessage}
       <LoadErrorAlert errorMessage={loadErrorMessage} />
     {:else if displayedGroups.length === 0}
@@ -229,7 +228,6 @@
         onGroupMove={handleMoveGroup}
         onGroupDelete={handleDeleteGroup}
         onOrderChange={handleGroupOrderChange}
-        onAddGroup={handleAddNewGroup}
       />
     {/if}
   </div>

@@ -6,6 +6,7 @@ export const ja = {
       delete: '削除',
       undo: '元に戻す',
       errorPrefix: 'エラー:',
+      loading: '読み込み中...',
     },
     languages: {
       af: 'アフリカーンス語',
@@ -193,7 +194,6 @@ export const ja = {
     },
     episodeListPage: {
       addNewButton: 'エピソードを追加',
-      loading: '読み込み中...',
       emptyState: {
         title: 'エピソードがありません',
         message: 'このコレクションに最初のエピソードを追加しましょう。',

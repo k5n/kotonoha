@@ -18,7 +18,6 @@
     onGroupMove: (_group: EpisodeGroup) => void;
     onGroupDelete: (_group: EpisodeGroup) => void;
     onOrderChange: (_items: readonly EpisodeGroup[]) => void;
-    onAddGroup: () => void;
   }
   let {
     groups,
@@ -27,7 +26,6 @@
     onGroupMove,
     onGroupDelete,
     onOrderChange,
-    onAddGroup,
   }: Props = $props();
 
   function handleChangeName(e: Event, group: EpisodeGroup) {

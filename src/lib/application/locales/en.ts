@@ -6,6 +6,7 @@ export const en = {
       delete: 'Delete',
       undo: 'Undo',
       errorPrefix: 'Error:',
+      loading: 'Loading...',
     },
     languages: {
       af: 'Afrikaans',
@@ -192,7 +193,6 @@ export const en = {
     },
     episodeListPage: {
       addNewButton: 'Add Episode',
-      loading: 'Loading...',
       emptyState: {
         title: 'No Episodes',
         message: "Let's add the first episode to this collection.",
