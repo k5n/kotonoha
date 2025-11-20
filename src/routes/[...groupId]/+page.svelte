@@ -11,10 +11,11 @@
   import type { EpisodeGroup, EpisodeGroupType } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/presentational/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
+  import EmptyStateDisplay from '$lib/presentation/components/presentational/EmptyStateDisplay.svelte';
   import ErrorWarningToast from '$lib/presentation/components/presentational/ErrorWarningToast.svelte';
   import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
   import { Button, Heading, Spinner } from 'flowbite-svelte';
-  import { CogOutline, PlusOutline } from 'flowbite-svelte-icons';
+  import { CogOutline, FolderPlusOutline, PlusOutline } from 'flowbite-svelte-icons';
   import type { PageProps } from './$types';
   import GroupAddModal from './presentational/GroupAddModal.svelte';
   import GroupGrid from './presentational/GroupGrid.svelte';
@@ -204,26 +205,34 @@
     </div>
   {/if}
 
-  {#if currentGroupType === 'album'}
-    <div class="flex justify-center py-12">
-      <!-- Show spinner until page navigation -->
-      <Spinner size="16" />
-    </div>
-  {:else if loadErrorMessage}
-    <div class="mb-8">
+  <div class="mb-8">
+    {#if currentGroupType === 'album'}
+      <div class="flex justify-center py-12">
+        <!-- Show spinner until page navigation -->
+        <Spinner size="16" />
+      </div>
+    {:else if loadErrorMessage}
       <LoadErrorAlert errorMessage={loadErrorMessage} />
-    </div>
-  {:else}
-    <GroupGrid
-      groups={displayedGroups}
-      onGroupClick={handleGroupClick}
-      onGroupNameChange={handleChangeGroupName}
-      onGroupMove={handleMoveGroup}
-      onGroupDelete={handleDeleteGroup}
-      onOrderChange={handleGroupOrderChange}
-      onAddGroup={handleAddNewGroup}
-    />
-  {/if}
+    {:else if displayedGroups.length === 0}
+      <EmptyStateDisplay
+        title={t('groupPage.emptyState.title')}
+        message={t('groupPage.emptyState.message')}
+        buttonText={t('groupPage.emptyState.addButton')}
+        Icon={FolderPlusOutline}
+        onAdd={handleAddNewGroup}
+      />
+    {:else}
+      <GroupGrid
+        groups={displayedGroups}
+        onGroupClick={handleGroupClick}
+        onGroupNameChange={handleChangeGroupName}
+        onGroupMove={handleMoveGroup}
+        onGroupDelete={handleDeleteGroup}
+        onOrderChange={handleGroupOrderChange}
+        onAddGroup={handleAddNewGroup}
+      />
+    {/if}
+  </div>
 
   <GroupAddModal
     show={showGroupAdd}

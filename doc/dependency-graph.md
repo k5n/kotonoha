@@ -3,7 +3,6 @@
 `src/` 以下の各ファイルの import 依存関係を解析した結果グラフ。
 
 ```mermaid
-%%| fig-width: 15
 graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
@@ -121,7 +120,10 @@ graph LR
                     subgraph sg_lib_presentation_components_presentational ["presentational"]
                         src_lib_presentation_components_presentational_Breadcrumbs_svelte["Breadcrumbs.svelte"]
                         src_lib_presentation_components_presentational_ConfirmModal_svelte["ConfirmModal.svelte"]
+                        src_lib_presentation_components_presentational_EmptyStateDisplay_svelte["EmptyStateDisplay.svelte"]
+                        src_lib_presentation_components_presentational_ErrorWarningToast_svelte["ErrorWarningToast.svelte"]
                         src_lib_presentation_components_presentational_FileSelect_svelte["FileSelect.svelte"]
+                        src_lib_presentation_components_presentational_LoadErrorAlert_svelte["LoadErrorAlert.svelte"]
                     end
                 end
                 subgraph sg_lib_presentation_utils ["utils"]
@@ -372,6 +374,7 @@ src_lib_presentation_components_presentational_Breadcrumbs_svelte --> src_lib_ap
 src_lib_presentation_components_presentational_Breadcrumbs_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_lib_presentation_components_presentational_ConfirmModal_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_lib_presentation_components_presentational_FileSelect_svelte --> src_lib_application_stores_i18n_svelte_ts
+src_lib_presentation_components_presentational_LoadErrorAlert_svelte --> src_lib_application_stores_i18n_svelte_ts
 src_routes__layout_ts --> src_lib_application_usecases_initializeApplication_ts
 src_routes_____groupId___page_svelte --> src_lib_application_stores_groupPathStore_svelte_ts
 src_routes_____groupId___page_svelte --> src_lib_application_stores_i18n_svelte_ts
@@ -384,6 +387,9 @@ src_routes_____groupId___page_svelte --> src_lib_application_usecases_updateEpis
 src_routes_____groupId___page_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_Breadcrumbs_svelte
 src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_ConfirmModal_svelte
+src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_EmptyStateDisplay_svelte
+src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_ErrorWarningToast_svelte
+src_routes_____groupId___page_svelte --> src_lib_presentation_components_presentational_LoadErrorAlert_svelte
 src_routes_____groupId___page_svelte --> src_routes_____groupId__presentational_GroupAddModal_svelte
 src_routes_____groupId___page_svelte --> src_routes_____groupId__presentational_GroupGrid_svelte
 src_routes_____groupId___page_svelte --> src_routes_____groupId__presentational_GroupMoveModal_svelte
@@ -417,6 +423,9 @@ src_routes_episode_list__groupId___page_svelte --> src_lib_domain_entities_episo
 src_routes_episode_list__groupId___page_svelte --> src_lib_domain_entities_episodeGroup_ts
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_Breadcrumbs_svelte
 src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_ConfirmModal_svelte
+src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_EmptyStateDisplay_svelte
+src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_ErrorWarningToast_svelte
+src_routes_episode_list__groupId___page_svelte --> src_lib_presentation_components_presentational_LoadErrorAlert_svelte
 src_routes_episode_list__groupId___page_svelte --> src_routes_episode_list__groupId__presentational_AudioScriptFileEpisodeAddModal_svelte
 src_routes_episode_list__groupId___page_svelte --> src_routes_episode_list__groupId__presentational_EpisodeListTable_svelte
 src_routes_episode_list__groupId___page_svelte --> src_routes_episode_list__groupId__presentational_EpisodeMoveModal_svelte
@@ -471,6 +480,7 @@ src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceAnalysi
 src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceCard_ts
 src_routes_episode__id___page_svelte --> src_lib_presentation_actions_keyboardShortcuts_ts
 src_routes_episode__id___page_svelte --> src_lib_presentation_components_presentational_ConfirmModal_svelte
+src_routes_episode__id___page_svelte --> src_lib_presentation_components_presentational_LoadErrorAlert_svelte
 src_routes_episode__id___page_svelte --> src_routes_episode__id__presentational_AudioPlayer_svelte
 src_routes_episode__id___page_svelte --> src_routes_episode__id__presentational_SentenceCardList_svelte
 src_routes_episode__id___page_svelte --> src_routes_episode__id__presentational_SentenceMiningModal_svelte

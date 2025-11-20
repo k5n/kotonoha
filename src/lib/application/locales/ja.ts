@@ -181,6 +181,11 @@ export const ja = {
         deleteGroup: 'グループの削除に失敗しました。',
         fetchGroups: 'グループの取得に失敗しました。',
       },
+      emptyState: {
+        title: 'グループがありません',
+        message: 'コンテンツを整理するために最初のグループを追加しましょう。',
+        addButton: '最初のグループを追加',
+      },
       confirmDelete: {
         message:
           'グループ「{{groupName}}」を削除しますか？このグループの子グループやエピソード、センテンスマイニングしたカードも全て削除され、この操作は元に戻せません。',
@@ -373,12 +378,6 @@ export const ja = {
       groupGrid: {
         rename: '名前の変更',
         move: '移動',
-        noGroups: 'このフォルダーにはグループがありません。',
-        emptyState: {
-          title: 'グループがありません',
-          message: 'コンテンツを整理するために最初のグループを追加しましょう。',
-          addButton: '最初のグループを追加',
-        },
       },
       groupMoveModal: {
         title: 'グループの移動',

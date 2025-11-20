@@ -180,6 +180,11 @@ export const en = {
         deleteGroup: 'Failed to delete group.',
         fetchGroups: 'Failed to fetch groups.',
       },
+      emptyState: {
+        title: 'No Groups',
+        message: "Let's add the first group to organize your content.",
+        addButton: 'Add First Group',
+      },
       confirmDelete: {
         message:
           'Are you sure you want to delete the group "{{groupName}}"? All child groups, episodes, and sentence mining cards within this group will also be deleted. This action cannot be undone.',
@@ -375,12 +380,6 @@ export const en = {
       groupGrid: {
         rename: 'Rename',
         move: 'Move',
-        noGroups: 'There are no groups in this folder.',
-        emptyState: {
-          title: 'No Groups',
-          message: "Let's add the first group to organize your content.",
-          addButton: 'Add First Group',
-        },
       },
       groupMoveModal: {
         title: 'Move Group',

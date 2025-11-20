@@ -29,6 +29,7 @@
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import Breadcrumbs from '$lib/presentation/components/presentational/Breadcrumbs.svelte';
   import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
+  import EmptyStateDisplay from '$lib/presentation/components/presentational/EmptyStateDisplay.svelte';
   import ErrorWarningToast from '$lib/presentation/components/presentational/ErrorWarningToast.svelte';
   import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
   import { Button, Heading, Spinner } from 'flowbite-svelte';
@@ -46,6 +47,7 @@
 
   let { data }: PageProps = $props();
   let errorMessage = $state('');
+  let isTransitioning = $state(false);
   let showEpisodeMove = $state(false);
   let showEpisodeNameEdit = $state(false);
   let showDeleteConfirm = $state(false);
@@ -68,6 +70,7 @@
   // === Page transition ===
 
   function openEpisode(episodeId: number) {
+    isTransitioning = true;
     goto(`/episode/${episodeId}`);
   }
 
@@ -337,23 +340,22 @@
     </div>
   {/if}
 
-  {#if loadErrorMessage}
-    <div class="mb-8">
+  <div class="mb-8">
+    {#if loadErrorMessage}
       <LoadErrorAlert errorMessage={loadErrorMessage} />
-    </div>
-  {:else if data.episodeGroup}
-    {#if episodes.length === 0}
-      <div class="mt-8 rounded-lg border-2 border-dashed px-6 py-16 text-center">
-        <FileOutline class="mx-auto mb-4 h-12 w-12 text-gray-400" />
-        <Heading tag="h3" class="mb-2 text-xl font-semibold"
-          >{t('episodeListPage.emptyState.title')}</Heading
-        >
-        <p class="mb-4 text-gray-500">{t('episodeListPage.emptyState.message')}</p>
-        <Button color="alternative" onclick={handleAddEpisodeClick}>
-          <PlusOutline class="me-2 h-5 w-5" />
-          {t('episodeListPage.emptyState.addButton')}
-        </Button>
+    {:else if isTransitioning}
+      <div class="flex items-center justify-center py-20">
+        <Spinner size="8" />
+        <span class="ms-4 text-gray-500">{t('episodeListPage.loading')}</span>
       </div>
+    {:else if episodes.length === 0}
+      <EmptyStateDisplay
+        title={t('episodeListPage.emptyState.title')}
+        message={t('episodeListPage.emptyState.message')}
+        buttonText={t('episodeListPage.emptyState.addButton')}
+        Icon={FileOutline}
+        onAdd={handleAddEpisodeClick}
+      />
     {:else}
       <EpisodeListTable
         {episodes}
@@ -367,12 +369,7 @@
         }}
       />
     {/if}
-  {:else}
-    <div class="flex items-center justify-center py-20">
-      <Spinner size="8" />
-      <span class="ms-4 text-gray-500">{t('episodeListPage.loading')}</span>
-    </div>
-  {/if}
+  </div>
 </div>
 
 <EpisodeSourceSelectionModal
