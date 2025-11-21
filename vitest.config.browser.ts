@@ -48,6 +48,7 @@ export default defineProject({
     },
     globals: true,
     include: ['src/**/*.browser.test.ts'],
+    exclude: ['**/node_modules/**', '**/e2e-tests/**', '**/src-tauri/**'],
   },
   build: {
     ssr: false,

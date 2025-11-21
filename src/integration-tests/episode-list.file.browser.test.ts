@@ -22,8 +22,8 @@ vi.mock('@tauri-apps/api/core');
 vi.mock('@tauri-apps/plugin-store', () => ({
   load: vi.fn().mockResolvedValue({
     get: vi.fn().mockImplementation(async (key: string) => {
-      if (key === 'learningTargetLanguages') return ['en'];
-      if (key === 'explanationLanguages') return ['ja'];
+      if (key === 'learningTargetLanguages') return ['en', 'es'];
+      if (key === 'explanationLanguages') return ['ja', 'en'];
       return null;
     }),
     set: vi.fn(),
@@ -255,7 +255,7 @@ afterAll(async () => {
   await outputCoverage(import.meta.url);
 });
 
-test('renders file episode form', async () => {
+test('success: renders file episode form', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
   await setupPage(String(groupId));
@@ -273,7 +273,7 @@ test('renders file episode form', async () => {
   await page.screenshot();
 });
 
-test('handles file selection and language detection', async () => {
+test('success: handles file selection and language detection', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
   await setupPage(String(groupId));
@@ -298,7 +298,7 @@ test('handles file selection and language detection', async () => {
   await expect.element(languageSelect).toHaveValue('en');
 });
 
-test('handles TSV configuration', async () => {
+test('success: handles TSV configuration', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
   await setupPage(String(groupId));
@@ -330,7 +330,7 @@ test('handles TSV configuration', async () => {
   await expect.element(page.getByLabelText('Text Column')).toBeInTheDocument();
 });
 
-test('handles submit request with valid payload', async () => {
+test('success: handles submit request with valid payload', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
   await setupPage(String(groupId));
@@ -365,7 +365,7 @@ test('handles submit request with valid payload', async () => {
   await page.screenshot();
 });
 
-test('handles form validation errors', async () => {
+test('error: handles form validation errors', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
   await setupPage(String(groupId));
@@ -390,7 +390,7 @@ test('handles form validation errors', async () => {
   await page.screenshot();
 });
 
-test('handles TTS submit request with valid payload', async () => {
+test('success: handles TTS submit request with valid payload', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
   await setupPage(String(groupId));
@@ -449,4 +449,74 @@ test('handles TTS submit request with valid payload', async () => {
   await waitFor(TTS_WAIT_TIME_MS);
   await waitForFadeTransition();
   await page.screenshot();
+});
+
+test('error: handles script language detection error', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Mock the invoke function to return an error for language detection
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'detect_language_from_text') {
+      throw new Error('Failed to detect language: Unsupported text format');
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Select audio file first
+  await page.getByTestId('audio-file-select').click();
+
+  // Mock file selection to return SRT file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  // Click the script file select button
+  await page.getByTestId('script-file-select').click();
+
+  // Wait for async operations and error handling
+  await waitFor(200);
+  await page.screenshot();
+
+  // Check that an error toast or message is displayed
+  await expect.element(page.getByText('No language detected')).toBeInTheDocument();
+
+  // Verify that the language select shows default value
+  const learningLanguageSelect = page.getByTestId('learningLanguage');
+  await expect.element(learningLanguageSelect).toHaveValue('en');
+});
+
+test('error: handles script language detection error in TTS workflow', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  // Mock the invoke function to return an error for language detection
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'detect_language_from_text') {
+      throw new Error('Failed to detect language: Network error');
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Mock file selection to return SRT file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  // Select script file for TTS workflow
+  await page.getByTestId('tts-script-file-select').click();
+
+  // Wait for async operations and error handling
+  await waitFor(200);
+  await page.screenshot();
+
+  // Check that an error toast or message is displayed
+  await expect.element(page.getByText('No language detected.')).toBeInTheDocument();
+
+  // Verify that the language select shows default value
+  const learningLanguageSelect = page.getByTestId('learningLanguage');
+  await expect.element(learningLanguageSelect).toHaveValue('en');
 });

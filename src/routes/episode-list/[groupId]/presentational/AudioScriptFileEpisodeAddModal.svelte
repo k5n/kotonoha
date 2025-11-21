@@ -173,6 +173,7 @@
         {/if}
         <Select
           id="learningLanguage"
+          data-testid="learningLanguage"
           bind:value={audioScriptFileEpisodeAddStore.selectedStudyLanguage}
           items={learningTargetLanguageOptions}
         ></Select>

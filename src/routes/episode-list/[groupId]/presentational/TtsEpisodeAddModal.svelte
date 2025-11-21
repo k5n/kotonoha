@@ -160,6 +160,7 @@
         {/if}
         <Select
           id="tts-learning-language"
+          data-testid="learningLanguage"
           bind:value={ttsEpisodeAddStore.selectedStudyLanguage}
           items={learningTargetLanguageOptions}
         ></Select>
