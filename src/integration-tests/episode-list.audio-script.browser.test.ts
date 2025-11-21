@@ -380,3 +380,195 @@ test('error: handles script language detection error', async () => {
   const learningLanguageSelect = page.getByTestId('learningLanguage');
   await expect.element(learningLanguageSelect).toHaveValue('en');
 });
+
+test('error: handles episode creation failure', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Fill in the form via UI
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+
+  await page.getByTestId('audio-file-select').click();
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  await page.getByTestId('script-file-select').click();
+
+  // Wait for async operations
+  await waitFor(100);
+
+  // Mock the addNewEpisode usecase to throw an error
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'copy_audio_file') {
+      throw new Error('Failed to copy audio file: Disk full');
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Try to submit
+  await page.screenshot();
+  await page.getByRole('button', { name: 'Create' }).click();
+
+  // Wait for error handling
+  await waitFor(200);
+  await page.screenshot();
+
+  // Check that error message is displayed
+  await expect.element(page.getByText('Failed to add new episode.')).toBeInTheDocument();
+
+  // Verify that the modal is closed
+  await expect
+    .element(page.getByRole('heading', { name: 'Add New Episode' }))
+    .not.toBeInTheDocument();
+});
+
+test('error: handles file read failure', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Fill in the form via UI
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+
+  await page.getByTestId('audio-file-select').click();
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  await page.getByTestId('script-file-select').click();
+
+  // Wait for async operations
+  await waitFor(100);
+
+  // Mock the read_text_file command to return invalid SRT content
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'read_text_file') {
+      throw 'File not found.';
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Try to submit
+  await page.screenshot();
+  await page.getByRole('button', { name: 'Create' }).click();
+
+  // Wait for error handling
+  await waitFor(200);
+  await page.screenshot();
+
+  // Check that error message is displayed
+  await expect.element(page.getByText('Failed to add new episode.')).toBeInTheDocument();
+
+  // Verify that the modal is closed
+  await expect
+    .element(page.getByRole('heading', { name: 'Add New Episode' }))
+    .not.toBeInTheDocument();
+});
+
+test('error: handles episode database insertion failure', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Fill in the form via UI
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+
+  await page.getByTestId('audio-file-select').click();
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  await page.getByTestId('script-file-select').click();
+
+  // Wait for async operations
+  await waitFor(100);
+
+  const executeSpy = vi.spyOn(Database.prototype, 'execute');
+  executeSpy.mockImplementation(async (sql: string) => {
+    if (sql.startsWith('INSERT INTO episodes')) {
+      throw new Error('Database insertion error: UNIQUE constraint failed');
+    }
+    return { lastInsertId: 0, rowsAffected: 0 };
+  });
+
+  try {
+    // Try to submit
+    await page.screenshot();
+    await page.getByRole('button', { name: 'Create' }).click();
+
+    // Wait for error handling
+    await waitFor(200);
+    await page.screenshot();
+
+    // Check that error message is displayed
+    await expect.element(page.getByText('Failed to add new episode.')).toBeInTheDocument();
+
+    // Verify that the modal is closed
+    await expect
+      .element(page.getByRole('heading', { name: 'Add New Episode' }))
+      .not.toBeInTheDocument();
+  } finally {
+    executeSpy.mockRestore();
+  }
+});
+
+test('error: handles content insertion failure', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Fill in the form via UI
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+
+  await page.getByTestId('audio-file-select').click();
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  await page.getByTestId('script-file-select').click();
+
+  // Wait for async operations
+  await waitFor(100);
+
+  // Mock database failure
+  const originalExecute = Database.prototype.execute;
+  const executeSpy = vi.spyOn(Database.prototype, 'execute');
+  executeSpy.mockImplementation(async function (
+    this: Database,
+    sql: string,
+    bindValues?: unknown[]
+  ) {
+    if (sql.startsWith('INSERT INTO dialogues')) {
+      throw new Error('Database insertion error: UNIQUE constraint failed');
+    }
+    return originalExecute.apply(this, [sql, bindValues]);
+  });
+
+  try {
+    // Try to submit
+    await page.screenshot();
+    await page.getByRole('button', { name: 'Create' }).click();
+
+    // Wait for error handling
+    await waitFor(200);
+    await page.screenshot();
+
+    // Check that error message is displayed
+    await expect.element(page.getByText('Failed to add new episode.')).toBeInTheDocument();
+
+    // Verify that the modal is closed
+    await expect
+      .element(page.getByRole('heading', { name: 'Add New Episode' }))
+      .not.toBeInTheDocument();
+  } finally {
+    executeSpy.mockRestore();
+  }
+});

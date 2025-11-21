@@ -146,7 +146,6 @@
     } catch (e) {
       console.error(`Failed to add file-based episode: ${e}`);
       onError(t('episodeListPage.errors.addEpisode'));
-      throw e;
     } finally {
       isSubmitting = false;
     }

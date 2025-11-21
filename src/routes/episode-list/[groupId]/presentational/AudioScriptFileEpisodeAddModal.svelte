@@ -95,14 +95,8 @@
     try {
       isSubmitting = true;
       await onSubmitRequested(payload);
-      handleClose();
-    } catch (error) {
-      console.error('Failed to submit audio+script episode:', error);
-      audioScriptFileEpisodeAddStore.errorMessage = t(
-        'components.fileEpisodeForm.errorSubmissionFailed'
-      );
     } finally {
-      isSubmitting = false;
+      handleClose();
     }
   }
 </script>
