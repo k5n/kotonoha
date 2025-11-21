@@ -288,8 +288,7 @@ export const en = {
         learningLanguageLabel: 'Learning Target Language',
         generateAudioLabel: 'Generate audio using Text-to-Speech (TTS)',
         errorTitleRequired: 'Please enter a title.',
-        errorAudioRequired:
-          'Please select an audio file or check the option to generate audio using TTS.',
+        errorAudioRequired: 'Please select an audio file.',
         errorScriptFileRequired: 'Please select a script file.',
         errorDetectLanguage: 'Failed to auto-detect language.',
         errorTsvParse: 'Failed to parse TSV file.',

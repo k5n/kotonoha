@@ -354,11 +354,7 @@ test('error: handles form validation errors', async () => {
   await createButton.click();
 
   // Check that error message is shown
-  await expect
-    .element(
-      page.getByText('Please select an audio file or check the option to generate audio using TTS.')
-    )
-    .toBeInTheDocument();
+  await expect.element(page.getByText('Please select an audio file.')).toBeInTheDocument();
 
   await page.screenshot();
 });

@@ -286,8 +286,7 @@ export const ja = {
         learningLanguageLabel: '学習対象言語',
         generateAudioLabel: 'Text-to-Speech (TTS) で音声を生成する',
         errorTitleRequired: 'タイトルを入力してください',
-        errorAudioRequired:
-          '音声ファイルを選択するか、TTSで音声を生成するオプションをチェックしてください。',
+        errorAudioRequired: '音声ファイルを選択してください。',
         errorScriptFileRequired: 'スクリプトファイルを選択してください',
         errorDetectLanguage: '言語の自動判定に失敗しました。',
         errorTsvParse: 'TSVファイルの解析に失敗しました。',
