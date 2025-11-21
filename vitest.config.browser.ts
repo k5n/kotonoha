@@ -21,7 +21,7 @@ export default defineProject({
         '**/*.browser.test.ts',
         '**/mocks/**',
         'src/integration-tests/**',
-        '**/src-tauri/**',
+        'src-tauri/**',
       ],
       extension: ['.ts', '.svelte'],
       forceBuildInstrument: true,
@@ -48,7 +48,7 @@ export default defineProject({
     },
     globals: true,
     include: ['src/**/*.browser.test.ts'],
-    exclude: ['**/node_modules/**', '**/e2e-tests/**', '**/src-tauri/**'],
+    exclude: ['**/node_modules/**', '**/e2e-tests/**', 'src-tauri/**'],
   },
   build: {
     ssr: false,

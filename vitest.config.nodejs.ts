@@ -8,6 +8,6 @@ export default defineProject({
     environment: 'jsdom',
     globals: true,
     include: ['src/**/*.test.ts'],
-    exclude: ['**/*.browser.test.ts', '**/node_modules/**', '**/e2e-tests/**', '**/src-tauri/**'],
+    exclude: ['**/*.browser.test.ts', '**/node_modules/**', '**/e2e-tests/**', 'src-tauri/**'],
   },
 });
