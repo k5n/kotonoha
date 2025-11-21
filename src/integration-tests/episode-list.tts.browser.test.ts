@@ -307,6 +307,40 @@ test('success: handles TTS submit request with valid payload', async () => {
   await page.screenshot();
 });
 
+test('success: handles no script language detected in TTS workflow', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  // Mock the invoke function to return an error for language detection
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'detect_language_from_text') {
+      return null;
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Mock file selection to return SRT file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  // Select script file for TTS workflow
+  await page.getByTestId('tts-script-file-select').click();
+
+  // Wait for async operations and error handling
+  await waitFor(200);
+  await page.screenshot();
+
+  // Check that an error toast or message is displayed
+  await expect.element(page.getByText('No language detected.')).toBeInTheDocument();
+
+  // Verify that the language select shows default value
+  const learningLanguageSelect = page.getByTestId('learningLanguage');
+  await expect.element(learningLanguageSelect).toHaveValue('en');
+});
+
 test('error: handles script language detection error in TTS workflow', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
@@ -334,7 +368,7 @@ test('error: handles script language detection error in TTS workflow', async () 
   await page.screenshot();
 
   // Check that an error toast or message is displayed
-  await expect.element(page.getByText('No language detected.')).toBeInTheDocument();
+  await expect.element(page.getByText('Failed to auto-detect language')).toBeInTheDocument();
 
   // Verify that the language select shows default value
   const learningLanguageSelect = page.getByTestId('learningLanguage');

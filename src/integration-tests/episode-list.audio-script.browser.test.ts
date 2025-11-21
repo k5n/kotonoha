@@ -345,6 +345,42 @@ test('error: handles form validation errors', async () => {
   await page.screenshot();
 });
 
+test('success: handles no script language detected', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Mock the invoke function to return an error for language detection
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'detect_language_from_text') {
+      return null;
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Select audio file first
+  await page.getByTestId('audio-file-select').click();
+
+  // Mock file selection to return SRT file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  // Click the script file select button
+  await page.getByTestId('script-file-select').click();
+
+  // Wait for async operations and error handling
+  await waitFor(200);
+  await page.screenshot();
+
+  // Check that an error toast or message is displayed
+  await expect.element(page.getByText('No language detected')).toBeInTheDocument();
+
+  // Verify that the language select shows default value
+  const learningLanguageSelect = page.getByTestId('learningLanguage');
+  await expect.element(learningLanguageSelect).toHaveValue('en');
+});
+
 test('error: handles script language detection error', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
@@ -374,7 +410,7 @@ test('error: handles script language detection error', async () => {
   await page.screenshot();
 
   // Check that an error toast or message is displayed
-  await expect.element(page.getByText('No language detected')).toBeInTheDocument();
+  await expect.element(page.getByText('Failed to auto-detect language')).toBeInTheDocument();
 
   // Verify that the language select shows default value
   const learningLanguageSelect = page.getByTestId('learningLanguage');
