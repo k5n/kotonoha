@@ -8,7 +8,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import Database from '@tauri-apps/plugin-sql';
 import { tick } from 'svelte';
 import { render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
@@ -253,38 +253,6 @@ test('success: handles file selection and language detection', async () => {
   await expect.element(languageSelect).toHaveValue('en');
 });
 
-test('success: handles TSV configuration', async () => {
-  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
-
-  await setupPage(String(groupId));
-
-  await openAudioScriptEpisodeModal();
-
-  // Mock file selection to return TSV file
-  vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
-
-  // Override read_text_file mock for TSV
-  const invokeMock = vi.mocked(invoke);
-  invokeMock.mockImplementation(async (command) => {
-    if (command === 'read_text_file') {
-      return 'start_time\ttext\n00:00:00,000\tHello world\n00:00:05,000\tHow are you?';
-    }
-    return defaultInvokeMock(command);
-  });
-
-  // Select TSV file via UI
-  await page.getByTestId('script-file-select').click();
-
-  // Wait for async operations
-  await waitFor(100);
-  await page.screenshot();
-
-  // TSV configuration should appear automatically
-  await expect.element(page.getByText('TSV Column Settings')).toBeInTheDocument();
-  await expect.element(page.getByLabelText('Start Time Column')).toBeInTheDocument();
-  await expect.element(page.getByLabelText('Text Column')).toBeInTheDocument();
-});
-
 test('success: handles submit request with valid payload', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
@@ -318,6 +286,56 @@ test('success: handles submit request with valid payload', async () => {
     .not.toBeInTheDocument();
 
   await page.screenshot();
+});
+
+test('success: handles TSV configuration', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Mock file selection to return TSV file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
+
+  // Override read_text_file mock for TSV
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'read_text_file') {
+      return 'start_time\ttext\n00:00:00,000\tHello world\n00:00:05,000\tHow are you?';
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Select TSV file via UI
+  await page.getByTestId('script-file-select').click();
+
+  // Wait for async operations
+  await waitFor(100);
+  await page.screenshot();
+
+  // TSV configuration should appear automatically
+  await expect.element(page.getByText('TSV Column Settings')).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Start Time Column')).toBeInTheDocument();
+  await expect.element(page.getByLabelText('Text Column')).toBeInTheDocument();
+
+  await userEvent.selectOptions(page.getByTestId('startTimeColumn'), '0');
+  await userEvent.selectOptions(page.getByTestId('textColumn'), '1');
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+  await page.getByTestId('audio-file-select').click();
+  await page.screenshot();
+
+  // Click submit
+  await page.getByRole('button', { name: 'Create' }).click();
+  await waitForFadeTransition();
+
+  // Check that the modal is closed (successful submission)
+  await page.screenshot();
+  await expect.element(page.getByText('Test Episode')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('heading', { name: 'Add New Episode' }))
+    .not.toBeInTheDocument();
 });
 
 test('error: handles form validation errors', async () => {

@@ -56,6 +56,7 @@
         </Label>
         <Select
           id="startTimeColumn"
+          data-testid="startTimeColumn"
           value={tsvConfigStore.tsvConfig.startTimeColumnIndex}
           onchange={(e) =>
             tsvConfigStore.updateConfig(
@@ -71,6 +72,7 @@
         </Label>
         <Select
           id="textColumn"
+          data-testid="textColumn"
           value={tsvConfigStore.tsvConfig.textColumnIndex}
           onchange={handleTextColumnChange}
           items={columnOptions}
@@ -82,6 +84,7 @@
         </Label>
         <Select
           id="endTimeColumn"
+          data-testid="endTimeColumn"
           value={tsvConfigStore.tsvConfig.endTimeColumnIndex}
           onchange={(e) =>
             tsvConfigStore.updateConfig(
