@@ -60,7 +60,38 @@ function readTsConfig(configPath: string): TsConfigPaths | undefined {
     console.error('Error reading tsconfig.json:', configFile.error.messageText);
     return undefined;
   }
-  const parsedConfig = ts.parseJsonConfigFileContent(configFile.config, ts.sys, projectRoot);
+
+  const config = configFile.config;
+
+  // Handle 'extends' property specifically for SvelteKit's tsconfig.json
+  if (config.extends && typeof config.extends === 'string') {
+    const extendsPath = path.resolve(path.dirname(configPath), config.extends);
+    try {
+      const extendsConfigFile = ts.readConfigFile(extendsPath, ts.sys.readFile);
+      if (!extendsConfigFile.error) {
+        // Merge compilerOptions from extended config.
+        // For simplicity, we'll just take the paths from the extended config if available
+        // or merge them if both have paths.
+        if (extendsConfigFile.config.compilerOptions?.paths) {
+          config.compilerOptions = {
+            ...extendsConfigFile.config.compilerOptions,
+            ...config.compilerOptions,
+          };
+        }
+      } else {
+        console.warn(
+          `Warning: Could not read extended tsconfig file '${extendsPath}': ${extendsConfigFile.error.messageText}. Proceeding without it.`
+        );
+      }
+    } catch (e) {
+      console.warn(
+        `Warning: Failed to process extends path '${extendsPath}'. Proceeding without it.`,
+        e
+      );
+    }
+  }
+
+  const parsedConfig = ts.parseJsonConfigFileContent(config, ts.sys, projectRoot);
   return parsedConfig.options.paths;
 }
 
@@ -201,6 +232,247 @@ function sortFileTree(level: FileNode) {
   }
 }
 
+// --- Layer Definition ---
+const PRESENTATION_LAYER_ROOTS = ['src/routes', 'src/lib/presentation'];
+const USECASE_ROOT = 'src/lib/application/usecases';
+const STORE_ROOT = 'src/lib/application/stores';
+
+// Helper to generate a valid Mermaid node ID
+const getNodeMermaidId = (filePath: string) => {
+  return filePath.replace(/[^a-zA-Z0-9_]/g, '_');
+};
+
+// Helper to generate a unique subgraph ID
+const getSubgraphId = (posixPath: string) => `sg_${getNodeMermaidId(posixPath)}`;
+
+// Helper to escape labels for Mermaid
+const escapeLabel = (label: string) => label.replace(/"/g, '\\"');
+
+/**
+ * Generates a generic Mermaid markdown block for a given set of file nodes.
+ * @param title The title for the graph section.
+ * @param description The description for the graph section.
+ * @param fullGraph The complete dependency graph of the project.
+ * @param allAbsoluteFiles All absolute file paths in the project used to build the file tree.
+ * @param nodesForGraph The specific set of normalized file paths to include in this graph.
+ * @returns A string containing the Mermaid markdown block.
+ */
+function generateMermaidBlock(
+  title: string,
+  description: string,
+  fullGraph: DependencyGraph,
+  allAbsoluteFiles: string[],
+  nodesForGraph: Set<string>
+): string {
+  const filesForThisGraph = allAbsoluteFiles.filter((file) =>
+    nodesForGraph.has(normalizePath(file))
+  );
+
+  // Build file tree for Mermaid subgraphs
+  const fileTree: FileNode = {};
+  filesForThisGraph.forEach((file) => {
+    const relativePath = path.relative(srcDir, file);
+    const parts = relativePath.split(path.sep);
+    let currentLevel: FileNode = fileTree;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (i === parts.length - 1) {
+        if (!currentLevel.files) currentLevel.files = [];
+        currentLevel.files.push(file);
+      } else {
+        if (!currentLevel[part]) currentLevel[part] = {};
+        currentLevel = currentLevel[part] as FileNode;
+      }
+    }
+  });
+
+  sortFileTree(fileTree);
+
+  let mermaidGraph = 'graph LR\n';
+
+  // Recursively generate subgraphs
+  const generateSubgraphs = (level: FileNode, currentPath: string, indent: string): string => {
+    let subgraphContent = '';
+    for (const key of Object.keys(level).sort()) {
+      if (key === 'files') {
+        if (level.files) {
+          level.files.forEach((file: string) => {
+            const fileName = path.basename(file);
+            const mermaidId = getNodeMermaidId(normalizePath(file));
+            subgraphContent += `${indent}    ${mermaidId}["${fileName}"]\n`;
+          });
+        }
+      } else {
+        const subPath = path.posix.join(currentPath, key);
+        const nextLevel = level[key];
+        if (typeof nextLevel === 'object' && nextLevel !== null && !Array.isArray(nextLevel)) {
+          const innerContent = generateSubgraphs(nextLevel as FileNode, subPath, indent + '    ');
+          if (innerContent) {
+            const subgraphId = getSubgraphId(subPath);
+            const subgraphLabel = escapeLabel(key);
+            subgraphContent += `${indent}    subgraph ${subgraphId} ["${subgraphLabel}"]\n`;
+            subgraphContent += innerContent;
+            subgraphContent += `${indent}    end\n`;
+          }
+        }
+      }
+    }
+    return subgraphContent;
+  };
+
+  mermaidGraph += generateSubgraphs(fileTree, '', '    ');
+
+  // Add dependency edges
+  for (const sourceFile of nodesForGraph) {
+    const sourceMermaidId = getNodeMermaidId(sourceFile);
+    const targets = fullGraph[sourceFile];
+    if (targets) {
+      const sortedTargets = Array.from(targets).sort();
+      for (const targetFile of sortedTargets) {
+        if (nodesForGraph.has(targetFile)) {
+          const targetMermaidId = getNodeMermaidId(targetFile);
+          mermaidGraph += `    ${sourceMermaidId} --> ${targetMermaidId}\n`;
+        }
+      }
+    }
+  }
+
+  return `### ${title}\n\n${description}\n\n\`\`\`mermaid\n${mermaidGraph}\`\`\`\n`;
+}
+
+/**
+ * Recursively collects all unique dependencies for a given starting file.
+ * @param startFile The normalized path of the file to start from.
+ * @param fullGraph The complete dependency graph.
+ * @param allPresentationFiles A set of all files belonging to the presentation layer.
+ * @returns A set of normalized file paths that are dependencies of the start file.
+ */
+function collectDependenciesRecursively(
+  startFile: string,
+  fullGraph: DependencyGraph,
+  allPresentationFiles: Set<string>
+): Set<string> {
+  const collected = new Set<string>();
+  const queue: string[] = [startFile];
+  const visited = new Set<string>();
+
+  while (queue.length > 0) {
+    const currentFile = queue.shift()!;
+    if (visited.has(currentFile)) {
+      continue;
+    }
+    visited.add(currentFile);
+    collected.add(currentFile);
+
+    const dependencies = fullGraph[currentFile];
+    if (dependencies) {
+      for (const dep of dependencies) {
+        // Only trace dependencies within the presentation layer or store layer
+        if (allPresentationFiles.has(dep) || dep.startsWith(STORE_ROOT)) {
+          queue.push(dep);
+        }
+      }
+    }
+  }
+  return collected;
+}
+
+/**
+ * Generates separate Mermaid graphs for each screen (+page.svelte) in the Presentation layer.
+ */
+async function generateScreenDependencyGraphs(
+  fullGraph: DependencyGraph,
+  allAbsoluteFiles: string[]
+): Promise<string> {
+  const allNormalizedFiles = allAbsoluteFiles.map(normalizePath);
+  const presentationFiles = new Set<string>();
+  allNormalizedFiles.forEach((file) => {
+    if (PRESENTATION_LAYER_ROOTS.some((root) => file.startsWith(root))) {
+      presentationFiles.add(file);
+    }
+  });
+
+  const screenEntryPoints = await glob('**/+page.svelte', {
+    cwd: path.join(srcDir, 'routes'),
+    absolute: true,
+  });
+
+  let finalContent = '';
+
+  for (const screenFile of screenEntryPoints.sort()) {
+    const normalizedScreenFile = normalizePath(screenFile);
+    const screenDependencies = collectDependenciesRecursively(
+      normalizedScreenFile,
+      fullGraph,
+      presentationFiles
+    );
+
+    const screenPath =
+      path
+        .dirname(normalizedScreenFile)
+        .replace(/^src\/routes/, '')
+        .replace(/\/$/, '') || '/';
+
+    const title = `Screen: ${screenPath}`;
+    const description = `Dependencies for the \`${screenPath}\` screen.`;
+
+    finalContent += generateMermaidBlock(
+      title,
+      description,
+      fullGraph,
+      allAbsoluteFiles,
+      screenDependencies
+    );
+  }
+
+  return finalContent;
+}
+
+/**
+ * Generates a separate Mermaid graph for each use case.
+ */
+function generateUsecaseGraphs(
+  fullGraph: DependencyGraph,
+  reverseGraph: DependencyGraph,
+  allAbsoluteFiles: string[]
+): string {
+  const allNormalizedFiles = allAbsoluteFiles.map(normalizePath);
+  const usecaseFiles = allNormalizedFiles.filter((file) => file.startsWith(USECASE_ROOT));
+
+  let finalContent = '## Application Layer: Use Case Dependencies\n';
+
+  for (const usecaseFile of usecaseFiles.sort()) {
+    const nodesForGraph = new Set<string>([usecaseFile]);
+
+    // Add dependencies of the use case
+    const deps = fullGraph[usecaseFile];
+    if (deps) {
+      deps.forEach((dep) => nodesForGraph.add(dep));
+    }
+
+    // Add presentation layer files that depend on the use case
+    const dependents = reverseGraph[usecaseFile];
+    if (dependents) {
+      dependents.forEach((dependent) => {
+        if (PRESENTATION_LAYER_ROOTS.some((root) => dependent.startsWith(root))) {
+          nodesForGraph.add(dependent);
+        }
+      });
+    }
+
+    const usecaseName = path.basename(usecaseFile);
+    finalContent += generateMermaidBlock(
+      `Use Case: ${usecaseName}`,
+      `Shows files that use the \`${usecaseName}\` use case, and the files it depends on.`,
+      fullGraph,
+      allAbsoluteFiles,
+      nodesForGraph
+    );
+  }
+
+  return finalContent;
+}
+
 async function generateDependencyGraph() {
   // Exclude .test.ts files using glob ignore option
   let files = await glob('**/*.{ts,svelte.ts,svelte}', {
@@ -217,8 +489,18 @@ async function generateDependencyGraph() {
     graph[normalizedFilePath] = getDependencies(file);
   }
 
+  // Create reverse dependency graph
+  const reverseGraph: DependencyGraph = {};
+  for (const sourceFile in graph) {
+    for (const targetFile of graph[sourceFile]) {
+      if (!reverseGraph[targetFile]) {
+        reverseGraph[targetFile] = new Set<string>();
+      }
+      reverseGraph[targetFile].add(sourceFile);
+    }
+  }
+
   // --- Folder-level dependency graph ---
-  // Build dependencies between each file's immediate parent folder
   interface FolderGraph {
     [folderPath: string]: Set<string>;
   }
@@ -249,97 +531,9 @@ async function generateDependencyGraph() {
     }
   }
 
-  // --- Mermaid Graph Generation (file-level) ---
-  let mermaidGraph = 'graph LR\n';
-
-  // Helper to generate a valid Mermaid node ID
-  const getNodeMermaidId = (filePath: string) => {
-    return filePath.replace(/[^a-zA-Z0-9_]/g, '_');
-  };
-
-  // Helper to generate a unique subgraph ID
-  const getSubgraphId = (posixPath: string) => `sg_${getNodeMermaidId(posixPath)}`;
-
-  // Helper to escape labels for Mermaid
-  const escapeLabel = (label: string) => label.replace(/"/g, '\\"');
-
-  const fileTree: FileNode = {};
-  files.forEach((file) => {
-    const relativePath = path.relative(srcDir, file);
-    const parts = relativePath.split(path.sep);
-    let currentLevel: FileNode = fileTree;
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      if (i === parts.length - 1) {
-        // It's a file
-        if (!currentLevel.files) {
-          currentLevel.files = [];
-        }
-        currentLevel.files.push(file);
-      } else {
-        // It's a directory
-        if (!currentLevel[part]) {
-          currentLevel[part] = {};
-        }
-        currentLevel = currentLevel[part] as FileNode;
-      }
-    }
-  });
-
-  sortFileTree(fileTree);
-
-  // Recursively generate subgraphs
-  const generateSubgraphs = (level: FileNode, currentPath: string, indent: string) => {
-    let subgraphContent = '';
-    // Loop through sorted keys
-    for (const key of Object.keys(level).sort()) {
-      if (key === 'files') {
-        if (level.files) {
-          // files are already sorted
-          level.files.forEach((file: string) => {
-            const fileName = path.basename(file);
-            const mermaidId = getNodeMermaidId(normalizePath(file));
-            subgraphContent += `${indent}    ${mermaidId}["${fileName}"]\n`;
-          });
-        }
-      } else {
-        const subPath = path.posix.join(currentPath, key);
-        const subgraphTitle = key; // Use directory name as subgraph title
-
-        const nextLevel = level[key];
-        if (typeof nextLevel === 'object' && nextLevel !== null && !Array.isArray(nextLevel)) {
-          const innerContent = generateSubgraphs(nextLevel as FileNode, subPath, indent + '    ');
-          if (innerContent) {
-            const subgraphId = getSubgraphId(subPath);
-            const subgraphLabel = escapeLabel(subgraphTitle);
-            subgraphContent += `${indent}    subgraph ${subgraphId} ["${subgraphLabel}"]\n`;
-            subgraphContent += innerContent;
-            subgraphContent += `${indent}    end\n`;
-          }
-        }
-      }
-    }
-    return subgraphContent;
-  };
-
-  mermaidGraph += generateSubgraphs(fileTree, '', '    ');
-
-  // Add dependencies (sorted)
-  for (const sourceFile of Object.keys(graph).sort()) {
-    const sourceMermaidId = getNodeMermaidId(sourceFile);
-    const sortedTargets = Array.from(graph[sourceFile]).sort();
-    for (const targetFile of sortedTargets) {
-      const targetMermaidId = getNodeMermaidId(targetFile);
-      // Ensure both source and target are part of the graph (i.e., within srcDir)
-      if (graph[targetFile] || files.map(normalizePath).includes(targetFile)) {
-        mermaidGraph += `${sourceMermaidId} --> ${targetMermaidId}\n`;
-      }
-    }
-  }
-
-  // Folder nodes/edges are produced later in a dedicated Mermaid block.
-
-  const fileMermaidBlock = `# Src Dependency Graph\n\n\`src/\` 以下の各ファイルの import 依存関係を解析した結果グラフ。\n\n\`\`\`mermaid\n${mermaidGraph}\`\`\`\n`;
+  // --- Generate Layer-specific Mermaid Graphs ---
+  const presentationMermaidBlock = await generateScreenDependencyGraphs(graph, files);
+  const usecaseMermaidBlocks = generateUsecaseGraphs(graph, reverseGraph, files);
 
   // --- Mermaid Graph Generation (folder-level) ---
   // Only include target folders that actually appear in the folderGraph
@@ -406,77 +600,26 @@ async function generateDependencyGraph() {
   for (const srcFolder of Object.keys(folderGraph).sort()) {
     const targets = Array.from(folderGraph[srcFolder]).sort();
     for (const tgtFolder of targets) {
-      mermaidFolderGraph += `    ${getNodeMermaidId(srcFolder)} --> ${getNodeMermaidId(tgtFolder)}\n`;
+      mermaidFolderGraph += `    ${getNodeMermaidId(srcFolder)} --> ${getNodeMermaidId(
+        tgtFolder
+      )}\n`;
     }
   }
 
-  const folderMermaidBlock = `# Src Folder-level Dependency Graph\n\n\`src/\` 以下の各ディレクトリ間依存関係を解析した結果グラフ。\n\n\`\`\`mermaid\n${mermaidFolderGraph}\`\`\`\n`;
+  const fullMermaidHeader = `# Frontend Dependency Graphs\n\n`;
+  const folderMermaidBlock = `# Src Folder-level Dependency Graph\n\nDependency graph showing relationships between directories under \`src/\`.\n\n\`\`\`mermaid\n${mermaidFolderGraph}\`\`\`\n`;
 
-  const fullMermaidContent = fileMermaidBlock + '\n' + folderMermaidBlock;
+  const fullMermaidContent =
+    fullMermaidHeader +
+    '# Presentation Layer Dependency Graph\n\n' +
+    presentationMermaidBlock +
+    '\n' +
+    usecaseMermaidBlocks +
+    '\n' +
+    folderMermaidBlock;
 
   fs.writeFileSync(dependencyGraphMd, fullMermaidContent, 'utf-8');
   console.log(`Dependency graph generated at ${dependencyGraphMd}`);
-
-  // NOTE: Disabled for now as AGENTS.md is getting too large.
-  // // --- Generate simplified Markdown list for AGENTS.md ---
-  // try {
-  //   const simpleList = generateSimpleList(graph);
-  //   updateAgentsMd(simpleList);
-  // } catch (err) {
-  //   console.error('Failed to update AGENTS.md with simplified dependency list:', err);
-  // }
 }
-
-// // Generate a simple sorted list of dependencies in the format:
-// // src/... -> src/...
-// function generateSimpleList(graph: DependencyGraph): string {
-//   const lines: string[] = [];
-//   const sources = Object.keys(graph).sort();
-//   for (const src of sources) {
-//     const targets = Array.from(graph[src]).sort();
-//     for (const tgt of targets) {
-//       // Only include targets that are within the graph (i.e., internal)
-//       // and avoid self-dependencies
-//       if (tgt && tgt !== src) {
-//         lines.push(`- ${src} -> ${tgt}`);
-//       }
-//     }
-//   }
-//   // Deduplicate (in case multiple entries) while preserving order
-//   return Array.from(new Set(lines)).join('\n');
-// }
-
-// // Replace content between <!-- DEP_GRAPH_START --> and <!-- DEP_GRAPH_END --> in AGENTS.md
-// function updateAgentsMd(simpleList: string) {
-//   const agentsPath = path.join(projectRoot, 'src/AGENTS.md');
-//   if (!fs.existsSync(agentsPath)) {
-//     console.error(`AGENTS.md not found at ${agentsPath}`);
-//     return;
-//   }
-
-//   const text = fs.readFileSync(agentsPath, 'utf-8');
-//   const startMarker = '<!-- DEP_GRAPH_START -->';
-//   const endMarker = '<!-- DEP_GRAPH_END -->';
-
-//   const startIdx = text.indexOf(startMarker);
-//   const endIdx = text.indexOf(endMarker);
-
-//   if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
-//     console.error('DEP_GRAPH markers not found or malformed in AGENTS.md; skipping update.');
-//     return;
-//   }
-
-//   const before = text.slice(0, startIdx + startMarker.length);
-//   const after = text.slice(endIdx);
-
-//   const newContent = `${before}\n\n${simpleList}\n\n${after}`;
-
-//   try {
-//     fs.writeFileSync(agentsPath, newContent, 'utf-8');
-//     console.log(`AGENTS.md updated with simplified dependency list at markers.`);
-//   } catch (err) {
-//     console.error('Failed to write AGENTS.md:', err);
-//   }
-// }
 
 generateDependencyGraph().catch(console.error);
