@@ -22,12 +22,12 @@
   import type { Episode } from '$lib/domain/entities/episode';
   import { Button } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
-  import AudioScriptFileEpisodeAddModal from '../presentational/AudioScriptFileEpisodeAddModal.svelte';
   import EpisodeSourceSelectionModal from '../presentational/EpisodeSourceSelectionModal.svelte';
-  import TtsEpisodeAddModal from '../presentational/TtsEpisodeAddModal.svelte';
-  import TtsExecutionModal from '../presentational/TtsExecutionModal.svelte';
-  import TtsModelDownloadModal from '../presentational/TtsModelDownloadModal.svelte';
-  import YoutubeEpisodeAddModal from '../presentational/YoutubeEpisodeAddModal.svelte';
+  import AudioScriptFileEpisodeAddModal from './AudioScriptFileEpisodeAddModal.svelte';
+  import TtsEpisodeAddModal from './TtsEpisodeAddModal.svelte';
+  import TtsExecutionModal from './TtsExecutionModal.svelte';
+  import TtsModelDownloadModal from './TtsModelDownloadModal.svelte';
+  import YoutubeEpisodeAddModal from './YoutubeEpisodeAddModal.svelte';
 
   interface Props {
     episodeGroupId: number;
