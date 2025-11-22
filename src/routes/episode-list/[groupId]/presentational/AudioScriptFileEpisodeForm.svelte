@@ -20,13 +20,11 @@
       title: string;
       audioFile: string;
       scriptFile: string;
-      tsvConfig: string;
     };
     fieldTouched: {
       title: boolean;
       audioFile: boolean;
       scriptFile: boolean;
-      tsvConfig: boolean;
     };
     errorMessage: string;
     tsvErrorMessage: string;
@@ -142,9 +140,6 @@
 
   {#if openTsvConfigSection}
     <TsvConfigSection {onDetectScriptLanguage} />
-    {#if fieldTouched.tsvConfig && fieldErrors.tsvConfig}
-      <div class="mb-4 text-sm text-red-600">{fieldErrors.tsvConfig}</div>
-    {/if}
   {/if}
 
   {#if learningTargetLanguageOptions.length > 0}

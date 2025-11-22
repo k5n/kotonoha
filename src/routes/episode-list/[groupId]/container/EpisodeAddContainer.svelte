@@ -1,7 +1,9 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
-  import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
-  import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
+  import {
+    audioScriptFileEpisodeAddStore,
+    type AudioScriptFileEpisodeAddPayload,
+  } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
   import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
@@ -92,16 +94,6 @@
     }
   }
 
-  function buildAudioScriptPayload(
-    payload: AudioScriptFileEpisodeAddPayload | null
-  ): AudioScriptFileEpisodeAddPayload {
-    const finalPayload = payload ?? audioScriptFileEpisodeAddStore.buildPayload();
-    if (!finalPayload) {
-      throw new Error('Audio-script episode payload is not ready');
-    }
-    return finalPayload;
-  }
-
   async function ensureTtsEpisodePayload(
     payload: TtsEpisodeAddPayload | null
   ): Promise<TtsEpisodeAddPayload> {
@@ -124,38 +116,7 @@
     return finalPayload;
   }
 
-  async function handleAudioScriptEpisodeSubmit(
-    payload: AudioScriptFileEpisodeAddPayload | null
-  ): Promise<void> {
-    if (!episodeGroupId) {
-      throw new Error('No group ID found, cannot add episode');
-    }
-
-    let finalPayload: AudioScriptFileEpisodeAddPayload;
-    try {
-      finalPayload = buildAudioScriptPayload(payload);
-    } catch (e) {
-      console.error(`Failed to prepare audio+script episode payload: ${e}`);
-      throw e;
-    }
-
-    isSubmitting = true;
-    try {
-      await addNewEpisode(finalPayload, episodeGroupId, episodes);
-      await invalidateAll();
-    } catch (e) {
-      console.error(`Failed to add file-based episode: ${e}`);
-      onError(t('episodeListPage.errors.addEpisode'));
-    } finally {
-      isSubmitting = false;
-    }
-  }
-
   async function handleTtsEpisodeSubmit(payload: TtsEpisodeAddPayload | null): Promise<void> {
-    if (!episodeGroupId) {
-      throw new Error('No group ID found, cannot add episode');
-    }
-
     let finalPayload: TtsEpisodeAddPayload;
     try {
       finalPayload = await ensureTtsEpisodePayload(payload);
@@ -164,32 +125,29 @@
       throw e;
     }
 
-    isSubmitting = true;
-    try {
-      await addNewEpisode(finalPayload, episodeGroupId, episodes);
-      await invalidateAll();
-    } catch (e) {
-      console.error(`Failed to add TTS-based episode: ${e}`);
-      onError(t('episodeListPage.errors.addEpisode'));
-      throw e;
-    } finally {
-      isSubmitting = false;
-    }
+    await handleEpisodeSubmit(finalPayload);
   }
 
-  async function handleYoutubeEpisodeSubmit(payload: YoutubeEpisodeAddPayload): Promise<void> {
-    if (!episodeGroupId) {
-      throw new Error('No group ID found, cannot add episode');
-    }
-
+  async function handleEpisodeSubmit(
+    payload:
+      | AudioScriptFileEpisodeAddPayload
+      | TtsEpisodeAddPayload
+      | YoutubeEpisodeAddPayload
+      | null
+  ): Promise<void> {
     isSubmitting = true;
     try {
+      if (!episodeGroupId) {
+        throw new Error('No group ID found, cannot add episode');
+      }
+      if (!payload) {
+        throw new Error('Episode payload is not ready');
+      }
       await addNewEpisode(payload, episodeGroupId, episodes);
       await invalidateAll();
     } catch (e) {
-      console.error(`Failed to add YouTube episode: ${e}`);
+      console.error(`Failed to add episode: ${e}`);
       onError(t('episodeListPage.errors.addEpisode'));
-      throw e;
     } finally {
       isSubmitting = false;
     }
@@ -210,7 +168,7 @@
 <AudioScriptFileEpisodeAddModal
   open={isOpen && selectedEpisodeType === 'audio-script'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleAudioScriptEpisodeSubmit}
+  onSubmitRequested={handleEpisodeSubmit}
   onTsvFileSelected={previewScriptFile}
   onDetectScriptLanguage={handleAudioScriptLanguageDetection}
 />
@@ -227,7 +185,7 @@
 <YoutubeEpisodeAddModal
   open={isOpen && selectedEpisodeType === 'youtube'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleYoutubeEpisodeSubmit}
+  onSubmitRequested={handleEpisodeSubmit}
   onYoutubeUrlChanged={fetchYoutubeMetadata}
 />
 

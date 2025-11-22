@@ -9,7 +9,7 @@
   type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmitRequested: (payload: AudioScriptFileEpisodeAddPayload) => Promise<void>;
+    onSubmitRequested: (payload: AudioScriptFileEpisodeAddPayload | null) => Promise<void>;
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
   };
@@ -24,39 +24,32 @@
 
   let isSubmitting = $state(false);
 
-  // Field validation state
   let fieldErrors = $state({
     title: '',
     audioFile: '',
     scriptFile: '',
-    tsvConfig: '',
   });
 
   let fieldTouched = $state({
     title: false,
     audioFile: false,
     scriptFile: false,
-    tsvConfig: false,
   });
 
   function resetFormState() {
     audioScriptFileEpisodeAddStore.reset();
-    // Reset validation state
     fieldErrors = {
       title: '',
       audioFile: '',
       scriptFile: '',
-      tsvConfig: '',
     };
     fieldTouched = {
       title: false,
       audioFile: false,
       scriptFile: false,
-      tsvConfig: false,
     };
   }
 
-  // Validation functions
   function validateTitle(): string {
     const value = audioScriptFileEpisodeAddStore.title.trim();
     return value ? '' : t('components.fileEpisodeForm.errorTitleRequired');
@@ -101,7 +94,6 @@
   async function handleScriptFileChange(filePath: string | null) {
     audioScriptFileEpisodeAddStore.scriptFilePath = filePath;
 
-    // Mark as touched and validate
     fieldTouched.audioFile = true;
     fieldErrors.audioFile = validateAudioFile();
     fieldTouched.scriptFile = true;
@@ -110,15 +102,12 @@
     if (!filePath) {
       tsvConfigStore.reset();
       audioScriptFileEpisodeAddStore.selectedStudyLanguage = null;
-      await onDetectScriptLanguage();
       return;
     }
 
     const normalized = filePath.toLowerCase();
     if (normalized.endsWith('.tsv')) {
       await onTsvFileSelected(filePath);
-      // Mark TSV config as touched when TSV file is loaded
-      fieldTouched.tsvConfig = true;
     } else {
       tsvConfigStore.reset();
       await onDetectScriptLanguage();
@@ -126,16 +115,9 @@
   }
 
   async function handleSubmit() {
-    const payload = audioScriptFileEpisodeAddStore.buildPayload();
-    if (!payload) {
-      audioScriptFileEpisodeAddStore.errorMessage = t(
-        'components.fileEpisodeForm.errorSubmissionFailed'
-      );
-      return;
-    }
-
+    isSubmitting = true;
     try {
-      isSubmitting = true;
+      const payload = audioScriptFileEpisodeAddStore.buildPayload();
       await onSubmitRequested(payload);
     } finally {
       handleClose();
