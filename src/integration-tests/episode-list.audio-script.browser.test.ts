@@ -15,6 +15,8 @@ import Component from '../routes/episode-list/[groupId]/+page.svelte';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitFor, waitForFadeTransition } from './lib/utils';
 
+import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
+import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
 import '$src/app.css';
 
 // Mock configurations
@@ -185,6 +187,8 @@ beforeEach(async () => {
   );
 
   groupPathStore.reset();
+  audioScriptFileEpisodeAddStore.reset();
+  tsvConfigStore.reset();
   i18nStore.init('en');
 
   vi.mocked(open).mockReset();
@@ -224,6 +228,8 @@ test('success: renders file episode form', async () => {
     .element(page.getByLabelText('Subtitle File (*.srt, *.vtt, *.sswt, *.tsv, *.txt)'))
     .toBeInTheDocument();
   await expect.element(page.getByPlaceholder("Episode's title")).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+  await expect.element(page.getByRole('button', { name: 'Create' })).toBeDisabled();
 
   await page.screenshot();
 });
@@ -263,9 +269,7 @@ test('success: handles submit request with valid payload', async () => {
   // Fill in the form via UI
   const titleInput = page.getByPlaceholder("Episode's title");
   await titleInput.fill('Test Episode');
-
   await page.getByTestId('audio-file-select').click();
-
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
   await page.getByTestId('script-file-select').click();
 
@@ -277,6 +281,7 @@ test('success: handles submit request with valid payload', async () => {
   await expect.element(languageSelect).toHaveValue('en');
 
   // Click submit
+  await page.screenshot();
   await page.getByRole('button', { name: 'Create' }).click();
   await waitForFadeTransition();
 
@@ -297,6 +302,10 @@ test('success: handles TSV configuration', async () => {
 
   // Mock file selection to return TSV file
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+  await page.getByTestId('audio-file-select').click();
 
   // Override read_text_file mock for TSV
   const invokeMock = vi.mocked(invoke);
@@ -321,9 +330,6 @@ test('success: handles TSV configuration', async () => {
 
   await userEvent.selectOptions(page.getByTestId('startTimeColumn'), '0');
   await userEvent.selectOptions(page.getByTestId('textColumn'), '1');
-  const titleInput = page.getByPlaceholder("Episode's title");
-  await titleInput.fill('Test Episode');
-  await page.getByTestId('audio-file-select').click();
   await page.screenshot();
 
   // Click submit
@@ -338,24 +344,210 @@ test('success: handles TSV configuration', async () => {
     .not.toBeInTheDocument();
 });
 
-test('error: handles form validation errors', async () => {
+test('error: handles title validation when audio file is selected', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
   await setupPage(String(groupId));
 
   await openAudioScriptEpisodeModal();
 
-  // Fill only title via UI
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await expect.element(createButton).toBeDisabled();
+
+  // Select audio file
+  await page.getByTestId('audio-file-select').click();
+
+  // Check that error message is shown
+  await expect.element(page.getByText('Please enter a title.')).toBeInTheDocument();
+  await expect.element(createButton).toBeDisabled();
+
+  await page.screenshot();
+});
+
+test('error: handles title validation when script file is selected', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await expect.element(createButton).toBeDisabled();
+
+  // Select script file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  await page.getByTestId('script-file-select').click();
+
+  // Check that error message is shown
+  await expect.element(page.getByText('Please enter a title.')).toBeInTheDocument();
+  await expect.element(createButton).toBeDisabled();
+
+  await page.screenshot();
+});
+
+test('error: handles audio file validation when script file is selected', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await expect.element(createButton).toBeDisabled();
+
+  // Fill title
   const titleInput = page.getByPlaceholder("Episode's title");
   await titleInput.fill('Test Episode');
 
-  // Try to submit without filling required fields
-  const createButton = page.getByRole('button', { name: 'Create' });
-  await createButton.click();
+  // Select script file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  await page.getByTestId('script-file-select').click();
 
   // Check that error message is shown
   await expect.element(page.getByText('Please select an audio file.')).toBeInTheDocument();
+  await expect.element(createButton).toBeDisabled();
 
+  await page.screenshot();
+});
+
+test('error: handles TSV start time and text column validation', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Mock file selection to return TSV file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+  await page.getByTestId('audio-file-select').click();
+
+  // Override read_text_file mock for TSV
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'read_text_file') {
+      return 'start_time\ttext\n00:00:00,000\tHello world\n00:00:05,000\tHow are you?';
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Select TSV file via UI
+  await page.getByTestId('script-file-select').click();
+
+  // Create button should be disabled until valid columns are selected
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await expect.element(createButton).toBeDisabled();
+  await expect
+    .element(page.getByText('Please select the start time and text columns.'))
+    .toBeInTheDocument();
+  await page.screenshot();
+});
+
+test('error: handles TSV start time validation', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Mock file selection to return TSV file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+  await page.getByTestId('audio-file-select').click();
+
+  // Override read_text_file mock for TSV
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'read_text_file') {
+      return 'start_time\ttext\n00:00:00,000\tHello world\n00:00:05,000\tHow are you?';
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Select TSV file via UI
+  await page.getByTestId('script-file-select').click();
+
+  // Create button should be disabled until valid columns are selected
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await userEvent.selectOptions(page.getByTestId('textColumn'), '1');
+  await expect.element(createButton).toBeDisabled();
+  await expect.element(page.getByText('Please select Start Time column.')).toBeInTheDocument();
+  await page.screenshot();
+});
+
+test('error: handles TSV text column validation', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Mock file selection to return TSV file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+  await page.getByTestId('audio-file-select').click();
+
+  // Override read_text_file mock for TSV
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'read_text_file') {
+      return 'start_time\ttext\n00:00:00,000\tHello world\n00:00:05,000\tHow are you?';
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Select TSV file via UI
+  await page.getByTestId('script-file-select').click();
+
+  // Create button should be disabled until valid columns are selected
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await userEvent.selectOptions(page.getByTestId('startTimeColumn'), '0');
+  await expect.element(createButton).toBeDisabled();
+  await expect.element(page.getByText('Please select Text column.')).toBeInTheDocument();
+  await page.screenshot();
+});
+
+test('error: handles TSV text column and start time column must be different', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Mock file selection to return TSV file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+  await page.getByTestId('audio-file-select').click();
+
+  // Override read_text_file mock for TSV
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'read_text_file') {
+      return 'start_time\ttext\n00:00:00,000\tHello world\n00:00:05,000\tHow are you?';
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Select TSV file via UI
+  await page.getByTestId('script-file-select').click();
+
+  // Create button should be disabled until valid columns are selected
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await userEvent.selectOptions(page.getByTestId('startTimeColumn'), '0');
+  await expect.element(createButton).toBeDisabled();
+  await userEvent.selectOptions(page.getByTestId('textColumn'), '0');
+  await expect.element(createButton).toBeDisabled();
+  await expect
+    .element(page.getByText('Start Time and Text columns must be different.'))
+    .toBeInTheDocument();
   await page.screenshot();
 });
 

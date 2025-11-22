@@ -32,20 +32,36 @@
     ...columnOptions,
   ]);
 
+  async function handleStartTimeColumnChange(e: Event) {
+    tsvConfigStore.updateConfig(
+      'startTimeColumnIndex',
+      parseInt((e.currentTarget as HTMLSelectElement).value)
+    );
+    tsvConfigStore.validateTsvColumns();
+  }
+
   async function handleTextColumnChange(e: Event) {
     tsvConfigStore.updateConfig(
       'textColumnIndex',
       parseInt((e.currentTarget as HTMLSelectElement).value)
     );
+    tsvConfigStore.validateTsvColumns();
     await onDetectScriptLanguage();
+  }
+
+  function handleEndTimeColumnChange(e: Event) {
+    tsvConfigStore.updateConfig(
+      'endTimeColumnIndex',
+      parseInt((e.currentTarget as HTMLSelectElement).value)
+    );
   }
 </script>
 
 {#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
-  <div class="mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-    {#if tsvConfigStore.errorMessageKey}
-      <div class="mb-4 text-sm text-red-600">{t(tsvConfigStore.errorMessageKey)}</div>
-    {/if}
+  <div
+    class={'mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800' +
+      (tsvConfigStore.isValid ? ' border-green-600' : ' border-red-600')}
+  >
     <Heading tag="h3" class="mb-2 text-lg font-semibold">
       {t('components.tsvConfigSection.tsvSettingsTitle')}
     </Heading>
@@ -58,11 +74,7 @@
           id="startTimeColumn"
           data-testid="startTimeColumn"
           value={tsvConfigStore.tsvConfig.startTimeColumnIndex}
-          onchange={(e) =>
-            tsvConfigStore.updateConfig(
-              'startTimeColumnIndex',
-              parseInt((e.currentTarget as HTMLSelectElement).value)
-            )}
+          onchange={handleStartTimeColumnChange}
           items={columnOptions}
         />
       </div>
@@ -86,11 +98,7 @@
           id="endTimeColumn"
           data-testid="endTimeColumn"
           value={tsvConfigStore.tsvConfig.endTimeColumnIndex}
-          onchange={(e) =>
-            tsvConfigStore.updateConfig(
-              'endTimeColumnIndex',
-              parseInt((e.currentTarget as HTMLSelectElement).value)
-            )}
+          onchange={handleEndTimeColumnChange}
           items={endTimeColumnOptions}
         />
       </div>
@@ -118,4 +126,7 @@
       </Table>
     </div>
   </div>
+  {#if tsvConfigStore.errorMessageKey}
+    <div class="mb-4 text-sm text-red-600">{t(tsvConfigStore.errorMessageKey)}</div>
+  {/if}
 {/if}

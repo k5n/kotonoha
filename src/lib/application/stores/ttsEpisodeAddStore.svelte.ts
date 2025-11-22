@@ -71,9 +71,7 @@ function validateForm(): boolean {
   }
 
   if (tsvConfigStore.scriptPreview) {
-    const { startTimeColumnIndex, textColumnIndex } = tsvConfigStore.tsvConfig;
-    if (startTimeColumnIndex === -1 || textColumnIndex === -1) {
-      errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
+    if (!tsvConfigStore.isValid) {
       return false;
     }
   }

@@ -21,10 +21,10 @@ export const groupPathStore = {
     return '/' + path.map((g) => g.id).join('/');
   },
 
-  // パスを一括セット
-  setPath(newPath: readonly EpisodeGroup[]) {
-    path = newPath;
-  },
+  // // パスを一括セット
+  // setPath(newPath: readonly EpisodeGroup[]) {
+  //   path = newPath;
+  // },
 
   // パスにグループを追加
   pushGroup(group: EpisodeGroup) {

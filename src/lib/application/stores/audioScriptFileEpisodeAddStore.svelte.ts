@@ -61,6 +61,13 @@ function buildPayload(): AudioScriptFileEpisodeAddPayload | null {
     return null;
   }
 
+  // Validate TSV configuration if script preview exists
+  if (tsvStore.scriptPreview) {
+    if (!tsvStore.isValid) {
+      return null;
+    }
+  }
+
   const tsvConfig = tsvStore.tsvConfig;
   const finalTsvConfig =
     tsvConfig.startTimeColumnIndex !== -1 && tsvConfig.textColumnIndex !== -1
@@ -81,36 +88,6 @@ function buildPayload(): AudioScriptFileEpisodeAddPayload | null {
     learningLanguage: selectedStudyLanguage,
     tsvConfig: finalTsvConfig,
   } satisfies AudioScriptFileEpisodeAddPayload;
-}
-
-function validateForm(): boolean {
-  const trimmedTitle = title.trim();
-  if (!trimmedTitle) {
-    errorMessage = t('components.fileEpisodeForm.errorTitleRequired');
-    return false;
-  }
-
-  if (!audioFilePath) {
-    errorMessage = t('components.fileEpisodeForm.errorAudioRequired');
-    return false;
-  }
-
-  if (!scriptFilePath) {
-    errorMessage = t('components.fileEpisodeForm.errorScriptFileRequired');
-    return false;
-  }
-
-  const scriptPreview = tsvStore.scriptPreview;
-  const tsvConfig = tsvStore.tsvConfig;
-  if (scriptPreview && scriptPreview.rows.length > 0) {
-    if (tsvConfig.startTimeColumnIndex === -1 || tsvConfig.textColumnIndex === -1) {
-      errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
-      return false;
-    }
-  }
-
-  errorMessage = '';
-  return true;
 }
 
 function reset() {
@@ -176,7 +153,6 @@ export const audioScriptFileEpisodeAddStore = {
   completeLanguageDetection,
   failedLanguageDetection,
   buildPayload,
-  validateForm,
   reset,
 
   tsv: tsvStore,

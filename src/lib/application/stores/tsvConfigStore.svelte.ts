@@ -10,6 +10,33 @@ let isFetchingScriptPreview = $state(false);
 let scriptPreview = $state(null as ScriptPreview | null);
 let errorMessageKey = $state('');
 
+const isValid = $derived(
+  tsvConfig.startTimeColumnIndex >= 0 &&
+    tsvConfig.textColumnIndex >= 0 &&
+    tsvConfig.startTimeColumnIndex !== tsvConfig.textColumnIndex
+);
+
+function validateTsvColumns() {
+  const { startTimeColumnIndex, textColumnIndex } = tsvConfig;
+
+  if (startTimeColumnIndex === -1 && textColumnIndex === -1) {
+    errorMessageKey = 'components.fileEpisodeForm.errorTsvColumnRequired';
+    return;
+  }
+  if (startTimeColumnIndex === -1) {
+    errorMessageKey = 'components.fileEpisodeForm.errorStartTimeColumnRequired';
+    return;
+  }
+  if (textColumnIndex === -1) {
+    errorMessageKey = 'components.fileEpisodeForm.errorTextColumnRequired';
+    return;
+  }
+  if (startTimeColumnIndex === textColumnIndex) {
+    errorMessageKey = 'components.fileEpisodeForm.errorTsvColumnsMustBeDifferent';
+    return;
+  }
+}
+
 export const tsvConfigStore = {
   get tsvConfig() {
     return tsvConfig;
@@ -27,12 +54,20 @@ export const tsvConfigStore = {
     return isFetchingScriptPreview;
   },
 
+  get isValid() {
+    return isValid;
+  },
+
   updateConfig(field: keyof TsvConfig, value: number) {
     tsvConfig = {
       ...tsvConfig,
       [field]: value,
     };
+    // Clear error when user updates configuration
+    errorMessageKey = '';
   },
+
+  validateTsvColumns,
 
   startScriptPreviewFetching() {
     isFetchingScriptPreview = true;
@@ -42,6 +77,7 @@ export const tsvConfigStore = {
   completeScriptPreviewFetching(preview: ScriptPreview | null) {
     scriptPreview = preview;
     isFetchingScriptPreview = false;
+    validateTsvColumns();
   },
 
   failedScriptPreviewFetching(errorKey: string) {
