@@ -200,11 +200,7 @@
       <Label class="mb-2 block" for="title">{t('components.fileEpisodeForm.titleLabel')}</Label>
       <Input
         id="title"
-        class={fieldTouched.title
-          ? fieldErrors.title
-            ? 'border-red-700'
-            : 'border-green-700'
-          : ''}
+        class={fieldTouched.title && !fieldErrors.title ? 'border-green-700' : ''}
         placeholder={t('components.fileEpisodeForm.titlePlaceholder')}
         value={audioScriptFileEpisodeAddStore.title}
         oninput={handleTitleInput}
@@ -221,11 +217,7 @@
         {t('components.fileEpisodeForm.audioFileLabel')}
       </Label>
       <FileSelect
-        color={fieldTouched.audioFile && fieldErrors.audioFile
-          ? 'red'
-          : fieldTouched.audioFile
-            ? 'green'
-            : 'light'}
+        color={fieldTouched.audioFile && !fieldErrors.audioFile ? 'green' : 'light'}
         accept="audio/*"
         value={audioScriptFileEpisodeAddStore.audioFilePath}
         onFileSelected={(file) => {
@@ -247,11 +239,9 @@
         {t('components.fileEpisodeForm.scriptFileLabel')}
       </Label>
       <FileSelect
-        color={fieldTouched.scriptFile && fieldErrors.scriptFile
-          ? 'red'
-          : fieldTouched.scriptFile
-            ? 'green'
-            : 'light'}
+        color={fieldTouched.scriptFile && !fieldErrors.scriptFile && !tsvConfigStore.errorMessageKey
+          ? 'green'
+          : 'light'}
         accept=".srt,.sswt,.tsv,.vtt,.txt"
         value={audioScriptFileEpisodeAddStore.scriptFilePath}
         onFileSelected={(file) => handleScriptFileChange(file)}
@@ -295,7 +285,16 @@
 
     {#if audioScriptFileEpisodeAddStore.errorMessage}
       <div class="mb-4">
-        <div class="text-sm text-red-600">{audioScriptFileEpisodeAddStore.errorMessage}</div>
+        <div class="text-sm text-red-600">
+          {audioScriptFileEpisodeAddStore.errorMessage}
+        </div>
+      </div>
+    {/if}
+    {#if tsvConfigStore.errorMessageKey}
+      <div class="mb-4">
+        <div class="text-sm text-red-600">
+          {t(tsvConfigStore.errorMessageKey)}
+        </div>
       </div>
     {/if}
 

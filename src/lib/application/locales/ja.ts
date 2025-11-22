@@ -290,7 +290,6 @@ export const ja = {
         errorScriptFileRequired: 'スクリプトファイルを選択してください',
         errorDetectLanguage: '言語の自動判定に失敗しました。',
         errorTsvParse: 'TSVファイルの解析に失敗しました。',
-        errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
         errorStartTimeColumnRequired: '開始時間カラムを設定してください。',
         errorTextColumnRequired: 'テキストカラムを設定してください。',
         errorTsvColumnsMustBeDifferent: '開始時間絡むとテキストカラムは異なる必要があります。',

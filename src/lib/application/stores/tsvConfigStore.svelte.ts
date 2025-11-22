@@ -9,6 +9,8 @@ let tsvConfig = $state({
 let isFetchingScriptPreview = $state(false);
 let scriptPreview = $state(null as ScriptPreview | null);
 let errorMessageKey = $state('');
+let startTimeColumnErrorMessageKey = $state('');
+let textColumnErrorMessageKey = $state('');
 
 const isValid = $derived(
   tsvConfig.startTimeColumnIndex >= 0 &&
@@ -19,21 +21,19 @@ const isValid = $derived(
 function validateTsvColumns() {
   const { startTimeColumnIndex, textColumnIndex } = tsvConfig;
 
-  if (startTimeColumnIndex === -1 && textColumnIndex === -1) {
-    errorMessageKey = 'components.fileEpisodeForm.errorTsvColumnRequired';
-    return;
-  }
   if (startTimeColumnIndex === -1) {
-    errorMessageKey = 'components.fileEpisodeForm.errorStartTimeColumnRequired';
-    return;
+    startTimeColumnErrorMessageKey = 'components.fileEpisodeForm.errorStartTimeColumnRequired';
+  } else {
+    startTimeColumnErrorMessageKey = '';
   }
   if (textColumnIndex === -1) {
-    errorMessageKey = 'components.fileEpisodeForm.errorTextColumnRequired';
-    return;
+    textColumnErrorMessageKey = 'components.fileEpisodeForm.errorTextColumnRequired';
+  } else {
+    textColumnErrorMessageKey = '';
   }
-  if (startTimeColumnIndex === textColumnIndex) {
-    errorMessageKey = 'components.fileEpisodeForm.errorTsvColumnsMustBeDifferent';
-    return;
+  if (startTimeColumnIndex >= 0 && startTimeColumnIndex === textColumnIndex) {
+    startTimeColumnErrorMessageKey = 'components.fileEpisodeForm.errorTsvColumnsMustBeDifferent';
+    textColumnErrorMessageKey = 'components.fileEpisodeForm.errorTsvColumnsMustBeDifferent';
   }
 }
 
@@ -44,6 +44,14 @@ export const tsvConfigStore = {
 
   get errorMessageKey() {
     return errorMessageKey;
+  },
+
+  get startTimeColumnErrorMessageKey() {
+    return startTimeColumnErrorMessageKey;
+  },
+
+  get textColumnErrorMessageKey() {
+    return textColumnErrorMessageKey;
   },
 
   get scriptPreview() {
@@ -63,18 +71,15 @@ export const tsvConfigStore = {
       ...tsvConfig,
       [field]: value,
     };
-    // Clear error when user updates configuration
-    errorMessageKey = '';
+    validateTsvColumns();
   },
-
-  validateTsvColumns,
 
   startScriptPreviewFetching() {
     isFetchingScriptPreview = true;
     errorMessageKey = '';
   },
 
-  completeScriptPreviewFetching(preview: ScriptPreview | null) {
+  completeScriptPreviewFetching(preview: ScriptPreview) {
     scriptPreview = preview;
     isFetchingScriptPreview = false;
     validateTsvColumns();

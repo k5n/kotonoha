@@ -21,8 +21,6 @@ let detectedLanguage = $state<string | null>(null);
 let learningTargetLanguages = $state<readonly string[]>([]);
 let selectedStudyLanguage = $state<string | null>(null);
 
-const tsvStore = tsvConfigStore;
-
 function setSelectedStudyLanguage(language: string | null) {
   selectedStudyLanguage = language;
 }
@@ -60,15 +58,11 @@ function buildPayload(): AudioScriptFileEpisodeAddPayload | null {
   if (!title.trim() || !audioFilePath || !scriptFilePath || !selectedStudyLanguage) {
     return null;
   }
-
-  // Validate TSV configuration if script preview exists
-  if (tsvStore.scriptPreview) {
-    if (!tsvStore.isValid) {
-      return null;
-    }
+  if (tsvConfigStore.scriptPreview && !tsvConfigStore.isValid) {
+    return null;
   }
 
-  const tsvConfig = tsvStore.tsvConfig;
+  const tsvConfig = tsvConfigStore.tsvConfig;
   const finalTsvConfig =
     tsvConfig.startTimeColumnIndex !== -1 && tsvConfig.textColumnIndex !== -1
       ? {
@@ -99,7 +93,7 @@ function reset() {
   detectedLanguage = null;
   learningTargetLanguages = [];
   selectedStudyLanguage = null;
-  tsvStore.reset();
+  tsvConfigStore.reset();
 }
 
 export const audioScriptFileEpisodeAddStore = {
@@ -154,6 +148,4 @@ export const audioScriptFileEpisodeAddStore = {
   failedLanguageDetection,
   buildPayload,
   reset,
-
-  tsv: tsvStore,
 } as const;

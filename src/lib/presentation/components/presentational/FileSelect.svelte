@@ -96,9 +96,8 @@
     <Button
       {disabled}
       onclick={handleFileSelect}
-      outline
       {color}
-      class="flex w-full items-center justify-start gap-2 bg-gray-50"
+      class="flex w-full items-center justify-start gap-2"
       {id}
       data-testid={dataTestId}
     >

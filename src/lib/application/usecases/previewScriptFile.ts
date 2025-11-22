@@ -11,6 +11,11 @@ export async function previewScriptFile(filePath: string): Promise<void> {
   try {
     const content = await fileRepository.readTextFileByAbsolutePath(filePath);
     const preview = parseScriptPreview(content, 5);
+    if (preview.rows.length === 0) {
+      console.error('TSV file is empty or has no data rows.');
+      tsvConfigStore.failedScriptPreviewFetching('components.fileEpisodeForm.errorTsvParse');
+      return;
+    }
     tsvConfigStore.completeScriptPreviewFetching(preview);
   } catch (e) {
     tsvConfigStore.failedScriptPreviewFetching('components.fileEpisodeForm.errorTsvParse');

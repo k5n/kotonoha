@@ -440,7 +440,10 @@ test('error: handles TSV start time and text column validation', async () => {
   const createButton = page.getByRole('button', { name: 'Create' });
   await expect.element(createButton).toBeDisabled();
   await expect
-    .element(page.getByText('Please select the start time and text columns.'))
+    .element(page.getByTestId('startTimeColumnError').getByText('Please select Start Time column.'))
+    .toBeInTheDocument();
+  await expect
+    .element(page.getByTestId('textColumnError').getByText('Please select Text column.'))
     .toBeInTheDocument();
   await page.screenshot();
 });
@@ -475,7 +478,10 @@ test('error: handles TSV start time validation', async () => {
   const createButton = page.getByRole('button', { name: 'Create' });
   await userEvent.selectOptions(page.getByTestId('textColumn'), '1');
   await expect.element(createButton).toBeDisabled();
-  await expect.element(page.getByText('Please select Start Time column.')).toBeInTheDocument();
+  await expect
+    .element(page.getByTestId('startTimeColumnError').getByText('Please select Start Time column.'))
+    .toBeInTheDocument();
+  await expect.element(page.getByTestId('textColumnError')).not.toBeInTheDocument();
   await page.screenshot();
 });
 
@@ -509,7 +515,10 @@ test('error: handles TSV text column validation', async () => {
   const createButton = page.getByRole('button', { name: 'Create' });
   await userEvent.selectOptions(page.getByTestId('startTimeColumn'), '0');
   await expect.element(createButton).toBeDisabled();
-  await expect.element(page.getByText('Please select Text column.')).toBeInTheDocument();
+  await expect
+    .element(page.getByTestId('textColumnError').getByText('Please select Text column.'))
+    .toBeInTheDocument();
+  await expect.element(page.getByTestId('startTimeColumnError')).not.toBeInTheDocument();
   await page.screenshot();
 });
 
@@ -546,9 +555,56 @@ test('error: handles TSV text column and start time column must be different', a
   await userEvent.selectOptions(page.getByTestId('textColumn'), '0');
   await expect.element(createButton).toBeDisabled();
   await expect
-    .element(page.getByText('Start Time and Text columns must be different.'))
+    .element(
+      page
+        .getByTestId('startTimeColumnError')
+        .getByText('Start Time and Text columns must be different.')
+    )
+    .toBeInTheDocument();
+  await expect
+    .element(
+      page
+        .getByTestId('textColumnError')
+        .getByText('Start Time and Text columns must be different.')
+    )
     .toBeInTheDocument();
   await page.screenshot();
+});
+
+test('error: handles TSV preview failure because of invalid format', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openAudioScriptEpisodeModal();
+
+  // Mock file selection to return TSV file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('Test Episode');
+  await page.getByTestId('audio-file-select').click();
+
+  // Override read_text_file mock for TSV
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'read_text_file') {
+      return '';
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Select TSV file via UI
+  await page.getByTestId('script-file-select').click();
+
+  // Wait for async operations
+  await waitFor(100);
+  await page.screenshot();
+
+  // Check that error message is shown
+  await expect.element(page.getByText('Failed to parse TSV file.')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Create' })).toBeDisabled();
+  await expect.element(page.getByRole('button', { name: 'Cancel' })).toBeEnabled();
 });
 
 test('success: handles no script language detected', async () => {

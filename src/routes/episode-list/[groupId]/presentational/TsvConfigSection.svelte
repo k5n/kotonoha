@@ -37,7 +37,6 @@
       'startTimeColumnIndex',
       parseInt((e.currentTarget as HTMLSelectElement).value)
     );
-    tsvConfigStore.validateTsvColumns();
   }
 
   async function handleTextColumnChange(e: Event) {
@@ -45,7 +44,6 @@
       'textColumnIndex',
       parseInt((e.currentTarget as HTMLSelectElement).value)
     );
-    tsvConfigStore.validateTsvColumns();
     await onDetectScriptLanguage();
   }
 
@@ -60,7 +58,7 @@
 {#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
   <div
     class={'mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800' +
-      (tsvConfigStore.isValid ? ' border-green-600' : ' border-red-600')}
+      (tsvConfigStore.isValid ? ' border-green-600' : '')}
   >
     <Heading tag="h3" class="mb-2 text-lg font-semibold">
       {t('components.tsvConfigSection.tsvSettingsTitle')}
@@ -77,6 +75,11 @@
           onchange={handleStartTimeColumnChange}
           items={columnOptions}
         />
+        {#if tsvConfigStore.startTimeColumnErrorMessageKey}
+          <div data-testid="startTimeColumnError" class="mt-1 text-sm text-red-600">
+            {t(tsvConfigStore.startTimeColumnErrorMessageKey)}
+          </div>
+        {/if}
       </div>
       <div>
         <Label for="textColumn" class="mb-2 block">
@@ -89,6 +92,11 @@
           onchange={handleTextColumnChange}
           items={columnOptions}
         />
+        {#if tsvConfigStore.textColumnErrorMessageKey}
+          <div data-testid="textColumnError" class="mt-1 text-sm text-red-600">
+            {t(tsvConfigStore.textColumnErrorMessageKey)}
+          </div>
+        {/if}
       </div>
       <div>
         <Label for="endTimeColumn" class="mb-2 block">
@@ -126,7 +134,4 @@
       </Table>
     </div>
   </div>
-  {#if tsvConfigStore.errorMessageKey}
-    <div class="mb-4 text-sm text-red-600">{t(tsvConfigStore.errorMessageKey)}</div>
-  {/if}
 {/if}

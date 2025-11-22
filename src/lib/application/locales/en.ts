@@ -292,7 +292,6 @@ export const en = {
         errorScriptFileRequired: 'Please select a script file.',
         errorDetectLanguage: 'Failed to auto-detect language.',
         errorTsvParse: 'Failed to parse TSV file.',
-        errorTsvColumnRequired: 'Please select the start time and text columns.',
         errorStartTimeColumnRequired: 'Please select Start Time column.',
         errorTextColumnRequired: 'Please select Text column.',
         errorTsvColumnsMustBeDifferent: 'Start Time and Text columns must be different.',
