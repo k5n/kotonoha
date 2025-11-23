@@ -5,7 +5,7 @@
   import FileSelect from '$lib/presentation/components/presentational/FileSelect.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Heading, Input, Label, Modal, Select } from 'flowbite-svelte';
-  import TsvConfigSection from './TsvConfigSection.svelte';
+  import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
   import TtsConfigSection from './TtsConfigSection.svelte';
 
   type Props = {
@@ -64,6 +64,18 @@
       value: lang,
       name: `${t(bcp47ToTranslationKey(lang)!)} (${bcp47ToLanguageName(lang)})`,
     })) || []
+  );
+
+  let startTimeColumnErrorMessage = $derived(
+    ttsEpisodeAddStore.tsv.startTimeColumnErrorMessageKey
+      ? t(ttsEpisodeAddStore.tsv.startTimeColumnErrorMessageKey)
+      : ''
+  );
+
+  let textColumnErrorMessage = $derived(
+    ttsEpisodeAddStore.tsv.textColumnErrorMessageKey
+      ? t(ttsEpisodeAddStore.tsv.textColumnErrorMessageKey)
+      : ''
   );
 
   async function processScriptFile(filePath: string) {
@@ -145,7 +157,18 @@
     </div>
 
     {#if ttsEpisodeAddStore.tsv.scriptPreview}
-      <TsvConfigSection {onDetectScriptLanguage} />
+      <TsvConfigSection
+        headers={ttsEpisodeAddStore.tsv.scriptPreview?.headers || []}
+        rows={ttsEpisodeAddStore.tsv.scriptPreview?.rows || []}
+        config={ttsEpisodeAddStore.tsv.tsvConfig}
+        valid={ttsEpisodeAddStore.tsv.isValid}
+        {startTimeColumnErrorMessage}
+        {textColumnErrorMessage}
+        onConfigUpdate={(key, value) => {
+          ttsEpisodeAddStore.tsv.updateConfig(key, value);
+        }}
+        {onDetectScriptLanguage}
+      />
     {/if}
 
     {#if learningTargetLanguageOptions.length > 0}

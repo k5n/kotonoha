@@ -3,7 +3,7 @@
   import FileSelect from '$lib/presentation/components/presentational/FileSelect.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Heading, Input, Label, Select } from 'flowbite-svelte';
-  import TsvConfigSection from '../container/TsvConfigSection.svelte';
+  import TsvConfigSection from './TsvConfigSection.svelte';
 
   type Props = {
     isSubmitting: boolean;
@@ -11,8 +11,13 @@
     title: string;
     audioFilePath: string | null;
     scriptFilePath: string | null;
-    openTsvConfigSection: boolean;
-    validTsv: boolean;
+    tsvPreviewOpen: boolean;
+    tsvValid: boolean;
+    tsvConfig: import('$lib/domain/entities/tsvConfig').TsvConfig;
+    tsvPreviewHeaders: readonly string[];
+    tsvPreviewRows: readonly (readonly string[])[];
+    tsvStartTimeColumnErrorMessage: string;
+    tsvTextColumnErrorMessage: string;
     selectedStudyLanguage: string | null;
     learningTargetLanguages: readonly string[];
     languageDetectionWarningMessage: string;
@@ -36,6 +41,10 @@
     onSubmit: () => void;
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
+    onTsvConfigUpdate: (
+      key: keyof import('$lib/domain/entities/tsvConfig').TsvConfig,
+      value: number
+    ) => void;
   };
 
   let {
@@ -44,8 +53,13 @@
     title = $bindable(''),
     audioFilePath = $bindable(null),
     scriptFilePath,
-    openTsvConfigSection,
-    validTsv,
+    tsvPreviewOpen,
+    tsvValid,
+    tsvConfig,
+    tsvPreviewHeaders,
+    tsvPreviewRows,
+    tsvStartTimeColumnErrorMessage,
+    tsvTextColumnErrorMessage,
     selectedStudyLanguage = $bindable(null),
     learningTargetLanguages,
     languageDetectionWarningMessage,
@@ -60,6 +74,7 @@
     onCancel,
     onSubmit,
     onDetectScriptLanguage,
+    onTsvConfigUpdate,
   }: Props = $props();
 
   // Form validity check
@@ -68,7 +83,7 @@
       audioFilePath &&
       scriptFilePath &&
       selectedStudyLanguage &&
-      (!openTsvConfigSection || validTsv)
+      (!tsvPreviewOpen || tsvValid)
   );
 
   let learningTargetLanguageOptions = $derived(
@@ -138,8 +153,17 @@
     {/if}
   </div>
 
-  {#if openTsvConfigSection}
-    <TsvConfigSection {onDetectScriptLanguage} />
+  {#if tsvPreviewOpen}
+    <TsvConfigSection
+      headers={tsvPreviewHeaders}
+      rows={tsvPreviewRows}
+      config={tsvConfig}
+      valid={tsvValid}
+      startTimeColumnErrorMessage={tsvStartTimeColumnErrorMessage}
+      textColumnErrorMessage={tsvTextColumnErrorMessage}
+      onConfigUpdate={onTsvConfigUpdate}
+      {onDetectScriptLanguage}
+    />
   {/if}
 
   {#if learningTargetLanguageOptions.length > 0}

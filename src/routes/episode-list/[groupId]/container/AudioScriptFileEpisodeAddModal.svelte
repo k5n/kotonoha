@@ -132,8 +132,17 @@
     title={audioScriptFileEpisodeAddStore.title}
     audioFilePath={audioScriptFileEpisodeAddStore.audioFilePath}
     scriptFilePath={audioScriptFileEpisodeAddStore.scriptFilePath}
-    openTsvConfigSection={!!tsvConfigStore.scriptPreview}
-    validTsv={tsvConfigStore.isValid}
+    tsvPreviewOpen={!!tsvConfigStore.scriptPreview}
+    tsvValid={tsvConfigStore.isValid}
+    tsvConfig={tsvConfigStore.tsvConfig}
+    tsvPreviewHeaders={tsvConfigStore.scriptPreview?.headers || []}
+    tsvPreviewRows={tsvConfigStore.scriptPreview?.rows || []}
+    tsvStartTimeColumnErrorMessage={tsvConfigStore.startTimeColumnErrorMessageKey
+      ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
+      : ''}
+    tsvTextColumnErrorMessage={tsvConfigStore.textColumnErrorMessageKey
+      ? t(tsvConfigStore.textColumnErrorMessageKey)
+      : ''}
     selectedStudyLanguage={audioScriptFileEpisodeAddStore.selectedStudyLanguage}
     learningTargetLanguages={audioScriptFileEpisodeAddStore.learningTargetLanguages}
     languageDetectionWarningMessage={audioScriptFileEpisodeAddStore.languageDetectionWarningMessage}
@@ -149,5 +158,6 @@
     onSubmit={handleSubmit}
     {onTsvFileSelected}
     {onDetectScriptLanguage}
+    onTsvConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
   />
 </Modal>

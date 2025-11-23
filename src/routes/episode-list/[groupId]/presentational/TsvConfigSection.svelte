@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
+  import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import {
     Heading,
     Label,
@@ -14,51 +14,49 @@
   } from 'flowbite-svelte';
 
   type Props = {
+    headers: readonly string[];
+    rows: readonly (readonly string[])[];
+    config: TsvConfig;
+    valid: boolean;
+    startTimeColumnErrorMessage: string;
+    textColumnErrorMessage: string;
+    onConfigUpdate: (key: keyof TsvConfig, value: number) => void;
     onDetectScriptLanguage: () => Promise<void>;
   };
-
-  let { onDetectScriptLanguage }: Props = $props();
-
-  let displayHeaders = $derived.by(() => {
-    const scriptPreview = tsvConfigStore.scriptPreview;
-    if (!scriptPreview || !scriptPreview.headers) return [];
-    return scriptPreview.headers;
-  });
-
-  let columnOptions = $derived(displayHeaders.map((header, i) => ({ value: i, name: header })));
-
+  let {
+    headers,
+    rows,
+    config,
+    valid,
+    startTimeColumnErrorMessage,
+    textColumnErrorMessage,
+    onConfigUpdate,
+    onDetectScriptLanguage,
+  }: Props = $props();
+  let columnOptions = $derived(headers.map((header, i) => ({ value: i, name: header })));
   let endTimeColumnOptions = $derived([
     { value: -1, name: t('components.tsvConfigSection.none') },
     ...columnOptions,
   ]);
 
   async function handleStartTimeColumnChange(e: Event) {
-    tsvConfigStore.updateConfig(
-      'startTimeColumnIndex',
-      parseInt((e.currentTarget as HTMLSelectElement).value)
-    );
+    onConfigUpdate('startTimeColumnIndex', parseInt((e.currentTarget as HTMLSelectElement).value));
   }
 
   async function handleTextColumnChange(e: Event) {
-    tsvConfigStore.updateConfig(
-      'textColumnIndex',
-      parseInt((e.currentTarget as HTMLSelectElement).value)
-    );
+    onConfigUpdate('textColumnIndex', parseInt((e.currentTarget as HTMLSelectElement).value));
     await onDetectScriptLanguage();
   }
 
   function handleEndTimeColumnChange(e: Event) {
-    tsvConfigStore.updateConfig(
-      'endTimeColumnIndex',
-      parseInt((e.currentTarget as HTMLSelectElement).value)
-    );
+    onConfigUpdate('endTimeColumnIndex', parseInt((e.currentTarget as HTMLSelectElement).value));
   }
 </script>
 
-{#if tsvConfigStore.scriptPreview && tsvConfigStore.scriptPreview.rows.length > 0}
+{#if rows.length > 0}
   <div
     class={'mb-4 rounded-lg border bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800' +
-      (tsvConfigStore.isValid ? ' border-green-600' : '')}
+      (valid ? ' border-green-600' : '')}
   >
     <Heading tag="h3" class="mb-2 text-lg font-semibold">
       {t('components.tsvConfigSection.tsvSettingsTitle')}
@@ -71,13 +69,13 @@
         <Select
           id="startTimeColumn"
           data-testid="startTimeColumn"
-          value={tsvConfigStore.tsvConfig.startTimeColumnIndex}
+          value={config.startTimeColumnIndex}
           onchange={handleStartTimeColumnChange}
           items={columnOptions}
         />
-        {#if tsvConfigStore.startTimeColumnErrorMessageKey}
+        {#if startTimeColumnErrorMessage}
           <div data-testid="startTimeColumnError" class="mt-1 text-sm text-red-600">
-            {t(tsvConfigStore.startTimeColumnErrorMessageKey)}
+            {startTimeColumnErrorMessage}
           </div>
         {/if}
       </div>
@@ -88,13 +86,13 @@
         <Select
           id="textColumn"
           data-testid="textColumn"
-          value={tsvConfigStore.tsvConfig.textColumnIndex}
+          value={config.textColumnIndex}
           onchange={handleTextColumnChange}
           items={columnOptions}
         />
-        {#if tsvConfigStore.textColumnErrorMessageKey}
+        {#if textColumnErrorMessage}
           <div data-testid="textColumnError" class="mt-1 text-sm text-red-600">
-            {t(tsvConfigStore.textColumnErrorMessageKey)}
+            {textColumnErrorMessage}
           </div>
         {/if}
       </div>
@@ -105,7 +103,7 @@
         <Select
           id="endTimeColumn"
           data-testid="endTimeColumn"
-          value={tsvConfigStore.tsvConfig.endTimeColumnIndex}
+          value={config.endTimeColumnIndex}
           onchange={handleEndTimeColumnChange}
           items={endTimeColumnOptions}
         />
@@ -117,12 +115,12 @@
           <TableHeadCell>
             {t('components.tsvConfigSection.previewTable.rowNumber')}
           </TableHeadCell>
-          {#each displayHeaders as header, i (i)}
+          {#each headers as header, i (i)}
             <TableHeadCell>{header}</TableHeadCell>
           {/each}
         </TableHead>
         <TableBody>
-          {#each tsvConfigStore.scriptPreview.rows as row, i (i)}
+          {#each rows as row, i (i)}
             <TableBodyRow>
               <TableBodyCell>{i + 1}</TableBodyCell>
               {#each row as cell, j (j)}
