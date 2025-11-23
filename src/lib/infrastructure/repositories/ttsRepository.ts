@@ -1,5 +1,6 @@
 import type { DownloadProgress, TtsProgress } from '$lib/domain/entities/ttsEvent';
 import type { DefaultVoices, FileInfo, Speaker, Voice } from '$lib/domain/entities/voice';
+import { assertNotUndefined } from '$lib/utils/assertion';
 import { normalizeBcp47 } from '$lib/utils/language';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
@@ -132,9 +133,7 @@ export const ttsRepository = {
   async start(transcript: string, voice: Voice, speakerId: number): Promise<TtsResult> {
     // Find the config file (.json) from the voice files
     const configFile = voice.files.find((file) => file.url.endsWith('.json'));
-    if (!configFile) {
-      throw new Error('No config file (.json) found in voice files');
-    }
+    assertNotUndefined(configFile, 'No config file (.json) found in voice files');
 
     // Use the required `path` field to construct the configPath under models/
     const relativePath = configFile.path;

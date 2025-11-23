@@ -4,6 +4,7 @@ import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.sve
 import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
+import { assertNotNull } from '$lib/utils/assertion';
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import { tsvConfigStore } from '../stores/tsvConfigStore.svelte';
 
@@ -22,20 +23,14 @@ export async function executeTts(store: TtsTargetStore = ttsEpisodeAddStore): Pr
   try {
     // Read script content from file
     const scriptFilePath = store.scriptFilePath;
-    if (!scriptFilePath) {
-      throw new Error('Script file path is not set (this must not happen)');
-    }
+    assertNotNull(scriptFilePath, 'Script file path must not be null');
     const fullText = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
     const extension = scriptFilePath.split('.').pop()?.toLowerCase() ?? '';
     const scriptContent = extractScriptText(fullText, extension, tsvConfigStore.tsvConfig);
 
-    // Get voice and speaker information from the store
     const selectedVoice = ttsConfigStore.selectedVoice;
+    assertNotNull(selectedVoice, 'No voice selected for TTS');
     const selectedSpeakerId = parseInt(ttsConfigStore.selectedSpeakerId);
-
-    if (!selectedVoice) {
-      throw new Error('No voice selected for TTS');
-    }
 
     // Open the modal and start execution
     ttsExecutionStore.openModal();

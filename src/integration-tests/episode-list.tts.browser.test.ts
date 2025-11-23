@@ -5,6 +5,7 @@ import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event, type UnlistenFn } from '@tauri-apps/api/event';
 import { open } from '@tauri-apps/plugin-dialog';
+import { fetch as httpFetch } from '@tauri-apps/plugin-http';
 import Database from '@tauri-apps/plugin-sql';
 import { tick } from 'svelte';
 import { render } from 'vitest-browser-svelte';
@@ -15,6 +16,7 @@ import Component from '../routes/episode-list/[groupId]/+page.svelte';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitFor, waitForFadeTransition } from './lib/utils';
 
+import { ttsDownloadStore } from '$lib/application/stores/ttsDownloadStore.svelte';
 import '$src/app.css';
 
 // Mock configurations
@@ -176,6 +178,39 @@ async function defaultInvokeMock(command: string): Promise<unknown> {
   throw new Error(`Unhandled Tauri command: ${command as string}`);
 }
 
+async function defaultListenMock(
+  event: string,
+  callback: (event: Event<unknown>) => void
+): Promise<UnlistenFn> {
+  if (event === 'download_progress') {
+    // Simulate download completion
+    setTimeout(() => {
+      callback({
+        event: 'download_progress',
+        id: 1,
+        payload: {
+          downloadId: 'test',
+          fileName: 'model.onnx',
+          progress: 100,
+          downloaded: 100,
+          total: 100,
+        },
+      });
+    }, DOWNLOAD_WAIT_TIME_MS);
+  }
+  if (event === 'tts-progress') {
+    // Simulate TTS progress
+    setTimeout(() => {
+      callback({
+        event: 'tts-progress',
+        id: 1,
+        payload: { progress: 50, startMs: 500, endMs: 5000, text: 'Hello world' },
+      });
+    }, TTS_WAIT_TIME_MS / 2);
+  }
+  return vi.fn() as UnlistenFn;
+}
+
 async function openTtsEpisodeModal() {
   await page.getByRole('button', { name: 'Add Episode' }).click();
   await waitForFadeTransition();
@@ -201,39 +236,10 @@ beforeEach(async () => {
 
   const listenMock = vi.mocked(listen);
   listenMock.mockReset();
-  listenMock.mockImplementation(
-    async (event: string, callback: (event: Event<unknown>) => void) => {
-      if (event === 'download_progress') {
-        // Simulate download completion
-        setTimeout(() => {
-          callback({
-            event: 'download_progress',
-            id: 1,
-            payload: {
-              downloadId: 'test',
-              fileName: 'model.onnx',
-              progress: 100,
-              downloaded: 100,
-              total: 100,
-            },
-          });
-        }, DOWNLOAD_WAIT_TIME_MS);
-      }
-      if (event === 'tts-progress') {
-        // Simulate TTS progress
-        setTimeout(() => {
-          callback({
-            event: 'tts-progress',
-            id: 1,
-            payload: { progress: 50, startMs: 500, endMs: 5000, text: 'Hello world' },
-          });
-        }, TTS_WAIT_TIME_MS / 2);
-      }
-      return vi.fn() as UnlistenFn;
-    }
-  );
+  listenMock.mockImplementation(defaultListenMock);
 
   groupPathStore.reset();
+  ttsDownloadStore.reset();
   i18nStore.init('en');
 
   vi.mocked(open).mockReset();
@@ -373,4 +379,105 @@ test('error: handles script language detection error in TTS workflow', async () 
   // Verify that the language select shows default value
   const learningLanguageSelect = page.getByTestId('learningLanguage');
   await expect.element(learningLanguageSelect).toHaveValue('en');
+});
+
+test('error: shows error message when TTS voice fetch fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  // Force Piper voice metadata fetch to fail
+  vi.mocked(httpFetch).mockRejectedValueOnce(new Error('Network error while fetching voices'));
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  // Mock file selection to return SRT file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  // Trigger TTS workflow which attempts to fetch voices
+  await page.getByTestId('tts-script-file-select').click();
+
+  await waitFor(200);
+
+  await expect.element(page.getByText('Failed to load TTS voices.')).toBeInTheDocument();
+  await page.screenshot();
+});
+
+test('error: shows error message when TTS model download fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'download_file_with_progress') {
+      throw new Error('Network error while downloading');
+    }
+    return defaultInvokeMock(command);
+  });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('TTS Download Failure Episode');
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  await page.getByTestId('tts-script-file-select').click();
+
+  await waitFor(100);
+
+  await page.getByRole('button', { name: 'Create' }).click();
+  await waitForFadeTransition();
+
+  await expect
+    .element(
+      page.getByText(
+        'Failed to download TTS model. Please check your network connection or storage.'
+      )
+    )
+    .toBeInTheDocument();
+  await page.screenshot();
+});
+
+test('error: shows error message when TTS execution fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'start_tts') {
+      throw new Error('TTS start failed');
+    }
+    return defaultInvokeMock(command as string);
+  });
+  const listenMock = vi.mocked(listen);
+  listenMock.mockImplementation(
+    async (event: string, callback: (event: Event<unknown>) => void) => {
+      if (event === 'tts-progress') {
+        return vi.fn() as UnlistenFn;
+      }
+      return defaultListenMock(event, callback);
+    }
+  );
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('TTS Execution Failure Episode');
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  await page.getByTestId('tts-script-file-select').click();
+  await waitFor(100);
+
+  await page.getByRole('button', { name: 'Create' }).click();
+  await waitForFadeTransition();
+  await waitFor(DOWNLOAD_WAIT_TIME_MS);
+
+  await expect.element(page.getByRole('heading', { name: 'Generating Audio' })).toBeInTheDocument();
+  await expect.element(page.getByText('Failed to generate audio using TTS.')).toBeInTheDocument();
+
+  await page.screenshot();
 });
