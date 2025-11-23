@@ -25,7 +25,7 @@
 
 {#snippet footer()}
   {#if isDownloading}
-    <Button color="gray" onclick={onCancel}>
+    <Button data-testid="tts-model-download-cancel-button" color="gray" onclick={onCancel}>
       {t('common.cancel')}
     </Button>
   {:else}

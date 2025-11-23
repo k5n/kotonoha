@@ -3,6 +3,7 @@ import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.s
 import type { Voice } from '$lib/domain/entities/voice';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
+import { assertNotNull } from '$lib/utils/assertion';
 import { getSupportedLanguages } from '$lib/utils/language';
 import { detectScriptLanguage, type LanguageDetectionStore } from './detectScriptLanguage';
 
@@ -38,10 +39,7 @@ export async function fetchTtsVoices(store: TtsVoiceStore = ttsEpisodeAddStore):
     return;
   }
   const scriptFilePath = store.scriptFilePath;
-  if (!scriptFilePath) {
-    console.error('Script file path is not set. This must not happen.');
-    return;
-  }
+  assertNotNull(scriptFilePath, 'Script file path is not set. This must not happen.');
 
   console.time('fetchTtsVoices');
 
