@@ -29,7 +29,7 @@
       {t('common.cancel')}
     </Button>
   {:else}
-    <Button onclick={ttsDownloadStore.closeModal}>
+    <Button data-testid="tts-model-download-close-button" onclick={ttsDownloadStore.closeModal}>
       {t('components.ttsModelDownloadModal.close')}
     </Button>
   {/if}

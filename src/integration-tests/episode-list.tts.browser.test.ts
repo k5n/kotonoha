@@ -261,6 +261,11 @@ test('success: handles TTS submit request with valid payload', async () => {
   await setupPage(String(groupId));
 
   await openTtsEpisodeModal();
+  await waitForFadeTransition();
+  await page.screenshot();
+
+  // Ensure TTS configuration section is displayed before file selection
+  await expect.element(page.getByText('Text-to-Speech Configuration')).not.toBeInTheDocument();
 
   // Fill in the form via UI
   const titleInput = page.getByPlaceholder("Episode's title");
@@ -269,10 +274,13 @@ test('success: handles TTS submit request with valid payload', async () => {
   // Mock file selection to return SRT file
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
 
-  await page.getByTestId('tts-script-file-select').click();
+  await page.getByTestId('script-file-select').click();
 
   // Wait for async operations
   await waitFor(100);
+
+  // TTS configuration section should now be visible
+  await expect.element(page.getByText('Text-to-Speech Configuration')).toBeInTheDocument();
 
   // Language should be auto-selected after detection
   const languageSelect = page.getByLabelText('Learning Target Language');
@@ -347,7 +355,7 @@ test('success: allows cancelling TTS model download', async () => {
 
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
 
-  await page.getByTestId('tts-script-file-select').click();
+  await page.getByTestId('script-file-select').click();
 
   await waitFor(100);
 
@@ -361,6 +369,7 @@ test('success: allows cancelling TTS model download', async () => {
 
   await page.getByTestId('tts-model-download-cancel-button').click();
   await waitForFadeTransition();
+  await page.screenshot();
 
   await expect
     .element(page.getByRole('heading', { name: 'Downloading TTS Model' }))
@@ -374,12 +383,7 @@ test('success: allows cancelling TTS model download', async () => {
   await expect
     .element(page.getByRole('heading', { name: 'Generating Audio' }))
     .not.toBeInTheDocument();
-  //TODO: Change the message to inform the user that it has been canceled
-  await expect
-    .element(page.getByText('Failed to submit episode. Please try again.'))
-    .toBeInTheDocument();
-
-  await page.screenshot();
+  // //TODO: Change the message to inform the user that it has been canceled
 });
 
 test('success: allows cancelling TTS execution mid-process', async () => {
@@ -409,7 +413,7 @@ test('success: allows cancelling TTS execution mid-process', async () => {
 
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
 
-  await page.getByTestId('tts-script-file-select').click();
+  await page.getByTestId('script-file-select').click();
 
   await waitFor(100);
 
@@ -429,15 +433,15 @@ test('success: allows cancelling TTS execution mid-process', async () => {
   await expect.element(page.getByRole('heading', { name: 'Generating Audio' })).toBeInTheDocument();
 
   await page.screenshot();
-  await page.getByTestId('tts-cancel-button').click();
+  await page.getByTestId('tts-execution-cancel-button').click();
   await waitForFadeTransition();
+  await page.screenshot();
 
   await expect
     .element(page.getByRole('heading', { name: 'Generating Audio' }))
     .not.toBeInTheDocument();
   expect(invokeMock).toHaveBeenCalledWith('cancel_tts');
-
-  await page.screenshot();
+  // //TODO: Change the message to inform the user that it has been canceled
 });
 
 test('success: handles no script language detected in TTS workflow', async () => {
@@ -460,7 +464,7 @@ test('success: handles no script language detected in TTS workflow', async () =>
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
 
   // Select script file for TTS workflow
-  await page.getByTestId('tts-script-file-select').click();
+  await page.getByTestId('script-file-select').click();
 
   // Wait for async operations and error handling
   await waitFor(200);
@@ -481,6 +485,9 @@ test('error: handles script language detection error in TTS workflow', async () 
 
   await openTtsEpisodeModal();
 
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('TTS Cancel Episode');
+
   // Mock the invoke function to return an error for language detection
   const invokeMock = vi.mocked(invoke);
   invokeMock.mockImplementation(async (command) => {
@@ -494,13 +501,14 @@ test('error: handles script language detection error in TTS workflow', async () 
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
 
   // Select script file for TTS workflow
-  await page.getByTestId('tts-script-file-select').click();
+  await page.getByTestId('script-file-select').click();
 
   // Wait for async operations and error handling
   await waitFor(200);
   await page.screenshot();
 
   // Check that an error toast or message is displayed
+  // TODO: 表示場所を言語選択付近に変更する
   await expect.element(page.getByText('Failed to auto-detect language')).toBeInTheDocument();
 
   // Verify that the language select shows default value
@@ -522,7 +530,7 @@ test('error: shows error message when TTS voice fetch fails', async () => {
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
 
   // Trigger TTS workflow which attempts to fetch voices
-  await page.getByTestId('tts-script-file-select').click();
+  await page.getByTestId('script-file-select').click();
 
   await waitFor(200);
 
@@ -550,12 +558,13 @@ test('error: shows error message when TTS model download fails', async () => {
 
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
 
-  await page.getByTestId('tts-script-file-select').click();
+  await page.getByTestId('script-file-select').click();
 
   await waitFor(100);
 
   await page.getByRole('button', { name: 'Create' }).click();
   await waitForFadeTransition();
+  await page.screenshot();
 
   await expect
     .element(
@@ -564,7 +573,15 @@ test('error: shows error message when TTS model download fails', async () => {
       )
     )
     .toBeInTheDocument();
+  await expect.element(page.getByTestId('tts-model-download-close-button')).toBeEnabled();
+
+  await page.getByTestId('tts-model-download-close-button').click();
+  await waitForFadeTransition();
   await page.screenshot();
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Downloading TTS Model' }))
+    .not.toBeInTheDocument();
 });
 
 test('error: shows error message when TTS execution fails', async () => {
@@ -595,8 +612,7 @@ test('error: shows error message when TTS execution fails', async () => {
   await titleInput.fill('TTS Execution Failure Episode');
 
   vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
-
-  await page.getByTestId('tts-script-file-select').click();
+  await page.getByTestId('script-file-select').click();
   await waitFor(100);
 
   await page.getByRole('button', { name: 'Create' }).click();
@@ -607,4 +623,13 @@ test('error: shows error message when TTS execution fails', async () => {
   await expect.element(page.getByText('Failed to generate audio using TTS.')).toBeInTheDocument();
 
   await page.screenshot();
+  await expect.element(page.getByTestId('tts-execution-close-button')).toBeEnabled();
+
+  await page.getByTestId('tts-execution-close-button').click();
+  await waitForFadeTransition();
+  await page.screenshot();
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Generating Audio' }))
+    .not.toBeInTheDocument();
 });

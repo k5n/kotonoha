@@ -17,11 +17,11 @@
 
 {#snippet footer()}
   {#if isExecuting}
-    <Button data-testid="tts-cancel-button" color="gray" onclick={onCancel}>
+    <Button data-testid="tts-execution-cancel-button" color="gray" onclick={onCancel}>
       {t('common.cancel')}
     </Button>
   {:else}
-    <Button onclick={ttsExecutionStore.closeModal}>
+    <Button data-testid="tts-execution-close-button" onclick={ttsExecutionStore.closeModal}>
       {t('components.ttsExecutionModal.close')}
     </Button>
   {/if}

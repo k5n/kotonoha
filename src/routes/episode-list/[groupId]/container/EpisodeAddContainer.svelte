@@ -13,11 +13,6 @@
     detectScriptLanguage,
     type LanguageDetectionStore,
   } from '$lib/application/usecases/detectScriptLanguage';
-  import {
-    cancelTtsModelDownload,
-    downloadTtsModel,
-  } from '$lib/application/usecases/downloadTtsModel';
-  import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
@@ -27,8 +22,6 @@
   import EpisodeSourceSelectionModal from '../presentational/EpisodeSourceSelectionModal.svelte';
   import AudioScriptFileEpisodeAddModal from './AudioScriptFileEpisodeAddModal.svelte';
   import TtsEpisodeAddModal from './TtsEpisodeAddModal.svelte';
-  import TtsExecutionModal from './TtsExecutionModal.svelte';
-  import TtsModelDownloadModal from './TtsModelDownloadModal.svelte';
   import YoutubeEpisodeAddModal from './YoutubeEpisodeAddModal.svelte';
 
   interface Props {
@@ -94,40 +87,6 @@
     }
   }
 
-  async function ensureTtsEpisodePayload(
-    payload: TtsEpisodeAddPayload | null
-  ): Promise<TtsEpisodeAddPayload> {
-    if (payload) {
-      return payload;
-    }
-
-    if (!ttsEpisodeAddStore.scriptFilePath) {
-      throw new Error('Script file path is required before generating TTS audio');
-    }
-
-    console.info('TTS audio generation required for the new episode');
-    await downloadTtsModel();
-    await executeTts(ttsEpisodeAddStore);
-
-    const finalPayload = ttsEpisodeAddStore.buildPayload();
-    if (!finalPayload) {
-      throw new Error('TTS episode payload is not ready');
-    }
-    return finalPayload;
-  }
-
-  async function handleTtsEpisodeSubmit(payload: TtsEpisodeAddPayload | null): Promise<void> {
-    let finalPayload: TtsEpisodeAddPayload;
-    try {
-      finalPayload = await ensureTtsEpisodePayload(payload);
-    } catch (e) {
-      console.error(`Failed to prepare TTS episode payload: ${e}`);
-      throw e;
-    }
-
-    await handleEpisodeSubmit(finalPayload);
-  }
-
   async function handleEpisodeSubmit(
     payload:
       | AudioScriptFileEpisodeAddPayload
@@ -176,7 +135,7 @@
 <TtsEpisodeAddModal
   open={isOpen && selectedEpisodeType === 'script-tts'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleTtsEpisodeSubmit}
+  onSubmitRequested={handleEpisodeSubmit}
   onTsvFileSelected={previewScriptFile}
   onDetectScriptLanguage={handleTtsLanguageDetection}
   onTtsEnabled={handleTtsSetup}
@@ -188,7 +147,3 @@
   onSubmitRequested={handleEpisodeSubmit}
   onYoutubeUrlChanged={fetchYoutubeMetadata}
 />
-
-<TtsModelDownloadModal onCancel={cancelTtsModelDownload} />
-
-<TtsExecutionModal onCancel={cancelTtsExecution} />

@@ -2,16 +2,21 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
   import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
-  import FileSelect from '$lib/presentation/components/presentational/FileSelect.svelte';
-  import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
-  import { Button, Heading, Input, Label, Modal, Select } from 'flowbite-svelte';
-  import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
-  import TtsConfigSection from './TtsConfigSection.svelte';
+  import {
+    cancelTtsModelDownload,
+    downloadTtsModel,
+  } from '$lib/application/usecases/downloadTtsModel';
+  import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
+  import { assertNotNull } from '$lib/utils/assertion';
+  import { Modal } from 'flowbite-svelte';
+  import TtsEpisodeAddForm from '../presentational/TtsEpisodeAddForm.svelte';
+  import TtsExecutionModal from './TtsExecutionModal.svelte';
+  import TtsModelDownloadModal from './TtsModelDownloadModal.svelte';
 
   type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmitRequested: (payload: TtsEpisodeAddPayload | null) => Promise<void>;
+    onSubmitRequested: (payload: TtsEpisodeAddPayload) => Promise<void>;
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
     onTtsEnabled: () => Promise<void>;
@@ -27,21 +32,37 @@
   }: Props = $props();
 
   let isSubmitting = $state(false);
+
   let previousOpen = false;
+  let fieldErrors = $state({
+    title: '',
+    scriptFile: '',
+  });
+  let fieldTouched = $state({
+    title: false,
+    scriptFile: false,
+  });
 
   function resetFormState() {
     ttsEpisodeAddStore.reset();
+    fieldErrors = {
+      title: '',
+      scriptFile: '',
+    };
+    fieldTouched = {
+      title: false,
+      scriptFile: false,
+    };
+    isSubmitting = false;
   }
 
   $effect(() => {
     if (open && !previousOpen) {
       resetFormState();
-      isSubmitting = false;
     }
 
     if (!open && previousOpen) {
       resetFormState();
-      isSubmitting = false;
     }
 
     previousOpen = open;
@@ -49,21 +70,84 @@
 
   function handleClose() {
     resetFormState();
-    isSubmitting = false;
     onClose();
   }
 
-  let disabled = $derived(
-    isSubmitting ||
-      ttsEpisodeAddStore.tsv.isFetchingScriptPreview ||
-      ttsEpisodeAddStore.tts.isFetchingVoices
-  );
+  function validateTitle(): string {
+    const value = ttsEpisodeAddStore.title.trim();
+    return value ? '' : t('components.fileEpisodeForm.errorTitleRequired');
+  }
 
-  let learningTargetLanguageOptions = $derived(
-    ttsEpisodeAddStore.learningTargetLanguages.map((lang) => ({
-      value: lang,
-      name: `${t(bcp47ToTranslationKey(lang)!)} (${bcp47ToLanguageName(lang)})`,
-    })) || []
+  function validateScriptFile(): string {
+    return ttsEpisodeAddStore.scriptFilePath
+      ? ''
+      : t('components.fileEpisodeForm.errorScriptFileRequired');
+  }
+
+  function handleTitleChange(title: string) {
+    ttsEpisodeAddStore.title = title;
+    if (fieldTouched.title) {
+      fieldErrors.title = validateTitle();
+    }
+  }
+
+  function handleTitleBlur() {
+    fieldTouched.title = true;
+    fieldErrors.title = validateTitle();
+  }
+
+  async function handleScriptFileChange(filePath: string | null) {
+    ttsEpisodeAddStore.scriptFilePath = filePath;
+    fieldTouched.scriptFile = true;
+    fieldErrors.scriptFile = validateScriptFile();
+
+    if (!filePath) {
+      ttsEpisodeAddStore.selectedStudyLanguage = null;
+      ttsEpisodeAddStore.tsv.reset();
+      return;
+    }
+
+    const lowered = filePath.toLowerCase();
+    try {
+      if (lowered.endsWith('.tsv')) {
+        await onTsvFileSelected(filePath);
+      } else {
+        ttsEpisodeAddStore.tsv.reset();
+      }
+      await onDetectScriptLanguage();
+      await onTtsEnabled();
+    } catch (error) {
+      console.error('Failed to prepare script file for TTS episode:', error);
+      ttsEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorSubmissionFailed');
+    }
+  }
+
+  async function ensureTtsEpisodePayload(): Promise<TtsEpisodeAddPayload> {
+    assertNotNull(ttsEpisodeAddStore.scriptFilePath, 'Script file path is required');
+
+    console.info('TTS audio generation required for the new episode');
+    await downloadTtsModel();
+    await executeTts(ttsEpisodeAddStore);
+
+    const finalPayload = ttsEpisodeAddStore.buildPayload();
+    assertNotNull(finalPayload, 'TTS episode payload is null');
+    return finalPayload;
+  }
+
+  async function handleSubmit() {
+    isSubmitting = true;
+    try {
+      const payload = await ensureTtsEpisodePayload();
+      await onSubmitRequested(payload);
+    } catch (error) {
+      console.error('Failed to submit TTS episode:', error);
+    } finally {
+      handleClose();
+    }
+  }
+
+  let isProcessing = $derived(
+    ttsEpisodeAddStore.tsv.isFetchingScriptPreview || ttsEpisodeAddStore.tts.isFetchingVoices
   );
 
   let startTimeColumnErrorMessage = $derived(
@@ -77,136 +161,40 @@
       ? t(ttsEpisodeAddStore.tsv.textColumnErrorMessageKey)
       : ''
   );
-
-  async function processScriptFile(filePath: string) {
-    const lowered = filePath.toLowerCase();
-    try {
-      if (lowered.endsWith('.tsv')) {
-        await onTsvFileSelected(filePath);
-      }
-      await onDetectScriptLanguage();
-      await onTtsEnabled();
-    } catch (error) {
-      console.error('Failed to prepare script file for TTS episode:', error);
-      ttsEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorSubmissionFailed');
-    }
-  }
-
-  async function handleScriptFileChange(filePath: string | null) {
-    ttsEpisodeAddStore.scriptFilePath = filePath;
-    if (!filePath) {
-      return;
-    }
-    await processScriptFile(filePath);
-  }
-
-  function validateLocal(): boolean {
-    return ttsEpisodeAddStore.validateForm();
-  }
-
-  async function handleSubmit() {
-    if (isSubmitting || !validateLocal()) {
-      return;
-    }
-
-    try {
-      isSubmitting = true;
-      const payload = ttsEpisodeAddStore.buildPayload();
-      await onSubmitRequested(payload);
-      handleClose();
-    } catch (error) {
-      console.error('Failed to submit TTS episode:', error);
-      ttsEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorSubmissionFailed');
-    } finally {
-      isSubmitting = false;
-    }
-  }
 </script>
 
 <Modal onclose={handleClose} {open} size="xl">
-  <div class="p-4">
-    <Heading class="mb-4 text-xl font-bold">
-      {t('components.episodeAddModal.title')}
-    </Heading>
-
-    <div class="mb-4">
-      <Label class="mb-2 block" for="tts-title">
-        {t('components.fileEpisodeForm.titleLabel')}
-      </Label>
-      <Input
-        id="tts-title"
-        placeholder={t('components.fileEpisodeForm.titlePlaceholder')}
-        value={ttsEpisodeAddStore.title}
-        oninput={(e) => (ttsEpisodeAddStore.title = (e.currentTarget as HTMLInputElement).value)}
-        type="text"
-      />
-    </div>
-
-    <div class="mb-4">
-      <Label class="mb-2 block" for="tts-script-file">
-        {t('components.fileEpisodeForm.scriptFileLabel')}
-      </Label>
-      <FileSelect
-        accept=".srt,.sswt,.tsv,.vtt,.txt"
-        value={ttsEpisodeAddStore.scriptFilePath}
-        onFileSelected={(file) => handleScriptFileChange(file)}
-        onClear={() => handleScriptFileChange(null)}
-        id="tts-script-file"
-        dataTestId="tts-script-file-select"
-      />
-    </div>
-
-    {#if ttsEpisodeAddStore.tsv.scriptPreview}
-      <TsvConfigSection
-        headers={ttsEpisodeAddStore.tsv.scriptPreview?.headers || []}
-        rows={ttsEpisodeAddStore.tsv.scriptPreview?.rows || []}
-        config={ttsEpisodeAddStore.tsv.tsvConfig}
-        valid={ttsEpisodeAddStore.tsv.isValid}
-        {startTimeColumnErrorMessage}
-        {textColumnErrorMessage}
-        onConfigUpdate={(key, value) => {
-          ttsEpisodeAddStore.tsv.updateConfig(key, value);
-        }}
-        {onDetectScriptLanguage}
-      />
-    {/if}
-
-    {#if learningTargetLanguageOptions.length > 0}
-      <div class="mb-4">
-        <Label class="mb-2 block" for="tts-learning-language">
-          {t('components.fileEpisodeForm.learningLanguageLabel')}
-        </Label>
-        {#if ttsEpisodeAddStore.languageDetectionWarningMessage}
-          <div class="mb-2 text-sm text-yellow-600">
-            {ttsEpisodeAddStore.languageDetectionWarningMessage}
-          </div>
-        {/if}
-        <Select
-          id="tts-learning-language"
-          data-testid="learningLanguage"
-          bind:value={ttsEpisodeAddStore.selectedStudyLanguage}
-          items={learningTargetLanguageOptions}
-        ></Select>
-      </div>
-    {/if}
-
-    <div class="mb-4">
-      <TtsConfigSection />
-    </div>
-
-    {#if ttsEpisodeAddStore.errorMessage}
-      <div class="mb-4 text-sm text-red-600">{ttsEpisodeAddStore.errorMessage}</div>
-    {/if}
-
-    <div class="flex justify-end gap-2">
-      <Button color="gray" {disabled} onclick={handleClose}>
-        {t('common.cancel')}
-      </Button>
-      <Button data-testid="tts-episode-add-submit" {disabled} onclick={handleSubmit}>
-        {isSubmitting
-          ? t('components.episodeAddModal.submitting')
-          : t('components.episodeAddModal.submit')}
-      </Button>
-    </div>
-  </div>
+  <TtsEpisodeAddForm
+    {isSubmitting}
+    {isProcessing}
+    title={ttsEpisodeAddStore.title}
+    scriptFilePath={ttsEpisodeAddStore.scriptFilePath}
+    tsvPreviewOpen={!!ttsEpisodeAddStore.tsv.scriptPreview}
+    tsvValid={ttsEpisodeAddStore.tsv.isValid}
+    tsvConfig={ttsEpisodeAddStore.tsv.tsvConfig}
+    tsvPreviewHeaders={ttsEpisodeAddStore.tsv.scriptPreview?.headers || []}
+    tsvPreviewRows={ttsEpisodeAddStore.tsv.scriptPreview?.rows || []}
+    tsvStartTimeColumnErrorMessage={startTimeColumnErrorMessage}
+    tsvTextColumnErrorMessage={textColumnErrorMessage}
+    selectedStudyLanguage={ttsEpisodeAddStore.selectedStudyLanguage}
+    learningTargetLanguages={ttsEpisodeAddStore.learningTargetLanguages}
+    languageDetectionWarningMessage={ttsEpisodeAddStore.languageDetectionWarningMessage}
+    {fieldErrors}
+    {fieldTouched}
+    errorMessage={ttsEpisodeAddStore.errorMessage}
+    tsvErrorMessage={t(ttsEpisodeAddStore.tsv.errorMessageKey)}
+    onTitleChange={handleTitleChange}
+    onTitleBlur={handleTitleBlur}
+    onScriptFilePathChange={handleScriptFileChange}
+    onCancel={handleClose}
+    onSubmit={handleSubmit}
+    {onTsvFileSelected}
+    {onDetectScriptLanguage}
+    onTsvConfigUpdate={(key, value) => ttsEpisodeAddStore.tsv.updateConfig(key, value)}
+    {onTtsEnabled}
+  />
 </Modal>
+
+<TtsModelDownloadModal onCancel={cancelTtsModelDownload} />
+
+<TtsExecutionModal onCancel={cancelTtsExecution} />

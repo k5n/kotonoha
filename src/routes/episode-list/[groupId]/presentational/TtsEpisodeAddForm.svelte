@@ -3,13 +3,13 @@
   import FileSelect from '$lib/presentation/components/presentational/FileSelect.svelte';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Heading, Input, Label, Select } from 'flowbite-svelte';
+  import TtsConfigSection from '../container/TtsConfigSection.svelte';
   import TsvConfigSection from './TsvConfigSection.svelte';
 
   type Props = {
     isSubmitting: boolean;
     isProcessing: boolean;
     title: string;
-    audioFilePath: string | null;
     scriptFilePath: string | null;
     tsvPreviewOpen: boolean;
     tsvValid: boolean;
@@ -23,24 +23,22 @@
     languageDetectionWarningMessage: string;
     fieldErrors: {
       title: string;
-      audioFile: string;
       scriptFile: string;
     };
     fieldTouched: {
       title: boolean;
-      audioFile: boolean;
       scriptFile: boolean;
     };
     errorMessage: string;
     tsvErrorMessage: string;
     onTitleChange: (value: string) => void;
     onTitleBlur: () => void;
-    onAudioFileChange: (filePath: string | null) => void;
     onScriptFilePathChange: (filePath: string | null) => void;
     onCancel: () => void;
     onSubmit: () => void;
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
+    onTtsEnabled: () => Promise<void>;
     onTsvConfigUpdate: (
       key: keyof import('$lib/domain/entities/tsvConfig').TsvConfig,
       value: number
@@ -51,7 +49,6 @@
     isSubmitting,
     isProcessing,
     title,
-    audioFilePath,
     scriptFilePath,
     tsvPreviewOpen,
     tsvValid,
@@ -69,7 +66,6 @@
     tsvErrorMessage,
     onTitleChange,
     onTitleBlur,
-    onAudioFileChange,
     onScriptFilePathChange,
     onCancel,
     onSubmit,
@@ -78,11 +74,7 @@
   }: Props = $props();
 
   let isFormValid = $derived(
-    title.trim() &&
-      audioFilePath &&
-      scriptFilePath &&
-      selectedStudyLanguage &&
-      (!tsvPreviewOpen || tsvValid)
+    title.trim() && scriptFilePath && selectedStudyLanguage && (!tsvPreviewOpen || tsvValid)
   );
 
   let learningTargetLanguageOptions = $derived(
@@ -111,24 +103,6 @@
     />
     {#if fieldTouched.title && fieldErrors.title}
       <div class="mt-1 text-sm text-red-600">{fieldErrors.title}</div>
-    {/if}
-  </div>
-
-  <div class="mb-4">
-    <Label class="mb-2 block" for="audioFile">
-      {t('components.fileEpisodeForm.audioFileLabel')}
-    </Label>
-    <FileSelect
-      color={fieldTouched.audioFile && !fieldErrors.audioFile ? 'green' : 'light'}
-      accept="audio/*"
-      value={audioFilePath}
-      onFileSelected={(file) => onAudioFileChange(file)}
-      onClear={() => onAudioFileChange(null)}
-      id="audioFile"
-      dataTestId="audio-file-select"
-    />
-    {#if fieldTouched.audioFile && fieldErrors.audioFile}
-      <div class="mt-1 text-sm text-red-600">{fieldErrors.audioFile}</div>
     {/if}
   </div>
 
@@ -181,6 +155,12 @@
         bind:value={selectedStudyLanguage}
         items={learningTargetLanguageOptions}
       ></Select>
+    </div>
+  {/if}
+
+  {#if scriptFilePath}
+    <div class="mb-4">
+      <TtsConfigSection />
     </div>
   {/if}
 
