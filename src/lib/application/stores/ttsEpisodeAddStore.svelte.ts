@@ -31,10 +31,6 @@ function completeLanguageDetection(
   detectedLanguageCode: string | null,
   supportedLanguages: readonly string[]
 ) {
-  if (supportedLanguages.length === 0) {
-    throw new Error('supportedLanguages must contain at least one language');
-  }
-
   detectedLanguage = detectedLanguageCode;
   learningTargetLanguages = supportedLanguages;
 
@@ -58,6 +54,7 @@ function failedLanguageDetection(errorKey: string, supportedLanguages: readonly 
   detectedLanguage = null;
   errorMessage = t(errorKey);
   learningTargetLanguages = supportedLanguages;
+  setSelectedStudyLanguage(supportedLanguages[0]);
 }
 
 function validateForm(): boolean {
@@ -74,9 +71,7 @@ function validateForm(): boolean {
   }
 
   if (tsvConfigStore.scriptPreview) {
-    const { startTimeColumnIndex, textColumnIndex } = tsvConfigStore.tsvConfig;
-    if (startTimeColumnIndex === -1 || textColumnIndex === -1) {
-      errorMessage = t('components.fileEpisodeForm.errorTsvColumnRequired');
+    if (!tsvConfigStore.isValid) {
       return false;
     }
   }

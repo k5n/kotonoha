@@ -2,14 +2,12 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
   import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
-  import { Button, Dropdown, DropdownItem, Heading } from 'flowbite-svelte';
+  import { Dropdown, DropdownItem } from 'flowbite-svelte';
   import {
     AlignJustifyOutline,
     DotsVerticalOutline,
     FolderOutline,
-    FolderPlusOutline,
     ListOutline,
-    PlusOutline,
   } from 'flowbite-svelte-icons';
   import { flip } from 'svelte/animate';
 
@@ -20,7 +18,6 @@
     onGroupMove: (_group: EpisodeGroup) => void;
     onGroupDelete: (_group: EpisodeGroup) => void;
     onOrderChange: (_items: readonly EpisodeGroup[]) => void;
-    onAddGroup: () => void;
   }
   let {
     groups,
@@ -29,7 +26,6 @@
     onGroupMove,
     onGroupDelete,
     onOrderChange,
-    onAddGroup,
   }: Props = $props();
 
   function handleChangeName(e: Event, group: EpisodeGroup) {
@@ -69,92 +65,78 @@
 </script>
 
 <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-  {#if groups.length > 0}
-    {#each groups as group (group.id)}
-      <div
-        use:droppable={{
-          container: 'groups',
-          callbacks: {
-            onDrop: (state: DragDropState<EpisodeGroup>) => handleDrop(state, group),
-          },
-        }}
-        animate:flip={{ duration: 300 }}
-        class={`relative rounded-lg border p-4 text-center transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800
+  {#each groups as group (group.id)}
+    <div
+      use:droppable={{
+        container: 'groups',
+        callbacks: {
+          onDrop: (state: DragDropState<EpisodeGroup>) => handleDrop(state, group),
+        },
+      }}
+      animate:flip={{ duration: 300 }}
+      class={`relative rounded-lg border p-4 text-center transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800
     ${group.groupType === 'album' ? 'bg-blue-50 dark:bg-blue-900' : ''}`}
-        tabindex="0"
-        role="button"
-        onclick={() => {
+      tabindex="0"
+      role="button"
+      onclick={() => {
+        onGroupClick(group);
+      }}
+      onkeydown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
           onGroupClick(group);
-        }}
-        onkeydown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onGroupClick(group);
-          }
-        }}
-      >
-        {#if group.groupType === 'album'}
-          <ListOutline class="mx-auto mb-2 h-10 w-10 text-blue-500 dark:text-blue-400" />
-        {:else}
-          <FolderOutline class="mx-auto mb-2 h-10 w-10 text-gray-500 dark:text-gray-400" />
-        {/if}
-        <span class="font-semibold text-gray-800 dark:text-gray-200">{group.name}</span>
+        }
+      }}
+    >
+      {#if group.groupType === 'album'}
+        <ListOutline class="mx-auto mb-2 h-10 w-10 text-blue-500 dark:text-blue-400" />
+      {:else}
+        <FolderOutline class="mx-auto mb-2 h-10 w-10 text-gray-500 dark:text-gray-400" />
+      {/if}
+      <span class="font-semibold text-gray-800 dark:text-gray-200">{group.name}</span>
 
-        <div class="absolute top-2 left-2" use:draggable={{ container: 'groups', dragData: group }}>
-          <AlignJustifyOutline class="h-5 w-5" />
-        </div>
-        <div class="absolute top-2 right-2">
-          <button
-            type="button"
-            id={`card-menu-button-${group.id}`}
-            class="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-            aria-label={t('components.groupGrid.menuButtonLabel', { groupName: group.name })}
-            data-testid={`group-actions-button-${group.id}`}
-            onclick={(e: MouseEvent) => {
-              e.stopPropagation(); // イベント伝播を停止
-            }}
-            onkeydown={(e: KeyboardEvent) => {
-              e.stopPropagation(); // キーボードイベントの伝播も停止
-            }}
-          >
-            <DotsVerticalOutline class="h-5 w-5" />
-          </button>
-
-          <Dropdown simple triggeredBy={`#card-menu-button-${group.id}`}>
-            <DropdownItem
-              data-testid={`group-action-rename-${group.id}`}
-              onclick={(e: MouseEvent) => handleChangeName(e, group)}
-            >
-              {t('components.groupGrid.rename')}
-            </DropdownItem>
-            <DropdownItem
-              data-testid={`group-action-move-${group.id}`}
-              onclick={(e: MouseEvent) => handleMoveGroup(e, group)}
-            >
-              {t('components.groupGrid.move')}
-            </DropdownItem>
-            <DropdownItem
-              data-testid={`group-action-delete-${group.id}`}
-              onclick={(e: MouseEvent) => handleDeleteGroup(e, group)}
-              class="text-red-600 dark:text-red-500"
-            >
-              {t('common.delete')}
-            </DropdownItem>
-          </Dropdown>
-        </div>
+      <div class="absolute top-2 left-2" use:draggable={{ container: 'groups', dragData: group }}>
+        <AlignJustifyOutline class="h-5 w-5" />
       </div>
-    {/each}
-  {:else}
-    <div class="col-span-full mt-8 rounded-lg border-2 border-dashed px-6 py-16 text-center">
-      <FolderPlusOutline class="mx-auto mb-4 h-12 w-12 text-gray-400" />
-      <Heading tag="h3" class="mb-2 text-xl font-semibold">
-        {t('components.groupGrid.emptyState.title')}
-      </Heading>
-      <p class="mb-4 text-gray-500">{t('components.groupGrid.emptyState.message')}</p>
-      <Button color="alternative" onclick={onAddGroup}>
-        <PlusOutline class="me-2 h-5 w-5" />
-        {t('components.groupGrid.emptyState.addButton')}
-      </Button>
+      <div class="absolute top-2 right-2">
+        <button
+          type="button"
+          id={`card-menu-button-${group.id}`}
+          class="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+          aria-label={t('components.groupGrid.menuButtonLabel', { groupName: group.name })}
+          data-testid={`group-actions-button-${group.id}`}
+          onclick={(e: MouseEvent) => {
+            e.stopPropagation(); // イベント伝播を停止
+          }}
+          onkeydown={(e: KeyboardEvent) => {
+            e.stopPropagation(); // キーボードイベントの伝播も停止
+          }}
+        >
+          <DotsVerticalOutline class="h-5 w-5" />
+        </button>
+
+        <Dropdown simple triggeredBy={`#card-menu-button-${group.id}`}>
+          <DropdownItem
+            data-testid={`group-action-rename-${group.id}`}
+            onclick={(e: MouseEvent) => handleChangeName(e, group)}
+          >
+            {t('components.groupGrid.rename')}
+          </DropdownItem>
+          <DropdownItem
+            data-testid={`group-action-move-${group.id}`}
+            onclick={(e: MouseEvent) => handleMoveGroup(e, group)}
+          >
+            {t('components.groupGrid.move')}
+          </DropdownItem>
+          <DropdownItem
+            data-testid={`group-action-delete-${group.id}`}
+            onclick={(e: MouseEvent) => handleDeleteGroup(e, group)}
+            class="text-red-600 dark:text-red-500"
+          >
+            {t('common.delete')}
+          </DropdownItem>
+        </Dropdown>
+      </div>
     </div>
-  {/if}
+  {/each}
 </div>

@@ -4,7 +4,7 @@
 
   type EpisodeSource = 'file' | 'youtube';
   type FileDetailType = 'audio-script' | 'script-tts';
-  type SourceSelectionEvent = EpisodeSource | FileDetailType;
+  type SourceSelectionEvent = 'youtube' | FileDetailType;
   type ModalView = 'source-selection' | 'file-detail-selection';
 
   type Props = {

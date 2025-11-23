@@ -9,6 +9,33 @@ let tsvConfig = $state({
 let isFetchingScriptPreview = $state(false);
 let scriptPreview = $state(null as ScriptPreview | null);
 let errorMessageKey = $state('');
+let startTimeColumnErrorMessageKey = $state('');
+let textColumnErrorMessageKey = $state('');
+
+const isValid = $derived(
+  tsvConfig.startTimeColumnIndex >= 0 &&
+    tsvConfig.textColumnIndex >= 0 &&
+    tsvConfig.startTimeColumnIndex !== tsvConfig.textColumnIndex
+);
+
+function validateTsvColumns() {
+  const { startTimeColumnIndex, textColumnIndex } = tsvConfig;
+
+  if (startTimeColumnIndex === -1) {
+    startTimeColumnErrorMessageKey = 'components.fileEpisodeForm.errorStartTimeColumnRequired';
+  } else {
+    startTimeColumnErrorMessageKey = '';
+  }
+  if (textColumnIndex === -1) {
+    textColumnErrorMessageKey = 'components.fileEpisodeForm.errorTextColumnRequired';
+  } else {
+    textColumnErrorMessageKey = '';
+  }
+  if (startTimeColumnIndex >= 0 && startTimeColumnIndex === textColumnIndex) {
+    startTimeColumnErrorMessageKey = 'components.fileEpisodeForm.errorTsvColumnsMustBeDifferent';
+    textColumnErrorMessageKey = 'components.fileEpisodeForm.errorTsvColumnsMustBeDifferent';
+  }
+}
 
 export const tsvConfigStore = {
   get tsvConfig() {
@@ -19,6 +46,14 @@ export const tsvConfigStore = {
     return errorMessageKey;
   },
 
+  get startTimeColumnErrorMessageKey() {
+    return startTimeColumnErrorMessageKey;
+  },
+
+  get textColumnErrorMessageKey() {
+    return textColumnErrorMessageKey;
+  },
+
   get scriptPreview() {
     return scriptPreview;
   },
@@ -27,11 +62,16 @@ export const tsvConfigStore = {
     return isFetchingScriptPreview;
   },
 
+  get isValid() {
+    return isValid;
+  },
+
   updateConfig(field: keyof TsvConfig, value: number) {
     tsvConfig = {
       ...tsvConfig,
       [field]: value,
     };
+    validateTsvColumns();
   },
 
   startScriptPreviewFetching() {
@@ -39,9 +79,10 @@ export const tsvConfigStore = {
     errorMessageKey = '';
   },
 
-  completeScriptPreviewFetching(preview: ScriptPreview | null) {
+  completeScriptPreviewFetching(preview: ScriptPreview) {
     scriptPreview = preview;
     isFetchingScriptPreview = false;
+    validateTsvColumns();
   },
 
   failedScriptPreviewFetching(errorKey: string) {

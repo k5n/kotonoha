@@ -5,6 +5,8 @@ export const ja = {
       cancel: 'キャンセル',
       delete: '削除',
       undo: '元に戻す',
+      errorPrefix: 'エラー:',
+      loading: '読み込み中...',
     },
     languages: {
       af: 'アフリカーンス語',
@@ -170,17 +172,20 @@ export const ja = {
       },
     },
     groupPage: {
-      title: 'グループ一覧',
       addNewButton: '新規追加',
-      errorPrefix: 'エラー:',
       errors: {
-        addGropu: '新しいグループの追加に失敗しました。',
+        addGroup: '新しいグループの追加に失敗しました。',
         updateOrder: 'グループの並び替えに失敗しました。',
         updateName: 'グループ名の更新に失敗しました。',
         fetchParents: '移動先グループの取得に失敗しました。',
         moveGroup: 'グループの移動に失敗しました。',
         deleteGroup: 'グループの削除に失敗しました。',
         fetchGroups: 'グループの取得に失敗しました。',
+      },
+      emptyState: {
+        title: 'グループがありません',
+        message: 'コンテンツを整理するために最初のグループを追加しましょう。',
+        addButton: '最初のグループを追加',
       },
       confirmDelete: {
         message:
@@ -189,8 +194,6 @@ export const ja = {
     },
     episodeListPage: {
       addNewButton: 'エピソードを追加',
-      errorPrefix: 'エラー:',
-      loading: '読み込み中...',
       emptyState: {
         title: 'エピソードがありません',
         message: 'このコレクションに最初のエピソードを追加しましょう。',
@@ -211,7 +214,6 @@ export const ja = {
     },
     episodeDetailPage: {
       backButton: '戻る',
-      errorPrefix: 'エラー:',
       playbackTime: '再生時間: {{minutes}}分 {{seconds}}秒',
       scriptTitle: 'スクリプト',
       sentenceCardsTitle: '作成したカード',
@@ -284,12 +286,13 @@ export const ja = {
         learningLanguageLabel: '学習対象言語',
         generateAudioLabel: 'Text-to-Speech (TTS) で音声を生成する',
         errorTitleRequired: 'タイトルを入力してください',
-        errorAudioRequired:
-          '音声ファイルを選択するか、TTSで音声を生成するオプションをチェックしてください。',
+        errorAudioRequired: '音声ファイルを選択してください。',
         errorScriptFileRequired: 'スクリプトファイルを選択してください',
         errorDetectLanguage: '言語の自動判定に失敗しました。',
         errorTsvParse: 'TSVファイルの解析に失敗しました。',
-        errorTsvColumnRequired: '開始時間とテキストのカラムを選択してください。',
+        errorStartTimeColumnRequired: '開始時間カラムを設定してください。',
+        errorTextColumnRequired: 'テキストカラムを設定してください。',
+        errorTsvColumnsMustBeDifferent: '開始時間絡むとテキストカラムは異なる必要があります。',
         errorLanguageRequired: '学習対象の言語を選択してください。',
         errorSubmissionFailed: 'エピソードの作成に失敗しました。もう一度お試しください。',
         noLanguageDetected: '言語が検出されませんでした。',
@@ -376,12 +379,6 @@ export const ja = {
       groupGrid: {
         rename: '名前の変更',
         move: '移動',
-        noGroups: 'このフォルダーにはグループがありません。',
-        emptyState: {
-          title: 'グループがありません',
-          message: 'コンテンツを整理するために最初のグループを追加しましょう。',
-          addButton: '最初のグループを追加',
-        },
       },
       groupMoveModal: {
         title: 'グループの移動',

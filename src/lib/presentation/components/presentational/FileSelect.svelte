@@ -5,6 +5,7 @@
   import { CloseCircleSolid, FolderOpenOutline } from 'flowbite-svelte-icons';
 
   type Props = {
+    color?: 'light' | 'red' | 'green';
     accept?: string;
     multiple?: boolean;
     disabled?: boolean;
@@ -15,6 +16,7 @@
     onClear: () => void;
   };
   let {
+    color = 'light',
     accept = '*',
     disabled = false,
     id,
@@ -94,8 +96,8 @@
     <Button
       {disabled}
       onclick={handleFileSelect}
-      color="light"
-      class="flex w-full items-center justify-start gap-2 bg-gray-50"
+      {color}
+      class="flex w-full items-center justify-start gap-2"
       {id}
       data-testid={dataTestId}
     >

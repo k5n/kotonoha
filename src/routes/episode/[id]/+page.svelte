@@ -16,6 +16,7 @@
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
   import { keyboardShortcuts } from '$lib/presentation/actions/keyboardShortcuts';
   import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
+  import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
   import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
   import { onMount } from 'svelte';
@@ -175,11 +176,7 @@
   </div>
 
   {#if errorMessage}
-    <Alert color="red">
-      <ExclamationCircleOutline class="h-5 w-5" />
-      <span class="font-medium">{t('episodeDetailPage.errorPrefix')}</span>
-      {errorMessage}
-    </Alert>
+    <LoadErrorAlert {errorMessage} />
   {:else if data.episode}
     <div class="grid grid-cols-1 gap-8 lg:min-h-0 lg:flex-1 lg:grid-cols-3">
       <div class="flex flex-col lg:col-span-2 lg:min-h-0">

@@ -21,6 +21,7 @@ export default defineProject({
         '**/*.browser.test.ts',
         '**/mocks/**',
         'src/integration-tests/**',
+        '**/src-tauri/**',
       ],
       extension: ['.ts', '.svelte'],
       forceBuildInstrument: true,
@@ -35,6 +36,11 @@ export default defineProject({
       ),
     },
   },
+  server: {
+    watch: {
+      ignored: ['**/src-tauri/**'],
+    },
+  },
   test: {
     name: 'browser',
     setupFiles: ['vitest-browser-svelte'],
@@ -47,8 +53,10 @@ export default defineProject({
     },
     globals: true,
     include: ['src/**/*.browser.test.ts'],
+    exclude: ['**/node_modules/**', '**/e2e-tests/**', '**/src-tauri/**'],
   },
   build: {
     ssr: false,
+    sourcemap: true,
   },
 });

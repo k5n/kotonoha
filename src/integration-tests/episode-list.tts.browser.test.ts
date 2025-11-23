@@ -17,13 +17,14 @@ import { waitFor, waitForFadeTransition } from './lib/utils';
 
 import '$src/app.css';
 
+// Mock configurations
 vi.mock('@tauri-apps/plugin-sql', () => ({ __esModule: true, default: mockDatabase }));
 vi.mock('@tauri-apps/api/core');
 vi.mock('@tauri-apps/plugin-store', () => ({
   load: vi.fn().mockResolvedValue({
     get: vi.fn().mockImplementation(async (key: string) => {
-      if (key === 'learningTargetLanguages') return ['en'];
-      if (key === 'explanationLanguages') return ['ja'];
+      if (key === 'learningTargetLanguages') return ['en', 'es'];
+      if (key === 'explanationLanguages') return ['ja', 'en'];
       return null;
     }),
     set: vi.fn(),
@@ -86,8 +87,12 @@ vi.mock('$app/navigation', () => ({
   invalidateAll: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Constants
 const DATABASE_URL = 'dummy';
+const DOWNLOAD_WAIT_TIME_MS = 200;
+const TTS_WAIT_TIME_MS = 400;
 
+// Database utilities
 async function clearDatabase(): Promise<void> {
   const db = new Database(DATABASE_URL);
   await db.execute('DELETE FROM sentence_cards');
@@ -115,6 +120,7 @@ async function insertEpisodeGroup(params: {
   return rows[0]?.id ?? 0;
 }
 
+// Page setup utilities
 async function loadPageData(groupId: string): Promise<PageData> {
   return (await load({ params: { groupId } } as never)) as PageData;
 }
@@ -141,35 +147,7 @@ async function setupPage(groupId: string) {
   return { data, params, renderResult };
 }
 
-async function openAudioScriptEpisodeModal() {
-  await page.getByRole('button', { name: 'Add Episode' }).click();
-  await waitForFadeTransition();
-
-  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
-  await waitForFadeTransition();
-
-  await page.getByRole('button', { name: 'Open the audio + script workflow' }).click();
-  await waitForFadeTransition();
-
-  await tick();
-}
-
-async function openTtsEpisodeModal() {
-  await page.getByRole('button', { name: 'Add Episode' }).click();
-  await waitForFadeTransition();
-
-  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
-  await waitForFadeTransition();
-
-  await page.getByRole('button', { name: 'Open the script + TTS workflow' }).click();
-  await waitForFadeTransition();
-
-  await tick();
-}
-
-const DOWNLOAD_WAIT_TIME_MS = 200;
-const TTS_WAIT_TIME_MS = 400;
-
+// Default invoke mock
 async function defaultInvokeMock(command: string): Promise<unknown> {
   if (command === 'get_env_prefix_command') {
     return '';
@@ -196,6 +174,19 @@ async function defaultInvokeMock(command: string): Promise<unknown> {
     return { audioPath: '/path/to/audio.mp3', scriptPath: '/path/to/script.sswt' };
   }
   throw new Error(`Unhandled Tauri command: ${command as string}`);
+}
+
+async function openTtsEpisodeModal() {
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await waitForFadeTransition();
+
+  await page.getByRole('button', { name: 'Select the file-based episode workflow' }).click();
+  await waitForFadeTransition();
+
+  await page.getByRole('button', { name: 'Open the script + TTS workflow' }).click();
+  await waitForFadeTransition();
+
+  await tick();
 }
 
 beforeEach(async () => {
@@ -255,142 +246,7 @@ afterAll(async () => {
   await outputCoverage(import.meta.url);
 });
 
-test('renders file episode form', async () => {
-  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
-
-  await setupPage(String(groupId));
-
-  await openAudioScriptEpisodeModal();
-
-  // Check that the file episode modal is open and renders the form
-  await expect.element(page.getByText('Add New Episode')).toBeInTheDocument();
-  await expect.element(page.getByLabelText('Audio File')).toBeInTheDocument();
-  await expect
-    .element(page.getByLabelText('Subtitle File (*.srt, *.vtt, *.sswt, *.tsv, *.txt)'))
-    .toBeInTheDocument();
-  await expect.element(page.getByPlaceholder("Episode's title")).toBeInTheDocument();
-
-  await page.screenshot();
-});
-
-test('handles file selection and language detection', async () => {
-  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
-
-  await setupPage(String(groupId));
-
-  await openAudioScriptEpisodeModal();
-
-  // Click the audio file select button
-  await page.getByTestId('audio-file-select').click();
-
-  // Mock file selection to return SRT file
-  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
-  // Click the script file select button
-  await page.getByTestId('script-file-select').click();
-
-  // Wait for async operations
-  await waitFor(100);
-  await page.screenshot();
-
-  // Language detection should be triggered automatically after file selection
-  // Wait for language to be detected and selected
-  const languageSelect = page.getByLabelText('Learning Target Language');
-  await expect.element(languageSelect).toHaveValue('en');
-});
-
-test('handles TSV configuration', async () => {
-  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
-
-  await setupPage(String(groupId));
-
-  await openAudioScriptEpisodeModal();
-
-  // Mock file selection to return TSV file
-  vi.mocked(open).mockResolvedValue('/path/to/selected/file.tsv');
-
-  // Override read_text_file mock for TSV
-  const invokeMock = vi.mocked(invoke);
-  invokeMock.mockImplementation(async (command) => {
-    if (command === 'read_text_file') {
-      return 'start_time\ttext\n00:00:00,000\tHello world\n00:00:05,000\tHow are you?';
-    }
-    return defaultInvokeMock(command);
-  });
-
-  // Select TSV file via UI
-  await page.getByTestId('script-file-select').click();
-
-  // Wait for async operations
-  await waitFor(100);
-  await page.screenshot();
-
-  // TSV configuration should appear automatically
-  await expect.element(page.getByText('TSV Column Settings')).toBeInTheDocument();
-  await expect.element(page.getByLabelText('Start Time Column')).toBeInTheDocument();
-  await expect.element(page.getByLabelText('Text Column')).toBeInTheDocument();
-});
-
-test('handles submit request with valid payload', async () => {
-  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
-
-  await setupPage(String(groupId));
-
-  await openAudioScriptEpisodeModal();
-
-  // Fill in the form via UI
-  const titleInput = page.getByPlaceholder("Episode's title");
-  await titleInput.fill('Test Episode');
-
-  await page.getByTestId('audio-file-select').click();
-
-  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
-  await page.getByTestId('script-file-select').click();
-
-  // Wait for async operations
-  await waitFor(100);
-
-  // Language should be auto-selected after detection
-  const languageSelect = page.getByLabelText('Learning Target Language');
-  await expect.element(languageSelect).toHaveValue('en');
-
-  // Click submit
-  await page.getByRole('button', { name: 'Create' }).click();
-  await waitForFadeTransition();
-
-  // Check that the modal is closed (successful submission)
-  await expect
-    .element(page.getByRole('heading', { name: 'Add New Episode' }))
-    .not.toBeInTheDocument();
-
-  await page.screenshot();
-});
-
-test('handles form validation errors', async () => {
-  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
-
-  await setupPage(String(groupId));
-
-  await openAudioScriptEpisodeModal();
-
-  // Fill only title via UI
-  const titleInput = page.getByPlaceholder("Episode's title");
-  await titleInput.fill('Test Episode');
-
-  // Try to submit without filling required fields
-  const createButton = page.getByRole('button', { name: 'Create' });
-  await createButton.click();
-
-  // Check that error message is shown
-  await expect
-    .element(
-      page.getByText('Please select an audio file or check the option to generate audio using TTS.')
-    )
-    .toBeInTheDocument();
-
-  await page.screenshot();
-});
-
-test('handles TTS submit request with valid payload', async () => {
+test('success: handles TTS submit request with valid payload', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
   await setupPage(String(groupId));
@@ -449,4 +305,72 @@ test('handles TTS submit request with valid payload', async () => {
   await waitFor(TTS_WAIT_TIME_MS);
   await waitForFadeTransition();
   await page.screenshot();
+});
+
+test('success: handles no script language detected in TTS workflow', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  // Mock the invoke function to return an error for language detection
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'detect_language_from_text') {
+      return null;
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Mock file selection to return SRT file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  // Select script file for TTS workflow
+  await page.getByTestId('tts-script-file-select').click();
+
+  // Wait for async operations and error handling
+  await waitFor(200);
+  await page.screenshot();
+
+  // Check that an error toast or message is displayed
+  await expect.element(page.getByText('No language detected.')).toBeInTheDocument();
+
+  // Verify that the language select shows default value
+  const learningLanguageSelect = page.getByTestId('learningLanguage');
+  await expect.element(learningLanguageSelect).toHaveValue('en');
+});
+
+test('error: handles script language detection error in TTS workflow', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  // Mock the invoke function to return an error for language detection
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'detect_language_from_text') {
+      throw new Error('Failed to detect language: Network error');
+    }
+    return defaultInvokeMock(command);
+  });
+
+  // Mock file selection to return SRT file
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  // Select script file for TTS workflow
+  await page.getByTestId('tts-script-file-select').click();
+
+  // Wait for async operations and error handling
+  await waitFor(200);
+  await page.screenshot();
+
+  // Check that an error toast or message is displayed
+  await expect.element(page.getByText('Failed to auto-detect language')).toBeInTheDocument();
+
+  // Verify that the language select shows default value
+  const learningLanguageSelect = page.getByTestId('learningLanguage');
+  await expect.element(learningLanguageSelect).toHaveValue('en');
 });

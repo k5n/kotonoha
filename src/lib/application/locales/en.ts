@@ -5,6 +5,8 @@ export const en = {
       cancel: 'Cancel',
       delete: 'Delete',
       undo: 'Undo',
+      errorPrefix: 'Error:',
+      loading: 'Loading...',
     },
     languages: {
       af: 'Afrikaans',
@@ -169,9 +171,7 @@ export const en = {
       },
     },
     groupPage: {
-      title: 'Group List',
       addNewButton: 'Add New',
-      errorPrefix: 'Error:',
       errors: {
         addGroup: 'Failed to add new group.',
         updateOrder: 'Failed to update group order.',
@@ -181,6 +181,11 @@ export const en = {
         deleteGroup: 'Failed to delete group.',
         fetchGroups: 'Failed to fetch groups.',
       },
+      emptyState: {
+        title: 'No Groups',
+        message: "Let's add the first group to organize your content.",
+        addButton: 'Add First Group',
+      },
       confirmDelete: {
         message:
           'Are you sure you want to delete the group "{{groupName}}"? All child groups, episodes, and sentence mining cards within this group will also be deleted. This action cannot be undone.',
@@ -188,8 +193,6 @@ export const en = {
     },
     episodeListPage: {
       addNewButton: 'Add Episode',
-      errorPrefix: 'Error:',
-      loading: 'Loading...',
       emptyState: {
         title: 'No Episodes',
         message: "Let's add the first episode to this collection.",
@@ -211,7 +214,6 @@ export const en = {
     },
     episodeDetailPage: {
       backButton: 'Back',
-      errorPrefix: 'Error:',
       playbackTime: 'Duration: {{minutes}}min {{seconds}}s',
       scriptTitle: 'Transcript',
       sentenceCardsTitle: 'Sentence Cards',
@@ -286,12 +288,13 @@ export const en = {
         learningLanguageLabel: 'Learning Target Language',
         generateAudioLabel: 'Generate audio using Text-to-Speech (TTS)',
         errorTitleRequired: 'Please enter a title.',
-        errorAudioRequired:
-          'Please select an audio file or check the option to generate audio using TTS.',
+        errorAudioRequired: 'Please select an audio file.',
         errorScriptFileRequired: 'Please select a script file.',
         errorDetectLanguage: 'Failed to auto-detect language.',
         errorTsvParse: 'Failed to parse TSV file.',
-        errorTsvColumnRequired: 'Please select the start time and text columns.',
+        errorStartTimeColumnRequired: 'Please select Start Time column.',
+        errorTextColumnRequired: 'Please select Text column.',
+        errorTsvColumnsMustBeDifferent: 'Start Time and Text columns must be different.',
         errorLanguageRequired: 'Please select a learning target language.',
         errorSubmissionFailed: 'Failed to submit episode. Please try again.',
         noLanguageDetected: 'No language detected.',
@@ -378,12 +381,6 @@ export const en = {
       groupGrid: {
         rename: 'Rename',
         move: 'Move',
-        noGroups: 'There are no groups in this folder.',
-        emptyState: {
-          title: 'No Groups',
-          message: "Let's add the first group to organize your content.",
-          addButton: 'Add First Group',
-        },
       },
       groupMoveModal: {
         title: 'Move Group',
