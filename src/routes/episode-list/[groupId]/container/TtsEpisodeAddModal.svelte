@@ -161,6 +161,30 @@
       ? t(ttsEpisodeAddStore.tsv.textColumnErrorMessageKey)
       : ''
   );
+
+  const selectedLanguageVoices = $derived(
+    ttsEpisodeAddStore.tts.learningTargetVoices?.filter(
+      (voice) => voice.language.family === ttsEpisodeAddStore.tts.language
+    ) || []
+  );
+
+  const selectedQuality = $derived(ttsEpisodeAddStore.tts.selectedQuality);
+  const selectedVoice = $derived(ttsEpisodeAddStore.tts.selectedVoice);
+  const selectedSpeakerId = $derived(ttsEpisodeAddStore.tts.selectedSpeakerId);
+  const isFetchingTtsVoices = $derived(ttsEpisodeAddStore.tts.isFetchingVoices);
+  const ttsErrorMessage = $derived(ttsEpisodeAddStore.tts.errorMessage);
+
+  function handleSelectedQualityChange(quality: string) {
+    ttsEpisodeAddStore.tts.selectedQuality = quality;
+  }
+
+  function handleSelectedVoiceChange(voiceName: string) {
+    ttsEpisodeAddStore.tts.selectedVoiceName = voiceName;
+  }
+
+  function handleSelectedSpeakerIdChange(speakerId: string) {
+    ttsEpisodeAddStore.tts.selectedSpeakerId = speakerId;
+  }
 </script>
 
 <Modal onclose={handleClose} {open} size="xl">
@@ -192,6 +216,15 @@
     {onDetectScriptLanguage}
     onTsvConfigUpdate={(key, value) => ttsEpisodeAddStore.tsv.updateConfig(key, value)}
     {onTtsEnabled}
+    ttsSelectedLanguageVoices={selectedLanguageVoices}
+    ttsSelectedQuality={selectedQuality}
+    ttsSelectedVoice={selectedVoice}
+    ttsSelectedSpeakerId={selectedSpeakerId}
+    ttsIsFetchingVoices={isFetchingTtsVoices}
+    {ttsErrorMessage}
+    onTtsSelectedQualityChange={handleSelectedQualityChange}
+    onTtsSelectedVoiceChange={handleSelectedVoiceChange}
+    onTtsSelectedSpeakerIdChange={handleSelectedSpeakerIdChange}
   />
 </Modal>
 

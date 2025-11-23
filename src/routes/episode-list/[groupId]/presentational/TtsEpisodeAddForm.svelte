@@ -1,9 +1,10 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
   import FileSelect from '$lib/presentation/components/presentational/FileSelect.svelte';
+  import type { Voice } from '$lib/domain/entities/voice';
   import { bcp47ToLanguageName, bcp47ToTranslationKey } from '$lib/utils/language';
   import { Button, Heading, Input, Label, Select } from 'flowbite-svelte';
-  import TtsConfigSection from '../container/TtsConfigSection.svelte';
+  import TtsConfigSection from './TtsConfigSection.svelte';
   import TsvConfigSection from './TsvConfigSection.svelte';
 
   type Props = {
@@ -43,6 +44,15 @@
       key: keyof import('$lib/domain/entities/tsvConfig').TsvConfig,
       value: number
     ) => void;
+    ttsSelectedLanguageVoices: readonly Voice[];
+    ttsSelectedQuality: string;
+    ttsSelectedVoice: Voice | null;
+    ttsSelectedSpeakerId: string;
+    ttsIsFetchingVoices: boolean;
+    ttsErrorMessage: string;
+    onTtsSelectedQualityChange: (quality: string) => void;
+    onTtsSelectedVoiceChange: (voiceName: string) => void;
+    onTtsSelectedSpeakerIdChange: (speakerId: string) => void;
   };
 
   let {
@@ -71,6 +81,15 @@
     onSubmit,
     onDetectScriptLanguage,
     onTsvConfigUpdate,
+    ttsSelectedLanguageVoices,
+    ttsSelectedQuality,
+    ttsSelectedVoice,
+    ttsSelectedSpeakerId,
+    ttsIsFetchingVoices,
+    ttsErrorMessage,
+    onTtsSelectedQualityChange,
+    onTtsSelectedVoiceChange,
+    onTtsSelectedSpeakerIdChange,
   }: Props = $props();
 
   let isFormValid = $derived(
@@ -160,7 +179,17 @@
 
   {#if scriptFilePath}
     <div class="mb-4">
-      <TtsConfigSection />
+      <TtsConfigSection
+        selectedLanguageVoices={ttsSelectedLanguageVoices}
+        selectedQuality={ttsSelectedQuality}
+        selectedVoice={ttsSelectedVoice}
+        selectedSpeakerId={ttsSelectedSpeakerId}
+        isFetchingVoices={ttsIsFetchingVoices}
+        errorMessage={ttsErrorMessage}
+        onSelectedQualityChange={onTtsSelectedQualityChange}
+        onSelectedVoiceChange={onTtsSelectedVoiceChange}
+        onSelectedSpeakerIdChange={onTtsSelectedSpeakerIdChange}
+      />
     </div>
   {/if}
 
