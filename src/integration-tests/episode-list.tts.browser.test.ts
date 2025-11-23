@@ -175,6 +175,9 @@ async function defaultInvokeMock(command: string): Promise<unknown> {
     await waitFor(TTS_WAIT_TIME_MS);
     return { audioPath: '/path/to/audio.mp3', scriptPath: '/path/to/script.sswt' };
   }
+  if (command === 'cancel_tts') {
+    return;
+  }
   throw new Error(`Unhandled Tauri command: ${command as string}`);
 }
 
@@ -310,6 +313,64 @@ test('success: handles TTS submit request with valid payload', async () => {
 
   await waitFor(TTS_WAIT_TIME_MS);
   await waitForFadeTransition();
+  await page.screenshot();
+});
+
+test('success: allows cancelling TTS execution mid-process', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  const invokeMock = vi.mocked(invoke);
+  let rejectStart: (() => void) | null = null;
+  invokeMock.mockImplementation(async (command) => {
+    if (command === 'start_tts') {
+      return await new Promise((_, reject) => {
+        rejectStart = () => reject('TTS cancelled');
+      });
+    }
+    if (command === 'cancel_tts') {
+      rejectStart?.();
+      return;
+    }
+    return defaultInvokeMock(command as string);
+  });
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('TTS Cancel Episode');
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  await page.getByTestId('tts-script-file-select').click();
+
+  await waitFor(100);
+
+  await page.getByRole('button', { name: 'Create' }).click();
+  await waitForFadeTransition();
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Downloading TTS Model' }))
+    .toBeInTheDocument();
+
+  await waitFor(DOWNLOAD_WAIT_TIME_MS);
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Downloading TTS Model' }))
+    .not.toBeInTheDocument();
+
+  await expect.element(page.getByRole('heading', { name: 'Generating Audio' })).toBeInTheDocument();
+
+  await page.screenshot();
+  await page.getByTestId('tts-cancel-button').click();
+  await waitForFadeTransition();
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Generating Audio' }))
+    .not.toBeInTheDocument();
+  expect(invokeMock).toHaveBeenCalledWith('cancel_tts');
+
   await page.screenshot();
 });
 
