@@ -316,6 +316,72 @@ test('success: handles TTS submit request with valid payload', async () => {
   await page.screenshot();
 });
 
+test('success: allows cancelling TTS model download', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  const invokeMock = vi.mocked(invoke);
+  const pendingDownloads = new Map<string, () => void>();
+  invokeMock.mockImplementation(async (command, args: unknown) => {
+    if (command === 'download_file_with_progress') {
+      const downloadId = (args as { downloadId: string }).downloadId;
+      return await new Promise<void>((_, reject) => {
+        pendingDownloads.set(downloadId, () => reject(new Error('cancelled')));
+      });
+    }
+
+    if (command === 'cancel_download') {
+      const downloadId = (args as { downloadId: string }).downloadId;
+      pendingDownloads.get(downloadId)?.();
+      return;
+    }
+
+    return defaultInvokeMock(command as string);
+  });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('TTS Download Cancel Episode');
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+
+  await page.getByTestId('tts-script-file-select').click();
+
+  await waitFor(100);
+
+  await page.getByRole('button', { name: 'Create' }).click();
+  await waitForFadeTransition();
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Downloading TTS Model' }))
+    .toBeInTheDocument();
+  await page.screenshot();
+
+  await page.getByTestId('tts-model-download-cancel-button').click();
+  await waitForFadeTransition();
+
+  await expect
+    .element(page.getByRole('heading', { name: 'Downloading TTS Model' }))
+    .not.toBeInTheDocument();
+  expect(invokeMock).toHaveBeenCalledWith('cancel_download', {
+    downloadId: 'en/en_US/test/medium/en_US-test-medium.onnx',
+  });
+  expect(invokeMock).toHaveBeenCalledWith('cancel_download', {
+    downloadId: 'en/en_US/test/medium/en_US-test-medium.onnx.json',
+  });
+  await expect
+    .element(page.getByRole('heading', { name: 'Generating Audio' }))
+    .not.toBeInTheDocument();
+  //TODO: Change the message to inform the user that it has been canceled
+  await expect
+    .element(page.getByText('Failed to submit episode. Please try again.'))
+    .toBeInTheDocument();
+
+  await page.screenshot();
+});
+
 test('success: allows cancelling TTS execution mid-process', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
