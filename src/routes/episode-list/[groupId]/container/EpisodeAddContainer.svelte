@@ -17,6 +17,7 @@
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import type { Episode } from '$lib/domain/entities/episode';
+  import { assertNotNull } from '$lib/utils/assertion';
   import { Button } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
   import EpisodeSourceSelectionModal from '../presentational/EpisodeSourceSelectionModal.svelte';
@@ -96,12 +97,7 @@
   ): Promise<void> {
     isSubmitting = true;
     try {
-      if (!episodeGroupId) {
-        throw new Error('No group ID found, cannot add episode');
-      }
-      if (!payload) {
-        throw new Error('Episode payload is not ready');
-      }
+      assertNotNull(payload, 'Episode payload is not ready');
       await addNewEpisode(payload, episodeGroupId, episodes);
       await invalidateAll();
     } catch (e) {

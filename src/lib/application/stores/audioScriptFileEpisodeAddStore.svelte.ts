@@ -1,6 +1,6 @@
 import { t } from '$lib/application/stores/i18n.svelte';
-import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
+import { assert, assertNotNull } from '$lib/utils/assertion';
 import { bcp47ToTranslationKey } from '$lib/utils/language';
 
 export type AudioScriptFileEpisodeAddPayload = {
@@ -54,25 +54,13 @@ function failedLanguageDetection(errorKey: string, supportedLanguages: readonly 
   setSelectedStudyLanguage(supportedLanguages[0]);
 }
 
-function buildPayload(): AudioScriptFileEpisodeAddPayload | null {
-  if (!title.trim() || !audioFilePath || !scriptFilePath || !selectedStudyLanguage) {
-    return null;
-  }
-  if (tsvConfigStore.scriptPreview && !tsvConfigStore.isValid) {
-    return null;
-  }
-
-  const tsvConfig = tsvConfigStore.tsvConfig;
-  const finalTsvConfig =
-    tsvConfig.startTimeColumnIndex !== -1 && tsvConfig.textColumnIndex !== -1
-      ? {
-          startTimeColumnIndex: tsvConfig.startTimeColumnIndex,
-          textColumnIndex: tsvConfig.textColumnIndex,
-          ...(tsvConfig.endTimeColumnIndex !== -1 && {
-            endTimeColumnIndex: tsvConfig.endTimeColumnIndex,
-          }),
-        }
-      : undefined;
+function buildPayload(
+  finalTsvConfig: TsvConfig | undefined
+): AudioScriptFileEpisodeAddPayload | null {
+  assert(title.trim().length > 0, 'Title is empty');
+  assertNotNull(audioFilePath, 'Audio file path is null');
+  assertNotNull(scriptFilePath, 'Script file path is null');
+  assertNotNull(selectedStudyLanguage, 'Selected study language is null');
 
   return {
     source: 'file',
@@ -93,7 +81,6 @@ function reset() {
   detectedLanguage = null;
   learningTargetLanguages = [];
   selectedStudyLanguage = null;
-  tsvConfigStore.reset();
 }
 
 export const audioScriptFileEpisodeAddStore = {

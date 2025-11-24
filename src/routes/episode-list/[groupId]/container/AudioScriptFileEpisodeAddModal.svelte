@@ -3,6 +3,7 @@
   import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
+  import { assert } from '$lib/utils/assertion';
   import { Modal } from 'flowbite-svelte';
   import AudioFileSelect from '../presentational/AudioFileSelect.svelte';
   import FileEpisodeForm from '../presentational/FileEpisodeForm.svelte';
@@ -41,6 +42,7 @@
 
   function resetFormState() {
     audioScriptFileEpisodeAddStore.reset();
+    tsvConfigStore.reset();
     fieldErrors = {
       title: '',
       audioFile: '',
@@ -117,10 +119,25 @@
     }
   }
 
+  function buildPayload(): AudioScriptFileEpisodeAddPayload | null {
+    try {
+      assert(
+        tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid,
+        'TSV config is invalid'
+      );
+      const finalTsvConfig = tsvConfigStore.finalTsvConfig;
+      const payload = audioScriptFileEpisodeAddStore.buildPayload(finalTsvConfig);
+      return payload;
+    } catch (e) {
+      console.error(`Failed to build payload: ${e}`);
+      return null;
+    }
+  }
+
   async function handleSubmit() {
     isSubmitting = true;
     try {
-      const payload = audioScriptFileEpisodeAddStore.buildPayload();
+      const payload = buildPayload();
       await onSubmitRequested(payload);
     } finally {
       handleClose();
