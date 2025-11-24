@@ -4,7 +4,10 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { Modal } from 'flowbite-svelte';
-  import AudioScriptFileEpisodeForm from '../presentational/AudioScriptFileEpisodeForm.svelte';
+  import AudioFileSelect from '../presentational/AudioFileSelect.svelte';
+  import FileEpisodeForm from '../presentational/FileEpisodeForm.svelte';
+  import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
+  import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
 
   type Props = {
     open: boolean;
@@ -126,38 +129,59 @@
 </script>
 
 <Modal onclose={handleClose} {open} size="xl">
-  <AudioScriptFileEpisodeForm
+  <FileEpisodeForm
     {isSubmitting}
     isProcessing={tsvConfigStore.isFetchingScriptPreview}
+    isFormValid={audioScriptFileEpisodeAddStore.title.trim().length > 0 &&
+      audioScriptFileEpisodeAddStore.audioFilePath !== null &&
+      audioScriptFileEpisodeAddStore.scriptFilePath !== null &&
+      audioScriptFileEpisodeAddStore.selectedStudyLanguage !== null &&
+      (tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid)}
     title={audioScriptFileEpisodeAddStore.title}
-    audioFilePath={audioScriptFileEpisodeAddStore.audioFilePath}
-    scriptFilePath={audioScriptFileEpisodeAddStore.scriptFilePath}
-    tsvPreviewOpen={!!tsvConfigStore.scriptPreview}
-    tsvValid={tsvConfigStore.isValid}
-    tsvConfig={tsvConfigStore.tsvConfig}
-    tsvPreviewHeaders={tsvConfigStore.scriptPreview?.headers || []}
-    tsvPreviewRows={tsvConfigStore.scriptPreview?.rows || []}
-    tsvStartTimeColumnErrorMessage={tsvConfigStore.startTimeColumnErrorMessageKey
-      ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
-      : ''}
-    tsvTextColumnErrorMessage={tsvConfigStore.textColumnErrorMessageKey
-      ? t(tsvConfigStore.textColumnErrorMessageKey)
-      : ''}
     selectedStudyLanguage={audioScriptFileEpisodeAddStore.selectedStudyLanguage}
     learningTargetLanguages={audioScriptFileEpisodeAddStore.learningTargetLanguages}
-    languageDetectionWarningMessage={audioScriptFileEpisodeAddStore.languageDetectionWarningMessage}
     {fieldErrors}
     {fieldTouched}
+    languageDetectionWarningMessage={audioScriptFileEpisodeAddStore.languageDetectionWarningMessage}
     errorMessage={audioScriptFileEpisodeAddStore.errorMessage}
-    tsvErrorMessage={t(tsvConfigStore.errorMessageKey)}
     onTitleChange={handleTitleChange}
     onTitleBlur={handleTitleBlur}
-    onAudioFileChange={handleAudioFileChange}
-    onScriptFilePathChange={handleScriptFileChange}
     onCancel={handleClose}
     onSubmit={handleSubmit}
-    {onTsvFileSelected}
-    {onDetectScriptLanguage}
-    onTsvConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
-  />
+  >
+    <AudioFileSelect
+      audioFilePath={audioScriptFileEpisodeAddStore.audioFilePath}
+      {fieldErrors}
+      {fieldTouched}
+      onAudioFileChange={handleAudioFileChange}
+    />
+    <ScriptFileSelect
+      scriptFilePath={audioScriptFileEpisodeAddStore.scriptFilePath}
+      {fieldErrors}
+      {fieldTouched}
+      hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
+      onScriptFilePathChange={handleScriptFileChange}
+    />
+    {#if tsvConfigStore.scriptPreview !== null}
+      <TsvConfigSection
+        headers={tsvConfigStore.scriptPreview?.headers || []}
+        rows={tsvConfigStore.scriptPreview?.rows || []}
+        config={tsvConfigStore.tsvConfig}
+        valid={tsvConfigStore.isValid}
+        startTimeColumnErrorMessage={tsvConfigStore.startTimeColumnErrorMessageKey
+          ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
+          : ''}
+        textColumnErrorMessage={tsvConfigStore.textColumnErrorMessageKey
+          ? t(tsvConfigStore.textColumnErrorMessageKey)
+          : ''}
+        onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
+        {onDetectScriptLanguage}
+      />
+    {/if}
+    {#if tsvConfigStore.errorMessageKey}
+      <div class="mb-4 text-sm text-red-600">
+        {t(tsvConfigStore.errorMessageKey)}
+      </div>
+    {/if}
+  </FileEpisodeForm>
 </Modal>
