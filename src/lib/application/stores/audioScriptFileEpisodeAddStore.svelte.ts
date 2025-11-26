@@ -54,9 +54,7 @@ function failedLanguageDetection(errorKey: string, supportedLanguages: readonly 
   setSelectedStudyLanguage(supportedLanguages[0]);
 }
 
-function buildPayload(
-  finalTsvConfig: TsvConfig | undefined
-): AudioScriptFileEpisodeAddPayload | null {
+function buildPayload(finalTsvConfig?: TsvConfig): AudioScriptFileEpisodeAddPayload | null {
   assert(title.trim().length > 0, 'Title is empty');
   assertNotNull(audioFilePath, 'Audio file path is null');
   assertNotNull(scriptFilePath, 'Script file path is null');
