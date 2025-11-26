@@ -11,7 +11,7 @@ let currentLineText = $state('');
 let contextLines = $state<readonly ContextLine[]>([]);
 let lineHistory = $state<string[]>([]);
 let isExecuting = $state(false);
-let errorMessageKey = $state('');
+let errorMessage = $state('');
 let isCancelled = $state(false);
 
 function openModal() {
@@ -21,7 +21,7 @@ function openModal() {
   currentLineText = '';
   contextLines = [];
   lineHistory = [];
-  errorMessageKey = '';
+  errorMessage = '';
   isCancelled = false;
 }
 
@@ -32,7 +32,7 @@ function closeModal() {
   currentLineText = '';
   contextLines = [];
   lineHistory = [];
-  errorMessageKey = '';
+  errorMessage = '';
 }
 
 function updateProgress(progressPayload: TtsProgress) {
@@ -63,8 +63,8 @@ function completeExecution() {
   progress = 100;
 }
 
-function failedExecution(key: string) {
-  errorMessageKey = key;
+function failedExecution(message: string) {
+  errorMessage = message;
   isExecuting = false;
 }
 
@@ -87,7 +87,7 @@ function reset() {
   currentLineText = '';
   contextLines = [];
   lineHistory = [];
-  errorMessageKey = '';
+  errorMessage = '';
   isCancelled = false;
 }
 
@@ -107,8 +107,8 @@ export const ttsExecutionStore = {
   get isExecuting() {
     return isExecuting;
   },
-  get errorMessageKey() {
-    return errorMessageKey;
+  get errorMessage() {
+    return errorMessage;
   },
   get isCancelled() {
     return isCancelled;

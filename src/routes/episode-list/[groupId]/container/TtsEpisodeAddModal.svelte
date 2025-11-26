@@ -3,8 +3,8 @@
   import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
-  import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.svelte';
   import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
+  import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.svelte';
   import {
     cancelTtsModelDownload,
     createDownloadTasks,
@@ -161,7 +161,7 @@
 
       console.info('TTS audio generation required for the new episode');
       await startDownloadTtsModel();
-      await executeTts(fileBasedEpisodeAddStore);
+      await startTts();
 
       assert(
         tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid,
@@ -247,12 +247,12 @@
     total: 0,
   });
   let ttsDownloadIsDownloading = $state(false);
-  let ttsDownloadErrorMessageKey = $state('');
+  let ttsDownloadErrorMessage = $state('');
 
   function openTtsDownloadModal() {
     ttsDownloadModalOpen = true;
     ttsDownloadIsDownloading = true;
-    ttsDownloadErrorMessageKey = '';
+    ttsDownloadErrorMessage = '';
   }
 
   function closeTtsDownloadModal() {
@@ -266,15 +266,15 @@
       total: 0,
     };
     ttsDownloadIsDownloading = false;
-    ttsDownloadErrorMessageKey = '';
+    ttsDownloadErrorMessage = '';
   }
 
   function updateTtsDownloadProgress(newProgress: DownloadProgress) {
     ttsDownloadProgress = newProgress;
   }
 
-  function handleTtsDownloadFailed(key: string) {
-    ttsDownloadErrorMessageKey = key;
+  function handleTtsDownloadFailed(errorMessage: string) {
+    ttsDownloadErrorMessage = errorMessage;
     ttsDownloadIsDownloading = false;
   }
 
@@ -291,7 +291,7 @@
       closeTtsDownloadModal();
     } catch (error) {
       console.error('Failed to download TTS model:', error);
-      handleTtsDownloadFailed('components.ttsModelDownloadModal.error.downloadFailed');
+      handleTtsDownloadFailed(t('components.ttsModelDownloadModal.error.downloadFailed'));
     }
   }
 
@@ -304,14 +304,48 @@
     }
   }
 
+  // TTS execution
+
   const ttsExecutionOpen = $derived(ttsExecutionStore.showModal);
   const ttsExecutionProgress = $derived(ttsExecutionStore.progress);
   const ttsExecutionContextLines = $derived(ttsExecutionStore.contextLines);
   const ttsExecutionIsExecuting = $derived(ttsExecutionStore.isExecuting);
-  const ttsExecutionErrorMessageKey = $derived(ttsExecutionStore.errorMessageKey);
+  const ttsExecutionErrorMessage = $derived(ttsExecutionStore.errorMessage);
 
   function handleTtsExecutionClose() {
     ttsExecutionStore.closeModal();
+  }
+
+  async function startTts() {
+    const scriptFilePath = fileBasedEpisodeAddStore.scriptFilePath;
+    assertNotNull(scriptFilePath, 'Script file path must not be null');
+    const selectedVoice = ttsConfigStore.selectedVoice;
+    assertNotNull(selectedVoice, 'No voice selected for TTS');
+    const selectedSpeakerId = parseInt(ttsConfigStore.selectedSpeakerId);
+
+    ttsExecutionStore.openModal();
+    try {
+      const { audioPath, scriptPath } = await executeTts(
+        scriptFilePath,
+        selectedVoice,
+        selectedSpeakerId,
+        ttsExecutionStore.updateProgress
+      );
+      fileBasedEpisodeAddStore.scriptFilePath = scriptPath;
+      fileBasedEpisodeAddStore.audioFilePath = audioPath;
+      ttsExecutionStore.completeExecution();
+    } catch (error) {
+      console.error(`Failed to execute TTS: ${error}`);
+      if (!ttsExecutionStore.isCancelled) {
+        ttsExecutionStore.failedExecution(t('components.ttsExecutionModal.error.failedToExecute'));
+      }
+      throw error;
+    }
+  }
+
+  async function handleTtsExecutionCancel() {
+    await cancelTtsExecution();
+    ttsExecutionStore.cancelExecution();
   }
 </script>
 
@@ -379,7 +413,7 @@
   open={ttsDownloadModalOpen}
   progress={ttsDownloadProgress}
   isDownloading={ttsDownloadIsDownloading}
-  errorMessageKey={ttsDownloadErrorMessageKey}
+  errorMessage={ttsDownloadErrorMessage}
   onCancel={handleTtsModelDownloadCancel}
   onClose={closeTtsDownloadModal}
 />
@@ -389,7 +423,7 @@
   progress={ttsExecutionProgress}
   contextLines={ttsExecutionContextLines}
   isExecuting={ttsExecutionIsExecuting}
-  errorMessageKey={ttsExecutionErrorMessageKey}
-  onCancel={cancelTtsExecution}
+  errorMessage={ttsExecutionErrorMessage}
+  onCancel={handleTtsExecutionCancel}
   onClose={handleTtsExecutionClose}
 />

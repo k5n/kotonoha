@@ -587,16 +587,18 @@ graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
                 subgraph sg_lib_application_stores ["stores"]
-                    src_lib_application_stores_FileBasedEpisodeAddStore_svelte_ts["FileBasedEpisodeAddStore.svelte.ts"]
                     src_lib_application_stores_tsvConfigStore_svelte_ts["tsvConfigStore.svelte.ts"]
-                    src_lib_application_stores_ttsConfigStore_svelte_ts["ttsConfigStore.svelte.ts"]
-                    src_lib_application_stores_ttsExecutionStore_svelte_ts["ttsExecutionStore.svelte.ts"]
                 end
                 subgraph sg_lib_application_usecases ["usecases"]
                     src_lib_application_usecases_executeTts_ts["executeTts.ts"]
                 end
             end
             subgraph sg_lib_domain ["domain"]
+                subgraph sg_lib_domain_entities ["entities"]
+                    src_lib_domain_entities_ttsEvent_ts["ttsEvent.ts"]
+                    src_lib_domain_entities_ttsResult_ts["ttsResult.ts"]
+                    src_lib_domain_entities_voice_ts["voice.ts"]
+                end
                 subgraph sg_lib_domain_services ["services"]
                     src_lib_domain_services_extractScriptText_ts["extractScriptText.ts"]
                 end
@@ -606,9 +608,6 @@ graph LR
                     src_lib_infrastructure_repositories_fileRepository_ts["fileRepository.ts"]
                     src_lib_infrastructure_repositories_ttsRepository_ts["ttsRepository.ts"]
                 end
-            end
-            subgraph sg_lib_utils ["utils"]
-                src_lib_utils_assertion_ts["assertion.ts"]
             end
         end
         subgraph sg_routes ["routes"]
@@ -620,23 +619,20 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_FileBasedEpisodeAddStore_svelte_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_tsvConfigStore_svelte_ts
-    src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_ttsConfigStore_svelte_ts
-    src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_ttsExecutionStore_svelte_ts
+    src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_ttsEvent_ts
+    src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_ttsResult_ts
+    src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_voice_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_domain_services_extractScriptText_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_infrastructure_repositories_fileRepository_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
-    src_lib_application_usecases_executeTts_ts --> src_lib_utils_assertion_ts
-    src_lib_application_stores_FileBasedEpisodeAddStore_svelte_ts --> src_lib_application_stores_ttsConfigStore_svelte_ts
-    src_lib_application_stores_FileBasedEpisodeAddStore_svelte_ts --> src_lib_utils_assertion_ts
-    src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_utils_assertion_ts
-    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_FileBasedEpisodeAddStore_svelte_ts
+    src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_ttsEvent_ts
+    src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_ttsResult_ts
+    src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_voice_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_tsvConfigStore_svelte_ts
-    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_ttsConfigStore_svelte_ts
-    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_ttsExecutionStore_svelte_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_usecases_executeTts_ts
-    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_utils_assertion_ts
+    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_domain_entities_ttsEvent_ts
+    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_domain_entities_voice_ts
 ```
 ### Use Case: fetchAppInfo.ts
 

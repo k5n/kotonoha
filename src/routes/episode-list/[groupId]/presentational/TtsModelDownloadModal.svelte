@@ -1,24 +1,17 @@
 <script lang="ts">
-  import type { DownloadProgress } from '$lib/domain/entities/ttsEvent';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import type { DownloadProgress } from '$lib/domain/entities/ttsEvent';
   import { Button, Modal, Progressbar } from 'flowbite-svelte';
 
   type Props = {
     open: boolean;
     progress: DownloadProgress;
     isDownloading: boolean;
-    errorMessageKey: string;
+    errorMessage: string;
     onCancel: () => void;
     onClose: () => void;
   };
-  let {
-    open = false,
-    progress,
-    isDownloading,
-    errorMessageKey,
-    onCancel,
-    onClose,
-  }: Props = $props();
+  let { open = false, progress, isDownloading, errorMessage, onCancel, onClose }: Props = $props();
 
   // Format bytes to human readable format
   function formatBytes(bytes: number): string {
@@ -68,9 +61,9 @@
   </div>
 
   <!-- Error message -->
-  {#if errorMessageKey}
+  {#if errorMessage}
     <div class="mb-4 rounded-md bg-red-50 p-3">
-      <div class="text-sm text-red-700">{t(errorMessageKey)}</div>
+      <div class="text-sm text-red-700">{errorMessage}</div>
     </div>
   {/if}
 

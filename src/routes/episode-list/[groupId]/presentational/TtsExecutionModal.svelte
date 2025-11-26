@@ -12,7 +12,7 @@
     progress: number;
     contextLines: readonly ContextLine[];
     isExecuting: boolean;
-    errorMessageKey: string;
+    errorMessage: string;
     onCancel: () => void;
     onClose: () => void;
   };
@@ -22,7 +22,7 @@
     progress = 0,
     contextLines = [],
     isExecuting = false,
-    errorMessageKey = '',
+    errorMessage = '',
     onCancel,
     onClose,
   }: Props = $props();
@@ -79,9 +79,9 @@
   </div>
 
   <!-- Error message -->
-  {#if errorMessageKey}
+  {#if errorMessage}
     <div class="mb-4 rounded-md bg-red-50 p-3">
-      <div class="text-sm text-red-700">{t(errorMessageKey)}</div>
+      <div class="text-sm text-red-700">{errorMessage}</div>
     </div>
   {/if}
 
@@ -90,7 +90,7 @@
     <div class="text-center text-sm text-gray-600">
       {t('components.ttsExecutionModal.pleaseWait')}
     </div>
-  {:else if progress === 100 && !errorMessageKey}
+  {:else if progress === 100 && !errorMessage}
     <div class="text-center text-sm text-green-600">
       {t('components.ttsExecutionModal.completed')}
     </div>
