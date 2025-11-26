@@ -237,6 +237,12 @@ const PRESENTATION_LAYER_ROOTS = ['src/routes', 'src/lib/presentation'];
 const USECASE_ROOT = 'src/lib/application/usecases';
 const STORE_ROOT = 'src/lib/application/stores';
 
+// Files that should be hidden from the Presentation layer dependency graphs
+// (kept small so only intentionally noisy dependencies are suppressed)
+const EXCLUDED_PRESENTATION_GRAPH_FILES = new Set<string>([
+  'src/lib/application/stores/i18n.svelte.ts',
+]);
+
 // Helper to generate a valid Mermaid node ID
 const getNodeMermaidId = (filePath: string) => {
   return filePath.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -350,7 +356,8 @@ function generateMermaidBlock(
 function collectDependenciesRecursively(
   startFile: string,
   fullGraph: DependencyGraph,
-  allPresentationFiles: Set<string>
+  allPresentationFiles: Set<string>,
+  excluded: Set<string> = new Set<string>()
 ): Set<string> {
   const collected = new Set<string>();
   const queue: string[] = [startFile];
@@ -362,13 +369,17 @@ function collectDependenciesRecursively(
       continue;
     }
     visited.add(currentFile);
+    if (excluded.has(currentFile)) {
+      continue;
+    }
+
     collected.add(currentFile);
 
     const dependencies = fullGraph[currentFile];
     if (dependencies) {
       for (const dep of dependencies) {
         // Only trace dependencies within the presentation layer or store layer
-        if (allPresentationFiles.has(dep) || dep.startsWith(STORE_ROOT)) {
+        if (!excluded.has(dep) && (allPresentationFiles.has(dep) || dep.startsWith(STORE_ROOT))) {
           queue.push(dep);
         }
       }
@@ -404,7 +415,8 @@ async function generateScreenDependencyGraphs(
     const screenDependencies = collectDependenciesRecursively(
       normalizedScreenFile,
       fullGraph,
-      presentationFiles
+      presentationFiles,
+      EXCLUDED_PRESENTATION_GRAPH_FILES
     );
 
     const screenPath =
@@ -612,6 +624,7 @@ async function generateDependencyGraph() {
   const fullMermaidContent =
     fullMermaidHeader +
     '# Presentation Layer Dependency Graph\n\n' +
+    'Note: `src/lib/application/stores/i18n.svelte.ts` is omitted from presentation graphs to reduce noise.\n\n' +
     presentationMermaidBlock +
     '\n' +
     usecaseMermaidBlocks +
