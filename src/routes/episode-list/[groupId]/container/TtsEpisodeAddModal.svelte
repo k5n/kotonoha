@@ -3,6 +3,7 @@
   import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
+  import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.svelte';
   import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
   import {
     cancelTtsModelDownload,
@@ -19,8 +20,8 @@
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
   import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
   import TtsConfigSection from '../presentational/TtsConfigSection.svelte';
-  import TtsExecutionModal from './TtsExecutionModal.svelte';
-  import TtsModelDownloadModal from './TtsModelDownloadModal.svelte';
+  import TtsExecutionModal from '../presentational/TtsExecutionModal.svelte';
+  import TtsModelDownloadModal from '../presentational/TtsModelDownloadModal.svelte';
 
   type Props = {
     open: boolean;
@@ -302,6 +303,16 @@
       closeTtsDownloadModal();
     }
   }
+
+  const ttsExecutionOpen = $derived(ttsExecutionStore.showModal);
+  const ttsExecutionProgress = $derived(ttsExecutionStore.progress);
+  const ttsExecutionContextLines = $derived(ttsExecutionStore.contextLines);
+  const ttsExecutionIsExecuting = $derived(ttsExecutionStore.isExecuting);
+  const ttsExecutionErrorMessageKey = $derived(ttsExecutionStore.errorMessageKey);
+
+  function handleTtsExecutionClose() {
+    ttsExecutionStore.closeModal();
+  }
 </script>
 
 <Modal onclose={handleClose} {open} size="xl">
@@ -373,4 +384,12 @@
   onClose={closeTtsDownloadModal}
 />
 
-<TtsExecutionModal onCancel={cancelTtsExecution} />
+<TtsExecutionModal
+  open={ttsExecutionOpen}
+  progress={ttsExecutionProgress}
+  contextLines={ttsExecutionContextLines}
+  isExecuting={ttsExecutionIsExecuting}
+  errorMessageKey={ttsExecutionErrorMessageKey}
+  onCancel={cancelTtsExecution}
+  onClose={handleTtsExecutionClose}
+/>
