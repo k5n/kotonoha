@@ -141,6 +141,7 @@ graph LR
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_FileBasedEpisodeAddStore_svelte_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_tsvConfigStore_svelte_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_ttsConfigStore_svelte_ts
+    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_ttsDownloadStore_svelte_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_routes_episode_list__groupId__container_TtsExecutionModal_svelte
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_routes_episode_list__groupId__container_TtsModelDownloadModal_svelte
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_routes_episode_list__groupId__presentational_FileEpisodeForm_svelte
@@ -151,7 +152,6 @@ graph LR
     src_routes_episode_list__groupId__presentational_AudioFileSelect_svelte --> src_lib_presentation_components_presentational_FileSelect_svelte
     src_routes_episode_list__groupId__presentational_ScriptFileSelect_svelte --> src_lib_presentation_components_presentational_FileSelect_svelte
     src_routes_episode_list__groupId__container_TtsExecutionModal_svelte --> src_lib_application_stores_ttsExecutionStore_svelte_ts
-    src_routes_episode_list__groupId__container_TtsModelDownloadModal_svelte --> src_lib_application_stores_ttsDownloadStore_svelte_ts
 ```
 ### Screen: /episode/[id]
 
@@ -546,16 +546,13 @@ Shows files that use the `downloadTtsModel.ts` use case, and the files it depend
 graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
-                subgraph sg_lib_application_stores ["stores"]
-                    src_lib_application_stores_ttsConfigStore_svelte_ts["ttsConfigStore.svelte.ts"]
-                    src_lib_application_stores_ttsDownloadStore_svelte_ts["ttsDownloadStore.svelte.ts"]
-                end
                 subgraph sg_lib_application_usecases ["usecases"]
                     src_lib_application_usecases_downloadTtsModel_ts["downloadTtsModel.ts"]
                 end
             end
             subgraph sg_lib_domain ["domain"]
                 subgraph sg_lib_domain_entities ["entities"]
+                    src_lib_domain_entities_ttsEvent_ts["ttsEvent.ts"]
                     src_lib_domain_entities_voice_ts["voice.ts"]
                 end
             end
@@ -574,14 +571,13 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_downloadTtsModel_ts --> src_lib_application_stores_ttsConfigStore_svelte_ts
-    src_lib_application_usecases_downloadTtsModel_ts --> src_lib_application_stores_ttsDownloadStore_svelte_ts
+    src_lib_application_usecases_downloadTtsModel_ts --> src_lib_domain_entities_ttsEvent_ts
     src_lib_application_usecases_downloadTtsModel_ts --> src_lib_domain_entities_voice_ts
     src_lib_application_usecases_downloadTtsModel_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
-    src_lib_application_stores_ttsConfigStore_svelte_ts --> src_lib_domain_entities_voice_ts
+    src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_ttsEvent_ts
     src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_voice_ts
-    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_ttsConfigStore_svelte_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_usecases_downloadTtsModel_ts
+    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_domain_entities_voice_ts
 ```
 ### Use Case: executeTts.ts
 
@@ -960,6 +956,7 @@ graph LR
     src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_voice_ts
     src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_utils_language_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_usecases_fetchTtsVoices_ts
+    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_domain_entities_voice_ts
 ```
 ### Use Case: fetchYoutubeMetadata.ts
 

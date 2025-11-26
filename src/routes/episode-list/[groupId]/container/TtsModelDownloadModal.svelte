@@ -1,17 +1,24 @@
 <script lang="ts">
+  import type { DownloadProgress } from '$lib/domain/entities/ttsEvent';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { ttsDownloadStore } from '$lib/application/stores/ttsDownloadStore.svelte';
   import { Button, Modal, Progressbar } from 'flowbite-svelte';
 
   type Props = {
+    open: boolean;
+    progress: DownloadProgress;
+    isDownloading: boolean;
+    errorMessageKey: string;
     onCancel: () => void;
+    onClose: () => void;
   };
-  let { onCancel }: Props = $props();
-
-  let show = $derived(ttsDownloadStore.showModal);
-  let progress = $derived(ttsDownloadStore.progress);
-  let isDownloading = $derived(ttsDownloadStore.isDownloading);
-  let errorMessageKey = $derived(ttsDownloadStore.errorMessageKey);
+  let {
+    open = false,
+    progress,
+    isDownloading,
+    errorMessageKey,
+    onCancel,
+    onClose,
+  }: Props = $props();
 
   // Format bytes to human readable format
   function formatBytes(bytes: number): string {
@@ -29,13 +36,13 @@
       {t('common.cancel')}
     </Button>
   {:else}
-    <Button data-testid="tts-model-download-close-button" onclick={ttsDownloadStore.closeModal}>
+    <Button data-testid="tts-model-download-close-button" onclick={onClose}>
       {t('components.ttsModelDownloadModal.close')}
     </Button>
   {/if}
 {/snippet}
 
-<Modal bind:open={show} size="md" onclose={ttsDownloadStore.closeModal} {footer}>
+<Modal {open} size="md" onclose={onClose} {footer}>
   <!-- Header -->
   <div class="mb-4">
     <h2 class="text-lg font-semibold text-gray-900">

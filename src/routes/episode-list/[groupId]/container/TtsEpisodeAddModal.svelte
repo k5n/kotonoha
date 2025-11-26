@@ -4,12 +4,15 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
+  import { ttsDownloadStore } from '$lib/application/stores/ttsDownloadStore.svelte';
   import {
     cancelTtsModelDownload,
+    createDownloadTasks,
     downloadTtsModel,
   } from '$lib/application/usecases/downloadTtsModel';
   import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
+  import type { FileInfo } from '$lib/domain/entities/voice';
   import { assert, assertNotNull } from '$lib/utils/assertion';
   import { Modal } from 'flowbite-svelte';
   import FileEpisodeForm from '../presentational/FileEpisodeForm.svelte';
@@ -156,7 +159,7 @@
       assertNotNull(fileBasedEpisodeAddStore.scriptFilePath, 'Script file path is required');
 
       console.info('TTS audio generation required for the new episode');
-      await downloadTtsModel();
+      await startDownloadTtsModel();
       await executeTts(fileBasedEpisodeAddStore);
 
       assert(
@@ -230,6 +233,40 @@
       fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
       (!tsvConfigStore.scriptPreview || tsvConfigStore.isValid)
   );
+
+  // TTS model download
+
+  let downloadTasks: readonly FileInfo[] = $state([]);
+  const ttsDownloadModalOpen = $derived(ttsDownloadStore.showModal);
+  const ttsDownloadProgress = $derived(ttsDownloadStore.progress);
+  const ttsDownloadIsDownloading = $derived(ttsDownloadStore.isDownloading);
+  const ttsDownloadErrorMessageKey = $derived(ttsDownloadStore.errorMessageKey);
+
+  async function startDownloadTtsModel(): Promise<void> {
+    try {
+      assertNotNull(ttsConfigStore.selectedVoice, 'No TTS voice selected');
+      downloadTasks = await createDownloadTasks(ttsConfigStore.selectedVoice.files);
+      if (downloadTasks.length === 0) {
+        console.log('All TTS model files are already downloaded.');
+        return;
+      }
+      ttsDownloadStore.openModal();
+      await downloadTtsModel(downloadTasks, ttsDownloadStore.updateProgress);
+      ttsDownloadStore.closeModal();
+    } catch (error) {
+      console.error('Failed to download TTS model:', error);
+      ttsDownloadStore.failedDownload('components.ttsModelDownloadModal.error.downloadFailed');
+    }
+  }
+
+  async function handleTtsModelDownloadCancel() {
+    try {
+      const downloadIds = downloadTasks.map((file) => file.path);
+      await cancelTtsModelDownload(downloadIds);
+    } finally {
+      ttsDownloadStore.closeModal();
+    }
+  }
 </script>
 
 <Modal onclose={handleClose} {open} size="xl">
@@ -292,6 +329,13 @@
   </FileEpisodeForm>
 </Modal>
 
-<TtsModelDownloadModal onCancel={cancelTtsModelDownload} />
+<TtsModelDownloadModal
+  open={ttsDownloadModalOpen}
+  progress={ttsDownloadProgress}
+  isDownloading={ttsDownloadIsDownloading}
+  errorMessageKey={ttsDownloadErrorMessageKey}
+  onCancel={handleTtsModelDownloadCancel}
+  onClose={ttsDownloadStore.closeModal}
+/>
 
 <TtsExecutionModal onCancel={cancelTtsExecution} />

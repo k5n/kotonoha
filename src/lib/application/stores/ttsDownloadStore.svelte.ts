@@ -10,7 +10,6 @@ let progress = $state<DownloadProgress>({
 });
 let isDownloading = $state(false);
 let errorMessageKey = $state('');
-const downloadIds = $state<Set<string>>(new Set());
 
 function openModal() {
   showModal = true;
@@ -20,7 +19,6 @@ function openModal() {
 
 function closeModal() {
   showModal = false;
-  downloadIds.clear();
   isDownloading = false;
   errorMessageKey = '';
 }
@@ -34,10 +32,6 @@ function failedDownload(key: string) {
   isDownloading = false;
 }
 
-function setDownloadId(downloadId: string) {
-  downloadIds.add(downloadId);
-}
-
 function reset() {
   showModal = false;
   progress = {
@@ -47,7 +41,6 @@ function reset() {
     downloaded: 0,
     total: 0,
   };
-  downloadIds.clear();
   isDownloading = false;
   errorMessageKey = '';
 }
@@ -59,9 +52,6 @@ export const ttsDownloadStore = {
   get progress() {
     return progress;
   },
-  get downloadIds() {
-    return downloadIds;
-  },
   get isDownloading() {
     return isDownloading;
   },
@@ -71,7 +61,6 @@ export const ttsDownloadStore = {
   openModal,
   closeModal,
   updateProgress,
-  setDownloadId,
   failedDownload,
   reset,
 };
