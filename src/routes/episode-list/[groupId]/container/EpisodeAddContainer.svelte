@@ -9,7 +9,6 @@
     detectScriptLanguage,
     populateLearningTargetLanguages,
   } from '$lib/application/usecases/detectScriptLanguage';
-  import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import type { Episode } from '$lib/domain/entities/episode';
@@ -73,14 +72,6 @@
     }
   }
 
-  async function handleTtsSetup(): Promise<void> {
-    try {
-      await fetchTtsVoices();
-    } catch (e) {
-      console.error(`Failed to prepare TTS voices: ${e}`);
-    }
-  }
-
   async function handleEpisodeSubmit(
     payload: FileBasedEpisodeAddPayload | YoutubeEpisodeAddPayload | null
   ): Promise<void> {
@@ -123,7 +114,6 @@
   onSubmitRequested={handleEpisodeSubmit}
   onTsvFileSelected={previewScriptFile}
   onDetectScriptLanguage={handleLanguageDetection}
-  onTtsEnabled={handleTtsSetup}
 />
 
 <YoutubeEpisodeAddModal

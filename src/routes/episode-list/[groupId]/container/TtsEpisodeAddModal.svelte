@@ -9,6 +9,7 @@
     downloadTtsModel,
   } from '$lib/application/usecases/downloadTtsModel';
   import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
+  import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { assert, assertNotNull } from '$lib/utils/assertion';
   import { Modal } from 'flowbite-svelte';
   import FileEpisodeForm from '../presentational/FileEpisodeForm.svelte';
@@ -24,7 +25,6 @@
     onSubmitRequested: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
-    onTtsEnabled: () => Promise<void>;
   };
 
   let {
@@ -33,7 +33,6 @@
     onSubmitRequested,
     onTsvFileSelected,
     onDetectScriptLanguage,
-    onTtsEnabled,
   }: Props = $props();
 
   let isSubmitting = $state(false);
@@ -123,7 +122,7 @@
         tsvConfigStore.reset();
       }
       await onDetectScriptLanguage();
-      await onTtsEnabled();
+      await fetchTtsVoices();
     } catch (error) {
       console.error('Failed to prepare script file for TTS episode:', error);
       fileBasedEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorSubmissionFailed');
