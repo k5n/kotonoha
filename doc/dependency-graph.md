@@ -65,7 +65,6 @@ graph LR
                     src_lib_application_stores_groupPathStore_svelte_ts["groupPathStore.svelte.ts"]
                     src_lib_application_stores_tsvConfigStore_svelte_ts["tsvConfigStore.svelte.ts"]
                     src_lib_application_stores_ttsConfigStore_svelte_ts["ttsConfigStore.svelte.ts"]
-                    src_lib_application_stores_ttsExecutionStore_svelte_ts["ttsExecutionStore.svelte.ts"]
                     src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts["youtubeEpisodeAddStore.svelte.ts"]
                 end
             end
@@ -140,7 +139,6 @@ graph LR
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_FileBasedEpisodeAddStore_svelte_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_tsvConfigStore_svelte_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_ttsConfigStore_svelte_ts
-    src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_lib_application_stores_ttsExecutionStore_svelte_ts
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_routes_episode_list__groupId__presentational_FileEpisodeForm_svelte
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_routes_episode_list__groupId__presentational_ScriptFileSelect_svelte
     src_routes_episode_list__groupId__container_TtsEpisodeAddModal_svelte --> src_routes_episode_list__groupId__presentational_TsvConfigSection_svelte

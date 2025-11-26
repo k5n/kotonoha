@@ -4,7 +4,6 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
-  import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.svelte';
   import {
     cancelTtsModelDownload,
     createDownloadTasks,
@@ -12,7 +11,7 @@
   } from '$lib/application/usecases/downloadTtsModel';
   import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
-  import type { DownloadProgress } from '$lib/domain/entities/ttsEvent';
+  import type { DownloadProgress, TtsProgress } from '$lib/domain/entities/ttsEvent';
   import type { FileInfo } from '$lib/domain/entities/voice';
   import { assert, assertNotNull } from '$lib/utils/assertion';
   import { Modal } from 'flowbite-svelte';
@@ -22,6 +21,11 @@
   import TtsConfigSection from '../presentational/TtsConfigSection.svelte';
   import TtsExecutionModal from '../presentational/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '../presentational/TtsModelDownloadModal.svelte';
+
+  type ContextLine = {
+    readonly text: string;
+    readonly isCurrentLine: boolean;
+  };
 
   type Props = {
     open: boolean;
@@ -306,14 +310,76 @@
 
   // TTS execution
 
-  const ttsExecutionOpen = $derived(ttsExecutionStore.showModal);
-  const ttsExecutionProgress = $derived(ttsExecutionStore.progress);
-  const ttsExecutionContextLines = $derived(ttsExecutionStore.contextLines);
-  const ttsExecutionIsExecuting = $derived(ttsExecutionStore.isExecuting);
-  const ttsExecutionErrorMessage = $derived(ttsExecutionStore.errorMessage);
+  let ttsExecutionOpen = $state(false);
+  let ttsExecutionProgress = $state(0);
+  let ttsExecutionContextLines = $state<readonly ContextLine[]>([]);
+  let ttsExecutionLineHistory = $state<string[]>([]);
+  let ttsExecutionIsExecuting = $state(false);
+  let ttsExecutionErrorMessage = $state('');
+  let ttsExecutionIsCancelled = $state(false);
+
+  function openTtsExecutionModal() {
+    ttsExecutionOpen = true;
+    ttsExecutionIsExecuting = true;
+    ttsExecutionProgress = 0;
+    ttsExecutionContextLines = [];
+    ttsExecutionLineHistory = [];
+    ttsExecutionErrorMessage = '';
+    ttsExecutionIsCancelled = false;
+  }
+
+  function closeTtsExecutionModal() {
+    ttsExecutionOpen = false;
+    ttsExecutionIsExecuting = false;
+    ttsExecutionProgress = 0;
+    ttsExecutionContextLines = [];
+    ttsExecutionLineHistory = [];
+    ttsExecutionErrorMessage = '';
+  }
+
+  function truncateText(text: string, maxLength: number): string {
+    if (text.length <= maxLength) {
+      return text;
+    }
+    return text.substring(0, maxLength - 3) + '...';
+  }
+
+  function updateTtsExecutionProgress(progressPayload: TtsProgress) {
+    ttsExecutionProgress = progressPayload.progress;
+
+    const truncatedText = truncateText(progressPayload.text, 80);
+    if (
+      ttsExecutionLineHistory.length === 0 ||
+      ttsExecutionLineHistory[ttsExecutionLineHistory.length - 1] !== truncatedText
+    ) {
+      ttsExecutionLineHistory = [...ttsExecutionLineHistory, truncatedText];
+    }
+
+    const recentLines = ttsExecutionLineHistory.slice(-3);
+    ttsExecutionContextLines = recentLines.map((line, index) => ({
+      text: line,
+      isCurrentLine: index === recentLines.length - 1,
+    }));
+  }
+
+  function completeTtsExecution() {
+    ttsExecutionIsExecuting = false;
+    ttsExecutionOpen = false;
+    ttsExecutionProgress = 100;
+  }
+
+  function failedTtsExecution(message: string) {
+    ttsExecutionErrorMessage = message;
+    ttsExecutionIsExecuting = false;
+  }
+
+  function cancelTtsExecutionState() {
+    ttsExecutionIsCancelled = true;
+    ttsExecutionOpen = false;
+  }
 
   function handleTtsExecutionClose() {
-    ttsExecutionStore.closeModal();
+    closeTtsExecutionModal();
   }
 
   async function startTts() {
@@ -323,21 +389,21 @@
     assertNotNull(selectedVoice, 'No voice selected for TTS');
     const selectedSpeakerId = parseInt(ttsConfigStore.selectedSpeakerId);
 
-    ttsExecutionStore.openModal();
+    openTtsExecutionModal();
     try {
       const { audioPath, scriptPath } = await executeTts(
         scriptFilePath,
         selectedVoice,
         selectedSpeakerId,
-        ttsExecutionStore.updateProgress
+        updateTtsExecutionProgress
       );
       fileBasedEpisodeAddStore.scriptFilePath = scriptPath;
       fileBasedEpisodeAddStore.audioFilePath = audioPath;
-      ttsExecutionStore.completeExecution();
+      completeTtsExecution();
     } catch (error) {
       console.error(`Failed to execute TTS: ${error}`);
-      if (!ttsExecutionStore.isCancelled) {
-        ttsExecutionStore.failedExecution(t('components.ttsExecutionModal.error.failedToExecute'));
+      if (!ttsExecutionIsCancelled) {
+        failedTtsExecution(t('components.ttsExecutionModal.error.failedToExecute'));
       }
       throw error;
     }
@@ -345,7 +411,7 @@
 
   async function handleTtsExecutionCancel() {
     await cancelTtsExecution();
-    ttsExecutionStore.cancelExecution();
+    cancelTtsExecutionState();
   }
 </script>
 
