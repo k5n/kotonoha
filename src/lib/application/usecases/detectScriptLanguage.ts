@@ -7,16 +7,7 @@ import { getSupportedLanguages } from '$lib/utils/language';
 
 const MAX_TEXT_LENGTH = 1000;
 
-export type LanguageDetectionStore = {
-  readonly scriptFilePath: string | null;
-  completeLanguageDetection(
-    detectedLanguageCode: string | null,
-    supportedLanguages: readonly string[]
-  ): void;
-  failedLanguageDetection(errorKey: string, supportedLanguages: readonly string[]): void;
-};
-
-async function populateLearningTargetLanguages(): Promise<readonly string[]> {
+export async function populateLearningTargetLanguages(): Promise<readonly string[]> {
   try {
     const settings = await settingsRepository.getSettings();
     if (settings.learningTargetLanguages && settings.learningTargetLanguages.length > 0) {
@@ -30,39 +21,15 @@ async function populateLearningTargetLanguages(): Promise<readonly string[]> {
   }
 }
 
-/**
- * Detects the language of the currently selected script file and stores
- * the result into the provided store, which must expose detection helpers
- * and language selection APIs compatible with the legacy file episode form.
- */
-export async function detectScriptLanguage(store: LanguageDetectionStore): Promise<void> {
+export async function detectScriptLanguage(scriptFilePath: string): Promise<string | null> {
   console.info('Detecting script language...');
-  // Even if the detection fails, we want to set the learning target language list, so get it first
-  const supportedLanguages = await populateLearningTargetLanguages();
 
-  const scriptFilePath = store.scriptFilePath;
-  if (!scriptFilePath) {
-    store.failedLanguageDetection(
-      'components.fileEpisodeForm.errorScriptFileRequired',
-      supportedLanguages
-    );
-    return;
-  }
+  const extension = scriptFilePath.split('.').pop()?.toLowerCase() ?? '';
+  const fullText = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
+  const text = extractScriptText(fullText, extension, tsvConfigStore.tsvConfig);
+  const truncated = text.substring(0, MAX_TEXT_LENGTH);
 
-  try {
-    const extension = scriptFilePath.split('.').pop()?.toLowerCase() ?? '';
-    const fullText = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
-    const text = extractScriptText(fullText, extension, tsvConfigStore.tsvConfig);
-    const truncated = text.substring(0, MAX_TEXT_LENGTH);
-
-    const detected = await languageDetectionRepository.detectLanguage(truncated);
-    console.info(`Detected language: ${detected}`);
-    store.completeLanguageDetection(detected, supportedLanguages);
-  } catch (err) {
-    console.error(`Language detection failed: ${err}`);
-    store.failedLanguageDetection(
-      'components.fileEpisodeForm.errorDetectLanguage',
-      supportedLanguages
-    );
-  }
+  const detected = await languageDetectionRepository.detectLanguage(truncated);
+  console.info(`Detected language: ${detected}`);
+  return detected;
 }

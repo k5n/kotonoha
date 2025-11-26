@@ -1,16 +1,33 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
+  import type { Voice } from '$lib/domain/entities/voice';
   import { Button, Label, Select } from 'flowbite-svelte';
+
+  type Props = {
+    selectedLanguageVoices: readonly Voice[];
+    selectedQuality: string;
+    selectedVoice: Voice | null;
+    selectedSpeakerId: string;
+    isFetchingVoices: boolean;
+    errorMessage: string;
+    onSelectedQualityChange: (quality: string) => void;
+    onSelectedVoiceChange: (voiceName: string) => void;
+    onSelectedSpeakerIdChange: (speakerId: string) => void;
+  };
+  let {
+    selectedLanguageVoices,
+    selectedQuality,
+    selectedVoice,
+    selectedSpeakerId,
+    isFetchingVoices,
+    errorMessage,
+    onSelectedQualityChange,
+    onSelectedVoiceChange,
+    onSelectedSpeakerIdChange,
+  }: Props = $props();
 
   let audioElement = $state<HTMLAudioElement | null>(null);
   let isPlayingSample = $state(false);
-
-  const selectedLanguageVoices = $derived(
-    ttsConfigStore.learningTargetVoices?.filter(
-      (voice) => voice.language.family === ttsConfigStore.language
-    ) || []
-  );
 
   const availableQualities = $derived(
     Array.from(new Set(selectedLanguageVoices.map((v) => v.quality)))
@@ -21,7 +38,7 @@
   );
 
   const selectedLanguageQualityVoices = $derived(
-    selectedLanguageVoices.filter((voice) => voice.quality === ttsConfigStore.selectedQuality) || []
+    selectedLanguageVoices.filter((voice) => voice.quality === selectedQuality) || []
   );
 
   const voiceOptions = $derived(
@@ -31,19 +48,17 @@
     })) || []
   );
 
-  const currentVoice = $derived(ttsConfigStore.selectedVoice);
-
   const speakerOptions = $derived(
-    currentVoice?.speakers.map((speaker) => ({
+    selectedVoice?.speakers.map((speaker) => ({
       value: speaker.id.toString(),
       name: speaker.name,
     })) || []
   );
 
   const currentSpeaker = $derived(
-    currentVoice?.speakers.find((s) => s.id.toString() === ttsConfigStore.selectedSpeakerId) ||
-      (currentVoice?.speakers.length === 0
-        ? { id: 0, name: currentVoice.name, sampleUrl: '' }
+    selectedVoice?.speakers.find((s) => s.id.toString() === selectedSpeakerId) ||
+      (selectedVoice?.speakers.length === 0
+        ? { id: 0, name: selectedVoice.name, sampleUrl: '' }
         : null)
   );
 
@@ -86,40 +101,34 @@
   }
 
   // NOTE: Flowbite Svelte's Select component supports two-way binding only. So we create proxies here.
-  type SelectableKeys = 'selectedQuality' | 'selectedVoiceName' | 'selectedSpeakerId';
-
-  function createSelectionProxy<K extends SelectableKeys>(key: K) {
-    type ValueType = (typeof ttsConfigStore)[K];
-
+  function createSelectionProxy<K>(getter: () => K, setter: (value: K) => void) {
     return {
-      get value(): ValueType {
-        return ttsConfigStore[key];
+      get value(): K {
+        return getter();
       },
-      set value(newValue: ValueType) {
+      set value(newValue: K) {
         stopSample();
-        ttsConfigStore[key] = newValue;
+        setter(newValue);
       },
     };
   }
 
-  const quality = createSelectionProxy('selectedQuality');
-  const voiceName = createSelectionProxy('selectedVoiceName');
-  const speakerId = createSelectionProxy('selectedSpeakerId');
+  const quality = createSelectionProxy(() => selectedQuality, onSelectedQualityChange);
+  const voiceName = createSelectionProxy(() => selectedVoice?.name || '', onSelectedVoiceChange);
+  const speakerId = createSelectionProxy(() => selectedSpeakerId, onSelectedSpeakerIdChange);
 </script>
 
 <div class="mb-4 space-y-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
   <h4 class="text-sm font-medium text-gray-900 dark:text-white">
     {t('components.ttsConfigSection.configTitle')}
   </h4>
-  {#if ttsConfigStore.isFetchingVoices}
+  {#if isFetchingVoices}
     <div class="text-sm text-gray-600 dark:text-gray-400">
       {t('components.ttsConfigSection.loadingVoices')}
     </div>
-  {:else if ttsConfigStore.errorMessage}
-    <div class="text-sm text-red-600">
-      {ttsConfigStore.errorMessage}
-    </div>
-  {:else if ttsConfigStore.language}
+  {:else if errorMessage}
+    <div class="text-sm text-red-600">{errorMessage}</div>
+  {:else if selectedLanguageVoices.length > 0}
     <!-- Quality Selection -->
     {#if qualityOptions.length > 0}
       <div>

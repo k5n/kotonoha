@@ -1,5 +1,5 @@
+import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
 import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
-import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
 import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.svelte';
 import { extractScriptText } from '$lib/domain/services/extractScriptText';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
@@ -17,7 +17,7 @@ export type TtsTargetStore = {
  * Execute TTS generation with progress tracking
  * Gets script content from episodeAddStore and generates audio
  */
-export async function executeTts(store: TtsTargetStore = ttsEpisodeAddStore): Promise<void> {
+export async function executeTts(store: TtsTargetStore = fileBasedEpisodeAddStore): Promise<void> {
   let progressUnlisten: UnlistenFn | null = null;
 
   try {

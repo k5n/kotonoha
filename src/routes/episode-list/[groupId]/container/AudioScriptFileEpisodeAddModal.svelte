@@ -1,15 +1,21 @@
 <script lang="ts">
-  import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
-  import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
+  import {
+    fileBasedEpisodeAddStore,
+    type FileBasedEpisodeAddPayload,
+  } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
+  import { assert } from '$lib/utils/assertion';
   import { Modal } from 'flowbite-svelte';
-  import AudioScriptFileEpisodeForm from '../presentational/AudioScriptFileEpisodeForm.svelte';
+  import AudioFileSelect from '../presentational/AudioFileSelect.svelte';
+  import FileEpisodeForm from '../presentational/FileEpisodeForm.svelte';
+  import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
+  import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
 
   type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmitRequested: (payload: AudioScriptFileEpisodeAddPayload | null) => Promise<void>;
+    onSubmitRequested: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
   };
@@ -37,7 +43,8 @@
   });
 
   function resetFormState() {
-    audioScriptFileEpisodeAddStore.reset();
+    fileBasedEpisodeAddStore.reset();
+    tsvConfigStore.reset();
     fieldErrors = {
       title: '',
       audioFile: '',
@@ -51,24 +58,24 @@
   }
 
   function validateTitle(): string {
-    const value = audioScriptFileEpisodeAddStore.title.trim();
+    const value = fileBasedEpisodeAddStore.title.trim();
     return value ? '' : t('components.fileEpisodeForm.errorTitleRequired');
   }
 
   function validateAudioFile(): string {
-    return audioScriptFileEpisodeAddStore.audioFilePath
+    return fileBasedEpisodeAddStore.audioFilePath
       ? ''
       : t('components.fileEpisodeForm.errorAudioRequired');
   }
 
   function validateScriptFile(): string {
-    return audioScriptFileEpisodeAddStore.scriptFilePath
+    return fileBasedEpisodeAddStore.scriptFilePath
       ? ''
       : t('components.fileEpisodeForm.errorScriptFileRequired');
   }
 
   function handleTitleChange(title: string) {
-    audioScriptFileEpisodeAddStore.title = title;
+    fileBasedEpisodeAddStore.title = title;
     if (fieldTouched.title) {
       fieldErrors.title = validateTitle();
     }
@@ -86,13 +93,13 @@
   }
 
   async function handleAudioFileChange(filePath: string | null) {
-    audioScriptFileEpisodeAddStore.audioFilePath = filePath;
+    fileBasedEpisodeAddStore.audioFilePath = filePath;
     fieldTouched.audioFile = true;
     fieldErrors.audioFile = validateAudioFile();
   }
 
   async function handleScriptFileChange(filePath: string | null) {
-    audioScriptFileEpisodeAddStore.scriptFilePath = filePath;
+    fileBasedEpisodeAddStore.scriptFilePath = filePath;
 
     fieldTouched.audioFile = true;
     fieldErrors.audioFile = validateAudioFile();
@@ -101,7 +108,7 @@
 
     if (!filePath) {
       tsvConfigStore.reset();
-      audioScriptFileEpisodeAddStore.selectedStudyLanguage = null;
+      fileBasedEpisodeAddStore.selectedStudyLanguage = null;
       return;
     }
 
@@ -114,10 +121,25 @@
     }
   }
 
+  function buildPayload(): FileBasedEpisodeAddPayload | null {
+    try {
+      assert(
+        tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid,
+        'TSV config is invalid'
+      );
+      const finalTsvConfig = tsvConfigStore.finalTsvConfig;
+      const payload = fileBasedEpisodeAddStore.buildPayload(finalTsvConfig);
+      return payload;
+    } catch (e) {
+      console.error(`Failed to build payload: ${e}`);
+      return null;
+    }
+  }
+
   async function handleSubmit() {
     isSubmitting = true;
     try {
-      const payload = audioScriptFileEpisodeAddStore.buildPayload();
+      const payload = buildPayload();
       await onSubmitRequested(payload);
     } finally {
       handleClose();
@@ -126,38 +148,59 @@
 </script>
 
 <Modal onclose={handleClose} {open} size="xl">
-  <AudioScriptFileEpisodeForm
+  <FileEpisodeForm
     {isSubmitting}
     isProcessing={tsvConfigStore.isFetchingScriptPreview}
-    title={audioScriptFileEpisodeAddStore.title}
-    audioFilePath={audioScriptFileEpisodeAddStore.audioFilePath}
-    scriptFilePath={audioScriptFileEpisodeAddStore.scriptFilePath}
-    tsvPreviewOpen={!!tsvConfigStore.scriptPreview}
-    tsvValid={tsvConfigStore.isValid}
-    tsvConfig={tsvConfigStore.tsvConfig}
-    tsvPreviewHeaders={tsvConfigStore.scriptPreview?.headers || []}
-    tsvPreviewRows={tsvConfigStore.scriptPreview?.rows || []}
-    tsvStartTimeColumnErrorMessage={tsvConfigStore.startTimeColumnErrorMessageKey
-      ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
-      : ''}
-    tsvTextColumnErrorMessage={tsvConfigStore.textColumnErrorMessageKey
-      ? t(tsvConfigStore.textColumnErrorMessageKey)
-      : ''}
-    selectedStudyLanguage={audioScriptFileEpisodeAddStore.selectedStudyLanguage}
-    learningTargetLanguages={audioScriptFileEpisodeAddStore.learningTargetLanguages}
-    languageDetectionWarningMessage={audioScriptFileEpisodeAddStore.languageDetectionWarningMessage}
+    isFormValid={fileBasedEpisodeAddStore.title.trim().length > 0 &&
+      fileBasedEpisodeAddStore.audioFilePath !== null &&
+      fileBasedEpisodeAddStore.scriptFilePath !== null &&
+      fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
+      (tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid)}
+    title={fileBasedEpisodeAddStore.title}
+    selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
+    learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
     {fieldErrors}
     {fieldTouched}
-    errorMessage={audioScriptFileEpisodeAddStore.errorMessage}
-    tsvErrorMessage={t(tsvConfigStore.errorMessageKey)}
+    languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
+    errorMessage={fileBasedEpisodeAddStore.errorMessage}
     onTitleChange={handleTitleChange}
     onTitleBlur={handleTitleBlur}
-    onAudioFileChange={handleAudioFileChange}
-    onScriptFilePathChange={handleScriptFileChange}
     onCancel={handleClose}
     onSubmit={handleSubmit}
-    {onTsvFileSelected}
-    {onDetectScriptLanguage}
-    onTsvConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
-  />
+  >
+    <AudioFileSelect
+      audioFilePath={fileBasedEpisodeAddStore.audioFilePath}
+      {fieldErrors}
+      {fieldTouched}
+      onAudioFileChange={handleAudioFileChange}
+    />
+    <ScriptFileSelect
+      scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
+      {fieldErrors}
+      {fieldTouched}
+      hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
+      onScriptFilePathChange={handleScriptFileChange}
+    />
+    {#if tsvConfigStore.scriptPreview !== null}
+      <TsvConfigSection
+        headers={tsvConfigStore.scriptPreview?.headers || []}
+        rows={tsvConfigStore.scriptPreview?.rows || []}
+        config={tsvConfigStore.tsvConfig}
+        valid={tsvConfigStore.isValid}
+        startTimeColumnErrorMessage={tsvConfigStore.startTimeColumnErrorMessageKey
+          ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
+          : ''}
+        textColumnErrorMessage={tsvConfigStore.textColumnErrorMessageKey
+          ? t(tsvConfigStore.textColumnErrorMessageKey)
+          : ''}
+        onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
+        {onDetectScriptLanguage}
+      />
+    {/if}
+    {#if tsvConfigStore.errorMessageKey}
+      <div class="mb-4 text-sm text-red-600">
+        {t(tsvConfigStore.errorMessageKey)}
+      </div>
+    {/if}
+  </FileEpisodeForm>
 </Modal>

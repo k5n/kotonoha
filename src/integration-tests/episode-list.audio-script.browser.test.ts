@@ -1,6 +1,8 @@
 import { invalidateAll } from '$app/navigation';
+import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
+import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event, type UnlistenFn } from '@tauri-apps/api/event';
@@ -15,8 +17,6 @@ import Component from '../routes/episode-list/[groupId]/+page.svelte';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitFor, waitForFadeTransition } from './lib/utils';
 
-import { audioScriptFileEpisodeAddStore } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
-import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
 import '$src/app.css';
 
 // Mock configurations
@@ -187,7 +187,7 @@ beforeEach(async () => {
   );
 
   groupPathStore.reset();
-  audioScriptFileEpisodeAddStore.reset();
+  fileBasedEpisodeAddStore.reset();
   tsvConfigStore.reset();
   i18nStore.init('en');
 

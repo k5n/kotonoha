@@ -42,6 +42,18 @@ export const tsvConfigStore = {
     return tsvConfig;
   },
 
+  get finalTsvConfig(): TsvConfig | undefined {
+    return tsvConfig.startTimeColumnIndex !== -1 && tsvConfig.textColumnIndex !== -1
+      ? {
+          startTimeColumnIndex: tsvConfig.startTimeColumnIndex,
+          textColumnIndex: tsvConfig.textColumnIndex,
+          ...(tsvConfig.endTimeColumnIndex !== -1 && {
+            endTimeColumnIndex: tsvConfig.endTimeColumnIndex,
+          }),
+        }
+      : undefined;
+  },
+
   get errorMessageKey() {
     return errorMessageKey;
   },

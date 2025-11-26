@@ -1,10 +1,10 @@
 import { t } from '$lib/application/stores/i18n.svelte';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
+import { assertNotNull } from '$lib/utils/assertion';
 import { bcp47ToTranslationKey } from '$lib/utils/language';
-import { tsvConfigStore } from './tsvConfigStore.svelte';
 import { ttsConfigStore } from './ttsConfigStore.svelte';
 
-export type TtsEpisodeAddPayload = {
+export type FileBasedEpisodeAddPayload = {
   readonly source: 'file';
   readonly title: string;
   readonly audioFilePath: string;
@@ -14,8 +14,8 @@ export type TtsEpisodeAddPayload = {
 };
 
 let title = $state('');
-let scriptFilePath = $state<string | null>(null);
 let audioFilePath = $state<string | null>(null);
+let scriptFilePath = $state<string | null>(null);
 let errorMessage = $state('');
 let languageDetectionWarningMessage = $state('');
 let detectedLanguage = $state<string | null>(null);
@@ -57,55 +57,15 @@ function failedLanguageDetection(errorKey: string, supportedLanguages: readonly 
   setSelectedStudyLanguage(supportedLanguages[0]);
 }
 
-function validateForm(): boolean {
-  const titleValue = title.trim();
-
-  if (!titleValue) {
-    errorMessage = t('components.fileEpisodeForm.errorTitleRequired');
-    return false;
-  }
-
-  if (!scriptFilePath) {
-    errorMessage = t('components.fileEpisodeForm.errorScriptFileRequired');
-    return false;
-  }
-
-  if (tsvConfigStore.scriptPreview) {
-    if (!tsvConfigStore.isValid) {
-      return false;
-    }
-  }
-
-  if (!selectedStudyLanguage) {
-    errorMessage = t('components.fileEpisodeForm.errorLanguageRequired');
-    return false;
-  }
-
-  errorMessage = '';
-  return true;
-}
-
-function buildPayload(): TtsEpisodeAddPayload | null {
-  const trimmedTitle = title.trim();
-  if (!trimmedTitle || !scriptFilePath || !audioFilePath || !selectedStudyLanguage) {
-    return null;
-  }
-
-  const currentConfig = tsvConfigStore.tsvConfig;
-  const finalTsvConfig =
-    currentConfig.startTimeColumnIndex !== -1 && currentConfig.textColumnIndex !== -1
-      ? {
-          startTimeColumnIndex: currentConfig.startTimeColumnIndex,
-          textColumnIndex: currentConfig.textColumnIndex,
-          ...(currentConfig.endTimeColumnIndex !== -1 && {
-            endTimeColumnIndex: currentConfig.endTimeColumnIndex,
-          }),
-        }
-      : undefined;
+function buildPayload(finalTsvConfig?: TsvConfig): FileBasedEpisodeAddPayload | null {
+  assert(title.trim().length > 0, 'Title is empty');
+  assertNotNull(audioFilePath, 'Audio file path is null');
+  assertNotNull(scriptFilePath, 'Script file path is null');
+  assertNotNull(selectedStudyLanguage, 'Selected study language is null');
 
   return {
     source: 'file',
-    title: trimmedTitle,
+    title: title.trim(),
     audioFilePath,
     scriptFilePath,
     learningLanguage: selectedStudyLanguage,
@@ -115,18 +75,16 @@ function buildPayload(): TtsEpisodeAddPayload | null {
 
 function reset() {
   title = '';
-  scriptFilePath = null;
   audioFilePath = null;
+  scriptFilePath = null;
   errorMessage = '';
   languageDetectionWarningMessage = '';
   detectedLanguage = null;
   learningTargetLanguages = [];
   selectedStudyLanguage = null;
-  tsvConfigStore.reset();
-  ttsConfigStore.reset();
 }
 
-export const ttsEpisodeAddStore = {
+export const fileBasedEpisodeAddStore = {
   get title() {
     return title;
   },
@@ -134,19 +92,18 @@ export const ttsEpisodeAddStore = {
     title = value;
   },
 
-  get scriptFilePath() {
-    return scriptFilePath;
-  },
-  set scriptFilePath(path: string | null) {
-    scriptFilePath = path;
-    audioFilePath = null;
-  },
-
   get audioFilePath() {
     return audioFilePath;
   },
   set audioFilePath(path: string | null) {
     audioFilePath = path;
+  },
+
+  get scriptFilePath() {
+    return scriptFilePath;
+  },
+  set scriptFilePath(path: string | null) {
+    scriptFilePath = path;
   },
 
   get errorMessage() {
@@ -160,10 +117,6 @@ export const ttsEpisodeAddStore = {
     return languageDetectionWarningMessage;
   },
 
-  get detectedLanguage() {
-    return detectedLanguage;
-  },
-
   get learningTargetLanguages() {
     return learningTargetLanguages;
   },
@@ -175,12 +128,12 @@ export const ttsEpisodeAddStore = {
     setSelectedStudyLanguage(value);
   },
 
+  get detectedLanguage() {
+    return detectedLanguage;
+  },
+
   completeLanguageDetection,
   failedLanguageDetection,
-  validateForm,
   buildPayload,
   reset,
-
-  tsv: tsvConfigStore,
-  tts: ttsConfigStore,
-};
+} as const;
