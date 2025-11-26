@@ -7,7 +7,7 @@
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import {
     detectScriptLanguage,
-    type LanguageDetectionStore,
+    populateLearningTargetLanguages,
   } from '$lib/application/usecases/detectScriptLanguage';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
@@ -57,29 +57,25 @@
     selectedEpisodeType = 'none';
   }
 
-  async function runLanguageDetection(
-    store: LanguageDetectionStore,
-    context: string
-  ): Promise<void> {
+  async function handleLanguageDetection(): Promise<void> {
+    const supportedLanguages = await populateLearningTargetLanguages();
     try {
-      await detectScriptLanguage(store);
+      const scriptFilePath = fileBasedEpisodeAddStore.scriptFilePath;
+      assertNotNull(scriptFilePath, 'Script file path is null during language detection');
+      const detected = await detectScriptLanguage(scriptFilePath);
+      fileBasedEpisodeAddStore.completeLanguageDetection(detected, supportedLanguages);
     } catch (e) {
-      console.error(`Failed to detect script language for ${context}: ${e}`);
+      console.error(`Failed to detect script language: ${e}`);
+      fileBasedEpisodeAddStore.failedLanguageDetection(
+        'components.fileEpisodeForm.errorDetectLanguage',
+        supportedLanguages
+      );
     }
-  }
-
-  // TODO: もう別々にする必要はないので統合する
-  async function handleAudioScriptLanguageDetection(): Promise<void> {
-    await runLanguageDetection(fileBasedEpisodeAddStore, 'audio-script');
-  }
-
-  async function handleTtsLanguageDetection(): Promise<void> {
-    await runLanguageDetection(fileBasedEpisodeAddStore, 'script-tts');
   }
 
   async function handleTtsSetup(): Promise<void> {
     try {
-      await fetchTtsVoices(fileBasedEpisodeAddStore);
+      await fetchTtsVoices();
     } catch (e) {
       console.error(`Failed to prepare TTS voices: ${e}`);
     }
@@ -118,7 +114,7 @@
   onClose={handleEpisodeModalClose}
   onSubmitRequested={handleEpisodeSubmit}
   onTsvFileSelected={previewScriptFile}
-  onDetectScriptLanguage={handleAudioScriptLanguageDetection}
+  onDetectScriptLanguage={handleLanguageDetection}
 />
 
 <TtsEpisodeAddModal
@@ -126,7 +122,7 @@
   onClose={handleEpisodeModalClose}
   onSubmitRequested={handleEpisodeSubmit}
   onTsvFileSelected={previewScriptFile}
-  onDetectScriptLanguage={handleTtsLanguageDetection}
+  onDetectScriptLanguage={handleLanguageDetection}
   onTtsEnabled={handleTtsSetup}
 />
 
