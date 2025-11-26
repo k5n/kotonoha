@@ -122,10 +122,32 @@
         tsvConfigStore.reset();
       }
       await onDetectScriptLanguage();
-      await fetchTtsVoices();
+      await prepareTtsVoices();
     } catch (error) {
       console.error('Failed to prepare script file for TTS episode:', error);
       fileBasedEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorSubmissionFailed');
+    }
+  }
+
+  async function prepareTtsVoices() {
+    if (ttsConfigStore.isFetchingVoices) {
+      console.warn('TTS voices are already being fetched. Skipping duplicate request.');
+      return;
+    }
+    if (ttsConfigStore.allVoices) {
+      console.log('TTS voices are already fetched. Skipping.');
+      ttsConfigStore.setLanguage(fileBasedEpisodeAddStore.selectedStudyLanguage);
+      return;
+    }
+
+    try {
+      ttsConfigStore.startVoicesFetching();
+      const voices = await fetchTtsVoices();
+      ttsConfigStore.setVoiceData(voices);
+      ttsConfigStore.setLanguage(fileBasedEpisodeAddStore.selectedStudyLanguage);
+    } catch (error) {
+      console.error('Failed to fetch TTS voices:', error);
+      ttsConfigStore.setError('components.ttsConfigSection.failedToLoad');
     }
   }
 

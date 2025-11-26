@@ -1,29 +1,23 @@
-import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
-import type { Voice } from '$lib/domain/entities/voice';
+import type { DefaultVoices, Voice } from '$lib/domain/entities/voice';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 import { getSupportedLanguages } from '$lib/utils/language';
-import { fileBasedEpisodeAddStore } from '../stores/FileBasedEpisodeAddStore.svelte';
+
+export type FetchTtsVoicesResult = {
+  readonly allVoices: readonly Voice[];
+  readonly learningTargetVoices: readonly Voice[];
+  readonly defaultVoices: DefaultVoices;
+};
 
 /**
  * Fetches available TTS voices filtered by Gemini-supported languages
- * and updates the episode add store with the results.
+ * and returns both all voices and learning-target voices.
  */
-export async function fetchTtsVoices(): Promise<void> {
+export async function fetchTtsVoices(): Promise<FetchTtsVoicesResult> {
   console.info('Fetching TTS voices...');
-  if (ttsConfigStore.isFetchingVoices) {
-    console.warn('TTS voices are already being fetched. Skipping duplicate request.');
-    return;
-  }
-  if (ttsConfigStore.allVoices) {
-    console.log('TTS voices are already fetched. Skipping.');
-    return;
-  }
   console.time('fetchTtsVoices');
 
   try {
-    ttsConfigStore.startVoicesFetching();
-
     const voices = await ttsRepository.getAvailableVoices();
     const supportedLanguageCodes = getSupportedLanguages().map((lang) => lang.code);
     const filteredVoices: Voice[] = voices.filter((voice) => {
@@ -40,21 +34,19 @@ export async function fetchTtsVoices(): Promise<void> {
           )
         : filteredVoices;
 
-    ttsConfigStore.setVoiceData({
-      allVoices: filteredVoices,
-      learningTargetVoices: learningTargetVoices,
-      defaultVoices,
-    });
-
-    // Trigger validation for the currently selected language
-    ttsConfigStore.setLanguage(fileBasedEpisodeAddStore.selectedStudyLanguage);
-
     console.info(
       `Fetched ${filteredVoices.length} TTS voices, ${learningTargetVoices.length} match voices for learning target languages.`
     );
+
+    return {
+      allVoices: filteredVoices,
+      learningTargetVoices,
+      defaultVoices,
+    };
   } catch (err) {
     console.error(`Failed to fetch TTS voices: ${err}`);
-    ttsConfigStore.setError('components.ttsConfigSection.failedToLoad');
+    throw err;
+  } finally {
+    console.timeEnd('fetchTtsVoices');
   }
-  console.timeEnd('fetchTtsVoices');
 }
