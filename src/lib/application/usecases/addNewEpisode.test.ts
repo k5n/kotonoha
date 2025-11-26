@@ -1,13 +1,9 @@
-import type { AudioScriptFileEpisodeAddPayload } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
-import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
+import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
 import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
 import type { Episode } from '$lib/domain/entities/episode';
 import { addNewEpisode } from './addNewEpisode';
 
-type EpisodeAddPayload =
-  | AudioScriptFileEpisodeAddPayload
-  | TtsEpisodeAddPayload
-  | YoutubeEpisodeAddPayload;
+type EpisodeAddPayload = FileBasedEpisodeAddPayload | YoutubeEpisodeAddPayload;
 
 // Mock repositories
 vi.mock('$lib/infrastructure/repositories/dialogueRepository', () => ({
@@ -55,23 +51,11 @@ describe('addNewEpisode', () => {
     vi.clearAllMocks();
   });
 
-  it('accepts AudioScriptFileEpisodeAddPayload and processes it correctly', async () => {
-    const payload: AudioScriptFileEpisodeAddPayload = {
+  it('accepts FileBasedEpisodeAddPayload and processes it correctly', async () => {
+    const payload: FileBasedEpisodeAddPayload = {
       source: 'file',
-      title: 'Audio Script Episode',
-      audioFilePath: '/path/to/audio.mp3',
-      scriptFilePath: '/path/to/script.srt',
-      learningLanguage: 'en',
-    };
-
-    await expect(addNewEpisode(payload, 1, mockEpisodes)).resolves.not.toThrow();
-  });
-
-  it('accepts TtsEpisodeAddPayload and processes it correctly', async () => {
-    const payload: TtsEpisodeAddPayload = {
-      source: 'file',
-      title: 'TTS Episode',
-      audioFilePath: '/generated/audio.mp3', // This would be set by TTS
+      title: 'File-based Episode',
+      audioFilePath: '/generated/audio.mp3',
       scriptFilePath: '/path/to/script.srt',
       learningLanguage: 'en',
     };

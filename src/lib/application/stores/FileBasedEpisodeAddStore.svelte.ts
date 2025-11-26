@@ -1,9 +1,10 @@
 import { t } from '$lib/application/stores/i18n.svelte';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
-import { assert, assertNotNull } from '$lib/utils/assertion';
+import { assertNotNull } from '$lib/utils/assertion';
 import { bcp47ToTranslationKey } from '$lib/utils/language';
+import { ttsConfigStore } from './ttsConfigStore.svelte';
 
-export type AudioScriptFileEpisodeAddPayload = {
+export type FileBasedEpisodeAddPayload = {
   readonly source: 'file';
   readonly title: string;
   readonly audioFilePath: string;
@@ -23,6 +24,7 @@ let selectedStudyLanguage = $state<string | null>(null);
 
 function setSelectedStudyLanguage(language: string | null) {
   selectedStudyLanguage = language;
+  ttsConfigStore.setLanguage(language);
 }
 
 function completeLanguageDetection(
@@ -44,6 +46,7 @@ function completeLanguageDetection(
       language: t(bcp47ToTranslationKey(detectedLanguageCode) || detectedLanguageCode),
     });
   }
+
   errorMessage = '';
 }
 
@@ -54,7 +57,7 @@ function failedLanguageDetection(errorKey: string, supportedLanguages: readonly 
   setSelectedStudyLanguage(supportedLanguages[0]);
 }
 
-function buildPayload(finalTsvConfig?: TsvConfig): AudioScriptFileEpisodeAddPayload | null {
+function buildPayload(finalTsvConfig?: TsvConfig): FileBasedEpisodeAddPayload | null {
   assert(title.trim().length > 0, 'Title is empty');
   assertNotNull(audioFilePath, 'Audio file path is null');
   assertNotNull(scriptFilePath, 'Script file path is null');
@@ -67,7 +70,7 @@ function buildPayload(finalTsvConfig?: TsvConfig): AudioScriptFileEpisodeAddPayl
     scriptFilePath,
     learningLanguage: selectedStudyLanguage,
     tsvConfig: finalTsvConfig,
-  } satisfies AudioScriptFileEpisodeAddPayload;
+  };
 }
 
 function reset() {
@@ -81,7 +84,7 @@ function reset() {
   selectedStudyLanguage = null;
 }
 
-export const audioScriptFileEpisodeAddStore = {
+export const fileBasedEpisodeAddStore = {
   get title() {
     return title;
   },
@@ -121,8 +124,8 @@ export const audioScriptFileEpisodeAddStore = {
   get selectedStudyLanguage() {
     return selectedStudyLanguage;
   },
-  set selectedStudyLanguage(language: string | null) {
-    setSelectedStudyLanguage(language);
+  set selectedStudyLanguage(value: string | null) {
+    setSelectedStudyLanguage(value);
   },
 
   get detectedLanguage() {

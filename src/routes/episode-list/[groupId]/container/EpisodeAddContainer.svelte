@@ -1,12 +1,8 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
-  import {
-    audioScriptFileEpisodeAddStore,
-    type AudioScriptFileEpisodeAddPayload,
-  } from '$lib/application/stores/audioScriptFileEpisodeAddStore.svelte';
+  import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+  import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
-  import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
   import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import {
@@ -72,28 +68,25 @@
     }
   }
 
+  // TODO: もう別々にする必要はないので統合する
   async function handleAudioScriptLanguageDetection(): Promise<void> {
-    await runLanguageDetection(audioScriptFileEpisodeAddStore, 'audio-script');
+    await runLanguageDetection(fileBasedEpisodeAddStore, 'audio-script');
   }
 
   async function handleTtsLanguageDetection(): Promise<void> {
-    await runLanguageDetection(ttsEpisodeAddStore, 'script-tts');
+    await runLanguageDetection(fileBasedEpisodeAddStore, 'script-tts');
   }
 
   async function handleTtsSetup(): Promise<void> {
     try {
-      await fetchTtsVoices(ttsEpisodeAddStore);
+      await fetchTtsVoices(fileBasedEpisodeAddStore);
     } catch (e) {
       console.error(`Failed to prepare TTS voices: ${e}`);
     }
   }
 
   async function handleEpisodeSubmit(
-    payload:
-      | AudioScriptFileEpisodeAddPayload
-      | TtsEpisodeAddPayload
-      | YoutubeEpisodeAddPayload
-      | null
+    payload: FileBasedEpisodeAddPayload | YoutubeEpisodeAddPayload | null
   ): Promise<void> {
     isSubmitting = true;
     try {

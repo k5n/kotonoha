@@ -1,5 +1,5 @@
+import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
 import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
-import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
 import type { Voice } from '$lib/domain/entities/voice';
 import { settingsRepository } from '$lib/infrastructure/repositories/settingsRepository';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
@@ -28,7 +28,9 @@ async function getAvailableVoices(store: TtsVoiceStore): Promise<readonly Voice[
  * Fetches available TTS voices filtered by Gemini-supported languages
  * and updates the episode add store with the results.
  */
-export async function fetchTtsVoices(store: TtsVoiceStore = ttsEpisodeAddStore): Promise<void> {
+export async function fetchTtsVoices(
+  store: TtsVoiceStore = fileBasedEpisodeAddStore
+): Promise<void> {
   console.info('Fetching TTS voices...');
   if (ttsConfigStore.isFetchingVoices) {
     console.warn('TTS voices are already being fetched. Skipping duplicate request.');

@@ -1,9 +1,9 @@
 <script lang="ts">
+  import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+  import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
-  import type { TtsEpisodeAddPayload } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
-  import { ttsEpisodeAddStore } from '$lib/application/stores/ttsEpisodeAddStore.svelte';
   import {
     cancelTtsModelDownload,
     downloadTtsModel,
@@ -21,7 +21,7 @@
   type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmitRequested: (payload: TtsEpisodeAddPayload | null) => Promise<void>;
+    onSubmitRequested: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
     onTsvFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
     onTtsEnabled: () => Promise<void>;
@@ -49,7 +49,7 @@
   });
 
   function resetFormState() {
-    ttsEpisodeAddStore.reset();
+    fileBasedEpisodeAddStore.reset();
     ttsConfigStore.reset();
     tsvConfigStore.reset();
     fieldErrors = {
@@ -81,18 +81,18 @@
   }
 
   function validateTitle(): string {
-    const value = ttsEpisodeAddStore.title.trim();
+    const value = fileBasedEpisodeAddStore.title.trim();
     return value ? '' : t('components.fileEpisodeForm.errorTitleRequired');
   }
 
   function validateScriptFile(): string {
-    return ttsEpisodeAddStore.scriptFilePath
+    return fileBasedEpisodeAddStore.scriptFilePath
       ? ''
       : t('components.fileEpisodeForm.errorScriptFileRequired');
   }
 
   function handleTitleChange(title: string) {
-    ttsEpisodeAddStore.title = title;
+    fileBasedEpisodeAddStore.title = title;
     if (fieldTouched.title) {
       fieldErrors.title = validateTitle();
     }
@@ -104,12 +104,13 @@
   }
 
   async function handleScriptFileChange(filePath: string | null) {
-    ttsEpisodeAddStore.scriptFilePath = filePath;
+    fileBasedEpisodeAddStore.scriptFilePath = filePath;
+    fileBasedEpisodeAddStore.audioFilePath = null; // Clear audio file when script file changes
     fieldTouched.scriptFile = true;
     fieldErrors.scriptFile = validateScriptFile();
 
     if (!filePath) {
-      ttsEpisodeAddStore.selectedStudyLanguage = null;
+      fileBasedEpisodeAddStore.selectedStudyLanguage = null;
       tsvConfigStore.reset();
       return;
     }
@@ -125,17 +126,17 @@
       await onTtsEnabled();
     } catch (error) {
       console.error('Failed to prepare script file for TTS episode:', error);
-      ttsEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorSubmissionFailed');
+      fileBasedEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorSubmissionFailed');
     }
   }
 
-  async function ensureTtsEpisodePayload(): Promise<TtsEpisodeAddPayload | null> {
+  async function ensureTtsEpisodePayload(): Promise<FileBasedEpisodeAddPayload | null> {
     try {
-      assertNotNull(ttsEpisodeAddStore.scriptFilePath, 'Script file path is required');
+      assertNotNull(fileBasedEpisodeAddStore.scriptFilePath, 'Script file path is required');
 
       console.info('TTS audio generation required for the new episode');
       await downloadTtsModel();
-      await executeTts(ttsEpisodeAddStore);
+      await executeTts(fileBasedEpisodeAddStore);
 
       assert(
         tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid,
@@ -143,7 +144,7 @@
       );
       const finalTsvConfig = tsvConfigStore.finalTsvConfig;
 
-      const finalPayload = ttsEpisodeAddStore.buildPayload(finalTsvConfig);
+      const finalPayload = fileBasedEpisodeAddStore.buildPayload(finalTsvConfig);
       assertNotNull(finalPayload, 'TTS episode payload is null');
       return finalPayload;
     } catch (error) {
@@ -203,9 +204,9 @@
   }
 
   let isFormValid = $derived(
-    ttsEpisodeAddStore.title.trim().length > 0 &&
-      ttsEpisodeAddStore.scriptFilePath !== null &&
-      ttsEpisodeAddStore.selectedStudyLanguage !== null &&
+    fileBasedEpisodeAddStore.title.trim().length > 0 &&
+      fileBasedEpisodeAddStore.scriptFilePath !== null &&
+      fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
       (!tsvConfigStore.scriptPreview || tsvConfigStore.isValid)
   );
 </script>
@@ -215,20 +216,20 @@
     {isSubmitting}
     {isProcessing}
     {isFormValid}
-    title={ttsEpisodeAddStore.title}
-    selectedStudyLanguage={ttsEpisodeAddStore.selectedStudyLanguage}
-    learningTargetLanguages={ttsEpisodeAddStore.learningTargetLanguages}
-    languageDetectionWarningMessage={ttsEpisodeAddStore.languageDetectionWarningMessage}
+    title={fileBasedEpisodeAddStore.title}
+    selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
+    learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
+    languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
     fieldErrors={{ title: fieldErrors.title }}
     fieldTouched={{ title: fieldTouched.title }}
-    errorMessage={ttsEpisodeAddStore.errorMessage}
+    errorMessage={fileBasedEpisodeAddStore.errorMessage}
     onTitleChange={handleTitleChange}
     onTitleBlur={handleTitleBlur}
     onCancel={handleClose}
     onSubmit={handleSubmit}
   >
     <ScriptFileSelect
-      scriptFilePath={ttsEpisodeAddStore.scriptFilePath}
+      scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
       fieldErrors={{ scriptFile: fieldErrors.scriptFile }}
       fieldTouched={{ scriptFile: fieldTouched.scriptFile }}
       hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
@@ -254,7 +255,7 @@
       </div>
     {/if}
 
-    {#if ttsEpisodeAddStore.scriptFilePath}
+    {#if fileBasedEpisodeAddStore.scriptFilePath}
       <TtsConfigSection
         {selectedLanguageVoices}
         {selectedQuality}
