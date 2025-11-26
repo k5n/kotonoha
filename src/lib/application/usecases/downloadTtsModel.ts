@@ -3,19 +3,6 @@ import type { FileInfo } from '$lib/domain/entities/voice';
 import { ttsRepository } from '$lib/infrastructure/repositories/ttsRepository';
 
 /**
- * Custom error for TTS download operations.
- */
-export class TtsDownloadError extends Error {
-  constructor(
-    message: string,
-    public readonly type: 'validation' | 'download' | 'network'
-  ) {
-    super(message);
-    this.name = 'TtsDownloadError';
-  }
-}
-
-/**
  * Gets the list of files that need to be downloaded.
  * @param modelFiles The model files to check.
  * @param baseUrl The base URL for the files.
@@ -71,14 +58,14 @@ async function executeDownloads(
       const downloadId = file.path;
       await downloader(file, downloadId);
     } catch (error) {
-      throw new TtsDownloadError(`Failed to download ${file.url}: ${error}`, 'download');
+      throw new Error(`Failed to download ${file.url}: ${error}`);
     }
   });
 
   const results = await Promise.allSettled(downloadPromises);
   const failures = results.filter((result) => result.status === 'rejected');
   if (failures.length > 0) {
-    throw new TtsDownloadError(`${failures.length} file(s) failed to download`, 'download');
+    throw new Error(`${failures.length} file(s) failed to download`);
   }
 }
 
@@ -92,7 +79,7 @@ export async function createDownloadTasks(
  * Download TTS model if not already downloaded.
  * Gets the currently selected voice and speaker from the store.
  *
- * @throws TtsDownloadError if no voice/speaker is selected or download fails
+ * @throws Error if download fails
  */
 export async function downloadTtsModel(
   downloadTasks: readonly FileInfo[],
@@ -100,9 +87,7 @@ export async function downloadTtsModel(
 ): Promise<void> {
   const totalBytes = downloadTasks.reduce((sum, file) => sum + file.bytes, 0);
   const progressUnlisten = await ttsRepository.listenDownloadProgress((payload) => {
-    // Update file progress
     const fileProgress = new Map<string, number>();
-    // payload.fileName may be a URL in the Tauri event; prefer using the relative path
     fileProgress.set(payload.fileName, payload.downloaded);
 
     // Calculate overall progress

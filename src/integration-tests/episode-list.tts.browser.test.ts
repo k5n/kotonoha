@@ -16,7 +16,6 @@ import Component from '../routes/episode-list/[groupId]/+page.svelte';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitFor, waitForFadeTransition } from './lib/utils';
 
-import { ttsDownloadStore } from '$lib/application/stores/ttsDownloadStore.svelte';
 import '$src/app.css';
 
 // Mock configurations
@@ -242,7 +241,6 @@ beforeEach(async () => {
   listenMock.mockImplementation(defaultListenMock);
 
   groupPathStore.reset();
-  ttsDownloadStore.reset();
   i18nStore.init('en');
 
   vi.mocked(open).mockReset();
