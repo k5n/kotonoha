@@ -1,4 +1,5 @@
 import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
+import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import type { TtsProgress } from '$lib/domain/entities/ttsEvent';
 import type { Voice } from '$lib/domain/entities/voice';
 
@@ -16,7 +17,12 @@ export type TtsExecutionController = {
   readonly isExecuting: boolean;
   readonly isCancelled: boolean;
   readonly errorMessageKey: string;
-  start: (scriptFilePath: string, voice: Voice, speakerId: number) => Promise<TtsExecutionResult>;
+  start: (
+    scriptFilePath: string,
+    voice: Voice,
+    speakerId: number,
+    tsvConfig: TsvConfig
+  ) => Promise<TtsExecutionResult>;
   cancel: () => Promise<void>;
   close: () => void;
   reset: () => void;
@@ -89,11 +95,12 @@ export function createTtsExecutionController(): TtsExecutionController {
   async function start(
     scriptFilePath: string,
     voice: Voice,
-    speakerId: number
+    speakerId: number,
+    tsvConfig: TsvConfig
   ): Promise<TtsExecutionResult> {
     openModal();
     try {
-      const result = await executeTts(scriptFilePath, voice, speakerId, updateProgress);
+      const result = await executeTts(scriptFilePath, voice, speakerId, tsvConfig, updateProgress);
       complete();
       return result;
     } catch (error) {

@@ -126,6 +126,7 @@ graph LR
     src_routes_episode_list__groupId___page_svelte --> src_routes_episode_list__groupId__presentational_EpisodeMoveModal_svelte
     src_routes_episode_list__groupId___page_svelte --> src_routes_episode_list__groupId__presentational_EpisodeNameEditModal_svelte
     src_routes_episode_list__groupId__container_EpisodeAddContainer_svelte --> src_lib_application_stores_fileBasedEpisodeAddStore_svelte_ts
+    src_routes_episode_list__groupId__container_EpisodeAddContainer_svelte --> src_lib_application_stores_tsvConfigStore_svelte_ts
     src_routes_episode_list__groupId__container_EpisodeAddContainer_svelte --> src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts
     src_routes_episode_list__groupId__container_EpisodeAddContainer_svelte --> src_routes_episode_list__groupId__container_AudioScriptFileEpisodeAddContainer_svelte
     src_routes_episode_list__groupId__container_EpisodeAddContainer_svelte --> src_routes_episode_list__groupId__container_TtsEpisodeAddContainer_svelte
@@ -499,14 +500,14 @@ Shows files that use the `detectScriptLanguage.ts` use case, and the files it de
 graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
-                subgraph sg_lib_application_stores ["stores"]
-                    src_lib_application_stores_tsvConfigStore_svelte_ts["tsvConfigStore.svelte.ts"]
-                end
                 subgraph sg_lib_application_usecases ["usecases"]
                     src_lib_application_usecases_detectScriptLanguage_ts["detectScriptLanguage.ts"]
                 end
             end
             subgraph sg_lib_domain ["domain"]
+                subgraph sg_lib_domain_entities ["entities"]
+                    src_lib_domain_entities_tsvConfig_ts["tsvConfig.ts"]
+                end
                 subgraph sg_lib_domain_services ["services"]
                     src_lib_domain_services_extractScriptText_ts["extractScriptText.ts"]
                 end
@@ -531,12 +532,13 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_application_stores_tsvConfigStore_svelte_ts
+    src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_domain_entities_tsvConfig_ts
     src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_domain_services_extractScriptText_ts
     src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_infrastructure_repositories_fileRepository_ts
     src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_infrastructure_repositories_languageDetectionRepository_ts
     src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_infrastructure_repositories_settingsRepository_ts
     src_lib_application_usecases_detectScriptLanguage_ts --> src_lib_utils_language_ts
+    src_lib_domain_services_extractScriptText_ts --> src_lib_domain_entities_tsvConfig_ts
     src_routes_episode_list__groupId__container_EpisodeAddContainer_svelte --> src_lib_application_usecases_detectScriptLanguage_ts
 ```
 ### Use Case: downloadTtsModel.ts
@@ -589,15 +591,13 @@ Shows files that use the `executeTts.ts` use case, and the files it depends on.
 graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
-                subgraph sg_lib_application_stores ["stores"]
-                    src_lib_application_stores_tsvConfigStore_svelte_ts["tsvConfigStore.svelte.ts"]
-                end
                 subgraph sg_lib_application_usecases ["usecases"]
                     src_lib_application_usecases_executeTts_ts["executeTts.ts"]
                 end
             end
             subgraph sg_lib_domain ["domain"]
                 subgraph sg_lib_domain_entities ["entities"]
+                    src_lib_domain_entities_tsvConfig_ts["tsvConfig.ts"]
                     src_lib_domain_entities_ttsEvent_ts["ttsEvent.ts"]
                     src_lib_domain_entities_ttsResult_ts["ttsResult.ts"]
                     src_lib_domain_entities_voice_ts["voice.ts"]
@@ -622,17 +622,19 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_executeTts_ts --> src_lib_application_stores_tsvConfigStore_svelte_ts
+    src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_tsvConfig_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_ttsEvent_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_ttsResult_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_domain_entities_voice_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_domain_services_extractScriptText_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_infrastructure_repositories_fileRepository_ts
     src_lib_application_usecases_executeTts_ts --> src_lib_infrastructure_repositories_ttsRepository_ts
+    src_lib_domain_services_extractScriptText_ts --> src_lib_domain_entities_tsvConfig_ts
     src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_ttsEvent_ts
     src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_ttsResult_ts
     src_lib_infrastructure_repositories_ttsRepository_ts --> src_lib_domain_entities_voice_ts
     src_routes_episode_list__groupId__container_ttsExecutionController_svelte_ts --> src_lib_application_usecases_executeTts_ts
+    src_routes_episode_list__groupId__container_ttsExecutionController_svelte_ts --> src_lib_domain_entities_tsvConfig_ts
     src_routes_episode_list__groupId__container_ttsExecutionController_svelte_ts --> src_lib_domain_entities_ttsEvent_ts
     src_routes_episode_list__groupId__container_ttsExecutionController_svelte_ts --> src_lib_domain_entities_voice_ts
 ```

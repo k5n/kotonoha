@@ -153,7 +153,8 @@
       const { audioPath, scriptPath } = await ttsExecutionController.start(
         scriptFilePath,
         selectedVoice,
-        selectedSpeakerId
+        selectedSpeakerId,
+        tsvConfigStore.tsvConfig
       );
       fileBasedEpisodeAddStore.scriptFilePath = scriptPath;
       fileBasedEpisodeAddStore.audioFilePath = audioPath;
