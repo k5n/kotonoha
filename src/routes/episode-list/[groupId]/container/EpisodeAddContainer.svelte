@@ -16,8 +16,8 @@
   import { Button } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
   import EpisodeSourceSelectionModal from '../presentational/EpisodeSourceSelectionModal.svelte';
-  import AudioScriptFileEpisodeAddModal from './AudioScriptFileEpisodeAddModal.svelte';
-  import TtsEpisodeAddModal from './TtsEpisodeAddModal.svelte';
+  import AudioScriptFileEpisodeAddModal from './AudioScriptFileEpisodeAddContainer.svelte';
+  import TtsEpisodeAddModal from './TtsEpisodeAddContainer.svelte';
   import YoutubeEpisodeAddModal from './YoutubeEpisodeAddModal.svelte';
 
   interface Props {

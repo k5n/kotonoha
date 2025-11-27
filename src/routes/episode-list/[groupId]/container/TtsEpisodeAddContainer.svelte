@@ -14,8 +14,7 @@
   import type { DownloadProgress, TtsProgress } from '$lib/domain/entities/ttsEvent';
   import type { FileInfo } from '$lib/domain/entities/voice';
   import { assert, assertNotNull } from '$lib/utils/assertion';
-  import { Modal } from 'flowbite-svelte';
-  import FileEpisodeForm from '../presentational/FileEpisodeForm.svelte';
+  import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
   import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
   import TtsConfigSection from '../presentational/TtsConfigSection.svelte';
@@ -415,65 +414,65 @@
   }
 </script>
 
-<Modal onclose={handleClose} {open} size="xl">
-  <FileEpisodeForm
-    {isSubmitting}
-    {isProcessing}
-    {isFormValid}
-    title={fileBasedEpisodeAddStore.title}
-    selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
-    learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
-    languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
-    fieldErrors={{ title: fieldErrors.title }}
-    fieldTouched={{ title: fieldTouched.title }}
-    errorMessage={fileBasedEpisodeAddStore.errorMessage}
-    onTitleChange={handleTitleChange}
-    onTitleBlur={handleTitleBlur}
-    onCancel={handleClose}
-    onSubmit={handleSubmit}
-  >
-    <ScriptFileSelect
-      scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
-      fieldErrors={{ scriptFile: fieldErrors.scriptFile }}
-      fieldTouched={{ scriptFile: fieldTouched.scriptFile }}
-      hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
-      onScriptFilePathChange={handleScriptFileChange}
+<FileEpisodeModal
+  {open}
+  {isSubmitting}
+  {isProcessing}
+  {isFormValid}
+  title={fileBasedEpisodeAddStore.title}
+  selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
+  learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
+  languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
+  fieldErrors={{ title: fieldErrors.title }}
+  fieldTouched={{ title: fieldTouched.title }}
+  errorMessage={fileBasedEpisodeAddStore.errorMessage}
+  onTitleChange={handleTitleChange}
+  onTitleBlur={handleTitleBlur}
+  onClose={handleClose}
+  onCancel={handleClose}
+  onSubmit={handleSubmit}
+>
+  <ScriptFileSelect
+    scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
+    fieldErrors={{ scriptFile: fieldErrors.scriptFile }}
+    fieldTouched={{ scriptFile: fieldTouched.scriptFile }}
+    hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
+    onScriptFilePathChange={handleScriptFileChange}
+  />
+
+  {#if tsvConfigStore.scriptPreview}
+    <TsvConfigSection
+      headers={tsvConfigStore.scriptPreview?.headers || []}
+      rows={tsvConfigStore.scriptPreview?.rows || []}
+      config={tsvConfigStore.tsvConfig}
+      valid={tsvConfigStore.isValid}
+      {startTimeColumnErrorMessage}
+      {textColumnErrorMessage}
+      onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
+      {onDetectScriptLanguage}
     />
+  {/if}
 
-    {#if tsvConfigStore.scriptPreview}
-      <TsvConfigSection
-        headers={tsvConfigStore.scriptPreview?.headers || []}
-        rows={tsvConfigStore.scriptPreview?.rows || []}
-        config={tsvConfigStore.tsvConfig}
-        valid={tsvConfigStore.isValid}
-        {startTimeColumnErrorMessage}
-        {textColumnErrorMessage}
-        onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
-        {onDetectScriptLanguage}
-      />
-    {/if}
+  {#if tsvConfigStore.errorMessageKey}
+    <div class="mb-4 text-sm text-red-600">
+      {t(tsvConfigStore.errorMessageKey)}
+    </div>
+  {/if}
 
-    {#if tsvConfigStore.errorMessageKey}
-      <div class="mb-4 text-sm text-red-600">
-        {t(tsvConfigStore.errorMessageKey)}
-      </div>
-    {/if}
-
-    {#if fileBasedEpisodeAddStore.scriptFilePath}
-      <TtsConfigSection
-        {selectedLanguageVoices}
-        {selectedQuality}
-        {selectedVoice}
-        {selectedSpeakerId}
-        isFetchingVoices={isFetchingTtsVoices}
-        errorMessage={ttsErrorMessage}
-        onSelectedQualityChange={handleSelectedQualityChange}
-        onSelectedVoiceChange={handleSelectedVoiceChange}
-        onSelectedSpeakerIdChange={handleSelectedSpeakerIdChange}
-      />
-    {/if}
-  </FileEpisodeForm>
-</Modal>
+  {#if fileBasedEpisodeAddStore.scriptFilePath}
+    <TtsConfigSection
+      {selectedLanguageVoices}
+      {selectedQuality}
+      {selectedVoice}
+      {selectedSpeakerId}
+      isFetchingVoices={isFetchingTtsVoices}
+      errorMessage={ttsErrorMessage}
+      onSelectedQualityChange={handleSelectedQualityChange}
+      onSelectedVoiceChange={handleSelectedVoiceChange}
+      onSelectedSpeakerIdChange={handleSelectedSpeakerIdChange}
+    />
+  {/if}
+</FileEpisodeModal>
 
 <TtsModelDownloadModal
   open={ttsDownloadModalOpen}
