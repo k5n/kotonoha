@@ -10,15 +10,14 @@
     populateLearningTargetLanguages,
   } from '$lib/application/usecases/detectScriptLanguage';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
-  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import type { Episode } from '$lib/domain/entities/episode';
   import { assertNotNull } from '$lib/utils/assertion';
   import { Button } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
   import EpisodeSourceSelectionModal from '../presentational/EpisodeSourceSelectionModal.svelte';
-  import AudioScriptFileEpisodeAddModal from './AudioScriptFileEpisodeAddModal.svelte';
-  import TtsEpisodeAddModal from './TtsEpisodeAddModal.svelte';
-  import YoutubeEpisodeAddModal from './YoutubeEpisodeAddModal.svelte';
+  import AudioScriptFileEpisodeAddContainer from './AudioScriptFileEpisodeAddContainer.svelte';
+  import TtsEpisodeAddContainer from './TtsEpisodeAddContainer.svelte';
+  import YoutubeEpisodeAddContainer from './YoutubeEpisodeAddContainer.svelte';
 
   interface Props {
     episodeGroupId: number;
@@ -100,25 +99,23 @@
   onSourceSelected={handleEpisodeSourceSelected}
 />
 
-<AudioScriptFileEpisodeAddModal
+<AudioScriptFileEpisodeAddContainer
   open={isOpen && selectedEpisodeType === 'audio-script'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleEpisodeSubmit}
-  onTsvFileSelected={previewScriptFile}
+  onSubmit={handleEpisodeSubmit}
   onDetectScriptLanguage={handleLanguageDetection}
 />
 
-<TtsEpisodeAddModal
+<TtsEpisodeAddContainer
   open={isOpen && selectedEpisodeType === 'script-tts'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleEpisodeSubmit}
-  onTsvFileSelected={previewScriptFile}
+  onSubmit={handleEpisodeSubmit}
   onDetectScriptLanguage={handleLanguageDetection}
 />
 
-<YoutubeEpisodeAddModal
+<YoutubeEpisodeAddContainer
   open={isOpen && selectedEpisodeType === 'youtube'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleEpisodeSubmit}
+  onSubmit={handleEpisodeSubmit}
   onYoutubeUrlChanged={fetchYoutubeMetadata}
 />

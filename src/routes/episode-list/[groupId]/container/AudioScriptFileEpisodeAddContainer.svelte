@@ -5,28 +5,21 @@
   } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
+  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import { assert } from '$lib/utils/assertion';
-  import { Modal } from 'flowbite-svelte';
   import AudioFileSelect from '../presentational/AudioFileSelect.svelte';
-  import FileEpisodeForm from '../presentational/FileEpisodeForm.svelte';
+  import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
   import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
 
   type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmitRequested: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
-    onTsvFileSelected: (filePath: string) => Promise<void>;
+    onSubmit: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
   };
 
-  let {
-    open = false,
-    onClose,
-    onSubmitRequested,
-    onTsvFileSelected,
-    onDetectScriptLanguage,
-  }: Props = $props();
+  let { open = false, onClose, onSubmit, onDetectScriptLanguage }: Props = $props();
 
   let isSubmitting = $state(false);
 
@@ -114,7 +107,7 @@
 
     const normalized = filePath.toLowerCase();
     if (normalized.endsWith('.tsv')) {
-      await onTsvFileSelected(filePath);
+      await previewScriptFile(filePath);
     } else {
       tsvConfigStore.reset();
       await onDetectScriptLanguage();
@@ -140,67 +133,67 @@
     isSubmitting = true;
     try {
       const payload = buildPayload();
-      await onSubmitRequested(payload);
+      await onSubmit(payload);
     } finally {
       handleClose();
     }
   }
 </script>
 
-<Modal onclose={handleClose} {open} size="xl">
-  <FileEpisodeForm
-    {isSubmitting}
-    isProcessing={tsvConfigStore.isFetchingScriptPreview}
-    isFormValid={fileBasedEpisodeAddStore.title.trim().length > 0 &&
-      fileBasedEpisodeAddStore.audioFilePath !== null &&
-      fileBasedEpisodeAddStore.scriptFilePath !== null &&
-      fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
-      (tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid)}
-    title={fileBasedEpisodeAddStore.title}
-    selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
-    learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
+<FileEpisodeModal
+  {open}
+  {isSubmitting}
+  isProcessing={tsvConfigStore.isFetchingScriptPreview}
+  isFormValid={fileBasedEpisodeAddStore.title.trim().length > 0 &&
+    fileBasedEpisodeAddStore.audioFilePath !== null &&
+    fileBasedEpisodeAddStore.scriptFilePath !== null &&
+    fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
+    (tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid)}
+  title={fileBasedEpisodeAddStore.title}
+  selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
+  learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
+  {fieldErrors}
+  {fieldTouched}
+  languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
+  errorMessage={fileBasedEpisodeAddStore.errorMessage}
+  onTitleChange={handleTitleChange}
+  onTitleBlur={handleTitleBlur}
+  onClose={handleClose}
+  onCancel={handleClose}
+  onSubmit={handleSubmit}
+>
+  <AudioFileSelect
+    audioFilePath={fileBasedEpisodeAddStore.audioFilePath}
     {fieldErrors}
     {fieldTouched}
-    languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
-    errorMessage={fileBasedEpisodeAddStore.errorMessage}
-    onTitleChange={handleTitleChange}
-    onTitleBlur={handleTitleBlur}
-    onCancel={handleClose}
-    onSubmit={handleSubmit}
-  >
-    <AudioFileSelect
-      audioFilePath={fileBasedEpisodeAddStore.audioFilePath}
-      {fieldErrors}
-      {fieldTouched}
-      onAudioFileChange={handleAudioFileChange}
+    onAudioFileChange={handleAudioFileChange}
+  />
+  <ScriptFileSelect
+    scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
+    {fieldErrors}
+    {fieldTouched}
+    hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
+    onScriptFilePathChange={handleScriptFileChange}
+  />
+  {#if tsvConfigStore.scriptPreview !== null}
+    <TsvConfigSection
+      headers={tsvConfigStore.scriptPreview?.headers || []}
+      rows={tsvConfigStore.scriptPreview?.rows || []}
+      config={tsvConfigStore.tsvConfig}
+      valid={tsvConfigStore.isValid}
+      startTimeColumnErrorMessage={tsvConfigStore.startTimeColumnErrorMessageKey
+        ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
+        : ''}
+      textColumnErrorMessage={tsvConfigStore.textColumnErrorMessageKey
+        ? t(tsvConfigStore.textColumnErrorMessageKey)
+        : ''}
+      onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
+      {onDetectScriptLanguage}
     />
-    <ScriptFileSelect
-      scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
-      {fieldErrors}
-      {fieldTouched}
-      hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
-      onScriptFilePathChange={handleScriptFileChange}
-    />
-    {#if tsvConfigStore.scriptPreview !== null}
-      <TsvConfigSection
-        headers={tsvConfigStore.scriptPreview?.headers || []}
-        rows={tsvConfigStore.scriptPreview?.rows || []}
-        config={tsvConfigStore.tsvConfig}
-        valid={tsvConfigStore.isValid}
-        startTimeColumnErrorMessage={tsvConfigStore.startTimeColumnErrorMessageKey
-          ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
-          : ''}
-        textColumnErrorMessage={tsvConfigStore.textColumnErrorMessageKey
-          ? t(tsvConfigStore.textColumnErrorMessageKey)
-          : ''}
-        onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
-        {onDetectScriptLanguage}
-      />
-    {/if}
-    {#if tsvConfigStore.errorMessageKey}
-      <div class="mb-4 text-sm text-red-600">
-        {t(tsvConfigStore.errorMessageKey)}
-      </div>
-    {/if}
-  </FileEpisodeForm>
-</Modal>
+  {/if}
+  {#if tsvConfigStore.errorMessageKey}
+    <div class="mb-4 text-sm text-red-600">
+      {t(tsvConfigStore.errorMessageKey)}
+    </div>
+  {/if}
+</FileEpisodeModal>
