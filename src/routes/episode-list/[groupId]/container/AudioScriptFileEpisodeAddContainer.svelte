@@ -2,7 +2,7 @@
   import {
     fileBasedEpisodeAddStore,
     type FileBasedEpisodeAddPayload,
-  } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+  } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';

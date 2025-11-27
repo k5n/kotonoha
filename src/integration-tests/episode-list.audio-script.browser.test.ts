@@ -1,5 +1,5 @@
 import { invalidateAll } from '$app/navigation';
-import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
