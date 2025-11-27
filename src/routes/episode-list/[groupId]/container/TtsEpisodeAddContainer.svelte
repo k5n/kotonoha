@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import type { FileBasedEpisodeAddPayload } from '$lib/application/usecases/addNewEpisode';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
   import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assert, assertNotNull } from '$lib/utils/assertion';

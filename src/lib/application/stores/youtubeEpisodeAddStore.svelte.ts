@@ -1,14 +1,6 @@
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { bcp47ToTranslationKey } from '$lib/utils/language';
-
-/**
- * YouTubeベースのエピソード追加ペイロード
- */
-export type YoutubeEpisodeAddPayload = {
-  readonly source: 'youtube';
-  readonly metadata: YoutubeMetadata;
-  readonly url: string;
-};
+import type { YoutubeEpisodeAddPayload } from '../usecases/addNewEpisode';
 
 let url = $state('');
 let metadata = $state<YoutubeMetadata | null>(null);

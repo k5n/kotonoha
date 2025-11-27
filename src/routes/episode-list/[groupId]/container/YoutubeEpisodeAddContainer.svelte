@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
-  import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
+  import type { YoutubeEpisodeAddPayload } from '$lib/application/usecases/addNewEpisode';
   import {
     fetchYoutubeMetadata,
     InvalidYoutubeUrlError,
@@ -16,7 +16,6 @@
     onClose: () => void;
     onSubmit: (payload: YoutubeEpisodeAddPayload) => Promise<void>;
   };
-
   let { open = false, onClose, onSubmit }: Props = $props();
 
   let isSubmitting = $state(false);

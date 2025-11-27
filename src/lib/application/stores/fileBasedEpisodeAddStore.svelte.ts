@@ -2,15 +2,7 @@ import { t } from '$lib/application/stores/i18n.svelte';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import { assertNotNull } from '$lib/utils/assertion';
 import { bcp47ToTranslationKey } from '$lib/utils/language';
-
-export type FileBasedEpisodeAddPayload = {
-  readonly source: 'file';
-  readonly title: string;
-  readonly audioFilePath: string;
-  readonly scriptFilePath: string;
-  readonly learningLanguage: string;
-  readonly tsvConfig?: TsvConfig;
-};
+import type { FileBasedEpisodeAddPayload } from '../usecases/addNewEpisode';
 
 let title = $state('');
 let audioFilePath = $state<string | null>(null);

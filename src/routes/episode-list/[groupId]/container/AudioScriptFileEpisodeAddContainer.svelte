@@ -1,9 +1,7 @@
 <script lang="ts">
-  import {
-    fileBasedEpisodeAddStore,
-    type FileBasedEpisodeAddPayload,
-  } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
+  import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import type { FileBasedEpisodeAddPayload } from '$lib/application/usecases/addNewEpisode';
   import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assert } from '$lib/utils/assertion';
   import AudioFileSelect from '../presentational/AudioFileSelect.svelte';
