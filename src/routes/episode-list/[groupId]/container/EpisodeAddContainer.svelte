@@ -1,15 +1,12 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
-  import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
-  import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
+  import { addNewEpisode, type EpisodeAddPayload } from '$lib/application/usecases/addNewEpisode';
   import {
     detectScriptLanguage,
     populateLearningTargetLanguages,
   } from '$lib/application/usecases/detectScriptLanguage';
-  import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assertNotNull } from '$lib/utils/assertion';
@@ -72,9 +69,7 @@
     }
   }
 
-  async function handleEpisodeSubmit(
-    payload: FileBasedEpisodeAddPayload | YoutubeEpisodeAddPayload | null
-  ): Promise<void> {
+  async function handleEpisodeSubmit(payload: EpisodeAddPayload | null): Promise<void> {
     isSubmitting = true;
     try {
       assertNotNull(payload, 'Episode payload is not ready');
@@ -118,5 +113,4 @@
   open={isOpen && selectedEpisodeType === 'youtube'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}
-  onYoutubeUrlChanged={fetchYoutubeMetadata}
 />

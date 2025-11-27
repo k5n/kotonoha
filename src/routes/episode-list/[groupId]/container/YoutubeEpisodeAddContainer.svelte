@@ -1,7 +1,11 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
-  import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
-  import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
+  import type { YoutubeEpisodeAddPayload } from '$lib/application/usecases/addNewEpisode';
+  import {
+    fetchYoutubeMetadata,
+    InvalidYoutubeUrlError,
+    YoutubeDataApiKeyNotSetError,
+  } from '$lib/application/usecases/fetchYoutubeMetadata';
   import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
   import { bcp47ToTranslationKey } from '$lib/utils/language';
   import YoutubeEpisodeAddModal from '../presentational/YoutubeEpisodeAddModal.svelte';
@@ -10,17 +14,23 @@
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: YoutubeEpisodeAddPayload) => Promise<void>;
-    onYoutubeUrlChanged: (url: string) => Promise<void>;
   };
-
-  let { open = false, onClose, onSubmit, onYoutubeUrlChanged }: Props = $props();
+  let { open = false, onClose, onSubmit }: Props = $props();
 
   let isSubmitting = $state(false);
 
-  let isFormBusy = $derived(isSubmitting || youtubeEpisodeAddStore.isMetadataFetching);
+  let url = $state('');
+  let metadata = $state<YoutubeMetadata | null>(null);
+  let isMetadataFetching = $state(false);
+  let errorMessageKey = $state('');
 
-  let languageName = $derived.by(() => {
-    const metadata = youtubeEpisodeAddStore.metadata;
+  const isLanguageSupported = $derived(
+    !!metadata && bcp47ToTranslationKey(metadata.language) !== undefined
+  );
+
+  const isFormBusy = $derived(isSubmitting || isMetadataFetching);
+
+  const languageName = $derived.by(() => {
     if (!metadata) return '';
     const languageKey = bcp47ToTranslationKey(metadata.language);
     return languageKey
@@ -30,14 +40,61 @@
         });
   });
 
-  const metadata = $derived<YoutubeMetadata | null>(youtubeEpisodeAddStore.metadata);
-  const url = $derived(youtubeEpisodeAddStore.url);
-  const title = $derived(youtubeEpisodeAddStore.metadata?.title || '');
-  const canSubmit = $derived(Boolean(youtubeEpisodeAddStore.metadata));
-  const isLanguageSupported = $derived(Boolean(youtubeEpisodeAddStore.isLanguageSupported));
+  const title = $derived(metadata?.title || '');
+  const canSubmit = $derived(Boolean(metadata));
 
   function resetFormState() {
-    youtubeEpisodeAddStore.reset();
+    url = '';
+    metadata = null;
+    isMetadataFetching = false;
+    errorMessageKey = '';
+  }
+
+  function setUrl(value: string) {
+    url = value;
+    if (!value.trim()) {
+      metadata = null;
+      errorMessageKey = '';
+    }
+  }
+
+  function handleTitleChange(titleValue: string) {
+    if (metadata) {
+      metadata = {
+        ...metadata,
+        title: titleValue,
+      };
+    }
+  }
+
+  function validate(): boolean {
+    const title = metadata?.title?.trim() || '';
+    const currentUrl = url.trim();
+    if (!title) {
+      errorMessageKey = 'components.youtubeEpisodeForm.errorTitleRequired';
+      return false;
+    }
+    if (!currentUrl) {
+      errorMessageKey = 'components.youtubeEpisodeForm.errorYoutubeUrlRequired';
+      return false;
+    }
+    if (!isLanguageSupported) {
+      errorMessageKey = 'components.youtubeEpisodeForm.errorUnsupportedLanguage';
+      return false;
+    }
+    return true;
+  }
+
+  function buildPayload(): YoutubeEpisodeAddPayload | null {
+    if (!url.trim() || !metadata) {
+      return null;
+    }
+
+    return {
+      source: 'youtube',
+      metadata,
+      url,
+    };
   }
 
   function handleClose() {
@@ -46,25 +103,41 @@
     onClose();
   }
 
-  function handleYoutubeUrlChange(urlValue: string) {
-    youtubeEpisodeAddStore.url = urlValue;
-    onYoutubeUrlChanged(urlValue);
-  }
+  async function handleYoutubeUrlChange(urlValue: string) {
+    setUrl(urlValue.trim());
+    if (url === '') {
+      return;
+    }
 
-  function handleTitleChange(titleValue: string) {
-    youtubeEpisodeAddStore.changeTitle(titleValue);
+    isMetadataFetching = true;
+    errorMessageKey = '';
+    try {
+      metadata = await fetchYoutubeMetadata(urlValue);
+    } catch (error) {
+      metadata = null;
+      if (error instanceof YoutubeDataApiKeyNotSetError) {
+        errorMessageKey = 'components.youtubeEpisodeForm.errorApiKeyNotSet';
+      } else if (error instanceof InvalidYoutubeUrlError) {
+        errorMessageKey = 'components.youtubeEpisodeForm.errorInvalidUrl';
+      } else {
+        console.error('Failed to fetch YouTube metadata:', error);
+        errorMessageKey = 'components.youtubeEpisodeForm.errorFetchFailed';
+      }
+    } finally {
+      isMetadataFetching = false;
+    }
   }
 
   async function handleSubmitRequest() {
-    if (isSubmitting || youtubeEpisodeAddStore.isMetadataFetching) {
+    if (isSubmitting || isMetadataFetching) {
       return;
     }
 
-    if (!youtubeEpisodeAddStore.validate()) {
+    if (!validate()) {
       return;
     }
 
-    const payload = youtubeEpisodeAddStore.buildPayload();
+    const payload = buildPayload();
     if (!payload) {
       return;
     }
@@ -75,7 +148,7 @@
       handleClose();
     } catch (error) {
       console.error('Failed to submit YouTube episode:', error);
-      youtubeEpisodeAddStore.setErrorMessage('components.youtubeEpisodeForm.errorSubmissionFailed');
+      errorMessageKey = 'components.youtubeEpisodeForm.errorSubmissionFailed';
     } finally {
       isSubmitting = false;
     }
@@ -89,11 +162,11 @@
   {metadata}
   {languageName}
   {isLanguageSupported}
-  isMetadataFetching={youtubeEpisodeAddStore.isMetadataFetching}
+  {isMetadataFetching}
   {isFormBusy}
   {isSubmitting}
   {canSubmit}
-  errorMessageKey={youtubeEpisodeAddStore.errorMessageKey}
+  {errorMessageKey}
   onUrlChange={handleYoutubeUrlChange}
   onTitleChange={handleTitleChange}
   onSubmit={handleSubmitRequest}

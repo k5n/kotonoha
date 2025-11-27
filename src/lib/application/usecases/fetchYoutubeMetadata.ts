@@ -1,5 +1,5 @@
 import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
-import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
+import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { extractYoutubeVideoId, isValidYoutubeUrl } from '$lib/domain/services/youtubeUrlValidator';
 import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
@@ -17,42 +17,27 @@ async function ensureApiKey(): Promise<string | null> {
   return null;
 }
 
-export async function fetchYoutubeMetadata(url: string): Promise<void> {
-  if (!url.trim()) {
-    youtubeEpisodeAddStore.completeMetadataFetching(null);
-    return;
+export class YoutubeDataApiKeyNotSetError extends Error {}
+export class InvalidYoutubeUrlError extends Error {}
+
+export async function fetchYoutubeMetadata(url: string): Promise<YoutubeMetadata> {
+  const youtubeDataApiKey = await ensureApiKey();
+  if (!youtubeDataApiKey) {
+    console.error('YouTube Data API key is not set.');
+    throw new YoutubeDataApiKeyNotSetError();
   }
 
-  try {
-    youtubeEpisodeAddStore.startMetadataFetching();
-    const youtubeDataApiKey = await ensureApiKey();
-    if (!youtubeDataApiKey) {
-      youtubeEpisodeAddStore.failedMetadataFetching(
-        'components.youtubeEpisodeForm.errorApiKeyNotSet'
-      );
-      return;
-    }
-
-    if (!isValidYoutubeUrl(url)) {
-      youtubeEpisodeAddStore.failedMetadataFetching(
-        'components.youtubeEpisodeForm.errorInvalidUrl'
-      );
-      return;
-    }
-
-    const videoId = extractYoutubeVideoId(url);
-    if (videoId === null) {
-      console.error(`Failed to get videoId: ${url}`);
-      youtubeEpisodeAddStore.failedMetadataFetching(
-        'components.youtubeEpisodeForm.errorInvalidUrl'
-      );
-      return;
-    }
-
-    const metadata = await youtubeRepository.fetchYoutubeMetadata(youtubeDataApiKey, videoId);
-    youtubeEpisodeAddStore.completeMetadataFetching(metadata);
-  } catch (err) {
-    console.error(`Failed to fetch YouTube metadata: ${err}`);
-    youtubeEpisodeAddStore.failedMetadataFetching('components.youtubeEpisodeForm.errorFetchFailed');
+  if (!isValidYoutubeUrl(url)) {
+    console.error(`Invalid YouTube URL: ${url}`);
+    throw new InvalidYoutubeUrlError();
   }
+
+  const videoId = extractYoutubeVideoId(url);
+  if (videoId === null) {
+    console.error(`Failed to get videoId: ${url}`);
+    throw new InvalidYoutubeUrlError();
+  }
+
+  const metadata = await youtubeRepository.fetchYoutubeMetadata(youtubeDataApiKey, videoId);
+  return metadata;
 }

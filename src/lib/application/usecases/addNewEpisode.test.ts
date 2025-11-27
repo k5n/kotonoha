@@ -1,9 +1,9 @@
-import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
-import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
 import type { Episode } from '$lib/domain/entities/episode';
-import { addNewEpisode } from './addNewEpisode';
-
-type EpisodeAddPayload = FileBasedEpisodeAddPayload | YoutubeEpisodeAddPayload;
+import {
+  addNewEpisode,
+  type EpisodeAddPayload,
+  type FileBasedEpisodeAddPayload,
+} from './addNewEpisode';
 
 // Mock repositories
 vi.mock('$lib/infrastructure/repositories/dialogueRepository', () => ({
