@@ -77,6 +77,58 @@ vi.mock('@tauri-apps/plugin-http', () => ({
         },
         aliases: ['en-us-test-medium'],
       },
+      'en_US-bravo-medium': {
+        key: 'en_US-bravo-medium',
+        name: 'bravo',
+        language: {
+          code: 'en_US',
+          family: 'en',
+          region: 'US',
+          name_native: 'English',
+          name_english: 'English',
+          country_english: 'United States',
+        },
+        quality: 'medium',
+        num_speakers: 1,
+        speaker_id_map: { main: 0 },
+        files: {
+          'en/en_US/bravo/medium/en_US-bravo-medium.onnx': {
+            size_bytes: 100,
+            md5_digest: '33333333333333333333333333333333',
+          },
+          'en/en_US/bravo/medium/en_US-bravo-medium.onnx.json': {
+            size_bytes: 50,
+            md5_digest: '44444444444444444444444444444444',
+          },
+        },
+        aliases: [],
+      },
+      'en_US-charlie-high': {
+        key: 'en_US-charlie-high',
+        name: 'charlie',
+        language: {
+          code: 'en_US',
+          family: 'en',
+          region: 'US',
+          name_native: 'English',
+          name_english: 'English',
+          country_english: 'United States',
+        },
+        quality: 'high',
+        num_speakers: 2,
+        speaker_id_map: { lead: 0, side: 1 },
+        files: {
+          'en/en_US/charlie/high/en_US-charlie-high.onnx': {
+            size_bytes: 100,
+            md5_digest: '55555555555555555555555555555555',
+          },
+          'en/en_US/charlie/high/en_US-charlie-high.onnx.json': {
+            size_bytes: 50,
+            md5_digest: '66666666666666666666666666666666',
+          },
+        },
+        aliases: [],
+      },
       'es_ES-test-medium': {
         key: 'es_ES-test-medium',
         name: 'es-test',
@@ -84,6 +136,7 @@ vi.mock('@tauri-apps/plugin-http', () => ({
           code: 'es_ES',
           family: 'es',
           region: 'ES',
+          // cSpell:words Español
           name_native: 'Español',
           name_english: 'Spanish',
           country_english: 'Spain',
@@ -386,6 +439,58 @@ test('success: switches TTS voices when learning language changes', async () => 
   const speakerSelect = page.getByLabelText('Speaker');
   await expect.element(speakerSelect).toHaveValue('0');
 
+  await page.screenshot();
+});
+
+test('success: switches quality, voice, and speaker selections', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('TTS Quality Switch Episode');
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  await page.getByTestId('script-file-select').click();
+
+  await waitFor(100);
+
+  const qualitySelect = page.getByLabelText('Quality');
+  const voiceSelect = page.getByLabelText('Voice');
+  let speakerSelect = page.getByLabelText('Speaker');
+  await page.screenshot();
+
+  await expect.element(qualitySelect).toHaveValue('medium');
+  await expect.element(voiceSelect).toHaveValue('test');
+  await expect.element(speakerSelect).toHaveValue('0');
+
+  await userEvent.selectOptions(voiceSelect, 'bravo');
+  await tick();
+  await waitFor(50);
+  await page.screenshot();
+
+  await expect.element(voiceSelect).toHaveValue('bravo');
+  await expect.element(speakerSelect).not.toBeInTheDocument();
+
+  await userEvent.selectOptions(qualitySelect, 'high');
+  await tick();
+  await waitFor(50);
+  await page.screenshot();
+
+  await expect.element(qualitySelect).toHaveValue('high');
+  await expect.element(voiceSelect).toHaveValue('charlie');
+
+  speakerSelect = page.getByLabelText('Speaker');
+  await expect.element(speakerSelect).toHaveValue('0');
+
+  await userEvent.selectOptions(speakerSelect, '1');
+  await tick();
+  await waitFor(50);
+  await page.screenshot();
+
+  await expect.element(speakerSelect).toHaveValue('1');
   await page.screenshot();
 });
 
