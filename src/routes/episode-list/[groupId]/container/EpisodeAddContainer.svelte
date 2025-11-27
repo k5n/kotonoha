@@ -9,7 +9,6 @@
     detectScriptLanguage,
     populateLearningTargetLanguages,
   } from '$lib/application/usecases/detectScriptLanguage';
-  import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import type { Episode } from '$lib/domain/entities/episode';
   import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assertNotNull } from '$lib/utils/assertion';
@@ -118,5 +117,4 @@
   open={isOpen && selectedEpisodeType === 'youtube'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}
-  onYoutubeUrlChanged={fetchYoutubeMetadata}
 />

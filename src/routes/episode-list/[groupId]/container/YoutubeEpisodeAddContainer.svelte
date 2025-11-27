@@ -2,6 +2,11 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { youtubeEpisodeAddStore } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
+  import {
+    fetchYoutubeMetadata,
+    InvalidYoutubeUrlError,
+    YoutubeDataApiKeyNotSetError,
+  } from '$lib/application/usecases/fetchYoutubeMetadata';
   import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
   import { bcp47ToTranslationKey } from '$lib/utils/language';
   import YoutubeEpisodeAddModal from '../presentational/YoutubeEpisodeAddModal.svelte';
@@ -10,10 +15,9 @@
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: YoutubeEpisodeAddPayload) => Promise<void>;
-    onYoutubeUrlChanged: (url: string) => Promise<void>;
   };
 
-  let { open = false, onClose, onSubmit, onYoutubeUrlChanged }: Props = $props();
+  let { open = false, onClose, onSubmit }: Props = $props();
 
   let isSubmitting = $state(false);
 
@@ -46,9 +50,32 @@
     onClose();
   }
 
-  function handleYoutubeUrlChange(urlValue: string) {
-    youtubeEpisodeAddStore.url = urlValue;
-    onYoutubeUrlChanged(urlValue);
+  async function handleYoutubeUrlChange(urlValue: string) {
+    youtubeEpisodeAddStore.url = urlValue.trim();
+    if (youtubeEpisodeAddStore.url === '') {
+      return;
+    }
+
+    youtubeEpisodeAddStore.startMetadataFetching();
+    try {
+      const metadata = await fetchYoutubeMetadata(urlValue);
+      youtubeEpisodeAddStore.completeMetadataFetching(metadata);
+    } catch (error) {
+      if (error instanceof YoutubeDataApiKeyNotSetError) {
+        youtubeEpisodeAddStore.failedMetadataFetching(
+          'components.youtubeEpisodeForm.errorApiKeyNotSet'
+        );
+      } else if (error instanceof InvalidYoutubeUrlError) {
+        youtubeEpisodeAddStore.failedMetadataFetching(
+          'components.youtubeEpisodeForm.errorInvalidUrl'
+        );
+      } else {
+        console.error('Failed to fetch YouTube metadata:', error);
+        youtubeEpisodeAddStore.failedMetadataFetching(
+          'components.youtubeEpisodeForm.errorFetchFailed'
+        );
+      }
+    }
   }
 
   function handleTitleChange(titleValue: string) {
