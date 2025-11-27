@@ -3,6 +3,7 @@
   import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
+  import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
   import {
@@ -60,7 +61,7 @@
     try {
       const scriptFilePath = fileBasedEpisodeAddStore.scriptFilePath;
       assertNotNull(scriptFilePath, 'Script file path is null during language detection');
-      const detected = await detectScriptLanguage(scriptFilePath);
+      const detected = await detectScriptLanguage(scriptFilePath, tsvConfigStore.tsvConfig);
       fileBasedEpisodeAddStore.completeLanguageDetection(detected, supportedLanguages);
     } catch (e) {
       console.error(`Failed to detect script language: ${e}`);
