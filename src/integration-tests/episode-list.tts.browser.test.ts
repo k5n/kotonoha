@@ -9,7 +9,7 @@ import { fetch as httpFetch } from '@tauri-apps/plugin-http';
 import Database from '@tauri-apps/plugin-sql';
 import { tick } from 'svelte';
 import { render } from 'vitest-browser-svelte';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
@@ -76,6 +76,35 @@ vi.mock('@tauri-apps/plugin-http', () => ({
           },
         },
         aliases: ['en-us-test-medium'],
+      },
+      'es_ES-test-medium': {
+        key: 'es_ES-test-medium',
+        name: 'es-test',
+        language: {
+          code: 'es_ES',
+          family: 'es',
+          region: 'ES',
+          name_native: 'Español',
+          name_english: 'Spanish',
+          country_english: 'Spain',
+        },
+        quality: 'medium',
+        num_speakers: 2,
+        speaker_id_map: {
+          juan: 0,
+          maria: 1,
+        },
+        files: {
+          'es/es_ES/es-test/medium/es_ES-es-test-medium.onnx': {
+            size_bytes: 61234567,
+            md5_digest: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          },
+          'es/es_ES/es-test/medium/es_ES-es-test-medium.onnx.json': {
+            size_bytes: 4321,
+            md5_digest: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+          },
+        },
+        aliases: [],
       },
     }),
   }),
@@ -319,6 +348,44 @@ test('success: handles TTS submit request with valid payload', async () => {
 
   await waitFor(TTS_WAIT_TIME_MS);
   await waitForFadeTransition();
+  await page.screenshot();
+});
+
+test('success: switches TTS voices when learning language changes', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  await setupPage(String(groupId));
+
+  await openTtsEpisodeModal();
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await titleInput.fill('TTS Language Switch Episode');
+
+  vi.mocked(open).mockResolvedValue('/path/to/selected/file.srt');
+  await page.getByTestId('script-file-select').click();
+
+  await waitFor(100);
+
+  const learningLanguageSelect = page.getByTestId('learningLanguage');
+  const qualitySelect = page.getByLabelText('Quality');
+  const voiceSelect = page.getByLabelText('Voice');
+
+  await expect.element(learningLanguageSelect).toHaveValue('en');
+  await expect.element(qualitySelect).toHaveValue('medium');
+  await expect.element(voiceSelect).toHaveValue('test');
+
+  await userEvent.selectOptions(learningLanguageSelect, 'es');
+  await tick();
+  await waitFor(50);
+  await page.screenshot();
+
+  await expect.element(learningLanguageSelect).toHaveValue('es');
+  await expect.element(qualitySelect).toHaveValue('medium');
+  await expect.element(voiceSelect).toHaveValue('es-test');
+
+  const speakerSelect = page.getByLabelText('Speaker');
+  await expect.element(speakerSelect).toHaveValue('0');
+
   await page.screenshot();
 });
 

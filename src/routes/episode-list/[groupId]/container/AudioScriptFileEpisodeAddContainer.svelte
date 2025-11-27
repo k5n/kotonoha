@@ -150,7 +150,7 @@
     fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
     (tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid)}
   title={fileBasedEpisodeAddStore.title}
-  selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
+  learningLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
   learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
   {fieldErrors}
   {fieldTouched}
@@ -158,6 +158,9 @@
   errorMessage={fileBasedEpisodeAddStore.errorMessage}
   onTitleChange={handleTitleChange}
   onTitleBlur={handleTitleBlur}
+  onLearningLanguageChange={(lang) => {
+    fileBasedEpisodeAddStore.selectedStudyLanguage = lang;
+  }}
   onClose={handleClose}
   onCancel={handleClose}
   onSubmit={handleSubmit}

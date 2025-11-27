@@ -106,6 +106,7 @@
     if (!filePath) {
       fileBasedEpisodeAddStore.selectedStudyLanguage = null;
       tsvConfigStore.reset();
+      ttsConfigStore.reset();
       return;
     }
 
@@ -122,6 +123,11 @@
       console.error('Failed to prepare script file for TTS episode:', error);
       fileBasedEpisodeAddStore.errorMessage = t('components.fileEpisodeForm.errorSubmissionFailed');
     }
+  }
+
+  function handleLearningLanguageChange(lang: string | null) {
+    fileBasedEpisodeAddStore.selectedStudyLanguage = lang;
+    ttsConfigStore.setLanguage(lang);
   }
 
   async function prepareTtsVoices() {
@@ -244,7 +250,7 @@
   {isProcessing}
   {isFormValid}
   title={fileBasedEpisodeAddStore.title}
-  selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
+  learningLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
   learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
   languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
   fieldErrors={{ title: fieldErrors.title }}
@@ -252,6 +258,7 @@
   errorMessage={fileBasedEpisodeAddStore.errorMessage}
   onTitleChange={handleTitleChange}
   onTitleBlur={handleTitleBlur}
+  onLearningLanguageChange={handleLearningLanguageChange}
   onClose={handleClose}
   onCancel={handleClose}
   onSubmit={handleSubmit}
