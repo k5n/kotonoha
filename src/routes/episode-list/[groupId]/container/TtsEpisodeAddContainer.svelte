@@ -4,7 +4,6 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
-  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import { assert, assertNotNull } from '$lib/utils/assertion';
   import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
@@ -20,11 +19,17 @@
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
+    onTsvScriptFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
   };
 
-  let { open = false, onClose, onSubmit, onDetectScriptLanguage }: Props = $props();
-
+  let {
+    open = false,
+    onClose,
+    onSubmit,
+    onTsvScriptFileSelected,
+    onDetectScriptLanguage,
+  }: Props = $props();
   const ttsConfigController = createTtsConfigController();
   const ttsModelDownloadController = createTtsModelDownloadController();
   const ttsExecutionController = createTtsExecutionController();
@@ -101,7 +106,7 @@
     const lowered = filePath.toLowerCase();
     try {
       if (lowered.endsWith('.tsv')) {
-        await previewScriptFile(filePath);
+        await onTsvScriptFileSelected(filePath);
       } else {
         tsvConfigStore.reset();
       }

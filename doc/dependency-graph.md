@@ -1223,14 +1223,14 @@ Shows files that use the `previewScriptFile.ts` use case, and the files it depen
 graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
-                subgraph sg_lib_application_stores ["stores"]
-                    src_lib_application_stores_tsvConfigStore_svelte_ts["tsvConfigStore.svelte.ts"]
-                end
                 subgraph sg_lib_application_usecases ["usecases"]
                     src_lib_application_usecases_previewScriptFile_ts["previewScriptFile.ts"]
                 end
             end
             subgraph sg_lib_domain ["domain"]
+                subgraph sg_lib_domain_entities ["entities"]
+                    src_lib_domain_entities_scriptPreview_ts["scriptPreview.ts"]
+                end
                 subgraph sg_lib_domain_services ["services"]
                     src_lib_domain_services_parseScriptPreview_ts["parseScriptPreview.ts"]
                 end
@@ -1245,19 +1245,16 @@ graph LR
             subgraph sg_routes_episode_list ["episode-list"]
                 subgraph sg_routes_episode_list__groupId_ ["[groupId]"]
                     subgraph sg_routes_episode_list__groupId__container ["container"]
-                        src_routes_episode_list__groupId__container_AudioScriptFileEpisodeAddContainer_svelte["AudioScriptFileEpisodeAddContainer.svelte"]
-                        src_routes_episode_list__groupId__container_TtsEpisodeAddContainer_svelte["TtsEpisodeAddContainer.svelte"]
+                        src_routes_episode_list__groupId__container_EpisodeAddContainer_svelte["EpisodeAddContainer.svelte"]
                     end
                 end
             end
         end
-    src_lib_application_usecases_previewScriptFile_ts --> src_lib_application_stores_tsvConfigStore_svelte_ts
+    src_lib_application_usecases_previewScriptFile_ts --> src_lib_domain_entities_scriptPreview_ts
     src_lib_application_usecases_previewScriptFile_ts --> src_lib_domain_services_parseScriptPreview_ts
     src_lib_application_usecases_previewScriptFile_ts --> src_lib_infrastructure_repositories_fileRepository_ts
-    src_routes_episode_list__groupId__container_TtsEpisodeAddContainer_svelte --> src_lib_application_stores_tsvConfigStore_svelte_ts
-    src_routes_episode_list__groupId__container_TtsEpisodeAddContainer_svelte --> src_lib_application_usecases_previewScriptFile_ts
-    src_routes_episode_list__groupId__container_AudioScriptFileEpisodeAddContainer_svelte --> src_lib_application_stores_tsvConfigStore_svelte_ts
-    src_routes_episode_list__groupId__container_AudioScriptFileEpisodeAddContainer_svelte --> src_lib_application_usecases_previewScriptFile_ts
+    src_lib_domain_services_parseScriptPreview_ts --> src_lib_domain_entities_scriptPreview_ts
+    src_routes_episode_list__groupId__container_EpisodeAddContainer_svelte --> src_lib_application_usecases_previewScriptFile_ts
 ```
 ### Use Case: saveSettings.ts
 

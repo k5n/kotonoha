@@ -5,7 +5,6 @@
   } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
-  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import { assert } from '$lib/utils/assertion';
   import AudioFileSelect from '../presentational/AudioFileSelect.svelte';
   import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
@@ -16,11 +15,17 @@
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
+    onTsvScriptFileSelected: (filePath: string) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
   };
 
-  let { open = false, onClose, onSubmit, onDetectScriptLanguage }: Props = $props();
-
+  let {
+    open = false,
+    onClose,
+    onSubmit,
+    onTsvScriptFileSelected,
+    onDetectScriptLanguage,
+  }: Props = $props();
   let isSubmitting = $state(false);
 
   let fieldErrors = $state({
@@ -107,7 +112,7 @@
 
     const normalized = filePath.toLowerCase();
     if (normalized.endsWith('.tsv')) {
-      await previewScriptFile(filePath);
+      await onTsvScriptFileSelected(filePath);
     } else {
       tsvConfigStore.reset();
       await onDetectScriptLanguage();

@@ -11,6 +11,7 @@
     populateLearningTargetLanguages,
   } from '$lib/application/usecases/detectScriptLanguage';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
+  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import type { Episode } from '$lib/domain/entities/episode';
   import { assertNotNull } from '$lib/utils/assertion';
   import { Button } from 'flowbite-svelte';
@@ -72,6 +73,17 @@
     }
   }
 
+  async function handleTsvScriptFilePreview(filePath: string) {
+    tsvConfigStore.startScriptPreviewFetching();
+    try {
+      const preview = await previewScriptFile(filePath);
+      tsvConfigStore.completeScriptPreviewFetching(preview);
+    } catch (e) {
+      console.error(`Failed to preview TSV script file: ${e}`);
+      tsvConfigStore.failedScriptPreviewFetching('components.fileEpisodeForm.errorTsvParse');
+    }
+  }
+
   async function handleEpisodeSubmit(
     payload: FileBasedEpisodeAddPayload | YoutubeEpisodeAddPayload | null
   ): Promise<void> {
@@ -104,6 +116,7 @@
   open={isOpen && selectedEpisodeType === 'audio-script'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}
+  onTsvScriptFileSelected={handleTsvScriptFilePreview}
   onDetectScriptLanguage={handleLanguageDetection}
 />
 
@@ -111,6 +124,7 @@
   open={isOpen && selectedEpisodeType === 'script-tts'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}
+  onTsvScriptFileSelected={handleTsvScriptFilePreview}
   onDetectScriptLanguage={handleLanguageDetection}
 />
 
