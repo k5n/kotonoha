@@ -8,11 +8,11 @@
   type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmitRequested: (payload: YoutubeEpisodeAddPayload) => Promise<void>;
+    onSubmit: (payload: YoutubeEpisodeAddPayload) => Promise<void>;
     onYoutubeUrlChanged: (url: string) => Promise<void>;
   };
 
-  let { open = false, onClose, onSubmitRequested, onYoutubeUrlChanged }: Props = $props();
+  let { open = false, onClose, onSubmit, onYoutubeUrlChanged }: Props = $props();
 
   let isSubmitting = $state(false);
 
@@ -55,7 +55,7 @@
 
     try {
       isSubmitting = true;
-      await onSubmitRequested(payload);
+      await onSubmit(payload);
       handleClose();
     } catch (error) {
       console.error('Failed to submit YouTube episode:', error);

@@ -5,6 +5,7 @@
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
+  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import { assert, assertNotNull } from '$lib/utils/assertion';
   import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
@@ -18,18 +19,11 @@
   type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmitRequested: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
-    onTsvFileSelected: (filePath: string) => Promise<void>;
+    onSubmit: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
     onDetectScriptLanguage: () => Promise<void>;
   };
 
-  let {
-    open = false,
-    onClose,
-    onSubmitRequested,
-    onTsvFileSelected,
-    onDetectScriptLanguage,
-  }: Props = $props();
+  let { open = false, onClose, onSubmit, onDetectScriptLanguage }: Props = $props();
 
   const ttsModelDownloadController = createTtsModelDownloadController();
   const ttsExecutionController = createTtsExecutionController();
@@ -118,7 +112,7 @@
     const lowered = filePath.toLowerCase();
     try {
       if (lowered.endsWith('.tsv')) {
-        await onTsvFileSelected(filePath);
+        await previewScriptFile(filePath);
       } else {
         tsvConfigStore.reset();
       }
@@ -190,7 +184,7 @@
     try {
       const payload = await ensureTtsEpisodePayload();
       if (payload !== null) {
-        await onSubmitRequested(payload);
+        await onSubmit(payload);
       }
     } catch (error) {
       console.error('Failed to submit TTS episode:', error);

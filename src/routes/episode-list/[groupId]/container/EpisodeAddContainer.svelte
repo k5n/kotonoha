@@ -10,7 +10,6 @@
     populateLearningTargetLanguages,
   } from '$lib/application/usecases/detectScriptLanguage';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
-  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
   import type { Episode } from '$lib/domain/entities/episode';
   import { assertNotNull } from '$lib/utils/assertion';
   import { Button } from 'flowbite-svelte';
@@ -103,22 +102,20 @@
 <AudioScriptFileEpisodeAddModal
   open={isOpen && selectedEpisodeType === 'audio-script'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleEpisodeSubmit}
-  onTsvFileSelected={previewScriptFile}
+  onSubmit={handleEpisodeSubmit}
   onDetectScriptLanguage={handleLanguageDetection}
 />
 
 <TtsEpisodeAddModal
   open={isOpen && selectedEpisodeType === 'script-tts'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleEpisodeSubmit}
-  onTsvFileSelected={previewScriptFile}
+  onSubmit={handleEpisodeSubmit}
   onDetectScriptLanguage={handleLanguageDetection}
 />
 
 <YoutubeEpisodeAddModal
   open={isOpen && selectedEpisodeType === 'youtube'}
   onClose={handleEpisodeModalClose}
-  onSubmitRequested={handleEpisodeSubmit}
+  onSubmit={handleEpisodeSubmit}
   onYoutubeUrlChanged={fetchYoutubeMetadata}
 />
