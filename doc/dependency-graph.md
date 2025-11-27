@@ -63,7 +63,6 @@ graph LR
                 subgraph sg_lib_application_stores ["stores"]
                     src_lib_application_stores_fileBasedEpisodeAddStore_svelte_ts["fileBasedEpisodeAddStore.svelte.ts"]
                     src_lib_application_stores_groupPathStore_svelte_ts["groupPathStore.svelte.ts"]
-                    src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts["youtubeEpisodeAddStore.svelte.ts"]
                 end
             end
             subgraph sg_lib_presentation ["presentation"]
@@ -148,7 +147,6 @@ graph LR
     src_routes_episode_list__groupId__container_TtsEpisodeAddContainer_svelte --> src_routes_episode_list__groupId__presentational_TtsConfigSection_svelte
     src_routes_episode_list__groupId__container_TtsEpisodeAddContainer_svelte --> src_routes_episode_list__groupId__presentational_TtsExecutionModal_svelte
     src_routes_episode_list__groupId__container_TtsEpisodeAddContainer_svelte --> src_routes_episode_list__groupId__presentational_TtsModelDownloadModal_svelte
-    src_routes_episode_list__groupId__container_YoutubeEpisodeAddContainer_svelte --> src_lib_application_stores_youtubeEpisodeAddStore_svelte_ts
     src_routes_episode_list__groupId__container_YoutubeEpisodeAddContainer_svelte --> src_routes_episode_list__groupId__presentational_YoutubeEpisodeAddModal_svelte
     src_routes_episode_list__groupId__presentational_AudioFileSelect_svelte --> src_lib_presentation_components_presentational_FileSelect_svelte
     src_routes_episode_list__groupId__presentational_ScriptFileSelect_svelte --> src_lib_presentation_components_presentational_FileSelect_svelte
