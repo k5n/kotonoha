@@ -4,15 +4,7 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
-  import {
-    cancelTtsModelDownload,
-    createDownloadTasks,
-    downloadTtsModel,
-  } from '$lib/application/usecases/downloadTtsModel';
-  import { cancelTtsExecution, executeTts } from '$lib/application/usecases/executeTts';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
-  import type { DownloadProgress, TtsProgress } from '$lib/domain/entities/ttsEvent';
-  import type { FileInfo } from '$lib/domain/entities/voice';
   import { assert, assertNotNull } from '$lib/utils/assertion';
   import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
@@ -20,11 +12,8 @@
   import TtsConfigSection from '../presentational/TtsConfigSection.svelte';
   import TtsExecutionModal from '../presentational/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '../presentational/TtsModelDownloadModal.svelte';
-
-  type ContextLine = {
-    readonly text: string;
-    readonly isCurrentLine: boolean;
-  };
+  import { createTtsExecutionController } from './ttsExecutionController.svelte';
+  import { createTtsModelDownloadController } from './ttsModelDownloadController.svelte';
 
   type Props = {
     open: boolean;
@@ -42,6 +31,9 @@
     onDetectScriptLanguage,
   }: Props = $props();
 
+  const ttsModelDownloadController = createTtsModelDownloadController();
+  const ttsExecutionController = createTtsExecutionController();
+
   let isSubmitting = $state(false);
 
   let previousOpen = false;
@@ -58,6 +50,8 @@
     fileBasedEpisodeAddStore.reset();
     ttsConfigStore.reset();
     tsvConfigStore.reset();
+    ttsModelDownloadController.reset();
+    ttsExecutionController.reset();
     fieldErrors = {
       title: '',
       scriptFile: '',
@@ -161,10 +155,20 @@
   async function ensureTtsEpisodePayload(): Promise<FileBasedEpisodeAddPayload | null> {
     try {
       assertNotNull(fileBasedEpisodeAddStore.scriptFilePath, 'Script file path is required');
+      const scriptFilePath = fileBasedEpisodeAddStore.scriptFilePath;
+      const selectedVoice = ttsConfigStore.selectedVoice;
+      assertNotNull(selectedVoice, 'No TTS voice selected');
+      const selectedSpeakerId = parseInt(ttsConfigStore.selectedSpeakerId);
 
       console.info('TTS audio generation required for the new episode');
-      await startDownloadTtsModel();
-      await startTts();
+      await ttsModelDownloadController.start(selectedVoice.files);
+      const { audioPath, scriptPath } = await ttsExecutionController.start(
+        scriptFilePath,
+        selectedVoice,
+        selectedSpeakerId
+      );
+      fileBasedEpisodeAddStore.scriptFilePath = scriptPath;
+      fileBasedEpisodeAddStore.audioFilePath = audioPath;
 
       assert(
         tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid,
@@ -177,7 +181,7 @@
       return finalPayload;
     } catch (error) {
       console.error('Failed to build TTS episode payload:', error);
-      throw null;
+      return null;
     }
   }
 
@@ -185,10 +189,11 @@
     isSubmitting = true;
     try {
       const payload = await ensureTtsEpisodePayload();
-      await onSubmitRequested(payload);
+      if (payload !== null) {
+        await onSubmitRequested(payload);
+      }
     } catch (error) {
       console.error('Failed to submit TTS episode:', error);
-    } finally {
       handleClose();
     }
   }
@@ -237,181 +242,6 @@
       fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
       (!tsvConfigStore.scriptPreview || tsvConfigStore.isValid)
   );
-
-  // TTS model download
-
-  let ttsDownloadTasks: readonly FileInfo[] = $state([]);
-  let ttsDownloadModalOpen = $state(false);
-  let ttsDownloadProgress = $state<DownloadProgress>({
-    downloadId: '',
-    fileName: '',
-    progress: 0,
-    downloaded: 0,
-    total: 0,
-  });
-  let ttsDownloadIsDownloading = $state(false);
-  let ttsDownloadErrorMessage = $state('');
-
-  function openTtsDownloadModal() {
-    ttsDownloadModalOpen = true;
-    ttsDownloadIsDownloading = true;
-    ttsDownloadErrorMessage = '';
-  }
-
-  function closeTtsDownloadModal() {
-    ttsDownloadTasks = [];
-    ttsDownloadModalOpen = false;
-    ttsDownloadProgress = {
-      downloadId: '',
-      fileName: '',
-      progress: 0,
-      downloaded: 0,
-      total: 0,
-    };
-    ttsDownloadIsDownloading = false;
-    ttsDownloadErrorMessage = '';
-  }
-
-  function updateTtsDownloadProgress(newProgress: DownloadProgress) {
-    ttsDownloadProgress = newProgress;
-  }
-
-  function handleTtsDownloadFailed(errorMessage: string) {
-    ttsDownloadErrorMessage = errorMessage;
-    ttsDownloadIsDownloading = false;
-  }
-
-  async function startDownloadTtsModel(): Promise<void> {
-    try {
-      assertNotNull(ttsConfigStore.selectedVoice, 'No TTS voice selected');
-      ttsDownloadTasks = await createDownloadTasks(ttsConfigStore.selectedVoice.files);
-      if (ttsDownloadTasks.length === 0) {
-        console.log('All TTS model files are already downloaded.');
-        return;
-      }
-      openTtsDownloadModal();
-      await downloadTtsModel(ttsDownloadTasks, updateTtsDownloadProgress);
-      closeTtsDownloadModal();
-    } catch (error) {
-      console.error('Failed to download TTS model:', error);
-      handleTtsDownloadFailed(t('components.ttsModelDownloadModal.error.downloadFailed'));
-    }
-  }
-
-  async function handleTtsModelDownloadCancel() {
-    try {
-      const downloadIds = ttsDownloadTasks.map((file) => file.path);
-      await cancelTtsModelDownload(downloadIds);
-    } finally {
-      closeTtsDownloadModal();
-    }
-  }
-
-  // TTS execution
-
-  let ttsExecutionOpen = $state(false);
-  let ttsExecutionProgress = $state(0);
-  let ttsExecutionContextLines = $state<readonly ContextLine[]>([]);
-  let ttsExecutionLineHistory = $state<string[]>([]);
-  let ttsExecutionIsExecuting = $state(false);
-  let ttsExecutionErrorMessage = $state('');
-  let ttsExecutionIsCancelled = $state(false);
-
-  function openTtsExecutionModal() {
-    ttsExecutionOpen = true;
-    ttsExecutionIsExecuting = true;
-    ttsExecutionProgress = 0;
-    ttsExecutionContextLines = [];
-    ttsExecutionLineHistory = [];
-    ttsExecutionErrorMessage = '';
-    ttsExecutionIsCancelled = false;
-  }
-
-  function closeTtsExecutionModal() {
-    ttsExecutionOpen = false;
-    ttsExecutionIsExecuting = false;
-    ttsExecutionProgress = 0;
-    ttsExecutionContextLines = [];
-    ttsExecutionLineHistory = [];
-    ttsExecutionErrorMessage = '';
-  }
-
-  function truncateText(text: string, maxLength: number): string {
-    if (text.length <= maxLength) {
-      return text;
-    }
-    return text.substring(0, maxLength - 3) + '...';
-  }
-
-  function updateTtsExecutionProgress(progressPayload: TtsProgress) {
-    ttsExecutionProgress = progressPayload.progress;
-
-    const truncatedText = truncateText(progressPayload.text, 80);
-    if (
-      ttsExecutionLineHistory.length === 0 ||
-      ttsExecutionLineHistory[ttsExecutionLineHistory.length - 1] !== truncatedText
-    ) {
-      ttsExecutionLineHistory = [...ttsExecutionLineHistory, truncatedText];
-    }
-
-    const recentLines = ttsExecutionLineHistory.slice(-3);
-    ttsExecutionContextLines = recentLines.map((line, index) => ({
-      text: line,
-      isCurrentLine: index === recentLines.length - 1,
-    }));
-  }
-
-  function completeTtsExecution() {
-    ttsExecutionIsExecuting = false;
-    ttsExecutionOpen = false;
-    ttsExecutionProgress = 100;
-  }
-
-  function failedTtsExecution(message: string) {
-    ttsExecutionErrorMessage = message;
-    ttsExecutionIsExecuting = false;
-  }
-
-  function cancelTtsExecutionState() {
-    ttsExecutionIsCancelled = true;
-    ttsExecutionOpen = false;
-  }
-
-  function handleTtsExecutionClose() {
-    closeTtsExecutionModal();
-  }
-
-  async function startTts() {
-    const scriptFilePath = fileBasedEpisodeAddStore.scriptFilePath;
-    assertNotNull(scriptFilePath, 'Script file path must not be null');
-    const selectedVoice = ttsConfigStore.selectedVoice;
-    assertNotNull(selectedVoice, 'No voice selected for TTS');
-    const selectedSpeakerId = parseInt(ttsConfigStore.selectedSpeakerId);
-
-    openTtsExecutionModal();
-    try {
-      const { audioPath, scriptPath } = await executeTts(
-        scriptFilePath,
-        selectedVoice,
-        selectedSpeakerId,
-        updateTtsExecutionProgress
-      );
-      fileBasedEpisodeAddStore.scriptFilePath = scriptPath;
-      fileBasedEpisodeAddStore.audioFilePath = audioPath;
-      completeTtsExecution();
-    } catch (error) {
-      console.error(`Failed to execute TTS: ${error}`);
-      if (!ttsExecutionIsCancelled) {
-        failedTtsExecution(t('components.ttsExecutionModal.error.failedToExecute'));
-      }
-      throw error;
-    }
-  }
-
-  async function handleTtsExecutionCancel() {
-    await cancelTtsExecution();
-    cancelTtsExecutionState();
-  }
 </script>
 
 <FileEpisodeModal
@@ -475,20 +305,20 @@
 </FileEpisodeModal>
 
 <TtsModelDownloadModal
-  open={ttsDownloadModalOpen}
-  progress={ttsDownloadProgress}
-  isDownloading={ttsDownloadIsDownloading}
-  errorMessage={ttsDownloadErrorMessage}
-  onCancel={handleTtsModelDownloadCancel}
-  onClose={closeTtsDownloadModal}
+  open={ttsModelDownloadController.open}
+  progress={ttsModelDownloadController.progress}
+  isDownloading={ttsModelDownloadController.isDownloading}
+  errorMessage={t(ttsModelDownloadController.errorMessageKey)}
+  onCancel={ttsModelDownloadController.cancel}
+  onClose={ttsModelDownloadController.close}
 />
 
 <TtsExecutionModal
-  open={ttsExecutionOpen}
-  progress={ttsExecutionProgress}
-  contextLines={ttsExecutionContextLines}
-  isExecuting={ttsExecutionIsExecuting}
-  errorMessage={ttsExecutionErrorMessage}
-  onCancel={handleTtsExecutionCancel}
-  onClose={handleTtsExecutionClose}
+  open={ttsExecutionController.open}
+  progress={ttsExecutionController.progress}
+  contextLines={ttsExecutionController.contextLines}
+  isExecuting={ttsExecutionController.isExecuting}
+  errorMessage={t(ttsExecutionController.errorMessageKey)}
+  onCancel={ttsExecutionController.cancel}
+  onClose={ttsExecutionController.close}
 />
