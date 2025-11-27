@@ -1,7 +1,7 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
-  import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
-  import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+  import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
+  import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
   import { addNewEpisode } from '$lib/application/usecases/addNewEpisode';
@@ -11,6 +11,7 @@
   } from '$lib/application/usecases/detectScriptLanguage';
   import { fetchYoutubeMetadata } from '$lib/application/usecases/fetchYoutubeMetadata';
   import type { Episode } from '$lib/domain/entities/episode';
+  import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assertNotNull } from '$lib/utils/assertion';
   import { Button } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
@@ -55,12 +56,12 @@
     selectedEpisodeType = 'none';
   }
 
-  async function handleLanguageDetection(): Promise<void> {
+  async function handleLanguageDetection(tsvConfig: TsvConfig): Promise<void> {
     const supportedLanguages = await populateLearningTargetLanguages();
     try {
       const scriptFilePath = fileBasedEpisodeAddStore.scriptFilePath;
       assertNotNull(scriptFilePath, 'Script file path is null during language detection');
-      const detected = await detectScriptLanguage(scriptFilePath);
+      const detected = await detectScriptLanguage(scriptFilePath, tsvConfig);
       fileBasedEpisodeAddStore.completeLanguageDetection(detected, supportedLanguages);
     } catch (e) {
       console.error(`Failed to detect script language: ${e}`);

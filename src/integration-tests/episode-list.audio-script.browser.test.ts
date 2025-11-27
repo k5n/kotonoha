@@ -1,8 +1,7 @@
 import { invalidateAll } from '$app/navigation';
-import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
-import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event, type UnlistenFn } from '@tauri-apps/api/event';
@@ -188,7 +187,6 @@ beforeEach(async () => {
 
   groupPathStore.reset();
   fileBasedEpisodeAddStore.reset();
-  tsvConfigStore.reset();
   i18nStore.init('en');
 
   vi.mocked(open).mockReset();

@@ -1,4 +1,4 @@
-import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
 import type { YoutubeEpisodeAddPayload } from '$lib/application/stores/youtubeEpisodeAddStore.svelte';
 import type { Episode } from '$lib/domain/entities/episode';
 import { addNewEpisode } from './addNewEpisode';

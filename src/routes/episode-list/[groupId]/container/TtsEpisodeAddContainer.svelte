@@ -1,11 +1,9 @@
 <script lang="ts">
-  import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
-  import { fileBasedEpisodeAddStore } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+  import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
+  import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
-  import { ttsConfigStore } from '$lib/application/stores/ttsConfigStore.svelte';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
-  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
+  import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assert, assertNotNull } from '$lib/utils/assertion';
   import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
@@ -13,6 +11,8 @@
   import TtsConfigSection from '../presentational/TtsConfigSection.svelte';
   import TtsExecutionModal from '../presentational/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '../presentational/TtsModelDownloadModal.svelte';
+  import { createTsvConfigController } from './tsvConfigController.svelte';
+  import { createTtsConfigController } from './ttsConfigController.svelte';
   import { createTtsExecutionController } from './ttsExecutionController.svelte';
   import { createTtsModelDownloadController } from './ttsModelDownloadController.svelte';
 
@@ -20,17 +20,16 @@
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
-    onDetectScriptLanguage: () => Promise<void>;
+    onDetectScriptLanguage: (tsvConfig: TsvConfig) => Promise<void>;
   };
-
   let { open = false, onClose, onSubmit, onDetectScriptLanguage }: Props = $props();
 
+  const tsvConfigController = createTsvConfigController();
+  const ttsConfigController = createTtsConfigController();
   const ttsModelDownloadController = createTtsModelDownloadController();
   const ttsExecutionController = createTtsExecutionController();
 
   let isSubmitting = $state(false);
-
-  let previousOpen = false;
   let fieldErrors = $state({
     title: '',
     scriptFile: '',
@@ -42,8 +41,8 @@
 
   function resetFormState() {
     fileBasedEpisodeAddStore.reset();
-    ttsConfigStore.reset();
-    tsvConfigStore.reset();
+    ttsConfigController.reset();
+    tsvConfigController.reset();
     ttsModelDownloadController.reset();
     ttsExecutionController.reset();
     fieldErrors = {
@@ -56,18 +55,6 @@
     };
     isSubmitting = false;
   }
-
-  $effect(() => {
-    if (open && !previousOpen) {
-      resetFormState();
-    }
-
-    if (!open && previousOpen) {
-      resetFormState();
-    }
-
-    previousOpen = open;
-  });
 
   function handleClose() {
     resetFormState();
@@ -105,18 +92,19 @@
 
     if (!filePath) {
       fileBasedEpisodeAddStore.selectedStudyLanguage = null;
-      tsvConfigStore.reset();
+      tsvConfigController.reset();
+      ttsConfigController.reset();
       return;
     }
 
     const lowered = filePath.toLowerCase();
     try {
       if (lowered.endsWith('.tsv')) {
-        await previewScriptFile(filePath);
+        await tsvConfigController.fetchScriptPreview(filePath);
       } else {
-        tsvConfigStore.reset();
+        tsvConfigController.reset();
       }
-      await onDetectScriptLanguage();
+      await onDetectScriptLanguage(tsvConfigController.tsvConfig);
       await prepareTtsVoices();
     } catch (error) {
       console.error('Failed to prepare script file for TTS episode:', error);
@@ -124,25 +112,30 @@
     }
   }
 
+  function handleLearningLanguageChange(lang: string | null) {
+    fileBasedEpisodeAddStore.selectedStudyLanguage = lang;
+    ttsConfigController.setLanguage(lang);
+  }
+
   async function prepareTtsVoices() {
-    if (ttsConfigStore.isFetchingVoices) {
+    if (ttsConfigController.isFetchingVoices) {
       console.warn('TTS voices are already being fetched. Skipping duplicate request.');
       return;
     }
-    if (ttsConfigStore.allVoices) {
+    if (ttsConfigController.allVoices) {
       console.log('TTS voices are already fetched. Skipping.');
-      ttsConfigStore.setLanguage(fileBasedEpisodeAddStore.selectedStudyLanguage);
+      ttsConfigController.setLanguage(fileBasedEpisodeAddStore.selectedStudyLanguage);
       return;
     }
 
     try {
-      ttsConfigStore.startVoicesFetching();
+      ttsConfigController.startVoicesFetching();
       const voices = await fetchTtsVoices();
-      ttsConfigStore.setVoiceData(voices);
-      ttsConfigStore.setLanguage(fileBasedEpisodeAddStore.selectedStudyLanguage);
+      ttsConfigController.setVoiceData(voices);
+      ttsConfigController.setLanguage(fileBasedEpisodeAddStore.selectedStudyLanguage);
     } catch (error) {
       console.error('Failed to fetch TTS voices:', error);
-      ttsConfigStore.setError('components.ttsConfigSection.failedToLoad');
+      ttsConfigController.setError('components.ttsConfigSection.failedToLoad');
     }
   }
 
@@ -150,25 +143,26 @@
     try {
       assertNotNull(fileBasedEpisodeAddStore.scriptFilePath, 'Script file path is required');
       const scriptFilePath = fileBasedEpisodeAddStore.scriptFilePath;
-      const selectedVoice = ttsConfigStore.selectedVoice;
+      const selectedVoice = ttsConfigController.selectedVoice;
       assertNotNull(selectedVoice, 'No TTS voice selected');
-      const selectedSpeakerId = parseInt(ttsConfigStore.selectedSpeakerId);
+      const selectedSpeakerId = parseInt(ttsConfigController.selectedSpeakerId);
 
       console.info('TTS audio generation required for the new episode');
       await ttsModelDownloadController.start(selectedVoice.files);
       const { audioPath, scriptPath } = await ttsExecutionController.start(
         scriptFilePath,
         selectedVoice,
-        selectedSpeakerId
+        selectedSpeakerId,
+        tsvConfigController.tsvConfig
       );
       fileBasedEpisodeAddStore.scriptFilePath = scriptPath;
       fileBasedEpisodeAddStore.audioFilePath = audioPath;
 
       assert(
-        tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid,
+        tsvConfigController.scriptPreview === null || tsvConfigController.isValid,
         'TSV config is invalid'
       );
-      const finalTsvConfig = tsvConfigStore.finalTsvConfig;
+      const finalTsvConfig = tsvConfigController.finalTsvConfig;
 
       const finalPayload = fileBasedEpisodeAddStore.buildPayload(finalTsvConfig);
       assertNotNull(finalPayload, 'TTS episode payload is null');
@@ -193,48 +187,32 @@
   }
 
   let isProcessing = $derived(
-    tsvConfigStore.isFetchingScriptPreview || ttsConfigStore.isFetchingVoices
+    tsvConfigController.isFetchingScriptPreview || ttsConfigController.isFetchingVoices
   );
 
   let startTimeColumnErrorMessage = $derived(
-    tsvConfigStore.startTimeColumnErrorMessageKey
-      ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
+    tsvConfigController.startTimeColumnErrorMessageKey
+      ? t(tsvConfigController.startTimeColumnErrorMessageKey)
       : ''
   );
 
   let textColumnErrorMessage = $derived(
-    tsvConfigStore.textColumnErrorMessageKey ? t(tsvConfigStore.textColumnErrorMessageKey) : ''
+    tsvConfigController.textColumnErrorMessageKey
+      ? t(tsvConfigController.textColumnErrorMessageKey)
+      : ''
   );
 
   const selectedLanguageVoices = $derived(
-    ttsConfigStore.learningTargetVoices?.filter(
-      (voice) => voice.language.family === ttsConfigStore.language
+    ttsConfigController.learningTargetVoices?.filter(
+      (voice) => voice.language.family === ttsConfigController.language
     ) || []
   );
-
-  const selectedQuality = $derived(ttsConfigStore.selectedQuality);
-  const selectedVoice = $derived(ttsConfigStore.selectedVoice);
-  const selectedSpeakerId = $derived(ttsConfigStore.selectedSpeakerId);
-  const isFetchingTtsVoices = $derived(ttsConfigStore.isFetchingVoices);
-  const ttsErrorMessage = $derived(ttsConfigStore.errorMessage);
-
-  function handleSelectedQualityChange(quality: string) {
-    ttsConfigStore.selectedQuality = quality;
-  }
-
-  function handleSelectedVoiceChange(voiceName: string) {
-    ttsConfigStore.selectedVoiceName = voiceName;
-  }
-
-  function handleSelectedSpeakerIdChange(speakerId: string) {
-    ttsConfigStore.selectedSpeakerId = speakerId;
-  }
 
   let isFormValid = $derived(
     fileBasedEpisodeAddStore.title.trim().length > 0 &&
       fileBasedEpisodeAddStore.scriptFilePath !== null &&
       fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
-      (!tsvConfigStore.scriptPreview || tsvConfigStore.isValid)
+      (!tsvConfigController.scriptPreview || tsvConfigController.isValid)
   );
 </script>
 
@@ -244,7 +222,7 @@
   {isProcessing}
   {isFormValid}
   title={fileBasedEpisodeAddStore.title}
-  selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
+  learningLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
   learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
   languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
   fieldErrors={{ title: fieldErrors.title }}
@@ -252,6 +230,7 @@
   errorMessage={fileBasedEpisodeAddStore.errorMessage}
   onTitleChange={handleTitleChange}
   onTitleBlur={handleTitleBlur}
+  onLearningLanguageChange={handleLearningLanguageChange}
   onClose={handleClose}
   onCancel={handleClose}
   onSubmit={handleSubmit}
@@ -260,40 +239,40 @@
     scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
     fieldErrors={{ scriptFile: fieldErrors.scriptFile }}
     fieldTouched={{ scriptFile: fieldTouched.scriptFile }}
-    hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
+    hasOtherErrorRelatedToScriptFile={Boolean(tsvConfigController.errorMessageKey)}
     onScriptFilePathChange={handleScriptFileChange}
   />
 
-  {#if tsvConfigStore.scriptPreview}
+  {#if tsvConfigController.scriptPreview}
     <TsvConfigSection
-      headers={tsvConfigStore.scriptPreview?.headers || []}
-      rows={tsvConfigStore.scriptPreview?.rows || []}
-      config={tsvConfigStore.tsvConfig}
-      valid={tsvConfigStore.isValid}
+      headers={tsvConfigController.scriptPreview?.headers || []}
+      rows={tsvConfigController.scriptPreview?.rows || []}
+      config={tsvConfigController.tsvConfig}
+      valid={tsvConfigController.isValid}
       {startTimeColumnErrorMessage}
       {textColumnErrorMessage}
-      onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
-      {onDetectScriptLanguage}
+      onConfigUpdate={(key, value) => tsvConfigController.updateConfig(key, value)}
+      onDetectScriptLanguage={() => onDetectScriptLanguage(tsvConfigController.tsvConfig)}
     />
   {/if}
 
-  {#if tsvConfigStore.errorMessageKey}
+  {#if tsvConfigController.errorMessageKey}
     <div class="mb-4 text-sm text-red-600">
-      {t(tsvConfigStore.errorMessageKey)}
+      {t(tsvConfigController.errorMessageKey)}
     </div>
   {/if}
 
   {#if fileBasedEpisodeAddStore.scriptFilePath}
     <TtsConfigSection
       {selectedLanguageVoices}
-      {selectedQuality}
-      {selectedVoice}
-      {selectedSpeakerId}
-      isFetchingVoices={isFetchingTtsVoices}
-      errorMessage={ttsErrorMessage}
-      onSelectedQualityChange={handleSelectedQualityChange}
-      onSelectedVoiceChange={handleSelectedVoiceChange}
-      onSelectedSpeakerIdChange={handleSelectedSpeakerIdChange}
+      selectedQuality={ttsConfigController.selectedQuality}
+      selectedVoice={ttsConfigController.selectedVoice}
+      selectedSpeakerId={ttsConfigController.selectedSpeakerId}
+      isFetchingVoices={ttsConfigController.isFetchingVoices}
+      errorMessage={ttsConfigController.errorMessage}
+      onSelectedQualityChange={(quality) => (ttsConfigController.selectedQuality = quality)}
+      onSelectedVoiceChange={(voiceName) => (ttsConfigController.selectedVoiceName = voiceName)}
+      onSelectedSpeakerIdChange={(speakerId) => (ttsConfigController.selectedSpeakerId = speakerId)}
     />
   {/if}
 </FileEpisodeModal>

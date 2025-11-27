@@ -2,33 +2,32 @@
   import {
     fileBasedEpisodeAddStore,
     type FileBasedEpisodeAddPayload,
-  } from '$lib/application/stores/FileBasedEpisodeAddStore.svelte';
+  } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
-  import { previewScriptFile } from '$lib/application/usecases/previewScriptFile';
+  import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assert } from '$lib/utils/assertion';
   import AudioFileSelect from '../presentational/AudioFileSelect.svelte';
   import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
   import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
+  import { createTsvConfigController } from './tsvConfigController.svelte';
 
   type Props = {
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
-    onDetectScriptLanguage: () => Promise<void>;
+    onDetectScriptLanguage: (tsvConfig: TsvConfig) => Promise<void>;
   };
-
   let { open = false, onClose, onSubmit, onDetectScriptLanguage }: Props = $props();
 
-  let isSubmitting = $state(false);
+  const tsvConfigController = createTsvConfigController();
 
+  let isSubmitting = $state(false);
   let fieldErrors = $state({
     title: '',
     audioFile: '',
     scriptFile: '',
   });
-
   let fieldTouched = $state({
     title: false,
     audioFile: false,
@@ -37,7 +36,7 @@
 
   function resetFormState() {
     fileBasedEpisodeAddStore.reset();
-    tsvConfigStore.reset();
+    tsvConfigController.reset();
     fieldErrors = {
       title: '',
       audioFile: '',
@@ -100,27 +99,27 @@
     fieldErrors.scriptFile = validateScriptFile();
 
     if (!filePath) {
-      tsvConfigStore.reset();
+      tsvConfigController.reset();
       fileBasedEpisodeAddStore.selectedStudyLanguage = null;
       return;
     }
 
     const normalized = filePath.toLowerCase();
     if (normalized.endsWith('.tsv')) {
-      await previewScriptFile(filePath);
+      await tsvConfigController.fetchScriptPreview(filePath);
     } else {
-      tsvConfigStore.reset();
-      await onDetectScriptLanguage();
+      tsvConfigController.reset();
+      await onDetectScriptLanguage(tsvConfigController.tsvConfig);
     }
   }
 
   function buildPayload(): FileBasedEpisodeAddPayload | null {
     try {
       assert(
-        tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid,
+        tsvConfigController.scriptPreview === null || tsvConfigController.isValid,
         'TSV config is invalid'
       );
-      const finalTsvConfig = tsvConfigStore.finalTsvConfig;
+      const finalTsvConfig = tsvConfigController.finalTsvConfig;
       const payload = fileBasedEpisodeAddStore.buildPayload(finalTsvConfig);
       return payload;
     } catch (e) {
@@ -143,14 +142,14 @@
 <FileEpisodeModal
   {open}
   {isSubmitting}
-  isProcessing={tsvConfigStore.isFetchingScriptPreview}
+  isProcessing={tsvConfigController.isFetchingScriptPreview}
   isFormValid={fileBasedEpisodeAddStore.title.trim().length > 0 &&
     fileBasedEpisodeAddStore.audioFilePath !== null &&
     fileBasedEpisodeAddStore.scriptFilePath !== null &&
     fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
-    (tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid)}
+    (tsvConfigController.scriptPreview === null || tsvConfigController.isValid)}
   title={fileBasedEpisodeAddStore.title}
-  selectedStudyLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
+  learningLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
   learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
   {fieldErrors}
   {fieldTouched}
@@ -158,6 +157,9 @@
   errorMessage={fileBasedEpisodeAddStore.errorMessage}
   onTitleChange={handleTitleChange}
   onTitleBlur={handleTitleBlur}
+  onLearningLanguageChange={(lang) => {
+    fileBasedEpisodeAddStore.selectedStudyLanguage = lang;
+  }}
   onClose={handleClose}
   onCancel={handleClose}
   onSubmit={handleSubmit}
@@ -172,28 +174,28 @@
     scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
     {fieldErrors}
     {fieldTouched}
-    hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
+    hasOtherErrorRelatedToScriptFile={Boolean(tsvConfigController.errorMessageKey)}
     onScriptFilePathChange={handleScriptFileChange}
   />
-  {#if tsvConfigStore.scriptPreview !== null}
+  {#if tsvConfigController.scriptPreview !== null}
     <TsvConfigSection
-      headers={tsvConfigStore.scriptPreview?.headers || []}
-      rows={tsvConfigStore.scriptPreview?.rows || []}
-      config={tsvConfigStore.tsvConfig}
-      valid={tsvConfigStore.isValid}
-      startTimeColumnErrorMessage={tsvConfigStore.startTimeColumnErrorMessageKey
-        ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
+      headers={tsvConfigController.scriptPreview?.headers || []}
+      rows={tsvConfigController.scriptPreview?.rows || []}
+      config={tsvConfigController.tsvConfig}
+      valid={tsvConfigController.isValid}
+      startTimeColumnErrorMessage={tsvConfigController.startTimeColumnErrorMessageKey
+        ? t(tsvConfigController.startTimeColumnErrorMessageKey)
         : ''}
-      textColumnErrorMessage={tsvConfigStore.textColumnErrorMessageKey
-        ? t(tsvConfigStore.textColumnErrorMessageKey)
+      textColumnErrorMessage={tsvConfigController.textColumnErrorMessageKey
+        ? t(tsvConfigController.textColumnErrorMessageKey)
         : ''}
-      onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
-      {onDetectScriptLanguage}
+      onConfigUpdate={(key, value) => tsvConfigController.updateConfig(key, value)}
+      onDetectScriptLanguage={() => onDetectScriptLanguage(tsvConfigController.tsvConfig)}
     />
   {/if}
-  {#if tsvConfigStore.errorMessageKey}
+  {#if tsvConfigController.errorMessageKey}
     <div class="mb-4 text-sm text-red-600">
-      {t(tsvConfigStore.errorMessageKey)}
+      {t(tsvConfigController.errorMessageKey)}
     </div>
   {/if}
 </FileEpisodeModal>

@@ -1,6 +1,7 @@
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
 import { parseTsvToText } from '$lib/domain/services/parseTsvToText';
+import { assertNotUndefined } from '$lib/utils/assertion';
 
 /**
  * Extracts text content from script files, removing timestamps and focusing on the main text.
@@ -31,9 +32,7 @@ export function extractScriptText(
       return dialogues.map((d) => d.originalText).join('\n');
     }
     case 'tsv': {
-      if (!tsvConfig) {
-        throw new Error('TSV config is required for TSV script files.');
-      }
+      assertNotUndefined(tsvConfig, 'TSV config is required for TSV script files.');
       return parseTsvToText(scriptContent, tsvConfig);
     }
     default:

@@ -10,7 +10,7 @@
     isProcessing: boolean;
     isFormValid: boolean;
     title: string;
-    selectedStudyLanguage: string | null;
+    learningLanguage: string | null;
     learningTargetLanguages: readonly string[];
     languageDetectionWarningMessage: string;
     fieldErrors: {
@@ -22,6 +22,7 @@
     errorMessage: string;
     onTitleChange: (value: string) => void;
     onTitleBlur: () => void;
+    onLearningLanguageChange: (lang: string | null) => void;
     onClose: () => void;
     onCancel: () => void;
     onSubmit: () => void;
@@ -34,7 +35,7 @@
     isProcessing,
     isFormValid,
     title,
-    selectedStudyLanguage = $bindable(null),
+    learningLanguage,
     learningTargetLanguages,
     languageDetectionWarningMessage,
     fieldErrors,
@@ -42,6 +43,7 @@
     errorMessage,
     onTitleChange,
     onTitleBlur,
+    onLearningLanguageChange,
     onClose,
     onCancel,
     onSubmit,
@@ -54,6 +56,16 @@
       name: `${t(bcp47ToTranslationKey(lang)!)} (${bcp47ToLanguageName(lang)})`,
     })) || []
   );
+
+  const selectedStudyLanguageProxy = {
+    get value() {
+      return learningLanguage;
+    },
+    set value(lang: string | null) {
+      console.log('Selected study language changed to:', lang);
+      onLearningLanguageChange(lang);
+    },
+  };
 </script>
 
 <Modal onclose={onClose} {open} size="xl">
@@ -95,7 +107,7 @@
         <Select
           id="learningLanguage"
           data-testid="learningLanguage"
-          bind:value={selectedStudyLanguage}
+          bind:value={selectedStudyLanguageProxy.value}
           items={learningTargetLanguageOptions}
         ></Select>
       </div>

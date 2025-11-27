@@ -2,7 +2,6 @@ import { t } from '$lib/application/stores/i18n.svelte';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import { assertNotNull } from '$lib/utils/assertion';
 import { bcp47ToTranslationKey } from '$lib/utils/language';
-import { ttsConfigStore } from './ttsConfigStore.svelte';
 
 export type FileBasedEpisodeAddPayload = {
   readonly source: 'file';
@@ -22,11 +21,6 @@ let detectedLanguage = $state<string | null>(null);
 let learningTargetLanguages = $state<readonly string[]>([]);
 let selectedStudyLanguage = $state<string | null>(null);
 
-function setSelectedStudyLanguage(language: string | null) {
-  selectedStudyLanguage = language;
-  ttsConfigStore.setLanguage(language);
-}
-
 function completeLanguageDetection(
   detectedLanguageCode: string | null,
   supportedLanguages: readonly string[]
@@ -35,13 +29,13 @@ function completeLanguageDetection(
   learningTargetLanguages = supportedLanguages;
 
   if (detectedLanguageCode === null) {
-    setSelectedStudyLanguage(supportedLanguages[0]);
+    selectedStudyLanguage = supportedLanguages[0];
     languageDetectionWarningMessage = t('components.fileEpisodeForm.noLanguageDetected');
   } else if (supportedLanguages.includes(detectedLanguageCode)) {
-    setSelectedStudyLanguage(detectedLanguageCode);
+    selectedStudyLanguage = detectedLanguageCode;
     languageDetectionWarningMessage = '';
   } else {
-    setSelectedStudyLanguage(supportedLanguages[0]);
+    selectedStudyLanguage = supportedLanguages[0];
     languageDetectionWarningMessage = t('components.fileEpisodeForm.languageNotTargeted', {
       language: t(bcp47ToTranslationKey(detectedLanguageCode) || detectedLanguageCode),
     });
@@ -54,7 +48,7 @@ function failedLanguageDetection(errorKey: string, supportedLanguages: readonly 
   detectedLanguage = null;
   errorMessage = t(errorKey);
   learningTargetLanguages = supportedLanguages;
-  setSelectedStudyLanguage(supportedLanguages[0]);
+  selectedStudyLanguage = supportedLanguages[0];
 }
 
 function buildPayload(finalTsvConfig?: TsvConfig): FileBasedEpisodeAddPayload | null {
@@ -125,7 +119,7 @@ export const fileBasedEpisodeAddStore = {
     return selectedStudyLanguage;
   },
   set selectedStudyLanguage(value: string | null) {
-    setSelectedStudyLanguage(value);
+    selectedStudyLanguage = value;
   },
 
   get detectedLanguage() {
