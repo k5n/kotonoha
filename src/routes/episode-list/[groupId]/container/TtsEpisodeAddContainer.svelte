@@ -2,8 +2,8 @@
   import type { FileBasedEpisodeAddPayload } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { tsvConfigStore } from '$lib/application/stores/tsvConfigStore.svelte';
   import { fetchTtsVoices } from '$lib/application/usecases/fetchTtsVoices';
+  import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assert, assertNotNull } from '$lib/utils/assertion';
   import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
@@ -11,6 +11,7 @@
   import TtsConfigSection from '../presentational/TtsConfigSection.svelte';
   import TtsExecutionModal from '../presentational/TtsExecutionModal.svelte';
   import TtsModelDownloadModal from '../presentational/TtsModelDownloadModal.svelte';
+  import { createTsvConfigController } from './tsvConfigController.svelte';
   import { createTtsConfigController } from './ttsConfigController.svelte';
   import { createTtsExecutionController } from './ttsExecutionController.svelte';
   import { createTtsModelDownloadController } from './ttsModelDownloadController.svelte';
@@ -19,23 +20,16 @@
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
-    onTsvScriptFileSelected: (filePath: string) => Promise<void>;
-    onDetectScriptLanguage: () => Promise<void>;
+    onDetectScriptLanguage: (tsvConfig: TsvConfig) => Promise<void>;
   };
+  let { open = false, onClose, onSubmit, onDetectScriptLanguage }: Props = $props();
 
-  let {
-    open = false,
-    onClose,
-    onSubmit,
-    onTsvScriptFileSelected,
-    onDetectScriptLanguage,
-  }: Props = $props();
+  const tsvConfigController = createTsvConfigController();
   const ttsConfigController = createTtsConfigController();
   const ttsModelDownloadController = createTtsModelDownloadController();
   const ttsExecutionController = createTtsExecutionController();
 
   let isSubmitting = $state(false);
-
   let fieldErrors = $state({
     title: '',
     scriptFile: '',
@@ -48,7 +42,7 @@
   function resetFormState() {
     fileBasedEpisodeAddStore.reset();
     ttsConfigController.reset();
-    tsvConfigStore.reset();
+    tsvConfigController.reset();
     ttsModelDownloadController.reset();
     ttsExecutionController.reset();
     fieldErrors = {
@@ -98,7 +92,7 @@
 
     if (!filePath) {
       fileBasedEpisodeAddStore.selectedStudyLanguage = null;
-      tsvConfigStore.reset();
+      tsvConfigController.reset();
       ttsConfigController.reset();
       return;
     }
@@ -106,11 +100,11 @@
     const lowered = filePath.toLowerCase();
     try {
       if (lowered.endsWith('.tsv')) {
-        await onTsvScriptFileSelected(filePath);
+        await tsvConfigController.fetchScriptPreview(filePath);
       } else {
-        tsvConfigStore.reset();
+        tsvConfigController.reset();
       }
-      await onDetectScriptLanguage();
+      await onDetectScriptLanguage(tsvConfigController.tsvConfig);
       await prepareTtsVoices();
     } catch (error) {
       console.error('Failed to prepare script file for TTS episode:', error);
@@ -159,16 +153,16 @@
         scriptFilePath,
         selectedVoice,
         selectedSpeakerId,
-        tsvConfigStore.tsvConfig
+        tsvConfigController.tsvConfig
       );
       fileBasedEpisodeAddStore.scriptFilePath = scriptPath;
       fileBasedEpisodeAddStore.audioFilePath = audioPath;
 
       assert(
-        tsvConfigStore.scriptPreview === null || tsvConfigStore.isValid,
+        tsvConfigController.scriptPreview === null || tsvConfigController.isValid,
         'TSV config is invalid'
       );
-      const finalTsvConfig = tsvConfigStore.finalTsvConfig;
+      const finalTsvConfig = tsvConfigController.finalTsvConfig;
 
       const finalPayload = fileBasedEpisodeAddStore.buildPayload(finalTsvConfig);
       assertNotNull(finalPayload, 'TTS episode payload is null');
@@ -193,17 +187,19 @@
   }
 
   let isProcessing = $derived(
-    tsvConfigStore.isFetchingScriptPreview || ttsConfigController.isFetchingVoices
+    tsvConfigController.isFetchingScriptPreview || ttsConfigController.isFetchingVoices
   );
 
   let startTimeColumnErrorMessage = $derived(
-    tsvConfigStore.startTimeColumnErrorMessageKey
-      ? t(tsvConfigStore.startTimeColumnErrorMessageKey)
+    tsvConfigController.startTimeColumnErrorMessageKey
+      ? t(tsvConfigController.startTimeColumnErrorMessageKey)
       : ''
   );
 
   let textColumnErrorMessage = $derived(
-    tsvConfigStore.textColumnErrorMessageKey ? t(tsvConfigStore.textColumnErrorMessageKey) : ''
+    tsvConfigController.textColumnErrorMessageKey
+      ? t(tsvConfigController.textColumnErrorMessageKey)
+      : ''
   );
 
   const selectedLanguageVoices = $derived(
@@ -216,7 +212,7 @@
     fileBasedEpisodeAddStore.title.trim().length > 0 &&
       fileBasedEpisodeAddStore.scriptFilePath !== null &&
       fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
-      (!tsvConfigStore.scriptPreview || tsvConfigStore.isValid)
+      (!tsvConfigController.scriptPreview || tsvConfigController.isValid)
   );
 </script>
 
@@ -243,26 +239,26 @@
     scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
     fieldErrors={{ scriptFile: fieldErrors.scriptFile }}
     fieldTouched={{ scriptFile: fieldTouched.scriptFile }}
-    hasOtherErrorRelatedToScriptFile={tsvConfigStore.errorMessageKey !== null}
+    hasOtherErrorRelatedToScriptFile={Boolean(tsvConfigController.errorMessageKey)}
     onScriptFilePathChange={handleScriptFileChange}
   />
 
-  {#if tsvConfigStore.scriptPreview}
+  {#if tsvConfigController.scriptPreview}
     <TsvConfigSection
-      headers={tsvConfigStore.scriptPreview?.headers || []}
-      rows={tsvConfigStore.scriptPreview?.rows || []}
-      config={tsvConfigStore.tsvConfig}
-      valid={tsvConfigStore.isValid}
+      headers={tsvConfigController.scriptPreview?.headers || []}
+      rows={tsvConfigController.scriptPreview?.rows || []}
+      config={tsvConfigController.tsvConfig}
+      valid={tsvConfigController.isValid}
       {startTimeColumnErrorMessage}
       {textColumnErrorMessage}
-      onConfigUpdate={(key, value) => tsvConfigStore.updateConfig(key, value)}
-      {onDetectScriptLanguage}
+      onConfigUpdate={(key, value) => tsvConfigController.updateConfig(key, value)}
+      onDetectScriptLanguage={() => onDetectScriptLanguage(tsvConfigController.tsvConfig)}
     />
   {/if}
 
-  {#if tsvConfigStore.errorMessageKey}
+  {#if tsvConfigController.errorMessageKey}
     <div class="mb-4 text-sm text-red-600">
-      {t(tsvConfigStore.errorMessageKey)}
+      {t(tsvConfigController.errorMessageKey)}
     </div>
   {/if}
 
