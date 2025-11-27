@@ -1,18 +1,31 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
-  import { ttsExecutionStore } from '$lib/application/stores/ttsExecutionStore.svelte';
   import { Button, Modal, Progressbar } from 'flowbite-svelte';
 
-  type Props = {
-    onCancel: () => void;
+  type ContextLine = {
+    readonly text: string;
+    readonly isCurrentLine: boolean;
   };
-  let { onCancel }: Props = $props();
 
-  let show = $derived(ttsExecutionStore.showModal);
-  let progress = $derived(ttsExecutionStore.progress);
-  let contextLines = $derived(ttsExecutionStore.contextLines);
-  let isExecuting = $derived(ttsExecutionStore.isExecuting);
-  let errorMessageKey = $derived(ttsExecutionStore.errorMessageKey);
+  type Props = {
+    open: boolean;
+    progress: number;
+    contextLines: readonly ContextLine[];
+    isExecuting: boolean;
+    errorMessage: string;
+    onCancel: () => void;
+    onClose: () => void;
+  };
+
+  let {
+    open = false,
+    progress = 0,
+    contextLines = [],
+    isExecuting = false,
+    errorMessage = '',
+    onCancel,
+    onClose,
+  }: Props = $props();
 </script>
 
 {#snippet footer()}
@@ -21,13 +34,13 @@
       {t('common.cancel')}
     </Button>
   {:else}
-    <Button data-testid="tts-execution-close-button" onclick={ttsExecutionStore.closeModal}>
+    <Button data-testid="tts-execution-close-button" onclick={onClose}>
       {t('components.ttsExecutionModal.close')}
     </Button>
   {/if}
 {/snippet}
 
-<Modal open={show} size="md" onclose={ttsExecutionStore.closeModal} {footer}>
+<Modal {open} size="md" onclose={onClose} {footer}>
   <!-- Header -->
   <div class="mb-4">
     <h2 class="text-lg font-semibold text-gray-900">
@@ -66,9 +79,9 @@
   </div>
 
   <!-- Error message -->
-  {#if errorMessageKey}
+  {#if errorMessage}
     <div class="mb-4 rounded-md bg-red-50 p-3">
-      <div class="text-sm text-red-700">{t(errorMessageKey)}</div>
+      <div class="text-sm text-red-700">{errorMessage}</div>
     </div>
   {/if}
 
@@ -77,7 +90,7 @@
     <div class="text-center text-sm text-gray-600">
       {t('components.ttsExecutionModal.pleaseWait')}
     </div>
-  {:else if progress === 100 && !errorMessageKey}
+  {:else if progress === 100 && !errorMessage}
     <div class="text-center text-sm text-green-600">
       {t('components.ttsExecutionModal.completed')}
     </div>

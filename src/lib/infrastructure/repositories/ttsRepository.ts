@@ -1,4 +1,5 @@
 import type { DownloadProgress, TtsProgress } from '$lib/domain/entities/ttsEvent';
+import type { TtsResult } from '$lib/domain/entities/ttsResult';
 import type { DefaultVoices, FileInfo, Speaker, Voice } from '$lib/domain/entities/voice';
 import { assertNotUndefined } from '$lib/utils/assertion';
 import { normalizeBcp47 } from '$lib/utils/language';
@@ -7,14 +8,6 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import * as fs from '@tauri-apps/plugin-fs';
 import { fetch } from '@tauri-apps/plugin-http';
 import { getModelsDir } from '../config';
-
-/**
- * The result of a TTS operation.
- */
-type TtsResult = {
-  readonly audioPath: string;
-  readonly scriptPath: string;
-};
 
 /**
  * Contains information about a model file.
