@@ -1,23 +1,22 @@
 <script lang="ts">
-  import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import type { FileBasedEpisodeAddPayload } from '$lib/application/usecases/addNewEpisode';
-  import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assert } from '$lib/utils/assertion';
   import AudioFileSelect from '../presentational/AudioFileSelect.svelte';
   import FileEpisodeModal from '../presentational/FileEpisodeModal.svelte';
   import ScriptFileSelect from '../presentational/ScriptFileSelect.svelte';
   import TsvConfigSection from '../presentational/TsvConfigSection.svelte';
+  import { createFileBasedEpisodeAddController } from './fileBasedEpisodeAddController.svelte';
   import { createTsvConfigController } from './tsvConfigController.svelte';
 
   type Props = {
     open: boolean;
     onClose: () => void;
     onSubmit: (payload: FileBasedEpisodeAddPayload | null) => Promise<void>;
-    onDetectScriptLanguage: (tsvConfig: TsvConfig) => Promise<void>;
   };
-  let { open = false, onClose, onSubmit, onDetectScriptLanguage }: Props = $props();
+  let { open = false, onClose, onSubmit }: Props = $props();
 
+  const fileBasedEpisodeAddController = createFileBasedEpisodeAddController();
   const tsvConfigController = createTsvConfigController();
 
   let isSubmitting = $state(false);
@@ -33,7 +32,7 @@
   });
 
   function resetFormState() {
-    fileBasedEpisodeAddStore.reset();
+    fileBasedEpisodeAddController.reset();
     tsvConfigController.reset();
     fieldErrors = {
       title: '',
@@ -45,70 +44,53 @@
       audioFile: false,
       scriptFile: false,
     };
-  }
-
-  function validateTitle(): string {
-    const value = fileBasedEpisodeAddStore.title.trim();
-    return value ? '' : t('components.fileEpisodeForm.errorTitleRequired');
-  }
-
-  function validateAudioFile(): string {
-    return fileBasedEpisodeAddStore.audioFilePath
-      ? ''
-      : t('components.fileEpisodeForm.errorAudioRequired');
-  }
-
-  function validateScriptFile(): string {
-    return fileBasedEpisodeAddStore.scriptFilePath
-      ? ''
-      : t('components.fileEpisodeForm.errorScriptFileRequired');
+    isSubmitting = false;
   }
 
   function handleTitleChange(title: string) {
-    fileBasedEpisodeAddStore.title = title;
+    fileBasedEpisodeAddController.title = title;
     if (fieldTouched.title) {
-      fieldErrors.title = validateTitle();
+      fieldErrors.title = fileBasedEpisodeAddController.validateTitle();
     }
   }
 
   function handleTitleBlur() {
     fieldTouched.title = true;
-    fieldErrors.title = validateTitle();
+    fieldErrors.title = fileBasedEpisodeAddController.validateTitle();
   }
 
   function handleClose() {
     resetFormState();
-    isSubmitting = false;
     onClose();
   }
 
   async function handleAudioFileChange(filePath: string | null) {
-    fileBasedEpisodeAddStore.audioFilePath = filePath;
+    fileBasedEpisodeAddController.audioFilePath = filePath;
     fieldTouched.audioFile = true;
-    fieldErrors.audioFile = validateAudioFile();
+    fieldErrors.audioFile = fileBasedEpisodeAddController.validateAudioFile();
   }
 
   async function handleScriptFileChange(filePath: string | null) {
-    fileBasedEpisodeAddStore.scriptFilePath = filePath;
+    fileBasedEpisodeAddController.scriptFilePath = filePath;
 
     fieldTouched.audioFile = true;
-    fieldErrors.audioFile = validateAudioFile();
+    fieldErrors.audioFile = fileBasedEpisodeAddController.validateAudioFile();
     fieldTouched.scriptFile = true;
-    fieldErrors.scriptFile = validateScriptFile();
+    fieldErrors.scriptFile = fileBasedEpisodeAddController.validateScriptFile();
 
     if (!filePath) {
       tsvConfigController.reset();
-      fileBasedEpisodeAddStore.selectedStudyLanguage = null;
+      fileBasedEpisodeAddController.selectedStudyLanguage = null;
       return;
     }
 
-    const normalized = filePath.toLowerCase();
-    if (normalized.endsWith('.tsv')) {
+    if (filePath.toLowerCase().endsWith('.tsv')) {
       await tsvConfigController.fetchScriptPreview(filePath);
     } else {
       tsvConfigController.reset();
-      await onDetectScriptLanguage(tsvConfigController.tsvConfig);
     }
+
+    await fileBasedEpisodeAddController.detectLanguage(tsvConfigController.tsvConfig);
   }
 
   function buildPayload(): FileBasedEpisodeAddPayload | null {
@@ -118,7 +100,7 @@
         'TSV config is invalid'
       );
       const finalTsvConfig = tsvConfigController.finalTsvConfig;
-      const payload = fileBasedEpisodeAddStore.buildPayload(finalTsvConfig);
+      const payload = fileBasedEpisodeAddController.buildPayload(finalTsvConfig);
       return payload;
     } catch (e) {
       console.error(`Failed to build payload: ${e}`);
@@ -135,41 +117,58 @@
       handleClose();
     }
   }
+
+  let startTimeColumnErrorMessage = $derived(
+    tsvConfigController.startTimeColumnErrorMessageKey
+      ? t(tsvConfigController.startTimeColumnErrorMessageKey)
+      : ''
+  );
+
+  let textColumnErrorMessage = $derived(
+    tsvConfigController.textColumnErrorMessageKey
+      ? t(tsvConfigController.textColumnErrorMessageKey)
+      : ''
+  );
+
+  let isFormValid = $derived(
+    fileBasedEpisodeAddController.title.trim().length > 0 &&
+      fileBasedEpisodeAddController.audioFilePath !== null &&
+      fileBasedEpisodeAddController.scriptFilePath !== null &&
+      fileBasedEpisodeAddController.selectedStudyLanguage !== null &&
+      tsvConfigController.errorMessageKey === null &&
+      (tsvConfigController.scriptPreview === null || tsvConfigController.isValid)
+  );
 </script>
 
 <FileEpisodeModal
   {open}
   {isSubmitting}
   isProcessing={tsvConfigController.isFetchingScriptPreview}
-  isFormValid={fileBasedEpisodeAddStore.title.trim().length > 0 &&
-    fileBasedEpisodeAddStore.audioFilePath !== null &&
-    fileBasedEpisodeAddStore.scriptFilePath !== null &&
-    fileBasedEpisodeAddStore.selectedStudyLanguage !== null &&
-    (tsvConfigController.scriptPreview === null || tsvConfigController.isValid)}
-  title={fileBasedEpisodeAddStore.title}
-  learningLanguage={fileBasedEpisodeAddStore.selectedStudyLanguage}
-  learningTargetLanguages={fileBasedEpisodeAddStore.learningTargetLanguages}
+  {isFormValid}
+  title={fileBasedEpisodeAddController.title}
+  learningLanguage={fileBasedEpisodeAddController.selectedStudyLanguage}
+  learningTargetLanguages={fileBasedEpisodeAddController.learningTargetLanguages}
   {fieldErrors}
   {fieldTouched}
-  languageDetectionWarningMessage={fileBasedEpisodeAddStore.languageDetectionWarningMessage}
-  errorMessage={fileBasedEpisodeAddStore.errorMessage}
+  languageDetectionWarningMessage={fileBasedEpisodeAddController.languageDetectionWarningMessage}
+  errorMessage={fileBasedEpisodeAddController.errorMessage}
   onTitleChange={handleTitleChange}
   onTitleBlur={handleTitleBlur}
   onLearningLanguageChange={(lang) => {
-    fileBasedEpisodeAddStore.selectedStudyLanguage = lang;
+    fileBasedEpisodeAddController.selectedStudyLanguage = lang;
   }}
   onClose={handleClose}
   onCancel={handleClose}
   onSubmit={handleSubmit}
 >
   <AudioFileSelect
-    audioFilePath={fileBasedEpisodeAddStore.audioFilePath}
+    audioFilePath={fileBasedEpisodeAddController.audioFilePath}
     {fieldErrors}
     {fieldTouched}
     onAudioFileChange={handleAudioFileChange}
   />
   <ScriptFileSelect
-    scriptFilePath={fileBasedEpisodeAddStore.scriptFilePath}
+    scriptFilePath={fileBasedEpisodeAddController.scriptFilePath}
     {fieldErrors}
     {fieldTouched}
     hasOtherErrorRelatedToScriptFile={Boolean(tsvConfigController.errorMessageKey)}
@@ -181,14 +180,11 @@
       rows={tsvConfigController.scriptPreview?.rows || []}
       config={tsvConfigController.tsvConfig}
       valid={tsvConfigController.isValid}
-      startTimeColumnErrorMessage={tsvConfigController.startTimeColumnErrorMessageKey
-        ? t(tsvConfigController.startTimeColumnErrorMessageKey)
-        : ''}
-      textColumnErrorMessage={tsvConfigController.textColumnErrorMessageKey
-        ? t(tsvConfigController.textColumnErrorMessageKey)
-        : ''}
-      onConfigUpdate={(key, value) => tsvConfigController.updateConfig(key, value)}
-      onDetectScriptLanguage={() => onDetectScriptLanguage(tsvConfigController.tsvConfig)}
+      {startTimeColumnErrorMessage}
+      {textColumnErrorMessage}
+      onConfigUpdate={tsvConfigController.updateConfig}
+      onDetectScriptLanguage={() =>
+        fileBasedEpisodeAddController.detectLanguage(tsvConfigController.tsvConfig)}
     />
   {/if}
   {#if tsvConfigController.errorMessageKey}

@@ -1,14 +1,8 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
-  import { fileBasedEpisodeAddStore } from '$lib/application/stores/fileBasedEpisodeAddStore.svelte';
   import { t } from '$lib/application/stores/i18n.svelte';
   import { addNewEpisode, type EpisodeAddPayload } from '$lib/application/usecases/addNewEpisode';
-  import {
-    detectScriptLanguage,
-    populateLearningTargetLanguages,
-  } from '$lib/application/usecases/detectScriptLanguage';
   import type { Episode } from '$lib/domain/entities/episode';
-  import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
   import { assertNotNull } from '$lib/utils/assertion';
   import { Button } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
@@ -53,22 +47,6 @@
     selectedEpisodeType = 'none';
   }
 
-  async function handleLanguageDetection(tsvConfig: TsvConfig): Promise<void> {
-    const supportedLanguages = await populateLearningTargetLanguages();
-    try {
-      const scriptFilePath = fileBasedEpisodeAddStore.scriptFilePath;
-      assertNotNull(scriptFilePath, 'Script file path is null during language detection');
-      const detected = await detectScriptLanguage(scriptFilePath, tsvConfig);
-      fileBasedEpisodeAddStore.completeLanguageDetection(detected, supportedLanguages);
-    } catch (e) {
-      console.error(`Failed to detect script language: ${e}`);
-      fileBasedEpisodeAddStore.failedLanguageDetection(
-        'components.fileEpisodeForm.errorDetectLanguage',
-        supportedLanguages
-      );
-    }
-  }
-
   async function handleEpisodeSubmit(payload: EpisodeAddPayload | null): Promise<void> {
     isSubmitting = true;
     try {
@@ -99,14 +77,12 @@
   open={isOpen && selectedEpisodeType === 'audio-script'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}
-  onDetectScriptLanguage={handleLanguageDetection}
 />
 
 <TtsEpisodeAddContainer
   open={isOpen && selectedEpisodeType === 'script-tts'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}
-  onDetectScriptLanguage={handleLanguageDetection}
 />
 
 <YoutubeEpisodeAddContainer
