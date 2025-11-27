@@ -15,9 +15,9 @@
   import { Button } from 'flowbite-svelte';
   import { PlusOutline } from 'flowbite-svelte-icons';
   import EpisodeSourceSelectionModal from '../presentational/EpisodeSourceSelectionModal.svelte';
-  import AudioScriptFileEpisodeAddModal from './AudioScriptFileEpisodeAddContainer.svelte';
-  import TtsEpisodeAddModal from './TtsEpisodeAddContainer.svelte';
-  import YoutubeEpisodeAddModal from './YoutubeEpisodeAddModal.svelte';
+  import AudioScriptFileEpisodeAddContainer from './AudioScriptFileEpisodeAddContainer.svelte';
+  import TtsEpisodeAddContainer from './TtsEpisodeAddContainer.svelte';
+  import YoutubeEpisodeAddContainer from './YoutubeEpisodeAddContainer.svelte';
 
   interface Props {
     episodeGroupId: number;
@@ -99,21 +99,21 @@
   onSourceSelected={handleEpisodeSourceSelected}
 />
 
-<AudioScriptFileEpisodeAddModal
+<AudioScriptFileEpisodeAddContainer
   open={isOpen && selectedEpisodeType === 'audio-script'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}
   onDetectScriptLanguage={handleLanguageDetection}
 />
 
-<TtsEpisodeAddModal
+<TtsEpisodeAddContainer
   open={isOpen && selectedEpisodeType === 'script-tts'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}
   onDetectScriptLanguage={handleLanguageDetection}
 />
 
-<YoutubeEpisodeAddModal
+<YoutubeEpisodeAddContainer
   open={isOpen && selectedEpisodeType === 'youtube'}
   onClose={handleEpisodeModalClose}
   onSubmit={handleEpisodeSubmit}

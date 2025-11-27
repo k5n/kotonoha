@@ -65,11 +65,13 @@
       return;
     }
     onSourceSelected(source);
+    resetView();
   }
 
   function handleFileDetailClick(type: FileDetailType) {
     selectedFileType = type;
     onSourceSelected(type);
+    resetView();
   }
 
   function handleCancel() {
@@ -79,12 +81,6 @@
     }
     handleClose();
   }
-
-  $effect(() => {
-    if (!open) {
-      resetView();
-    }
-  });
 </script>
 
 <Modal {open} onclose={handleClose} size="md">
