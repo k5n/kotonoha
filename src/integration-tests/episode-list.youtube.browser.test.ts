@@ -323,6 +323,38 @@ test('error: shows an error when fetching YouTube captions fails', async () => {
   await expect.element(page.getByText('Failed to fetch YouTube metadata.')).toBeInTheDocument();
 });
 
+test('error: shows an error when fetching YouTube subtitles fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
+
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command, args) => {
+    if (command === 'fetch_youtube_subtitle') {
+      throw 'fetch subtitle failed';
+    }
+    return defaultInvokeMock(command, args);
+  });
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(1000);
+
+  await page.getByRole('button', { name: 'Create' }).click();
+  await waitFor(200);
+  await page.screenshot();
+
+  // TODO: 字幕が取得できなかったことをエラーメッセージで伝えるべき
+  await expect.element(page.getByText('Failed to add new episode.')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('heading', { name: 'Add New Episode' }))
+    .not.toBeInTheDocument();
+});
+
 test('fetches YouTube API key from Stronghold when store is empty', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
