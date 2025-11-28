@@ -126,7 +126,7 @@ beforeEach(async () => {
 
   groupPathStore.reset();
   i18nStore.init('en');
-  apiKeyStore.youtube.set('test-api-key');
+  apiKeyStore.youtube.reset();
 
   await clearDatabase();
 });
@@ -158,6 +158,7 @@ test('renders YouTube episode form', async () => {
 
 test('handles URL input and validation', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
 
   await setupPage(String(groupId));
 
@@ -196,6 +197,7 @@ test('handles URL input and validation', async () => {
 
 test('handles submit request with valid payload', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
 
   await setupPage(String(groupId));
 
@@ -286,6 +288,7 @@ test('closes on cancel', async () => {
 
 test('resets state on reopen after cancel', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
 
   await setupPage(String(groupId));
 
