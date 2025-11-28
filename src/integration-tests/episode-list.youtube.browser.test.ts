@@ -245,7 +245,7 @@ test('error: shows an error for invalid YouTube URL', async () => {
 
   const urlInput = page.getByLabelText('YouTube URL');
   await urlInput.fill('https://example.com/notyoutube');
-  await waitFor(200);
+  await waitFor(100);
   await page.screenshot();
 
   await expect.element(page.getByText('Invalid YouTube URL.')).toBeInTheDocument();
@@ -283,7 +283,41 @@ test('error: shows an error when fetching YouTube metadata fails', async () => {
 
   const urlInput = page.getByLabelText('YouTube URL');
   await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-  await waitFor(500);
+  await waitFor(100);
+  await page.screenshot();
+
+  await expect.element(page.getByText('Failed to fetch YouTube metadata.')).toBeInTheDocument();
+});
+
+test('error: shows an error when fetching YouTube captions fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
+
+  const fetchMock = vi.mocked(fetch);
+  fetchMock.mockImplementation(async (url, _options) => {
+    if (typeof url === 'string' && url.includes('youtube.com/oembed')) {
+      return {
+        ok: true,
+        json: async () => ({ title: 'Test Video' }),
+      } as Response;
+    }
+    if (typeof url === 'string' && url.includes('googleapis.com/youtube/v3/captions')) {
+      return {
+        ok: false,
+        status: 404,
+      } as Response;
+    }
+    throw new Error(`Unhandled fetch: ${url}`);
+  });
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(100);
   await page.screenshot();
 
   await expect.element(page.getByText('Failed to fetch YouTube metadata.')).toBeInTheDocument();
