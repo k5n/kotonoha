@@ -4,13 +4,16 @@ import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
+import { appDataDir } from '@tauri-apps/api/path';
 import { fetch } from '@tauri-apps/plugin-http';
 import Database from '@tauri-apps/plugin-sql';
+import { Stronghold } from '@tauri-apps/plugin-stronghold';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
+import { setupStrongholdMock } from './lib/mockFactories';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitFor, waitForFadeTransition } from './lib/utils';
 
@@ -18,6 +21,8 @@ import '$src/app.css';
 
 vi.mock('@tauri-apps/plugin-sql', () => ({ __esModule: true, default: mockDatabase }));
 vi.mock('@tauri-apps/api/core');
+vi.mock('@tauri-apps/plugin-stronghold');
+vi.mock('@tauri-apps/api/path');
 vi.mock('@tauri-apps/plugin-fs', () => ({
   BaseDirectory: { AppLocalData: 'appData' },
   exists: vi.fn().mockResolvedValue(false),
@@ -191,6 +196,59 @@ test('handles URL input and validation', async () => {
   // Check that metadata is fetched and title input shows the fetched title
   const titleInput = page.getByPlaceholder("Episode's title");
   await expect.element(titleInput).toHaveValue('Test Video');
+
+  await page.screenshot();
+});
+
+test('fetches YouTube API key from Stronghold when store is empty', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  apiKeyStore.youtube.reset();
+
+  const { stronghold } = setupStrongholdMock({ youtubeApiKey: 'stored-youtube-api-key' });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  vi.mocked(Stronghold.load).mockResolvedValue(stronghold as any);
+  vi.mocked(appDataDir).mockResolvedValue('/mock/appdata');
+
+  const fetchMock = vi.mocked(fetch);
+  fetchMock.mockImplementation(async (url, _options) => {
+    if (typeof url === 'string' && url.includes('youtube.com/oembed')) {
+      return {
+        ok: true,
+        json: async () => ({ title: 'Stored Key Video' }),
+      } as Response;
+    }
+    if (typeof url === 'string' && url.includes('googleapis.com/youtube/v3/captions')) {
+      expect(url).toContain('key=stored-youtube-api-key');
+      return {
+        ok: true,
+        json: async () => ({
+          items: [{ snippet: { language: 'en', trackKind: 'asr' } }],
+        }),
+      } as Response;
+    }
+    throw new Error(`Unhandled fetch: ${url}`);
+  });
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(1000);
+
+  expect(apiKeyStore.youtube.value).toBe('stored-youtube-api-key');
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await expect.element(titleInput).toHaveValue('Stored Key Video');
+
+  const googleApiCall = fetchMock.mock.calls.find(
+    ([firstArg]) =>
+      typeof firstArg === 'string' && firstArg.includes('googleapis.com/youtube/v3/captions')
+  );
+  expect(googleApiCall?.[0]).toContain('key=stored-youtube-api-key');
 
   await page.screenshot();
 });
