@@ -518,3 +518,73 @@ test('interaction error: shows error when moving group fails', async () => {
     executeSpy.mockRestore();
   }
 });
+
+test('breadcrumb: clicking Home navigates to root page', async () => {
+  // Create a group in DB
+  const groupId = await insertEpisodeGroup({ name: 'Parent Folder', groupType: 'folder' });
+
+  // Set groupPathStore to simulate being inside the group
+  groupPathStore.pushGroup({
+    id: groupId,
+    name: 'Parent Folder',
+    groupType: 'folder',
+    displayOrder: 1,
+    parentId: null,
+    children: [],
+  });
+
+  await setupPage(groupId.toString());
+
+  // Verify breadcrumb shows Home and the group
+  await expect.element(page.getByTestId('breadcrumb-home')).toBeInTheDocument();
+  await expect.element(page.getByTestId(`breadcrumb-group-${groupId}`)).toBeInTheDocument();
+  await page.screenshot();
+
+  // Click Home
+  await page.getByTestId('breadcrumb-home').click();
+
+  // Verify goto was called with root URL
+  expect(goto).toHaveBeenCalledWith('/');
+});
+
+test('breadcrumb: clicking intermediate group navigates to that group', async () => {
+  // Create parent and child groups in DB
+  const parentId = await insertEpisodeGroup({ name: 'Parent Folder', groupType: 'folder' });
+  const childId = await insertEpisodeGroup({
+    name: 'Child Folder',
+    groupType: 'folder',
+    parentId: parentId,
+  });
+
+  // Set groupPathStore to simulate being inside the child group (Home > Parent > Child)
+  groupPathStore.pushGroup({
+    id: parentId,
+    name: 'Parent Folder',
+    groupType: 'folder',
+    displayOrder: 1,
+    parentId: null,
+    children: [],
+  });
+  groupPathStore.pushGroup({
+    id: childId,
+    name: 'Child Folder',
+    groupType: 'folder',
+    displayOrder: 1,
+    parentId: parentId,
+    children: [],
+  });
+
+  await setupPage(childId.toString());
+
+  // Verify breadcrumb shows Home, Parent, and Child
+  await expect.element(page.getByTestId('breadcrumb-home')).toBeInTheDocument();
+  await expect.element(page.getByTestId(`breadcrumb-group-${parentId}`)).toBeInTheDocument();
+  await expect.element(page.getByTestId(`breadcrumb-group-${childId}`)).toBeInTheDocument();
+  await page.screenshot();
+
+  // Click Parent Folder breadcrumb
+  await page.getByTestId(`breadcrumb-group-${parentId}`).click();
+
+  // Verify goto was called with parent group URL
+  expect(goto).toHaveBeenCalledWith(`/${parentId}`);
+});

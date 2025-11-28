@@ -1,4 +1,4 @@
-import { invalidateAll } from '$app/navigation';
+import { goto, invalidateAll } from '$app/navigation';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
@@ -135,6 +135,9 @@ beforeEach(async () => {
 
   vi.mocked(invalidateAll).mockReset();
   vi.mocked(invalidateAll).mockResolvedValue(undefined);
+
+  vi.mocked(goto).mockReset();
+  vi.mocked(goto).mockResolvedValue();
 
   groupPathStore.reset();
   i18nStore.init('en');
@@ -345,4 +348,88 @@ test('error: delete failure surfaces the error banner and keeps the record', asy
   } finally {
     executeSpy.mockRestore();
   }
+});
+
+test('breadcrumb: clicking Home navigates to root page', async () => {
+  // Create a folder and an album in DB
+  const folderId = await insertEpisodeGroup({ name: 'Parent Folder', groupType: 'folder' });
+  const albumId = await insertEpisodeGroup({
+    name: 'Beginner Course',
+    groupType: 'album',
+    parentId: folderId,
+  });
+
+  // Set groupPathStore to simulate being inside Home > Parent Folder > Beginner Course
+  groupPathStore.pushGroup({
+    id: folderId,
+    name: 'Parent Folder',
+    groupType: 'folder',
+    displayOrder: 1,
+    parentId: null,
+    children: [],
+  });
+  groupPathStore.pushGroup({
+    id: albumId,
+    name: 'Beginner Course',
+    groupType: 'album',
+    displayOrder: 1,
+    parentId: folderId,
+    children: [],
+  });
+
+  await setupPage(String(albumId));
+
+  // Verify breadcrumb shows Home, Parent Folder, and Beginner Course
+  await expect.element(page.getByTestId('breadcrumb-home')).toBeInTheDocument();
+  await expect.element(page.getByTestId(`breadcrumb-group-${folderId}`)).toBeInTheDocument();
+  await expect.element(page.getByTestId(`breadcrumb-group-${albumId}`)).toBeInTheDocument();
+  await page.screenshot();
+
+  // Click Home
+  await page.getByTestId('breadcrumb-home').click();
+
+  // Verify goto was called with root URL
+  expect(goto).toHaveBeenCalledWith('/');
+});
+
+test('breadcrumb: clicking intermediate group navigates to that group', async () => {
+  // Create a folder and an album in DB
+  const folderId = await insertEpisodeGroup({ name: 'Parent Folder', groupType: 'folder' });
+  const albumId = await insertEpisodeGroup({
+    name: 'Beginner Course',
+    groupType: 'album',
+    parentId: folderId,
+  });
+
+  // Set groupPathStore to simulate being inside Home > Parent Folder > Beginner Course
+  groupPathStore.pushGroup({
+    id: folderId,
+    name: 'Parent Folder',
+    groupType: 'folder',
+    displayOrder: 1,
+    parentId: null,
+    children: [],
+  });
+  groupPathStore.pushGroup({
+    id: albumId,
+    name: 'Beginner Course',
+    groupType: 'album',
+    displayOrder: 1,
+    parentId: folderId,
+    children: [],
+  });
+
+  await setupPage(String(albumId));
+
+  // Verify breadcrumb shows Home, Parent Folder, and Beginner Course
+  await expect.element(page.getByTestId('breadcrumb-home')).toBeInTheDocument();
+  await expect.element(page.getByTestId(`breadcrumb-group-${folderId}`)).toBeInTheDocument();
+  await expect.element(page.getByTestId(`breadcrumb-group-${albumId}`)).toBeInTheDocument();
+  await page.screenshot();
+
+  // Click Parent Folder breadcrumb
+  await page.getByTestId(`breadcrumb-group-${folderId}`).click();
+
+  // Verify goto was called with parent folder URL
+  expect(goto).toHaveBeenCalledWith(`/${folderId}`);
 });

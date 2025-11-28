@@ -12,13 +12,13 @@
 </script>
 
 <Breadcrumb aria-label="Breadcrumb">
-  <BreadcrumbItem onclick={() => onNavigate(null)}>
+  <BreadcrumbItem data-testid="breadcrumb-home" onclick={() => onNavigate(null)}>
     <HomeOutline class="me-2 h-4 w-4" />
     {t('components.breadcrumbs.home')}
   </BreadcrumbItem>
 
   {#each path as group, i (group.id)}
-    <BreadcrumbItem onclick={() => onNavigate(i)}>
+    <BreadcrumbItem data-testid="breadcrumb-group-{group.id}" onclick={() => onNavigate(i)}>
       {group.name}
     </BreadcrumbItem>
   {/each}
