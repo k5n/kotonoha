@@ -3,6 +3,7 @@ import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
+import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
 import { invoke } from '@tauri-apps/api/core';
 import { appDataDir } from '@tauri-apps/api/path';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -205,6 +206,32 @@ test('handles URL input and validation', async () => {
   await expect.element(titleInput).toHaveValue('Test Video');
 
   await page.screenshot();
+});
+
+test('error: shows an error when YouTube Data API key is not set', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  const getYoutubeApiKeySpy = vi
+    .spyOn(apiKeyRepository, 'getYoutubeApiKey')
+    .mockResolvedValue(null);
+
+  try {
+    await setupPage(String(groupId));
+
+    await page.getByRole('button', { name: 'Add Episode' }).click();
+    await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+    const urlInput = page.getByLabelText('YouTube URL');
+    await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    await waitFor(100);
+    await page.screenshot();
+
+    await expect.element(page.getByText('YouTube Data API key is not set.')).toBeInTheDocument();
+    const createButton = page.getByRole('button', { name: 'Create' });
+    await expect.element(createButton).toBeDisabled();
+  } finally {
+    getYoutubeApiKeySpy.mockRestore();
+  }
 });
 
 test('fetches YouTube API key from Stronghold when store is empty', async () => {
