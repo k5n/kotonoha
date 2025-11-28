@@ -253,6 +253,42 @@ test('error: shows an error for invalid YouTube URL', async () => {
   await expect.element(createButton).toBeDisabled();
 });
 
+test('error: shows an error when fetching YouTube metadata fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
+
+  const fetchMock = vi.mocked(fetch);
+  fetchMock.mockImplementation(async (url, _options) => {
+    if (typeof url === 'string' && url.includes('youtube.com/oembed')) {
+      return {
+        ok: false,
+        status: 500,
+      } as Response;
+    }
+    if (typeof url === 'string' && url.includes('googleapis.com/youtube/v3/captions')) {
+      return {
+        ok: true,
+        json: async () => ({
+          items: [{ snippet: { language: 'en', trackKind: 'asr' } }],
+        }),
+      } as Response;
+    }
+    throw new Error(`Unhandled fetch: ${url}`);
+  });
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(500);
+  await page.screenshot();
+
+  await expect.element(page.getByText('Failed to fetch YouTube metadata.')).toBeInTheDocument();
+});
+
 test('fetches YouTube API key from Stronghold when store is empty', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
