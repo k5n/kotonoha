@@ -234,6 +234,25 @@ test('error: shows an error when YouTube Data API key is not set', async () => {
   }
 });
 
+test('error: shows an error for invalid YouTube URL', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://example.com/notyoutube');
+  await waitFor(200);
+  await page.screenshot();
+
+  await expect.element(page.getByText('Invalid YouTube URL.')).toBeInTheDocument();
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await expect.element(createButton).toBeDisabled();
+});
+
 test('fetches YouTube API key from Stronghold when store is empty', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
 
