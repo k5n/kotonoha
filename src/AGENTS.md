@@ -103,7 +103,7 @@ When generating or validating Svelte code for this project, produce concise code
 
 - Structure: Four-layer architecture with specific flow: Presentation → Application → Infrastructure. Domain layer (entities/services) is shared across all layers.
 - Layer responsibilities:
-  - **Presentation** (routes, components): Routes are page-level components that compose container components and delegate business logic. Container components invoke usecases and compose presentational components. Extract logic to `container/*.svelte.ts` if components become bloated or share logic. Presentational components are pure UI parts without business logic. Do not access stores (except i18n). Use Svelte 5 context to avoid prop drilling.
+  - **Presentation** (routes, components, actions): Routes are page-level components that compose container components and delegate business logic. Container components invoke usecases and compose presentational components. Extract logic to `container/*.svelte.ts` if components become bloated or share logic. Presentational components are pure UI parts without business logic. Do not access stores (except i18n). Use Svelte 5 context to avoid prop drilling. Actions (`actions/`) encapsulate DOM element logic (Svelte actions).
   - **Application** (usecases, stores): Usecases orchestrate workflows by calling domain services and infrastructure repositories. Stores manage cross-component UI state only (no business logic, no usecase invocation). Usecases may access stores directly to avoid prop drilling, but not vice versa.
   - **Domain** (entities, services): Entities are pure data types (no logic). Services are pure functions depending only on entities. Only usecases invoke services.
   - **Infrastructure** (repositories): Handles external system communication: Tauri commands, DB operations, file system access, HTTP requests, etc. Repositories consolidate external system communication.
@@ -112,8 +112,8 @@ When generating or validating Svelte code for this project, produce concise code
 
 ## Directory Structure
 
-- `src/lib/presentation/`: UI components. Shared components in `components/container/` and `components/presentational/`.
-- `src/lib/application/`: Usecases in `usecases/`, stores in `stores/`.
+- `src/lib/presentation/`: UI components. Shared components in `components/container/` and `components/presentational/`. Svelte actions in `actions/`.
+- `src/lib/application/`: Usecases in `usecases/`, stores in `stores/`, and localization files in `locales/`.
 - `src/lib/domain/`: Entities in `entities/`, services in `services/`.
 - `src/lib/infrastructure/`: Repositories in `repositories/`.
 - `src/routes/`: SvelteKit pages with `+page.svelte` and `+page.ts`, and route-specific components. Route-specific components in `routes/[route]/container/` and `routes/[route]/presentational/`.

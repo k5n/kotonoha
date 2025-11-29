@@ -240,10 +240,11 @@ erDiagram
     SENTENCE_CARDS {
         INTEGER id PK
         INTEGER dialogue_id FK
-        INTEGER vocabulary_id FK
+        TEXT part_of_speech
         TEXT expression
         TEXT sentence
-        TEXT definition
+        TEXT contextual_definition
+        TEXT core_meaning
         TEXT status
         TEXT created_at
     }
@@ -524,7 +525,7 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 フロントエンド全体の統合テストおよびコンポーネント単体テストを行うため、Vitest Browser Mode を使用したテスト環境を提供する。
 
-- **テストフレームワーク**: Vitest + WebdriverIO (Chrome)
+- **テストフレームワーク**: Vitest + Playwright (Chromium)
 - **テスト構成ファイル**: `vitest.config.browser.ts`
 - **テストファイルの命名規則**: `*.browser.test.ts`
 
