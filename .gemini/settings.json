@@ -1,5 +1,5 @@
 {
-  "contextFilename": ["AGENTS.md", "GEMINI.md"],
+  "contextFilename": ["AGENTS.md"],
   "mcpServers": {
     "context7": {
       "command": "npx",
