@@ -240,10 +240,11 @@ erDiagram
     SENTENCE_CARDS {
         INTEGER id PK
         INTEGER dialogue_id FK
-        INTEGER vocabulary_id FK
+        TEXT part_of_speech
         TEXT expression
         TEXT sentence
-        TEXT definition
+        TEXT contextual_definition
+        TEXT core_meaning
         TEXT status
         TEXT created_at
     }
@@ -524,7 +525,7 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 
 フロントエンド全体の統合テストおよびコンポーネント単体テストを行うため、Vitest Browser Mode を使用したテスト環境を提供する。
 
-- **テストフレームワーク**: Vitest + WebdriverIO (Chrome)
+- **テストフレームワーク**: Vitest + Playwright (Chromium)
 - **テスト構成ファイル**: `vitest.config.browser.ts`
 - **テストファイルの命名規則**: `*.browser.test.ts`
 
@@ -536,9 +537,10 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
    - 目的: 個別のコンポーネントの UI および振る舞いを検証
 
 2. **ルート統合テスト** (重点):
-   - 配置場所: 各ルートディレクトリ内に `integration.browser.test.ts` という名前で配置
-   - 例: `src/routes/settings/integration.browser.test.ts`
+   - 配置場所: `src/integration-tests/` ディレクトリ内に配置
+   - 例: `src/integration-tests/settings.browser.test.ts`
    - 目的: ページ全体のワークフロー（データ取得、表示、エラーハンドリング）を統合的に検証
+   - モック方針: Tauri のネイティブ機能（Rust 側の処理）や SvelteKit の関数などの、**フロントエンドのユーザーコード以外**をモックする。フロントエンドロジックとコンポーネントのユーザーコードは一切モックせずに全て動作させる。
 
 **モック戦略:**
 
@@ -550,7 +552,9 @@ Tauriのプラグインを利用するなどしてフロントエンド側で実
 **実行コマンド:**
 
 - すべてのブラウザモードテストを実行: `npm run test:browser`
-- すべてのテスト（単体 + ブラウザモード）を実行: `npm run test:all`
+- カバレッジレポートを生成: `npm run report:coverage`
+
+`npm run test:all` を実行すると、単体テストとブラウザモードテストの両方が実行され、カバレッジレポートも生成される。
 
 **利用上の注意:**
 
