@@ -91,6 +91,10 @@ Kotonoha supports the following subtitle formats:
 
 The standard SRT format is widely used and compatible with most subtitle tools. Each entry consists of a sequence number, a time range, and the subtitle text.
 
+### VTT (Web Video Text Tracks)
+
+The VTT format is a standard format for displaying timed text tracks on the web. It is widely supported and similar to SRT.
+
 ### SSWT (Simple Subtitle With Timestamps)
 
 SSWT is a simple, original format designed for Kotonoha. Each line represents a single subtitle and includes a time range and the text:
@@ -242,7 +246,7 @@ If the UI needs additional mocked behavior, extend the modules under `src/lib/in
 - `npm run format`: Formats the code.
 - `npm run test:browser`: Runs browser mode integration tests.
 - `npm run test:all`: Runs all tests (unit, browser mode).
-- `npm run generate:graph`: Generates dependency graph diagrams and lists and saves them to [`doc/dependency-graph.md`](./doc/dependency-graph.md) and [`AGENTS.md`](./AGENTS.md).
+- `npm run generate:graph`: Generates dependency graph diagrams and saves them to [`doc/dependency-graph.md`](./doc/dependency-graph.md).
 
 ### Testing
 
