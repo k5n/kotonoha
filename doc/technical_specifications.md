@@ -164,7 +164,7 @@ graph TD
     container --> stores
     container -.-> entities
     container --> presentational
-    presentational ---> stores
+    presentational -."only for i18n".-> stores
     presentational -.-> entities
     actions -.-> entities
     actions ---> usecases
@@ -184,7 +184,8 @@ graph TD
 
 - routes は SvelteKit のルーティング機能を利用した画面単位のコンポーネント群で、container の画面部品を束ねる。ビジネスロジックはできるだけ Application レイヤーの usecases に委譲する。
 - container には各画面の個々のある程度の塊の機能単位部品を格納し、ビジネスロジックはできるだけ Application レイヤーの usecases に委譲し、表示は presentational に委譲する。ルート固有の container は `routes/[route]/components/container/` に、共有の container は `lib/presentation/components/container/` に配置する。
-- presentational には純粋なUIコンポーネントを格納し、ビジネスロジックを持たせない。usecases の呼び出しは禁止する。ただし props のバケツリレーを避けるため、stores への直接アクセスを許容する。ルート固有の presentational は `routes/[route]/components/presentational/` に、共有の presentational は `lib/presentation/components/presentational/` に配置する。
+  - container 内の状態管理やロジックが肥大化した場合、あるいは共通の状態管理とロジックがある場合は、`container/*.svelte.ts` として切り出す。
+- presentational には純粋なUIコンポーネントを格納し、ビジネスロジックを持たせない。usecases の呼び出しは禁止する。stores への直接アクセスは原則として行わない（i18n などの例外を除く）。props のバケツリレーを避ける必要がある場合は、Svelte 5 の context 機能を利用する。ルート固有の presentational は `routes/[route]/components/presentational/` に、共有の presentational は `lib/presentation/components/presentational/` に配置する。
 - stores はアプリケーション全体の状態管理を担う。特に複数のコンポーネントにまたがる UI 状態を管理する役割を果たす。あくまで状態管理に専念し、ビジネスロジックは持たせず、usecases を呼び出すことはしない。
 - usecases はアプリケーションのユースケースを実装し、処理全体のオーケストレーションを担う。Domain レイヤーの services や Infrastructure レイヤーの repositories を呼び出す。routes や container 経由でのバケツリレーを避けるため、stores への直接アクセスを許容する。
 - entities は純粋なデータ型定義のみを含み、ロジックを持たせない。
