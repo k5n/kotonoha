@@ -39,8 +39,10 @@ async function getDefaultSubtitleLanguage(
     throw new Error(`Failed to fetch captions: ${res.status}`);
   }
 
-  const data = await res.json();
-  if (!data.items || data.items.length === 0) {
+  const data = (await res.json()) as {
+    items: readonly { snippet: { language: string; trackKind: string } }[];
+  };
+  if (data.items.length === 0) {
     console.error(`No captions found for this video: ${videoId}`);
     throw new Error(`No captions found for this video: ${videoId}`);
   }

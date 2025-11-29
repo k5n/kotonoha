@@ -8,6 +8,7 @@ import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRep
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
+import { assert, assertNotNull, assertNotUndefined } from '$lib/utils/assertion';
 import { bcp47ToLanguageName } from '$lib/utils/language';
 
 export type YoutubeEpisodeAddPayload = {
@@ -144,13 +145,10 @@ async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<vo
   const { title, embedUrl, language, trackKind } = youtubeMetadata;
 
   const videoId = extractYoutubeVideoId(embedUrl);
-  if (videoId === null) {
-    throw new Error(`Cannot extract video ID: ${embedUrl}`);
-  }
+  assertNotNull(videoId, `Cannot extract video ID: ${embedUrl}`);
   const languageName = bcp47ToLanguageName(language);
-  if (languageName === undefined) {
-    throw new Error(`Unsupported language: ${language}`);
-  }
+  assertNotUndefined(languageName, `Unsupported language: ${language}`);
+
   const subtitle = await youtubeRepository.fetchSubtitle({
     videoId,
     trackKind,
@@ -164,6 +162,7 @@ async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<vo
     learningLanguage: languageName,
     explanationLanguage: 'Japanese',
   });
+
   try {
     const dialogues = subtitle.map((dialogue) => ({
       ...dialogue,
@@ -202,6 +201,11 @@ export async function addNewEpisode(
 
   const displayOrder = calculateMaxDisplayOrder(existingEpisodes) + 1;
 
+  assert(
+    payload.source === 'file' || payload.source === 'youtube',
+    `Unknown payload source: ${JSON.stringify(payload)}`
+  );
+
   if (payload.source === 'file') {
     await addNewEpisodeFromFiles({
       episodeGroupId,
@@ -225,6 +229,4 @@ export async function addNewEpisode(
     console.info(`Successfully added YouTube episode for group ${episodeGroupId}`);
     return;
   }
-
-  throw new Error(`Unknown payload source: ${JSON.stringify(payload)}`);
 }

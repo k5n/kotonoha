@@ -3,14 +3,18 @@ import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
+import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
 import { invoke } from '@tauri-apps/api/core';
+import { appDataDir } from '@tauri-apps/api/path';
 import { fetch } from '@tauri-apps/plugin-http';
 import Database from '@tauri-apps/plugin-sql';
+import { Stronghold } from '@tauri-apps/plugin-stronghold';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
+import { setupStrongholdMock } from './lib/mockFactories';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitFor, waitForFadeTransition } from './lib/utils';
 
@@ -18,6 +22,8 @@ import '$src/app.css';
 
 vi.mock('@tauri-apps/plugin-sql', () => ({ __esModule: true, default: mockDatabase }));
 vi.mock('@tauri-apps/api/core');
+vi.mock('@tauri-apps/plugin-stronghold');
+vi.mock('@tauri-apps/api/path');
 vi.mock('@tauri-apps/plugin-fs', () => ({
   BaseDirectory: { AppLocalData: 'appData' },
   exists: vi.fn().mockResolvedValue(false),
@@ -83,23 +89,33 @@ async function setupPage(groupId: string) {
   return { data, params, renderResult };
 }
 
+async function defaultInvokeMock(command: string, _args?: unknown): Promise<unknown> {
+  if (command === 'get_env_prefix_command') {
+    return '';
+  }
+  if (command === 'get_stronghold_password') {
+    return 'test-password';
+  }
+  if (command === 'fetch_youtube_subtitle') {
+    return [];
+  }
+  if (command === 'fetch_youtube_metadata') {
+    return {
+      title: 'Test Video',
+      language: 'en',
+      trackKind: 'asr',
+      embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    };
+  }
+  throw new Error(`Unhandled Tauri command: ${command as string}`);
+}
+
 beforeEach(async () => {
   vi.clearAllMocks();
 
   const invokeMock = vi.mocked(invoke);
   invokeMock.mockReset();
-  invokeMock.mockImplementation(async (command) => {
-    if (command === 'get_env_prefix_command') {
-      return '';
-    }
-    if (command === 'get_stronghold_password') {
-      return 'test-password';
-    }
-    if (command === 'fetch_youtube_subtitle') {
-      return [];
-    }
-    throw new Error(`Unhandled Tauri command: ${command as string}`);
-  });
+  invokeMock.mockImplementation(defaultInvokeMock);
 
   const fetchMock = vi.mocked(fetch);
   fetchMock.mockReset();
@@ -126,7 +142,7 @@ beforeEach(async () => {
 
   groupPathStore.reset();
   i18nStore.init('en');
-  apiKeyStore.youtube.set('test-api-key');
+  apiKeyStore.youtube.reset();
 
   await clearDatabase();
 });
@@ -158,6 +174,7 @@ test('renders YouTube episode form', async () => {
 
 test('handles URL input and validation', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
 
   await setupPage(String(groupId));
 
@@ -172,10 +189,7 @@ test('handles URL input and validation', async () => {
         embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       };
     }
-    if (command === 'get_env_prefix_command') {
-      return '';
-    }
-    throw new Error(`Unhandled Tauri command: ${command as string}`);
+    return defaultInvokeMock(command, _args);
   });
 
   // Open the YouTube modal
@@ -194,30 +208,211 @@ test('handles URL input and validation', async () => {
   await page.screenshot();
 });
 
-test('handles submit request with valid payload', async () => {
+test('error: shows an error when YouTube Data API key is not set', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  const getYoutubeApiKeySpy = vi
+    .spyOn(apiKeyRepository, 'getYoutubeApiKey')
+    .mockResolvedValue(null);
+
+  try {
+    await setupPage(String(groupId));
+
+    await page.getByRole('button', { name: 'Add Episode' }).click();
+    await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+    const urlInput = page.getByLabelText('YouTube URL');
+    await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    await waitFor(100);
+    await page.screenshot();
+
+    await expect.element(page.getByText('YouTube Data API key is not set.')).toBeInTheDocument();
+    const createButton = page.getByRole('button', { name: 'Create' });
+    await expect.element(createButton).toBeDisabled();
+  } finally {
+    getYoutubeApiKeySpy.mockRestore();
+  }
+});
+
+test('error: shows an error for invalid YouTube URL', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
 
   await setupPage(String(groupId));
 
-  // Mock the invoke for YouTube metadata and episode creation
-  const invokeMock = vi.mocked(invoke);
-  invokeMock.mockImplementation(async (command, _args) => {
-    if (command === 'fetch_youtube_metadata') {
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://example.com/notyoutube');
+  await waitFor(100);
+  await page.screenshot();
+
+  await expect.element(page.getByText('Invalid YouTube URL.')).toBeInTheDocument();
+  const createButton = page.getByRole('button', { name: 'Create' });
+  await expect.element(createButton).toBeDisabled();
+});
+
+test('error: shows an error when fetching YouTube metadata fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
+
+  const fetchMock = vi.mocked(fetch);
+  fetchMock.mockImplementation(async (url, _options) => {
+    if (typeof url === 'string' && url.includes('youtube.com/oembed')) {
       return {
-        title: 'Test Video',
-        language: 'en',
-        trackKind: 'asr',
-        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      };
+        ok: false,
+        status: 500,
+      } as Response;
     }
-    if (command === 'get_env_prefix_command') {
-      return '';
+    if (typeof url === 'string' && url.includes('googleapis.com/youtube/v3/captions')) {
+      return {
+        ok: true,
+        json: async () => ({
+          items: [{ snippet: { language: 'en', trackKind: 'asr' } }],
+        }),
+      } as Response;
     }
-    if (command === 'fetch_youtube_subtitle') {
-      return [];
-    }
-    throw new Error(`Unhandled Tauri command: ${command as string}`);
+    throw new Error(`Unhandled fetch: ${url}`);
   });
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(100);
+  await page.screenshot();
+
+  await expect.element(page.getByText('Failed to fetch YouTube metadata.')).toBeInTheDocument();
+});
+
+test('error: shows an error when fetching YouTube captions fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
+
+  const fetchMock = vi.mocked(fetch);
+  fetchMock.mockImplementation(async (url, _options) => {
+    if (typeof url === 'string' && url.includes('youtube.com/oembed')) {
+      return {
+        ok: true,
+        json: async () => ({ title: 'Test Video' }),
+      } as Response;
+    }
+    if (typeof url === 'string' && url.includes('googleapis.com/youtube/v3/captions')) {
+      return {
+        ok: false,
+        status: 404,
+      } as Response;
+    }
+    throw new Error(`Unhandled fetch: ${url}`);
+  });
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(100);
+  await page.screenshot();
+
+  await expect.element(page.getByText('Failed to fetch YouTube metadata.')).toBeInTheDocument();
+});
+
+test('error: shows an error when fetching YouTube subtitles fails', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
+
+  const invokeMock = vi.mocked(invoke);
+  invokeMock.mockImplementation(async (command, args) => {
+    if (command === 'fetch_youtube_subtitle') {
+      throw 'fetch subtitle failed';
+    }
+    return defaultInvokeMock(command, args);
+  });
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(1000);
+
+  await page.getByRole('button', { name: 'Create' }).click();
+  await waitFor(200);
+  await page.screenshot();
+
+  // TODO: 字幕が取得できなかったことをエラーメッセージで伝えるべき
+  await expect.element(page.getByText('Failed to add new episode.')).toBeInTheDocument();
+  await expect
+    .element(page.getByRole('heading', { name: 'Add New Episode' }))
+    .not.toBeInTheDocument();
+});
+
+test('fetches YouTube API key from Stronghold when store is empty', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+
+  apiKeyStore.youtube.reset();
+
+  const { stronghold } = setupStrongholdMock({ youtubeApiKey: 'stored-youtube-api-key' });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  vi.mocked(Stronghold.load).mockResolvedValue(stronghold as any);
+  vi.mocked(appDataDir).mockResolvedValue('/mock/appdata');
+
+  const fetchMock = vi.mocked(fetch);
+  fetchMock.mockImplementation(async (url, _options) => {
+    if (typeof url === 'string' && url.includes('youtube.com/oembed')) {
+      return {
+        ok: true,
+        json: async () => ({ title: 'Stored Key Video' }),
+      } as Response;
+    }
+    if (typeof url === 'string' && url.includes('googleapis.com/youtube/v3/captions')) {
+      expect(url).toContain('key=stored-youtube-api-key');
+      return {
+        ok: true,
+        json: async () => ({
+          items: [{ snippet: { language: 'en', trackKind: 'asr' } }],
+        }),
+      } as Response;
+    }
+    throw new Error(`Unhandled fetch: ${url}`);
+  });
+
+  await setupPage(String(groupId));
+
+  await page.getByRole('button', { name: 'Add Episode' }).click();
+  await page.getByRole('button', { name: 'Select the YouTube episode workflow' }).click();
+
+  const urlInput = page.getByLabelText('YouTube URL');
+  await urlInput.fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await waitFor(1000);
+
+  expect(apiKeyStore.youtube.value).toBe('stored-youtube-api-key');
+
+  const titleInput = page.getByPlaceholder("Episode's title");
+  await expect.element(titleInput).toHaveValue('Stored Key Video');
+
+  const googleApiCall = fetchMock.mock.calls.find(
+    ([firstArg]) =>
+      typeof firstArg === 'string' && firstArg.includes('googleapis.com/youtube/v3/captions')
+  );
+  expect(googleApiCall?.[0]).toContain('key=stored-youtube-api-key');
+
+  await page.screenshot();
+});
+
+test('handles submit request with valid payload', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
+
+  await setupPage(String(groupId));
 
   // Open the YouTube modal
   await page.getByRole('button', { name: 'Add Episode' }).click();
@@ -286,28 +481,9 @@ test('closes on cancel', async () => {
 
 test('resets state on reopen after cancel', async () => {
   const groupId = await insertEpisodeGroup({ name: 'Test Group' });
+  apiKeyStore.youtube.set('test-api-key');
 
   await setupPage(String(groupId));
-
-  // Mock the invoke for YouTube metadata
-  const invokeMock = vi.mocked(invoke);
-  invokeMock.mockImplementation(async (command, _args) => {
-    if (command === 'fetch_youtube_metadata') {
-      return {
-        title: 'Test Video',
-        language: 'en',
-        trackKind: 'asr',
-        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      };
-    }
-    if (command === 'get_env_prefix_command') {
-      return '';
-    }
-    if (command === 'fetch_youtube_subtitle') {
-      return [];
-    }
-    throw new Error(`Unhandled Tauri command: ${command as string}`);
-  });
 
   // First open: Input URL and modify title
   await page.getByRole('button', { name: 'Add Episode' }).click();
