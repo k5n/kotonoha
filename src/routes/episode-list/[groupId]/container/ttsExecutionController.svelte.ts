@@ -15,7 +15,6 @@ export type TtsExecutionController = {
   readonly progress: number;
   readonly contextLines: readonly TtsContextLine[];
   readonly isExecuting: boolean;
-  readonly isCancelled: boolean;
   readonly errorMessageKey: string;
   start: (
     scriptFilePath: string,
@@ -105,6 +104,7 @@ export function createTtsExecutionController(): TtsExecutionController {
       return result;
     } catch (error) {
       console.error('Failed to execute TTS:', error);
+      // FIXME: errorでキャンセルかどうかを判定したほうが良い。isCancelledの状態は削除できる。
       if (!isCancelled) {
         fail('components.ttsExecutionModal.error.failedToExecute');
       }
@@ -136,9 +136,6 @@ export function createTtsExecutionController(): TtsExecutionController {
     },
     get isExecuting() {
       return isExecuting;
-    },
-    get isCancelled() {
-      return isCancelled;
     },
     get errorMessageKey() {
       return errorMessageKey;

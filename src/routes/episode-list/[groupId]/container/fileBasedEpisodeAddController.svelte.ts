@@ -12,11 +12,10 @@ export type FileBasedEpisodeAddController = {
   title: string;
   audioFilePath: string | null;
   scriptFilePath: string | null;
-  errorMessage: string;
+  readonly errorMessage: string;
   readonly languageDetectionWarningMessage: string;
   readonly learningTargetLanguages: readonly string[];
   selectedStudyLanguage: string | null;
-  readonly detectedLanguage: string | null;
   validateTitle: () => string;
   validateAudioFile: () => string;
   validateScriptFile: () => string;
@@ -63,7 +62,6 @@ export function createFileBasedEpisodeAddController(): FileBasedEpisodeAddContro
   let scriptFilePath = $state<string | null>(null);
   let errorMessage = $state('');
   let languageDetectionWarningMessage = $state('');
-  let detectedLanguage = $state<string | null>(null);
   let learningTargetLanguages = $state<readonly string[]>([]);
   let selectedStudyLanguage = $state<string | null>(null);
 
@@ -84,7 +82,6 @@ export function createFileBasedEpisodeAddController(): FileBasedEpisodeAddContro
     detectedLanguageCode: string | null,
     supportedLanguages: readonly string[]
   ) {
-    detectedLanguage = detectedLanguageCode;
     learningTargetLanguages = supportedLanguages;
 
     const { selectedStudyLanguage: selected, languageDetectionWarningMessage: warning } =
@@ -96,7 +93,6 @@ export function createFileBasedEpisodeAddController(): FileBasedEpisodeAddContro
   }
 
   function failedLanguageDetection(errorKey: string, supportedLanguages: readonly string[]) {
-    detectedLanguage = null;
     errorMessage = t(errorKey);
     learningTargetLanguages = supportedLanguages;
     selectedStudyLanguage = supportedLanguages[0] ?? null;
@@ -142,7 +138,6 @@ export function createFileBasedEpisodeAddController(): FileBasedEpisodeAddContro
     scriptFilePath = null;
     errorMessage = '';
     languageDetectionWarningMessage = '';
-    detectedLanguage = null;
     learningTargetLanguages = [];
     selectedStudyLanguage = null;
   }
@@ -172,9 +167,6 @@ export function createFileBasedEpisodeAddController(): FileBasedEpisodeAddContro
     get errorMessage() {
       return errorMessage;
     },
-    set errorMessage(value: string) {
-      errorMessage = value;
-    },
 
     get languageDetectionWarningMessage() {
       return languageDetectionWarningMessage;
@@ -189,10 +181,6 @@ export function createFileBasedEpisodeAddController(): FileBasedEpisodeAddContro
     },
     set selectedStudyLanguage(value: string | null) {
       selectedStudyLanguage = value;
-    },
-
-    get detectedLanguage() {
-      return detectedLanguage;
     },
 
     validateTitle,

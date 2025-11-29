@@ -8,7 +8,6 @@ import type { FileInfo } from '$lib/domain/entities/voice';
 
 export type TtsModelDownloadController = {
   readonly open: boolean;
-  readonly tasks: readonly FileInfo[];
   readonly progress: DownloadProgress;
   readonly isDownloading: boolean;
   readonly errorMessageKey: string;
@@ -92,9 +91,6 @@ export function createTtsModelDownloadController(): TtsModelDownloadController {
   return {
     get open() {
       return open;
-    },
-    get tasks() {
-      return tasks;
     },
     get progress() {
       return progress;

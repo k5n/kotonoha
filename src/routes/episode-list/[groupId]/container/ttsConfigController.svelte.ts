@@ -10,7 +10,6 @@ export type TtsConfigController = {
   readonly selectedVoice: Voice | null;
   selectedQuality: string;
   selectedSpeakerId: string;
-  readonly sampleUrl: string | null;
   readonly errorMessage: string;
   startVoicesFetching: () => void;
   setVoiceData: (params: {
@@ -76,10 +75,6 @@ export function createTtsConfigController(): TtsConfigController {
   );
 
   const availableSpeakers = $derived(currentVoice ? resolveSpeakers(currentVoice) : []);
-
-  const currentSpeaker = $derived(
-    availableSpeakers.find((speaker) => speaker.id === selectedSpeakerId) || null
-  );
 
   function applyVoiceConfig(config: { quality: string; voiceName: string; speakerId: number }) {
     selectedQuality = config.quality;
@@ -210,10 +205,6 @@ export function createTtsConfigController(): TtsConfigController {
     },
     set selectedSpeakerId(id: string) {
       setSelectedSpeakerId(parseInt(id));
-    },
-
-    get sampleUrl() {
-      return currentSpeaker?.sampleUrl || null;
     },
 
     get errorMessage() {
