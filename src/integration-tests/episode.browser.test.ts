@@ -3,6 +3,7 @@ import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import { audioInfoCacheStore } from '$lib/application/stores/audioInfoCacheStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelte';
+import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event, type UnlistenFn } from '@tauri-apps/api/event';
@@ -29,6 +30,63 @@ vi.mock('$app/navigation', () => ({
 }));
 
 const DATABASE_URL = 'dummy';
+
+const DEFAULT_ANALYZE_SENTENCE_RESPONSE: SentenceAnalysisResult = {
+  sentence: 'Analyzed sentence from LLM.',
+  translation: 'LLM translation result',
+  explanation: 'LLM explanation result',
+  items: [
+    {
+      id: 0,
+      expression: 'LLM Expression A',
+      partOfSpeech: 'noun',
+      contextualDefinition: 'Context from LLM result A',
+      coreMeaning: 'Core meaning A',
+      exampleSentence: 'Analyzed sentence from LLM.',
+      status: 'cache',
+    },
+    {
+      id: 0,
+      expression: 'LLM Expression B',
+      partOfSpeech: 'verb',
+      contextualDefinition: 'Context from LLM result B',
+      coreMeaning: 'Core meaning B',
+      exampleSentence: 'Analyzed sentence from LLM.',
+      status: 'cache',
+    },
+  ],
+};
+
+async function defaultInvokeMock(command: string, args?: unknown): Promise<unknown> {
+  if (command === 'get_env_prefix_command') {
+    return '';
+  }
+  if (command === 'open_audio') {
+    return null;
+  }
+  if (command === 'analyze_audio') {
+    return {
+      duration: 120000,
+      peaks: Array.from({ length: 20 }, (_, i) => (i % 2 === 0 ? 0.2 : 0.6)),
+    };
+  }
+  if (
+    command === 'play_audio' ||
+    command === 'pause_audio' ||
+    command === 'resume_audio' ||
+    command === 'stop_audio'
+  ) {
+    return null;
+  }
+  if (command === 'analyze_sentence_with_llm') {
+    return DEFAULT_ANALYZE_SENTENCE_RESPONSE;
+  }
+  if (command === 'seek_audio') {
+    const payload = args as { positionMs: number } | undefined;
+    return payload?.positionMs ?? null;
+  }
+  throw new Error(`Unhandled Tauri command: ${command as string}`);
+}
 
 async function clearDatabase(): Promise<void> {
   const db = new Database(DATABASE_URL);
@@ -199,33 +257,7 @@ beforeEach(async () => {
 
   const invokeMock = vi.mocked(invoke);
   invokeMock.mockReset();
-  invokeMock.mockImplementation(async (command: string, args?: unknown) => {
-    if (command === 'get_env_prefix_command') {
-      return '';
-    }
-    if (command === 'open_audio') {
-      return null;
-    }
-    if (command === 'analyze_audio') {
-      return {
-        duration: 120000,
-        peaks: Array.from({ length: 20 }, (_, i) => (i % 2 === 0 ? 0.2 : 0.6)),
-      };
-    }
-    if (
-      command === 'play_audio' ||
-      command === 'pause_audio' ||
-      command === 'resume_audio' ||
-      command === 'stop_audio'
-    ) {
-      return null;
-    }
-    if (command === 'seek_audio') {
-      const payload = args as { positionMs: number } | undefined;
-      return payload?.positionMs ?? null;
-    }
-    throw new Error(`Unhandled Tauri command: ${command as string}`);
-  });
+  invokeMock.mockImplementation(defaultInvokeMock);
 
   const listenMock = vi.mocked(listen);
   listenMock.mockReset();
@@ -427,4 +459,87 @@ test('success: mining flow with cache', async () => {
   await expect
     .element(sentenceCardsSection.getByText('Kotonoha Card Expression'))
     .toBeInTheDocument();
+});
+
+test('success: mining flow without cache calls LLM and caches results', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Story Album' });
+  const episodeId = await insertEpisode({
+    episodeGroupId: groupId,
+    title: 'Episode Story',
+    mediaPath: 'media/story.mp3',
+  });
+
+  await insertDialogue({
+    episodeId,
+    startTimeMs: 0,
+    endTimeMs: 5000,
+    originalText: 'Hello world from Kotonoha.',
+    correctedText: 'Hello world from Kotonoha!',
+    translation: null,
+    explanation: null,
+    sentence: null,
+  });
+
+  await insertDialogue({
+    episodeId,
+    startTimeMs: 6000,
+    endTimeMs: 11000,
+    originalText: 'Second line follows shortly after.',
+  });
+
+  const { data } = await setupPage(String(episodeId));
+  await page.screenshot();
+
+  expect(data.errorKey).toBeNull();
+  expect(data.episode?.title).toBe('Episode Story');
+
+  const sentenceCardsSection = page.getByTestId('sentence-cards-section');
+  await expect
+    .element(sentenceCardsSection.getByText('There are no Sentence Cards in this episode.'))
+    .toBeInTheDocument();
+
+  await expect.element(page.getByRole('button', { name: 'Mine' })).toBeVisible();
+  await page.getByRole('button', { name: 'Mine' }).click();
+  await waitForFadeTransition();
+  await page.screenshot();
+
+  await expect
+    .element(
+      page.getByTestId('sentence-mining-modal-sentence').getByText('Analyzed sentence from LLM.')
+    )
+    .toBeInTheDocument();
+
+  expect(vi.mocked(invoke)).toHaveBeenCalledWith(
+    'analyze_sentence_with_llm',
+    expect.objectContaining({
+      apiKey: 'test-gemini',
+      learningLanguage: 'English',
+      explanationLanguage: 'Japanese',
+      targetSentence: 'Hello world from Kotonoha!',
+    })
+  );
+
+  const firstItem = page.getByTestId('analysis-result-item-1');
+  const secondItem = page.getByTestId('analysis-result-item-2');
+  await expect.element(firstItem.getByText('LLM Expression A')).toBeInTheDocument();
+  await expect.element(firstItem.getByText('Context from LLM result A')).toBeInTheDocument();
+  await expect.element(firstItem.getByText('Core meaning A')).toBeInTheDocument();
+  await expect.element(secondItem.getByText('LLM Expression B')).toBeInTheDocument();
+  await expect.element(secondItem.getByText('Context from LLM result B')).toBeInTheDocument();
+  await expect.element(secondItem.getByText('Core meaning B')).toBeInTheDocument();
+  await expect.element(firstItem.getByRole('checkbox')).toBeEnabled();
+  await expect.element(firstItem.getByRole('checkbox')).not.toBeChecked();
+  await expect.element(secondItem.getByRole('checkbox')).toBeEnabled();
+  await expect.element(secondItem.getByRole('checkbox')).not.toBeChecked();
+
+  await firstItem.getByRole('checkbox').click();
+  await page.screenshot();
+  const submitButton = page.getByTestId('sentence-mining-modal-submit-button');
+  await expect.element(submitButton.getByText('Add 1 selected items to cards')).toBeEnabled();
+
+  await submitButton.click();
+  await waitForFadeTransition();
+  await page.screenshot();
+
+  await expect.element(sentenceCardsSection.getByText('LLM Expression A')).toBeInTheDocument();
 });
