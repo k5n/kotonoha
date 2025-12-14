@@ -1,9 +1,9 @@
-import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import type { SubtitleLineParseResult } from '$lib/domain/entities/subtitleLine';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
-import { parseSrtToDialogues } from '$lib/domain/services/parseSrtToDialogues';
-import { parseSswtToDialogues } from '$lib/domain/services/parseSswtToDialogues';
-import { parseTsvToDialogues } from '$lib/domain/services/parseTsvToDialogues';
-import { parseVttToDialogues } from '$lib/domain/services/parseVttToDialogues';
+import { parseSrtToSubtitleLines } from '$lib/domain/services/parseSrtToSubtitleLines';
+import { parseSswtToSubtitleLines } from '$lib/domain/services/parseSswtToSubtitleLines';
+import { parseTsvToSubtitleLines } from '$lib/domain/services/parseTsvToSubtitleLines';
+import { parseVttToSubtitleLines } from '$lib/domain/services/parseVttToSubtitleLines';
 
 /**
  * スクリプトファイルの内容を拡張子に基づいてダイアログにパースする
@@ -15,12 +15,12 @@ import { parseVttToDialogues } from '$lib/domain/services/parseVttToDialogues';
  * @returns パース結果のダイアログと警告
  * @throws サポートされていない拡張子の場合にエラーをスロー
  */
-export function parseScriptToDialogues(
+export function parseScriptToSubtitleLines(
   scriptContent: string,
   scriptExtension: string,
   episodeId: number,
   tsvConfig?: TsvConfig
-): { dialogues: readonly NewDialogue[]; warnings: readonly string[] } {
+): SubtitleLineParseResult {
   const supportedExtensions = ['srt', 'sswt', 'tsv', 'vtt'];
   if (!supportedExtensions.includes(scriptExtension)) {
     throw new Error(`Unsupported script file type: ${scriptExtension}`);
@@ -28,17 +28,17 @@ export function parseScriptToDialogues(
 
   switch (scriptExtension) {
     case 'srt':
-      return parseSrtToDialogues(scriptContent, episodeId);
+      return parseSrtToSubtitleLines(scriptContent, episodeId);
     case 'sswt':
-      return parseSswtToDialogues(scriptContent, episodeId);
+      return parseSswtToSubtitleLines(scriptContent, episodeId);
     case 'tsv': {
       if (tsvConfig === undefined) {
         throw new Error('TSV config is required for TSV script files.');
       }
-      return parseTsvToDialogues(scriptContent, episodeId, tsvConfig);
+      return parseTsvToSubtitleLines(scriptContent, episodeId, tsvConfig);
     }
     case 'vtt':
-      return parseVttToDialogues(scriptContent, episodeId);
+      return parseVttToSubtitleLines(scriptContent, episodeId);
     default:
       // This part should not be reached due to the check above, but it's good for safety.
       throw new Error(`Parser not implemented for: ${scriptExtension}`);

@@ -1,4 +1,4 @@
-import type { Dialogue, NewDialogue } from '$lib/domain/entities/dialogue';
+import type { NewSubtitleLine, SubtitleLine } from '$lib/domain/entities/subtitleLine';
 import Database from '@tauri-apps/plugin-sql';
 import { getDatabasePath } from '../config';
 
@@ -15,7 +15,7 @@ type DialogueRow = {
   deleted_at: string | null;
 };
 
-function mapRowToDialogue(row: DialogueRow): Dialogue {
+function mapRowToDialogue(row: DialogueRow): SubtitleLine {
   return {
     id: row.id,
     episodeId: row.episode_id,
@@ -31,7 +31,7 @@ function mapRowToDialogue(row: DialogueRow): Dialogue {
 }
 
 export const dialogueRepository = {
-  async getDialogueById(dialogueId: number): Promise<Dialogue | null> {
+  async getDialogueById(dialogueId: number): Promise<SubtitleLine | null> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<DialogueRow[]>('SELECT * FROM dialogues WHERE id = ?', [
       dialogueId,
@@ -39,7 +39,7 @@ export const dialogueRepository = {
     return rows.length > 0 ? mapRowToDialogue(rows[0]) : null;
   },
 
-  async getDialoguesByEpisodeId(episodeId: number): Promise<readonly Dialogue[]> {
+  async getDialoguesByEpisodeId(episodeId: number): Promise<readonly SubtitleLine[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<DialogueRow[]>(
       'SELECT * FROM dialogues WHERE episode_id = ? ORDER BY start_time_ms ASC',
@@ -48,7 +48,10 @@ export const dialogueRepository = {
     return rows.map(mapRowToDialogue);
   },
 
-  async bulkInsertDialogues(episodeId: number, dialogues: readonly NewDialogue[]): Promise<void> {
+  async bulkInsertDialogues(
+    episodeId: number,
+    dialogues: readonly NewSubtitleLine[]
+  ): Promise<void> {
     const db = new Database(await getDatabasePath());
     const values = dialogues
       .map(

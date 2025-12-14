@@ -3,17 +3,17 @@
   import { t } from '$lib/application/stores/i18n.svelte';
   import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelte';
   import { addSentenceCards } from '$lib/application/usecases/addSentenceCards';
-  import { analyzeDialogueForMining } from '$lib/application/usecases/analyzeDialogueForMining';
+  import { analyzeSubtitleLineForMining } from '$lib/application/usecases/analyzeSubtitleLineForMining';
   import { PLAYER_DIV_ID } from '$lib/application/usecases/mediaPlayer/youtubePlayer';
-  import { softDeleteDialogue } from '$lib/application/usecases/softDeleteDialogue';
-  import { undoSoftDeleteDialogue } from '$lib/application/usecases/undoSoftDeleteDialogue';
-  import { updateDialogue } from '$lib/application/usecases/updateDialogue';
-  import type { Dialogue } from '$lib/domain/entities/dialogue';
+  import { softDeleteSubtitleLine } from '$lib/application/usecases/softDeleteSubtitleLine';
+  import { undoSoftDeleteSubtitleLine } from '$lib/application/usecases/undoSoftDeleteSubtitleLine';
+  import { updateSubtitleLine } from '$lib/application/usecases/updateSubtitleLine';
   import type {
     SentenceAnalysisItem,
     SentenceAnalysisResult,
   } from '$lib/domain/entities/sentenceAnalysisResult';
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
+  import type { SubtitleLine } from '$lib/domain/entities/subtitleLine';
   import { keyboardShortcuts } from '$lib/presentation/actions/keyboardShortcuts';
   import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
   import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
@@ -33,7 +33,7 @@
 
   // --- Component State ---
   let isModalOpen = $state(false);
-  let miningTarget: Dialogue | null = $state(null);
+  let miningTarget: SubtitleLine | null = $state(null);
   let analysisResult: SentenceAnalysisResult | null = $state(null);
   let isProcessingMining = $state(false);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
@@ -42,13 +42,15 @@
 
   // Delete confirmation
   let isConfirmModalOpen = $state(false);
-  let dialogueToDeleteId: number | null = $state(null);
+  let subtitleLineIdToDelete: number | null = $state(null);
 
   // --- Derived State ---
-  const filteredDialogues = $derived(
-    (data.dialogues ?? []).filter((d) => showDeleted || !d.deletedAt)
+  const filteredSubtitleLines = $derived(
+    (data.subtitleLines ?? []).filter((d) => showDeleted || !d.deletedAt)
   );
-  const hasDeletedDialogues = $derived(data.dialogues?.some((d) => d.deletedAt !== null) ?? false);
+  const hasDeletedSubtitleLines = $derived(
+    data.subtitleLines?.some((d) => d.deletedAt !== null) ?? false
+  );
   const mediaPlayer = $derived(data.mediaPlayer);
 
   onMount(() => {
@@ -69,24 +71,26 @@
   }
 
   function handleCardClick(card: SentenceCard) {
-    const dialogue = data.dialogues?.find((d) => d.id === card.dialogueId);
-    if (dialogue) {
-      mediaPlayer?.seek(dialogue.startTimeMs);
+    const subtitleLine = data.subtitleLines?.find((d) => d.id === card.dialogueId);
+    if (subtitleLine) {
+      mediaPlayer?.seek(subtitleLine.startTimeMs);
     } else {
       console.error(
-        `Dialogue not found for sentence card: ${card.id}, dialogueId: ${card.dialogueId}`
+        `Script segment not found for sentence card: ${card.id}, subtitleLineId: ${card.dialogueId}`
       );
     }
   }
 
-  async function openMiningModal(dialogue: Dialogue, context: readonly Dialogue[]) {
-    console.info(`Open mining modal for dialogue: ${dialogue.id}, context size: ${context.length}`);
-    miningTarget = dialogue;
+  async function openMiningModal(subtitleLine: SubtitleLine, context: readonly SubtitleLine[]) {
+    console.info(
+      `Open mining modal for script segment: ${subtitleLine.id}, context size: ${context.length}`
+    );
+    miningTarget = subtitleLine;
     isModalOpen = true;
     try {
-      analysisResult = await analyzeDialogueForMining(dialogue, context);
+      analysisResult = await analyzeSubtitleLineForMining(subtitleLine, context);
     } catch (err) {
-      console.error(`Error analyzing dialogue for mining: ${err}`);
+      console.error(`Error analyzing script segment for mining: ${err}`);
       errorMessage = t('episodeDetailPage.errors.analyzeFailed');
       resetMiningModalState();
     }
@@ -119,43 +123,46 @@
     isProcessingMining = false;
   }
 
-  async function handleSaveDialogue(details: { dialogueId: number; correctedText: string }) {
-    const { dialogueId, correctedText } = details;
+  async function handleSaveSubtitleLine(details: {
+    subtitleLineId: number;
+    correctedText: string;
+  }) {
+    const { subtitleLineId, correctedText } = details;
     try {
-      await updateDialogue(dialogueId, correctedText);
+      await updateSubtitleLine(subtitleLineId, correctedText);
       await invalidateAll();
     } catch (err) {
-      console.error(`Error updating dialogue: ${err}`);
+      console.error(`Error updating script segment: ${err}`);
       errorMessage = t('episodeDetailPage.errors.updateDialogueFailed');
     }
   }
 
-  function handleDeleteRequest(dialogueId: number) {
-    dialogueToDeleteId = dialogueId;
+  function handleDeleteRequest(subtitleLineId: number) {
+    subtitleLineIdToDelete = subtitleLineId;
     isConfirmModalOpen = true;
   }
 
   async function handleDeleteConfirm() {
-    if (dialogueToDeleteId === null) return;
+    if (subtitleLineIdToDelete === null) return;
 
     try {
-      await softDeleteDialogue(dialogueToDeleteId);
+      await softDeleteSubtitleLine(subtitleLineIdToDelete);
       await invalidateAll();
     } catch (err) {
-      console.error(`Error soft deleting dialogue: ${err}`);
+      console.error(`Error soft deleting script segment: ${err}`);
       errorMessage = t('episodeDetailPage.errors.deleteDialogueFailed');
     } finally {
       isConfirmModalOpen = false;
-      dialogueToDeleteId = null;
+      subtitleLineIdToDelete = null;
     }
   }
 
-  async function handleUndoDelete(dialogueId: number) {
+  async function handleUndoDelete(subtitleLineId: number) {
     try {
-      await undoSoftDeleteDialogue(dialogueId);
+      await undoSoftDeleteSubtitleLine(subtitleLineId);
       await invalidateAll();
     } catch (err) {
-      console.error(`Error undoing soft delete for dialogue: ${err}`);
+      console.error(`Error undoing soft delete for script segment: ${err}`);
       errorMessage = t('episodeDetailPage.errors.undoDeleteDialogueFailed');
     }
   }
@@ -164,7 +171,7 @@
 <div
   use:keyboardShortcuts={{
     mediaPlayer,
-    dialogues: filteredDialogues,
+    subtitleLines: filteredSubtitleLines,
   }}
   class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col"
 >
@@ -221,19 +228,19 @@
             <Heading tag="h2" class="text-xl font-semibold">
               {t('episodeDetailPage.scriptTitle')}
             </Heading>
-            {#if hasDeletedDialogues}
+            {#if hasDeletedSubtitleLines}
               <Checkbox bind:checked={showDeleted}>{t('episodeDetailPage.showDeleted')}</Checkbox>
             {/if}
           </div>
           <TranscriptViewer
-            dialogues={filteredDialogues}
+            subtitleLines={filteredSubtitleLines}
             currentTime={mediaPlayerStore.currentTime}
             {canMine}
             {contextBefore}
             {contextAfter}
             onSeek={(time) => mediaPlayer?.seek(time)}
             onMine={openMiningModal}
-            onSave={handleSaveDialogue}
+            onSave={handleSaveSubtitleLine}
             onDelete={handleDeleteRequest}
             onUndoDelete={handleUndoDelete}
           />
@@ -256,7 +263,7 @@
 
 <SentenceMiningModal
   bind:openModal={isModalOpen}
-  dialogue={miningTarget}
+  subtitleLine={miningTarget}
   {analysisResult}
   onCreate={createMiningCards}
   isProcessing={isProcessingMining}

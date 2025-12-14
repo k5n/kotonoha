@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct AtomicDialogue {
+pub struct AtomicScriptSegment {
     pub start_time_ms: u32,
     pub end_time_ms: Option<u32>,
     pub original_text: String,
@@ -105,7 +105,7 @@ pub async fn fetch_youtube_subtitle(
     video_id: String,
     language: String,
     track_kind: String,
-) -> Result<Vec<AtomicDialogue>, String> {
+) -> Result<Vec<AtomicScriptSegment>, String> {
     info!("Fetching YouTube subtitle for video: {}", video_id);
 
     let url = "https://www.youtube.com/youtubei/v1/get_transcript";
@@ -166,7 +166,7 @@ pub async fn fetch_youtube_subtitle(
         }
     };
 
-    let mut dialogues = Vec::new();
+    let mut script_segments = Vec::new();
 
     for segment in segments {
         let segment_data = segment
@@ -188,7 +188,7 @@ pub async fn fetch_youtube_subtitle(
             let text = extract_text_from_snippet(data.get("snippet"));
 
             if !text.is_empty() {
-                dialogues.push(AtomicDialogue {
+                script_segments.push(AtomicScriptSegment {
                     start_time_ms: start_ms,
                     end_time_ms: end_ms,
                     original_text: text,
@@ -197,8 +197,11 @@ pub async fn fetch_youtube_subtitle(
         }
     }
 
-    info!("Successfully fetched {} subtitle segments", dialogues.len());
-    Ok(dialogues)
+    info!(
+        "Successfully fetched {} subtitle segments",
+        script_segments.len()
+    );
+    Ok(script_segments)
 }
 
 // cSpell:ignore Patb TRIMQ

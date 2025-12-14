@@ -1,10 +1,10 @@
 <script lang="ts">
   import { t } from '$lib/application/stores/i18n.svelte';
-  import type { Dialogue } from '$lib/domain/entities/dialogue';
   import type {
     SentenceAnalysisItem,
     SentenceAnalysisResult,
   } from '$lib/domain/entities/sentenceAnalysisResult';
+  import type { SubtitleLine } from '$lib/domain/entities/subtitleLine';
   import {
     Accordion,
     AccordionItem,
@@ -19,7 +19,7 @@
   // --- Props ---
   interface Props {
     openModal: boolean;
-    dialogue: Dialogue | null;
+    subtitleLine: SubtitleLine | null;
     analysisResult: SentenceAnalysisResult | null;
     onCreate: (_selectedResults: readonly SentenceAnalysisItem[]) => void;
     isProcessing: boolean; // 処理中かどうかのフラグ
@@ -28,7 +28,7 @@
   let {
     openModal = $bindable(),
     analysisResult,
-    dialogue,
+    subtitleLine,
     onCreate,
     isProcessing,
     onClose = () => {},
@@ -82,9 +82,9 @@
         {#if analysisResult?.sentence}
           <!-- Use LLM-generated sentence when available -->
           {analysisResult.sentence}
-        {:else if dialogue}
+        {:else if subtitleLine}
           <!-- Fallback to original dialogue text if no LLM sentence -->
-          {dialogue.correctedText || dialogue.originalText}
+          {subtitleLine.correctedText || subtitleLine.originalText}
         {/if}
       </p>
     </blockquote>

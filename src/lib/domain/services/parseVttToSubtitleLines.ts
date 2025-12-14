@@ -1,24 +1,27 @@
-import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import type {
+  NewSubtitleLine,
+  SubtitleLineParseResult,
+} from '$lib/domain/entities/subtitleLine';
 
 /**
- * Parses WebVTT content and converts it into an array of Dialogue objects.
+ * Parses WebVTT content and converts it into an array of SubtitleLine objects.
  *
  * @param vttContent The content of the WebVTT file as a string.
- * @param episodeId The ID of the episode to which these dialogues belong.
- * @returns An object containing the parsed dialogues and any warnings.
+ * @param episodeId The ID of the episode to which these script segments belong.
+ * @returns An object containing the parsed subtitleLines and any warnings.
  */
-export function parseVttToDialogues(
+export function parseVttToSubtitleLines(
   vttContent: string,
   episodeId: number
-): { dialogues: readonly NewDialogue[]; warnings: readonly string[] } {
-  const dialogues: NewDialogue[] = [];
+): SubtitleLineParseResult {
+  const subtitleLines: NewSubtitleLine[] = [];
   const warnings: string[] = [];
   const normalizedContent = vttContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const lines = normalizedContent.split('\n');
 
   if (lines[0].trim() !== 'WEBVTT') {
     warnings.push('Skipping file because it does not start with WEBVTT.');
-    return { dialogues, warnings };
+    return { subtitleLines, warnings };
   }
 
   const blocks = normalizedContent
@@ -77,7 +80,7 @@ export function parseVttToDialogues(
     const endTimeMs = vttTimeToMs(endTimeStr);
     const originalText = textLines.join('\n');
 
-    dialogues.push({
+    subtitleLines.push({
       episodeId: episodeId,
       startTimeMs: startTimeMs,
       endTimeMs: endTimeMs,
@@ -85,5 +88,5 @@ export function parseVttToDialogues(
     });
   }
 
-  return { dialogues, warnings };
+  return { subtitleLines, warnings };
 }
