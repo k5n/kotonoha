@@ -229,7 +229,6 @@ export const ja = {
         updateDialogueFailed: 'セリフの更新に失敗しました。',
         deleteDialogueFailed: 'セリフの削除に失敗しました。',
         undoDeleteDialogueFailed: 'セリフの削除の取り消しに失敗しました。',
-        invalidEpisodeId: '無効なエピソードIDです。',
         episodeNotFound: 'エピソードが見つかりません。',
         fetchDetail: 'エピソード詳細の取得に失敗しました。',
         audioLoadFailed: '音声の読み込みに失敗しました。',

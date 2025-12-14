@@ -29,7 +29,7 @@ vi.mock('$app/navigation', () => ({
 
 const DATABASE_URL = 'dummy';
 
-async function defaultInvokeMock(command: string, args?: unknown): Promise<unknown> {
+async function defaultInvokeMock(command: string, _args?: unknown): Promise<unknown> {
   if (command === 'get_env_prefix_command') {
     return '';
   }
@@ -41,6 +41,9 @@ async function defaultInvokeMock(command: string, args?: unknown): Promise<unkno
       duration: 120000,
       peaks: Array.from({ length: 20 }, (_, i) => (i % 2 === 0 ? 0.2 : 0.6)),
     };
+  }
+  if (command === 'stop_audio') {
+    return null;
   }
   throw new Error(`Unhandled Tauri command: ${command as string}`);
 }
@@ -311,4 +314,36 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
   await expect.element(page.getByRole('button', { name: 'Mine' })).toBeEnabled();
 
   await page.screenshot();
+});
+
+test('error: shows not found message when episode does not exist', async () => {
+  const missingEpisodeId = 9999;
+
+  const { data } = await setupPage(String(missingEpisodeId));
+  await page.screenshot();
+
+  expect(data.errorKey).toBe('episodeDetailPage.errors.episodeNotFound');
+  expect(data.episode).toBeUndefined();
+
+  await expect.element(page.getByText('Episode not found.')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Back' })).toBeEnabled();
+});
+
+test('error: shows fetch detail message when episode repository throws', async () => {
+  const selectSpy = vi
+    .spyOn(Database.prototype, 'select')
+    .mockRejectedValueOnce(new Error('Database select failed'));
+
+  try {
+    const { data } = await setupPage('1');
+    await page.screenshot();
+
+    expect(data.errorKey).toBe('episodeDetailPage.errors.fetchDetail');
+    expect(data.episode).toBeUndefined();
+
+    await expect.element(page.getByText('Failed to fetch episode details.')).toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: 'Back' })).toBeEnabled();
+  } finally {
+    selectSpy.mockRestore();
+  }
 });
