@@ -1,4 +1,7 @@
-import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import type {
+  NewSubtitleLine,
+  SubtitleLineParseResult,
+} from '$lib/domain/entities/subtitleLine';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 
 /**
@@ -41,19 +44,19 @@ function parseTimeToMilliseconds(timeStr: string): number | null {
 }
 
 /**
- * Parses TSV content and converts it into an array of Dialogue objects.
+ * Parses TSV content and converts it into an array of SubtitleLine objects.
  *
  * @param tsvContent The content of the TSV file as a string.
- * @param episodeId The ID of the episode to which these dialogues belong.
+ * @param episodeId The ID of the episode to which these script segments belong.
  * @param config Configuration for the TSV columns.
- * @returns An object containing the parsed dialogues and any warnings.
+ * @returns An object containing the parsed script segments and any warnings.
  */
-export function parseTsvToDialogues(
+export function parseTsvToSubtitleLines(
   tsvContent: string,
   episodeId: number,
   config: TsvConfig
-): { dialogues: readonly NewDialogue[]; warnings: readonly string[] } {
-  const dialogues: NewDialogue[] = [];
+): SubtitleLineParseResult {
+  const subtitleLines: NewSubtitleLine[] = [];
   const warnings: string[] = [];
 
   const lines = tsvContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
@@ -116,7 +119,7 @@ export function parseTsvToDialogues(
       continue;
     }
 
-    dialogues.push({
+    subtitleLines.push({
       episodeId,
       startTimeMs,
       endTimeMs,
@@ -124,5 +127,5 @@ export function parseTsvToDialogues(
     });
   }
 
-  return { dialogues, warnings };
+  return { subtitleLines, warnings };
 }

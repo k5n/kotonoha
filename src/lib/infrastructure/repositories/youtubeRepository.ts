@@ -1,4 +1,4 @@
-import { type AtomicDialogue } from '$lib/domain/entities/dialogue';
+import { type AtomicSubtitleLine } from '$lib/domain/entities/subtitleLine';
 import { type YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -75,9 +75,9 @@ export const youtubeRepository = {
     readonly videoId: string;
     readonly trackKind: string;
     readonly language: string;
-  }): Promise<readonly AtomicDialogue[]> {
+  }): Promise<readonly AtomicSubtitleLine[]> {
     try {
-      const result = await invoke<AtomicDialogue[]>('fetch_youtube_subtitle', {
+      const result = await invoke<AtomicSubtitleLine[]>('fetch_youtube_subtitle', {
         videoId,
         language,
         trackKind,

@@ -1,29 +1,32 @@
 import type { MediaPlayer } from '$lib/application/usecases/mediaPlayer/mediaPlayer';
-import type { Dialogue } from '$lib/domain/entities/dialogue';
+import type { SubtitleLine } from '$lib/domain/entities/subtitleLine';
 
 interface KeyboardShortcutsParams {
   mediaPlayer?: MediaPlayer;
-  dialogues: readonly Dialogue[];
+  subtitleLines: readonly SubtitleLine[];
 }
 
-function findCurrentDialogueIndex(time: number, dialogues: readonly Dialogue[]): number {
-  if (dialogues.length === 0) {
+function findCurrentSubtitleLineIndex(
+  time: number,
+  subtitleLines: readonly SubtitleLine[]
+): number {
+  if (subtitleLines.length === 0) {
     return -1;
   }
 
-  let dialogueIndex = -1;
-  for (let i = 0; i < dialogues.length; i++) {
-    if (dialogues[i].startTimeMs <= time) {
-      dialogueIndex = i;
+  let subtitleLineIndex = -1;
+  for (let i = 0; i < subtitleLines.length; i++) {
+    if (subtitleLines[i].startTimeMs <= time) {
+      subtitleLineIndex = i;
     } else {
       break;
     }
   }
-  return dialogueIndex;
+  return subtitleLineIndex;
 }
 
 export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsParams) {
-  let { mediaPlayer, dialogues } = params;
+  let { mediaPlayer, subtitleLines } = params;
 
   function handleKeydown(event: KeyboardEvent) {
     const target = event.target as HTMLElement;
@@ -35,14 +38,17 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
       return;
     }
 
-    if (dialogues.length === 0) return;
+    if (subtitleLines.length === 0) return;
 
-    const currentDialogueIndex = findCurrentDialogueIndex(mediaPlayer.currentTime, dialogues);
+    const currentSubtitleLineIndex = findCurrentSubtitleLineIndex(
+      mediaPlayer.currentTime,
+      subtitleLines
+    );
 
     switch (event.key) {
       case 'a': {
-        if (currentDialogueIndex > 0) {
-          const prevDialogue = dialogues[currentDialogueIndex - 1];
+        if (currentSubtitleLineIndex > 0) {
+          const prevDialogue = subtitleLines[currentSubtitleLineIndex - 1];
           mediaPlayer.seek(prevDialogue.startTimeMs);
         } else {
           mediaPlayer.seek(0);
@@ -50,15 +56,15 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
         break;
       }
       case 's': {
-        if (currentDialogueIndex !== -1) {
-          const currentDialogue = dialogues[currentDialogueIndex];
+        if (currentSubtitleLineIndex !== -1) {
+          const currentDialogue = subtitleLines[currentSubtitleLineIndex];
           mediaPlayer.seek(currentDialogue.startTimeMs);
         }
         break;
       }
       case 'd': {
-        if (currentDialogueIndex < dialogues.length - 1) {
-          const nextDialogue = dialogues[currentDialogueIndex + 1];
+        if (currentSubtitleLineIndex < subtitleLines.length - 1) {
+          const nextDialogue = subtitleLines[currentSubtitleLineIndex + 1];
           mediaPlayer.seek(nextDialogue.startTimeMs);
         }
         break;
@@ -79,8 +85,8 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
       case 'ArrowUp': {
         event.preventDefault();
         mediaPlayer.pause();
-        if (currentDialogueIndex > 0) {
-          const prevDialogue = dialogues[currentDialogueIndex - 1];
+        if (currentSubtitleLineIndex > 0) {
+          const prevDialogue = subtitleLines[currentSubtitleLineIndex - 1];
           mediaPlayer.seek(prevDialogue.startTimeMs);
         } else {
           mediaPlayer.seek(0);
@@ -90,8 +96,8 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
       case 'ArrowDown': {
         event.preventDefault();
         mediaPlayer.pause();
-        if (currentDialogueIndex < dialogues.length - 1) {
-          const nextDialogue = dialogues[currentDialogueIndex + 1];
+        if (currentSubtitleLineIndex < subtitleLines.length - 1) {
+          const nextDialogue = subtitleLines[currentSubtitleLineIndex + 1];
           mediaPlayer.seek(nextDialogue.startTimeMs);
         }
         break;
@@ -104,7 +110,7 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
   return {
     update(newParams: KeyboardShortcutsParams) {
       mediaPlayer = newParams.mediaPlayer;
-      dialogues = newParams.dialogues;
+      subtitleLines = newParams.subtitleLines;
     },
     destroy() {
       window.removeEventListener('keydown', handleKeydown);

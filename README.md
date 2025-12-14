@@ -123,14 +123,14 @@ Kotonoha does not include built-in ASR functionality. If you only have audio fil
 ### TSV (Tab-Separated Values)
 
 Kotonoha supports importing subtitles in a simple TSV (Tab-Separated Values) format.  
-Each row should contain at least a start time and the dialogue text. Optionally, you can include an end time column.
+Each row should contain at least a start time and the line text (i.e., a single subtitle or utterance). Optionally, you can include an end time column.
 
 **Supported columns:**
 
-- **Start Time** (required): The start time of the dialogue.
+- **Start Time** (required): The start time of the line.
   - Supported formats: `HH:MM:SS.mmm`, `MM:SS.mmm`, `SS.mmm`, or seconds (e.g., `2.5`, `4s`)
-- **End Time** (optional): The end time of the dialogue. If omitted, only the start time is used.
-- **Text** (required): The dialogue or subtitle text.
+- **End Time** (optional): The end time of the line. If omitted, only the start time is used.
+- **Text** (required): The line or subtitle text.
 
 **Example with start and end times:**
 
@@ -143,7 +143,7 @@ StartTime	EndTime	Text
 **Example with only start time:**
 
 ```
-Time	Subtitle
+Time	Line
 2s	Hello world.
 1:08	This is a test.
 ```

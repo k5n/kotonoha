@@ -1,5 +1,5 @@
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
-import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
+import { parseScriptToSubtitleLines } from '$lib/domain/services/parseScriptToSubtitleLines';
 import { parseTsvToText } from '$lib/domain/services/parseTsvToText';
 import { assertNotUndefined } from '$lib/utils/assertion';
 
@@ -28,8 +28,8 @@ export function extractScriptText(
     case 'srt':
     case 'vtt':
     case 'sswt': {
-      const { dialogues } = parseScriptToDialogues(scriptContent, scriptExtension, 0); // episodeId is dummy
-      return dialogues.map((d) => d.originalText).join('\n');
+      const { subtitleLines } = parseScriptToSubtitleLines(scriptContent, scriptExtension, 0); // episodeId is dummy
+      return subtitleLines.map((d) => d.originalText).join('\n');
     }
     case 'tsv': {
       assertNotUndefined(tsvConfig, 'TSV config is required for TSV script files.');

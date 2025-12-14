@@ -1,17 +1,20 @@
-import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import type {
+  NewSubtitleLine,
+  SubtitleLineParseResult,
+} from '$lib/domain/entities/subtitleLine';
 
 /**
- * Parses SRT content and converts it into an array of Dialogue objects.
+ * Parses SRT content and converts it into an array of SubtitleLine objects.
  *
  * @param srtContent The content of the SRT file as a string.
- * @param episodeId The ID of the episode to which these dialogues belong.
- * @returns An object containing the parsed dialogues and any warnings.
+ * @param episodeId The ID of the episode to which these script segments belong.
+ * @returns An object containing the parsed subtitleLines and any warnings.
  */
-export function parseSrtToDialogues(
+export function parseSrtToSubtitleLines(
   srtContent: string,
   episodeId: number
-): { dialogues: readonly NewDialogue[]; warnings: readonly string[] } {
-  const dialogues: NewDialogue[] = [];
+): SubtitleLineParseResult {
+  const subtitleLines: NewSubtitleLine[] = [];
   const warnings: string[] = [];
   const normalizedContent = srtContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const blocks = normalizedContent
@@ -56,7 +59,7 @@ export function parseSrtToDialogues(
     const endTimeMs = srtTimeToMs(endTimeStr);
     const originalText = textLines.join('\n');
 
-    dialogues.push({
+    subtitleLines.push({
       episodeId: episodeId,
       startTimeMs: startTimeMs,
       endTimeMs: endTimeMs,
@@ -64,5 +67,5 @@ export function parseSrtToDialogues(
     });
   }
 
-  return { dialogues, warnings };
+  return { subtitleLines, warnings };
 }

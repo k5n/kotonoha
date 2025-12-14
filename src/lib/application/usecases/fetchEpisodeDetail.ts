@@ -1,6 +1,6 @@
-import type { Dialogue } from '$lib/domain/entities/dialogue';
 import type { Episode } from '$lib/domain/entities/episode';
 import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
+import type { SubtitleLine } from '$lib/domain/entities/subtitleLine';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenceCardRepository';
@@ -8,7 +8,7 @@ import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenc
 // エピソード詳細取得ユースケース
 export async function fetchEpisodeDetail(episodeId: number): Promise<{
   episode: Episode;
-  dialogues: readonly Dialogue[];
+  subtitleLines: readonly SubtitleLine[];
   sentenceCards: readonly SentenceCard[];
 } | null> {
   console.info(`Fetching episode detail for ID: ${episodeId}`);
@@ -17,12 +17,12 @@ export async function fetchEpisodeDetail(episodeId: number): Promise<{
     console.error(`Episode with ID ${episodeId} not found`);
     return null;
   }
-  const dialogues = await dialogueRepository.getDialoguesByEpisodeId(episodeId);
+  const subtitleLines = await dialogueRepository.getDialoguesByEpisodeId(episodeId);
   const sentenceCards = await sentenceCardRepository.getSentenceCardsByEpisodeId(episodeId);
 
   return {
     episode,
-    dialogues,
+    subtitleLines,
     sentenceCards,
   };
 }

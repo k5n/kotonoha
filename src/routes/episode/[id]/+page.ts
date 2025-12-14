@@ -24,7 +24,7 @@ export const load: PageLoad = async ({ params }) => {
 
     return {
       episode: result.episode,
-      dialogues: result.dialogues,
+      subtitleLines: result.subtitleLines,
       sentenceCards: result.sentenceCards,
       isApiKeySet: isGeminiApiKeySet, // Use isGeminiApiKeySet for this page
       settings: settings,

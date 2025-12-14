@@ -1,4 +1,4 @@
-export type AtomicDialogue = {
+export type AtomicSubtitleLine = {
   readonly startTimeMs: number;
   readonly endTimeMs: number | null;
   readonly originalText: string;
@@ -7,18 +7,23 @@ export type AtomicDialogue = {
 /*
  * 新規作成時に必要なプロパティをまとめた型。
  */
-export type NewDialogue = {
+export type NewSubtitleLine = {
   readonly episodeId: number;
-} & AtomicDialogue;
+} & AtomicSubtitleLine;
 
 /**
  * スクリプト内の個々のセリフを表すエンティティ。
  */
-export type Dialogue = NewDialogue & {
+export type SubtitleLine = NewSubtitleLine & {
   readonly id: number;
   readonly correctedText: string | null;
   readonly translation: string | null;
   readonly explanation: string | null;
   readonly sentence: string | null;
   readonly deletedAt: string | null;
+};
+
+export type SubtitleLineParseResult = {
+  readonly subtitleLines: readonly NewSubtitleLine[];
+  readonly warnings: readonly string[];
 };

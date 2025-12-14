@@ -1,4 +1,7 @@
-import type { NewDialogue } from '$lib/domain/entities/dialogue';
+import type {
+  NewSubtitleLine,
+  SubtitleLineParseResult,
+} from '$lib/domain/entities/subtitleLine';
 
 const sswtLineRegex = /^\[(\d{2}:\d{2}:\d{2}\.\d{3}) -> (\d{2}:\d{2}:\d{2}\.\d{3})\]\s*(.*)$/;
 
@@ -25,19 +28,19 @@ function parseTimeToMs(timeString: string): number | null {
 }
 
 /**
- * Parses the content of an SSWT (Simple Subtitle With Timestamp) file into an array of Dialogue objects.
+ * Parses the content of an SSWT (Simple Subtitle With Timestamp) file into an array of SubtitleLine objects.
  *
  * Each line in an SSWT file is expected to be in the format:
  * `[HH:MM:SS.ms -> HH:MM:SS.ms] Your subtitle text here.`
  *
  * @param sswtContent The content of the SSWT file as a string.
- * @returns An object containing the parsed dialogues and any warnings.
+ * @returns An object containing the parsed subtitleLines and any warnings.
  */
-export function parseSswtToDialogues(
+export function parseSswtToSubtitleLines(
   sswtContent: string,
   episodeId: number
-): { dialogues: readonly NewDialogue[]; warnings: readonly string[] } {
-  const dialogues: NewDialogue[] = [];
+): SubtitleLineParseResult {
+  const subtitleLines: NewSubtitleLine[] = [];
   const warnings: string[] = [];
   const lines = sswtContent.split('\n');
 
@@ -62,7 +65,7 @@ export function parseSswtToDialogues(
       continue;
     }
 
-    dialogues.push({
+    subtitleLines.push({
       episodeId,
       startTimeMs,
       endTimeMs,
@@ -70,5 +73,5 @@ export function parseSswtToDialogues(
     });
   }
 
-  return { dialogues, warnings };
+  return { subtitleLines, warnings };
 }

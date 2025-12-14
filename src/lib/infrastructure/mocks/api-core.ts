@@ -1,7 +1,7 @@
 // Mock implementation of @tauri-apps/api/core for browser mode
 
-import type { AtomicDialogue } from '$lib/domain/entities/dialogue';
 import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
+import type { AtomicSubtitleLine } from '$lib/domain/entities/subtitleLine';
 import { type DownloadProgress, type TtsProgress } from '$lib/domain/entities/ttsEvent';
 import { BaseDirectory, writeFile } from './plugin-fs';
 
@@ -44,7 +44,7 @@ const mockSentenceMiningResult: SentenceAnalysisResult = {
   ],
 };
 
-const mockYoutubeSubtitles: readonly AtomicDialogue[] = [
+const mockYoutubeSubtitles: readonly AtomicSubtitleLine[] = [
   { startTimeMs: 0, endTimeMs: 2000, originalText: 'Hello, how are you today?' },
   {
     startTimeMs: 2000,

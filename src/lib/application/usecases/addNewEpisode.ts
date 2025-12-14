@@ -2,7 +2,7 @@ import type { Episode } from '$lib/domain/entities/episode';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
-import { parseScriptToDialogues } from '$lib/domain/services/parseScriptToDialogues';
+import { parseScriptToSubtitleLines } from '$lib/domain/services/parseScriptToSubtitleLines';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
 import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
@@ -111,9 +111,14 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
         throw new Error('Script file extension is undefined');
       }
 
-      const result = parseScriptToDialogues(scriptContent, scriptExtension, episode.id, tsvConfig);
+      const result = parseScriptToSubtitleLines(
+        scriptContent,
+        scriptExtension,
+        episode.id,
+        tsvConfig
+      );
 
-      const dialogues = result.dialogues;
+      const subtitleLines = result.subtitleLines;
       const warnings = result.warnings;
 
       for (const warning of warnings) {
@@ -121,7 +126,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
       }
 
       // NOTE: 本当はトランザクションでepisodeと一緒に入れるべきだけど・・・。実装の楽さを優先した。
-      await dialogueRepository.bulkInsertDialogues(episode.id, dialogues);
+      await dialogueRepository.bulkInsertDialogues(episode.id, subtitleLines);
     } catch (err) {
       await episodeRepository.deleteEpisode(episode.id);
       throw err;
@@ -164,11 +169,11 @@ async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<vo
   });
 
   try {
-    const dialogues = subtitle.map((dialogue) => ({
-      ...dialogue,
+    const subtitleLines = subtitle.map((subtitleLine) => ({
+      ...subtitleLine,
       episodeId: episode.id,
     }));
-    await dialogueRepository.bulkInsertDialogues(episode.id, dialogues);
+    await dialogueRepository.bulkInsertDialogues(episode.id, subtitleLines);
   } catch (err) {
     episodeRepository.deleteEpisode(episode.id);
     throw err;
