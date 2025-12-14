@@ -26,24 +26,24 @@ export const audioInfoCacheStore = {
     cache[audioPath] = audioInfo;
   },
 
-  /**
-   * Checks if an audio info object for a given path is in the cache.
-   * @param audioPath The path of the audio file.
-   * @returns True if the audio info is in the cache, false otherwise.
-   */
-  has(audioPath: string): boolean {
-    return audioPath in cache;
-  },
+  // /**
+  //  * Checks if an audio info object for a given path is in the cache.
+  //  * @param audioPath The path of the audio file.
+  //  * @returns True if the audio info is in the cache, false otherwise.
+  //  */
+  // has(audioPath: string): boolean {
+  //   return audioPath in cache;
+  // },
 
-  /**
-   * Clears a specific entry from the cache.
-   * @param audioPath The path of the audio file to remove from the cache.
-   */
-  remove(audioPath: string) {
-    if (this.has(audioPath)) {
-      delete cache[audioPath];
-    }
-  },
+  // /**
+  //  * Clears a specific entry from the cache.
+  //  * @param audioPath The path of the audio file to remove from the cache.
+  //  */
+  // remove(audioPath: string) {
+  //   if (this.has(audioPath)) {
+  //     delete cache[audioPath];
+  //   }
+  // },
 
   /**
    * Clears the entire cache.

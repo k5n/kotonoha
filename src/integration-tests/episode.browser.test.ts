@@ -297,6 +297,7 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
   await expect.element(audioPlayer.getByLabelText('Play')).toBeEnabled();
   await expect.element(audioPlayer.getByLabelText('Stop')).toBeEnabled();
   await expect.element(audioPlayer.getByText('00:00 / 02:00')).toBeInTheDocument();
+  await expect.element(page.getByTestId('youtube-player')).not.toBeInTheDocument();
 
   const transcriptViewer = page.getByTestId('transcript-viewer');
   await expect
@@ -314,6 +315,118 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
   await expect.element(page.getByRole('button', { name: 'Mine' })).toBeEnabled();
 
   await page.screenshot();
+});
+
+test('success: renders YouTube player when episode is from YouTube', async () => {
+  const originalYT = (globalThis as { YT?: unknown }).YT;
+
+  const mockPlayerState = { PLAYING: 1, PAUSED: 2, ENDED: 0 };
+  let lastPlayerOptions:
+    | {
+        height?: string;
+        width?: string;
+        videoId?: string;
+        playerVars?: Record<string, unknown>;
+        events?: {
+          onReady?: (event: unknown) => void;
+          onStateChange?: (event: { data: number }) => void;
+        };
+      }
+    | undefined;
+
+  class MockYTPlayer {
+    private options: {
+      events?: {
+        onReady?: (event: unknown) => void;
+        onStateChange?: (event: { data: number }) => void;
+      };
+    };
+
+    constructor(_elementId: string, options: MockYTPlayer['options']) {
+      this.options = options;
+      lastPlayerOptions = options;
+      this.options?.events?.onReady?.({});
+    }
+
+    playVideo() {
+      this.options?.events?.onStateChange?.({ data: mockPlayerState.PLAYING });
+    }
+
+    pauseVideo() {
+      this.options?.events?.onStateChange?.({ data: mockPlayerState.PAUSED });
+    }
+
+    stopVideo() {
+      this.options?.events?.onStateChange?.({ data: mockPlayerState.ENDED });
+    }
+
+    seekTo(_time: number, _allowSeekAhead: boolean) {}
+
+    destroy() {}
+
+    getCurrentTime() {
+      return 0;
+    }
+  }
+
+  (globalThis as { YT: unknown }).YT = {
+    Player: MockYTPlayer,
+    PlayerState: mockPlayerState,
+  };
+
+  try {
+    const groupId = await insertEpisodeGroup({ name: 'YouTube Album' });
+    const episodeId = await insertEpisode({
+      episodeGroupId: groupId,
+      title: 'YouTube Episode',
+      mediaPath: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    });
+
+    await insertDialogue({
+      episodeId,
+      startTimeMs: 0,
+      endTimeMs: 4000,
+      originalText: 'First line from YouTube video.',
+    });
+
+    const { data } = await setupPage(String(episodeId));
+
+    expect(data.audioInfo).toBeNull();
+    expect(lastPlayerOptions?.height).toBe('100%');
+    expect(lastPlayerOptions?.width).toBe('100%');
+    expect(lastPlayerOptions?.videoId).toBe('dQw4w9WgXcQ');
+    // cSpell:words playsinline disablekb
+    expect(lastPlayerOptions?.playerVars).toEqual(
+      expect.objectContaining({
+        playsinline: 1,
+        cc_load_policy: 1,
+        disablekb: 1,
+        iv_load_policy: 3,
+        rel: 0,
+      })
+    );
+    expect(lastPlayerOptions?.events?.onReady).toBeTypeOf('function');
+    expect(lastPlayerOptions?.events?.onStateChange).toBeTypeOf('function');
+
+    await page.screenshot();
+
+    await expect.element(page.getByTestId('youtube-player')).toBeInTheDocument();
+    await expect.element(page.getByTestId('audio-player')).not.toBeInTheDocument();
+
+    const transcriptViewer = page.getByTestId('transcript-viewer');
+    await expect
+      .element(transcriptViewer.getByText('First line from YouTube video.'))
+      .toBeInTheDocument();
+
+    const sentenceCardsSection = page.getByTestId('sentence-cards-section');
+    await expect
+      .element(sentenceCardsSection.getByText('There are no sentence Cards in this episode.'))
+      .toBeInTheDocument();
+
+    await expect.element(page.getByRole('button', { name: 'Mine' })).toBeEnabled();
+  } finally {
+    (globalThis as { YT?: unknown }).YT = originalYT;
+  }
 });
 
 test('error: shows not found message when episode does not exist', async () => {

@@ -1,4 +1,4 @@
-// cSpell:words playsinline disablekb modestbranding
+// cSpell:words playsinline disablekb
 import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelte';
 import type { MediaPlayer } from '$lib/application/usecases/mediaPlayer/mediaPlayer';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
