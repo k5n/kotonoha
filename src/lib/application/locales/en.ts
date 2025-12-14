@@ -229,7 +229,6 @@ export const en = {
         updateDialogueFailed: 'Failed to update dialogue.',
         deleteDialogueFailed: 'Failed to delete dialogue.',
         undoDeleteDialogueFailed: 'Failed to undo dialogue deletion.',
-        invalidEpisodeId: 'Invalid episode ID.',
         episodeNotFound: 'Episode not found.',
         fetchDetail: 'Failed to fetch episode details.',
         audioLoadFailed: 'Failed to load audio.',

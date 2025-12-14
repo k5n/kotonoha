@@ -149,6 +149,7 @@
 </script>
 
 <div
+  data-testid="transcript-viewer"
   bind:this={containerEl}
   class="h-[50vh] space-y-1 overflow-y-auto scroll-smooth rounded-lg border bg-gray-50 p-4 lg:h-full dark:border-gray-700 dark:bg-gray-800"
 >

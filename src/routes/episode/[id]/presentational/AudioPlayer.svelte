@@ -119,7 +119,10 @@
   }
 </script>
 
-<div class="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+<div
+  data-testid="audio-player"
+  class="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4"
+>
   <!-- Controls Section -->
   <div class="flex items-center gap-3">
     <button

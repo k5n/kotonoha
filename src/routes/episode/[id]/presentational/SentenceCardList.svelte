@@ -16,7 +16,7 @@
   }
 </script>
 
-<div class="space-y-2 lg:h-full lg:overflow-y-auto">
+<div data-testid="sentence-cards-section" class="space-y-2 lg:h-full lg:overflow-y-auto">
   {#if sentenceCards.length === 0}
     <div class="rounded-lg border-2 border-dashed py-10 text-center">
       <p class="text-gray-500">{t('components.sentenceCardList.noCards')}</p>

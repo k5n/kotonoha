@@ -8,9 +8,6 @@ import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
   const episodeId = Number(params.id);
-  if (isNaN(episodeId)) {
-    return { errorKey: 'episodeDetailPage.errors.invalidEpisodeId' };
-  }
   try {
     const result = await fetchEpisodeDetail(episodeId);
     if (!result) {

@@ -75,7 +75,10 @@
     <blockquote
       class="border-s-4 border-gray-300 bg-gray-50 p-4 dark:border-gray-500 dark:bg-gray-800"
     >
-      <p class="text-base leading-relaxed font-medium text-gray-900 dark:text-white">
+      <p
+        data-testid="sentence-mining-modal-sentence"
+        class="text-base leading-relaxed font-medium text-gray-900 dark:text-white"
+      >
         {#if analysisResult?.sentence}
           <!-- Use LLM-generated sentence when available -->
           {analysisResult.sentence}
@@ -114,6 +117,7 @@
           {#each analysisResult.items as item (item.id)}
             {@const isDisabled = item.status === 'active' || item.status === 'suspended'}
             <label
+              data-testid={`analysis-result-item-${item.id}`}
               class:cursor-not-allowed={isDisabled}
               class:opacity-50={isDisabled}
               class="flex w-full items-start space-x-3 rounded-lg border p-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
@@ -153,11 +157,20 @@
   </div>
 
   <div class="flex justify-end space-x-2">
-    <Button color="alternative" onclick={handleCancel} disabled={isProcessing}>
+    <Button
+      data-testid="sentence-mining-modal-cancel-button"
+      color="alternative"
+      onclick={handleCancel}
+      disabled={isProcessing}
+    >
       <CloseOutline class="me-2 h-5 w-5" />
       {t('common.cancel')}
     </Button>
-    <Button disabled={selectedItemIds.length === 0 || isProcessing} onclick={handleCreate}>
+    <Button
+      data-testid="sentence-mining-modal-submit-button"
+      disabled={selectedItemIds.length === 0 || isProcessing}
+      onclick={handleCreate}
+    >
       {#if isProcessing}
         <Spinner size="5" class="me-2" />
         {t('components.sentenceMiningModal.submitting')}

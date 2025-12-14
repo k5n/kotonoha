@@ -208,7 +208,11 @@
             {/await}
           {:else}
             <!-- YouTube Player Container -->
-            <div id={PLAYER_DIV_ID} class="aspect-video h-full w-full"></div>
+            <div
+              data-testid="youtube-player"
+              id={PLAYER_DIV_ID}
+              class="aspect-video h-full w-full"
+            ></div>
           {/if}
         </div>
 
