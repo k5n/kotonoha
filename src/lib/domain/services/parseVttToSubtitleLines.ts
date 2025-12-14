@@ -1,7 +1,4 @@
-import type {
-  NewSubtitleLine,
-  SubtitleLineParseResult,
-} from '$lib/domain/entities/subtitleLine';
+import type { NewSubtitleLine, SubtitleLineParseResult } from '$lib/domain/entities/subtitleLine';
 
 /**
  * Parses WebVTT content and converts it into an array of SubtitleLine objects.

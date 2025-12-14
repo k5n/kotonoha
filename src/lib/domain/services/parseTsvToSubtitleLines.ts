@@ -1,7 +1,4 @@
-import type {
-  NewSubtitleLine,
-  SubtitleLineParseResult,
-} from '$lib/domain/entities/subtitleLine';
+import type { NewSubtitleLine, SubtitleLineParseResult } from '$lib/domain/entities/subtitleLine';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 
 /**
