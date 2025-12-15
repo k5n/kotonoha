@@ -132,7 +132,7 @@
     }
   }
 
-  async function handleMoveGroupSubmit(newParentId: number | null) {
+  async function handleMoveGroupSubmit(newParentId: string | null) {
     if (!editingGroup) return;
     isSubmitting = true;
     errorMessage = ''; // Clear previous errors

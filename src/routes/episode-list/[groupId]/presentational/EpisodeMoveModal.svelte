@@ -10,7 +10,7 @@
     episode: Episode | null;
     availableTargetGroups: readonly EpisodeGroup[]; // Hierarchical list of available parents
     onClose: () => void;
-    onSubmit: (_newParentId: number) => void;
+    onSubmit: (_newParentId: string) => void;
   };
   let {
     show,
@@ -21,7 +21,7 @@
     onSubmit,
   }: Props = $props();
 
-  let selectedGroupId = $state<number | null>(null);
+  let selectedGroupId = $state<string | null>(null);
   let errorMessage = $state('');
 
   function handleSubmit() {
@@ -45,7 +45,7 @@
 
   // Helper to render hierarchical options with indentation
   function renderGroupOptions(groups: readonly EpisodeGroup[], level: number = 0) {
-    let options: { value: number | null; name: string }[] = [];
+    let options: { value: string | null; name: string }[] = [];
     const indent = '　'.repeat(level); // Japanese full-width space for indentation
 
     for (const group of groups) {

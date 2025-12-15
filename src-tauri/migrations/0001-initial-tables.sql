@@ -1,14 +1,15 @@
 CREATE TABLE episode_groups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    id TEXT PRIMARY KEY,
+    parent_group_id TEXT,
+    content TEXT NOT NULL,
     display_order INTEGER NOT NULL,
-    parent_group_id INTEGER,
     group_type TEXT NOT NULL,
-    FOREIGN KEY(parent_group_id) REFERENCES episode_groups(id)
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT DEFAULT NULL
 );
 CREATE TABLE episodes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    episode_group_id INTEGER NOT NULL,
+    episode_group_id TEXT NOT NULL,
     display_order INTEGER NOT NULL,
     title TEXT NOT NULL,
     media_path TEXT NOT NULL,
@@ -16,7 +17,6 @@ CREATE TABLE episodes (
     explanation_language TEXT NOT NULL DEFAULT 'Japanese',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
-    FOREIGN KEY(episode_group_id) REFERENCES episode_groups(id)
 );
 CREATE TABLE dialogues (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

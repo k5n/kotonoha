@@ -12,7 +12,7 @@ export function buildEpisodeGroupTree(
   const allIds = new Set(flatGroups.map((g) => g.id));
   const isRoot = (g: EpisodeGroup) => g.parentId === null || !allIds.has(g.parentId!);
 
-  const buildTree = (parentId: number | null): EpisodeGroup[] => {
+  const buildTree = (parentId: string | null): EpisodeGroup[] => {
     return flatGroups
       .filter((g) => (parentId === null ? isRoot(g) : g.parentId === parentId))
       .sort((a, b) => a.displayOrder - b.displayOrder)

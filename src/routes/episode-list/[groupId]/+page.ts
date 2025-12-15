@@ -4,7 +4,7 @@ import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
   try {
-    const groupId = parseInt(params.groupId, 10);
+    const groupId = params.groupId;
     const [episodeGroup, episodes] = await fetchEpisodes(groupId);
     return { episodeGroup, episodes, errorKey: null, groupId: params.groupId };
   } catch (e) {

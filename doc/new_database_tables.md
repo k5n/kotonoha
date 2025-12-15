@@ -8,14 +8,14 @@ CREATE TABLE episode_groups (
     display_order INTEGER NOT NULL,
     group_type TEXT NOT NULL,
     updated_at TEXT NOT NULL,
-    deleted_at TEXT,
+    deleted_at TEXT DEFAULT NULL
 );
 CREATE TABLE episodes (
     id TEXT PRIMARY KEY,
     episode_group_id TEXT NOT NULL,
     content TEXT NOT NULL, /* JSON formatted string */
     updated_at TEXT NOT NULL,
-    deleted_at TEXT,
+    deleted_at TEXT DEFAULT NULL
 );
 CREATE TABLE subtitle_lines (
     id TEXT PRIMARY KEY,
@@ -23,7 +23,7 @@ CREATE TABLE subtitle_lines (
     sequence_number INTEGER NOT NULL,
     content TEXT NOT NULL, /* JSON formatted string */
     updated_at TEXT NOT NULL,
-    deleted_at TEXT,
+    deleted_at TEXT DEFAULT NULL
 );
 CREATE TABLE sentence_cards (
     id TEXT PRIMARY KEY,
@@ -31,7 +31,7 @@ CREATE TABLE sentence_cards (
     content TEXT NOT NULL, /* JSON formatted string */
     status TEXT NOT NULL,
     updated_at TEXT NOT NULL,
-    deleted_at TEXT,
+    deleted_at TEXT DEFAULT NULL
 );
 
 ```

@@ -4,7 +4,7 @@ import { getDatabasePath } from '../config';
 
 type EpisodeRow = {
   id: number;
-  episode_group_id: number;
+  episode_group_id: string;
   display_order: number;
   title: string;
   media_path: string;
@@ -31,7 +31,7 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
 }
 
 export const episodeRepository = {
-  async getEpisodesWithCardCountByGroupId(groupId: number): Promise<readonly Episode[]> {
+  async getEpisodesWithCardCountByGroupId(groupId: string): Promise<readonly Episode[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<EpisodeRow[]>(
       `
@@ -56,7 +56,7 @@ export const episodeRepository = {
    * @returns エピソードの基本情報（id, title, mediaPath）の配列
    */
   async getPartialEpisodesByGroupIds(
-    groupIds: readonly number[]
+    groupIds: readonly string[]
   ): Promise<
     readonly { readonly id: number; readonly title: string; readonly mediaPath: string }[]
   > {
@@ -82,7 +82,7 @@ export const episodeRepository = {
   },
 
   async addEpisode(params: {
-    episodeGroupId: number;
+    episodeGroupId: string;
     displayOrder: number;
     title: string;
     mediaPath: string;
@@ -156,7 +156,7 @@ export const episodeRepository = {
     await db.execute('DELETE FROM episodes WHERE id = ?', [episodeId]);
   },
 
-  async updateGroupId(episodeId: number, targetGroupId: number): Promise<void> {
+  async updateGroupId(episodeId: number, targetGroupId: string): Promise<void> {
     const db = new Database(await getDatabasePath());
     await db.execute('UPDATE episodes SET episode_group_id = ? WHERE id = ?', [
       targetGroupId,

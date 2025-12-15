@@ -66,7 +66,7 @@
     }
   }
 
-  async function handleMoveEpisodeSubmit(targetGroupId: number) {
+  async function handleMoveEpisodeSubmit(targetGroupId: string) {
     if (!targetEpisode) return;
     isSubmitting = true;
     try {
@@ -136,7 +136,7 @@
     </div>
     <EpisodeAddContainer
       bind:isOpen={showAddEpisode}
-      episodeGroupId={data.episodeGroup?.id ?? 0}
+      episodeGroupId={data.episodeGroup?.id ?? ''}
       {episodes}
       disabled={data.errorKey !== null || isSubmitting}
       onError={(msg) => (errorMessage = msg)}

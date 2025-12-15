@@ -12,7 +12,7 @@
   import YoutubeEpisodeAddContainer from './YoutubeEpisodeAddContainer.svelte';
 
   interface Props {
-    episodeGroupId: number;
+    episodeGroupId: string;
     episodes: readonly Episode[];
     disabled?: boolean;
     isOpen?: boolean;

@@ -32,7 +32,7 @@ export type EpisodeAddPayload = FileBasedEpisodeAddPayload | YoutubeEpisodeAddPa
  * ファイルから新しいエピソードを追加するためのパラメータ
  */
 interface AddNewEpisodeFromFilesParams {
-  episodeGroupId: number;
+  episodeGroupId: string;
   displayOrder: number;
   title: string;
   mediaFilePath: string;
@@ -139,7 +139,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
 }
 
 interface AddNewYoutubeEpisodeParams {
-  episodeGroupId: number;
+  episodeGroupId: string;
   displayOrder: number;
   youtubeMetadata: YoutubeMetadata;
 }
@@ -199,7 +199,7 @@ function calculateMaxDisplayOrder(episodes: readonly Episode[]): number {
  */
 export async function addNewEpisode(
   payload: EpisodeAddPayload,
-  episodeGroupId: number,
+  episodeGroupId: string,
   existingEpisodes: readonly Episode[]
 ): Promise<void> {
   console.info(`Adding episode for group ${episodeGroupId}`);

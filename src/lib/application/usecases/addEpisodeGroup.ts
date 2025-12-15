@@ -7,7 +7,7 @@ import { episodeGroupRepository } from '$lib/infrastructure/repositories/episode
  */
 export async function addEpisodeGroup(params: {
   name: string;
-  parentId: number | null;
+  parentId: string | null;
   groupType: 'album' | 'folder';
   siblings: readonly EpisodeGroup[];
 }): Promise<void> {

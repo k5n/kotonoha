@@ -3,7 +3,7 @@
  */
 export type Episode = {
   readonly id: number;
-  readonly episodeGroupId: number;
+  readonly episodeGroupId: string;
   readonly displayOrder: number;
   readonly title: string;
   readonly mediaPath: string;
