@@ -40,7 +40,7 @@
 
   // === Page transition ===
 
-  function openEpisode(episodeId: number) {
+  function openEpisode(episodeId: string) {
     isTransitioning = true;
     goto(`/episode/${episodeId}`);
   }

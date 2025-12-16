@@ -28,7 +28,11 @@ export function extractScriptText(
     case 'srt':
     case 'vtt':
     case 'sswt': {
-      const { subtitleLines } = parseScriptToSubtitleLines(scriptContent, scriptExtension, 0); // episodeId is dummy
+      const { subtitleLines } = parseScriptToSubtitleLines(
+        scriptContent,
+        scriptExtension,
+        'dummy-episode'
+      ); // episodeId is dummy
       return subtitleLines.map((d) => d.originalText).join('\n');
     }
     case 'tsv': {

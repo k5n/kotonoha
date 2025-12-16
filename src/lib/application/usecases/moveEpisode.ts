@@ -5,6 +5,6 @@ import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepos
  * @param episodeId The ID of the episode to move.
  * @param targetGroupId The ID of the destination group.
  */
-export function moveEpisode(episodeId: number, targetGroupId: string) {
+export function moveEpisode(episodeId: string, targetGroupId: string) {
   return episodeRepository.updateGroupId(episodeId, targetGroupId);
 }

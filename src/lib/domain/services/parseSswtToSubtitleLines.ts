@@ -35,7 +35,7 @@ function parseTimeToMs(timeString: string): number | null {
  */
 export function parseSswtToSubtitleLines(
   sswtContent: string,
-  episodeId: number
+  episodeId: string
 ): SubtitleLineParseResult {
   const subtitleLines: NewSubtitleLine[] = [];
   const warnings: string[] = [];

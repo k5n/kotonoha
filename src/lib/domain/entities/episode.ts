@@ -2,7 +2,7 @@
  * 音声ファイルとスクリプトのペアを表すエンティティ。
  */
 export type Episode = {
-  readonly id: number;
+  readonly id: string;
   readonly episodeGroupId: string;
   readonly displayOrder: number;
   readonly title: string;
@@ -10,7 +10,8 @@ export type Episode = {
 
   readonly learningLanguage: string;
   readonly explanationLanguage: string;
-  readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly createdAt: Date;
   readonly sentenceCardCount: number;
+  readonly deletedAt?: string | null;
 };

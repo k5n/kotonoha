@@ -6,7 +6,7 @@ import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepos
 import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenceCardRepository';
 
 // エピソード詳細取得ユースケース
-export async function fetchEpisodeDetail(episodeId: number): Promise<{
+export async function fetchEpisodeDetail(episodeId: string): Promise<{
   episode: Episode;
   subtitleLines: readonly SubtitleLine[];
   sentenceCards: readonly SentenceCard[];

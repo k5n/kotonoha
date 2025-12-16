@@ -9,7 +9,7 @@ import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
-import { clearDatabase, DATABASE_URL, insertEpisode, insertEpisodeGroup } from './lib/database';
+import { clearDatabase, getEpisodeTitle, insertEpisode, insertEpisodeGroup } from './lib/database';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitForFadeTransition } from './lib/utils';
 
@@ -36,14 +36,6 @@ function pushGroupToPath(groupId: string, name: string): void {
     displayOrder: 1,
     children: [],
   });
-}
-
-async function getEpisodeTitle(episodeId: number): Promise<string | null> {
-  const db = new Database(DATABASE_URL);
-  const rows = await db.select<{ title: string }[]>('SELECT title FROM episodes WHERE id = ?', [
-    episodeId,
-  ]);
-  return rows[0]?.title ?? null;
 }
 
 async function openEpisodeActionsMenu(episodeId: string): Promise<void> {

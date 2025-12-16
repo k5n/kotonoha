@@ -50,7 +50,7 @@ function parseTimeToMilliseconds(timeStr: string): number | null {
  */
 export function parseTsvToSubtitleLines(
   tsvContent: string,
-  episodeId: number,
+  episodeId: string,
   config: TsvConfig
 ): SubtitleLineParseResult {
   const subtitleLines: NewSubtitleLine[] = [];

@@ -18,7 +18,7 @@
 
   type Props = {
     episodes: readonly Episode[];
-    onEpisodeClick: (episodeId: number) => void;
+    onEpisodeClick: (episodeId: string) => void;
     onEpisodeMoveClick: (episode: Episode) => void;
     onOrderChange: (_items: readonly Episode[]) => void;
     onEpisodeDeleteClick: (episode: Episode) => void;

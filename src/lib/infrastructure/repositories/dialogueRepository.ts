@@ -4,9 +4,9 @@ import { getDatabasePath } from '../config';
 
 type DialogueRow = {
   id: number;
-  episode_id: number;
+  episode_id: string;
   start_time_ms: number;
-  end_time_ms: number;
+  end_time_ms: number | null;
   original_text: string;
   corrected_text: string | null;
   translation: string | null;
@@ -39,7 +39,7 @@ export const dialogueRepository = {
     return rows.length > 0 ? mapRowToDialogue(rows[0]) : null;
   },
 
-  async getDialoguesByEpisodeId(episodeId: number): Promise<readonly SubtitleLine[]> {
+  async getDialoguesByEpisodeId(episodeId: string): Promise<readonly SubtitleLine[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<DialogueRow[]>(
       'SELECT * FROM dialogues WHERE episode_id = ? ORDER BY start_time_ms ASC',
@@ -49,7 +49,7 @@ export const dialogueRepository = {
   },
 
   async bulkInsertDialogues(
-    episodeId: number,
+    episodeId: string,
     dialogues: readonly NewSubtitleLine[]
   ): Promise<void> {
     const db = new Database(await getDatabasePath());
@@ -79,7 +79,7 @@ export const dialogueRepository = {
     );
   },
 
-  async deleteByEpisodeId(episodeId: number): Promise<void> {
+  async deleteByEpisodeId(episodeId: string): Promise<void> {
     const db = new Database(await getDatabasePath());
     await db.execute('DELETE FROM dialogues WHERE episode_id = ?', [episodeId]);
   },

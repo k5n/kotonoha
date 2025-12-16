@@ -18,7 +18,7 @@ import { parseVttToSubtitleLines } from '$lib/domain/services/parseVttToSubtitle
 export function parseScriptToSubtitleLines(
   scriptContent: string,
   scriptExtension: string,
-  episodeId: number,
+  episodeId: string,
   tsvConfig?: TsvConfig
 ): SubtitleLineParseResult {
   const supportedExtensions = ['srt', 'sswt', 'tsv', 'vtt'];

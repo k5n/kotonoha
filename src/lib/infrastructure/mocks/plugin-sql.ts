@@ -121,19 +121,15 @@ CREATE TABLE episode_groups (
     deleted_at TEXT DEFAULT NULL
 );
 CREATE TABLE episodes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,
     episode_group_id TEXT NOT NULL,
-    display_order INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    media_path TEXT NOT NULL,
-    learning_language TEXT NOT NULL DEFAULT 'English',
-    explanation_language TEXT NOT NULL DEFAULT 'Japanese',
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    content TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT DEFAULT NULL
 );
 CREATE TABLE dialogues (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    episode_id INTEGER NOT NULL,
+    episode_id TEXT NOT NULL,
     start_time_ms INTEGER NOT NULL,
     end_time_ms INTEGER,
     original_text TEXT NOT NULL,
@@ -141,8 +137,7 @@ CREATE TABLE dialogues (
     translation TEXT,
     explanation TEXT,
     sentence TEXT,
-    deleted_at TEXT,
-    FOREIGN KEY(episode_id) REFERENCES episodes(id)
+    deleted_at TEXT
 );
 CREATE TABLE sentence_cards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -153,8 +148,7 @@ CREATE TABLE sentence_cards (
     contextual_definition TEXT NOT NULL,
     core_meaning TEXT NOT NULL,
     status TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    FOREIGN KEY(dialogue_id) REFERENCES dialogues(id)
+    created_at TEXT NOT NULL
 );
 `;
 

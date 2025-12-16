@@ -9,7 +9,7 @@ import type { NewSubtitleLine, SubtitleLineParseResult } from '$lib/domain/entit
  */
 export function parseSrtToSubtitleLines(
   srtContent: string,
-  episodeId: number
+  episodeId: string
 ): SubtitleLineParseResult {
   const subtitleLines: NewSubtitleLine[] = [];
   const warnings: string[] = [];

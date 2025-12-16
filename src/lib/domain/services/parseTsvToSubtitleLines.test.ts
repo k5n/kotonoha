@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseTsvToSubtitleLines } from './parseTsvToSubtitleLines';
 
 describe('parseTsvToDialogues', () => {
-  const episodeId = 1;
+  const episodeId = 'episode-1';
 
   it('should parse a valid TSV with start and end times', () => {
     const tsvContent = `StartTime\tEndTime\tText
@@ -14,13 +14,13 @@ describe('parseTsvToDialogues', () => {
     expect(warnings).toHaveLength(0);
     expect(subtitleLines).toHaveLength(2);
     expect(subtitleLines[0]).toEqual({
-      episodeId: 1,
+      episodeId: episodeId,
       startTimeMs: 1500,
       endTimeMs: 3200,
       originalText: 'Hello world.',
     });
     expect(subtitleLines[1]).toEqual({
-      episodeId: 1,
+      episodeId: episodeId,
       startTimeMs: 2500,
       endTimeMs: 4000,
       originalText: 'This is a test.',
@@ -37,13 +37,13 @@ describe('parseTsvToDialogues', () => {
     expect(warnings).toHaveLength(0);
     expect(subtitleLines).toHaveLength(2);
     expect(subtitleLines[0]).toEqual({
-      episodeId: 1,
+      episodeId: episodeId,
       startTimeMs: 3661100,
       endTimeMs: null,
       originalText: 'Long time format.',
     });
     expect(subtitleLines[1]).toEqual({
-      episodeId: 1,
+      episodeId: episodeId,
       startTimeMs: 65500,
       endTimeMs: null,
       originalText: 'Short time format.',
@@ -110,7 +110,7 @@ My dialogue\t10.5`;
     expect(warnings).toHaveLength(0);
     expect(subtitleLines).toHaveLength(1);
     expect(subtitleLines[0]).toEqual({
-      episodeId: 1,
+      episodeId: episodeId,
       startTimeMs: 10500,
       endTimeMs: null,
       originalText: 'My dialogue',

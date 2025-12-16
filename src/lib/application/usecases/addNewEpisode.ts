@@ -10,6 +10,7 @@ import { fileRepository } from '$lib/infrastructure/repositories/fileRepository'
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
 import { assert, assertNotNull, assertNotUndefined } from '$lib/utils/assertion';
 import { bcp47ToLanguageName } from '$lib/utils/language';
+import { v4 as uuidV4 } from 'uuid';
 
 export type YoutubeEpisodeAddPayload = {
   readonly source: 'youtube';
@@ -98,6 +99,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
     const mediaPath = await fileRepository.saveAudioFile(audioFilePath, uuid, audioFilename);
     const scriptContent = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
     const episode = await episodeRepository.addEpisode({
+      id: uuid,
       episodeGroupId,
       displayOrder,
       title,
@@ -160,6 +162,7 @@ async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<vo
     language,
   });
   const episode = await episodeRepository.addEpisode({
+    id: uuidV4(),
     episodeGroupId,
     displayOrder,
     title,

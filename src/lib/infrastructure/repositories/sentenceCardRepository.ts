@@ -69,7 +69,7 @@ export const sentenceCardRepository = {
   /**
    * 指定したエピソードIDに紐づく全てのSentence Cardを取得する
    */
-  async getSentenceCardsByEpisodeId(episodeId: number): Promise<readonly SentenceCard[]> {
+  async getSentenceCardsByEpisodeId(episodeId: string): Promise<readonly SentenceCard[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<SentenceCardRow[]>(
       `
@@ -150,7 +150,7 @@ export const sentenceCardRepository = {
   /**
    * 指定したエピソードIDに紐づく全てのSentence Cardを削除する
    */
-  async deleteByEpisodeId(episodeId: number): Promise<void> {
+  async deleteByEpisodeId(episodeId: string): Promise<void> {
     const db = new Database(await getDatabasePath());
     const dialogueIds = await db.select<{ id: number }[]>(
       'SELECT id FROM dialogues WHERE episode_id = ?',

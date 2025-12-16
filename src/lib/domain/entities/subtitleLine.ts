@@ -8,7 +8,7 @@ export type AtomicSubtitleLine = {
  * 新規作成時に必要なプロパティをまとめた型。
  */
 export type NewSubtitleLine = {
-  readonly episodeId: number;
+  readonly episodeId: string;
 } & AtomicSubtitleLine;
 
 /**
@@ -16,6 +16,7 @@ export type NewSubtitleLine = {
  */
 export type SubtitleLine = NewSubtitleLine & {
   readonly id: number;
+  readonly sequenceNumber?: number;
   readonly correctedText: string | null;
   readonly translation: string | null;
   readonly explanation: string | null;

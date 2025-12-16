@@ -12,7 +12,13 @@ import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode/[id]/$types';
 import { load } from '../routes/episode/[id]/+page';
-import { clearDatabase, DATABASE_URL, insertEpisode, insertEpisodeGroup } from './lib/database';
+import {
+  clearDatabase,
+  DATABASE_URL,
+  insertDialogue,
+  insertEpisode,
+  insertEpisodeGroup,
+} from './lib/database';
 import Component from './lib/EpisodePageWrapper.svelte';
 import { createMockStore } from './lib/mockFactories';
 import { outputCoverage } from './lib/outputCoverage';
@@ -45,50 +51,6 @@ async function defaultInvokeMock(command: string, _args?: unknown): Promise<unkn
     return null;
   }
   throw new Error(`Unhandled Tauri command: ${command as string}`);
-}
-
-async function insertDialogue(params: {
-  episodeId: number;
-  startTimeMs: number;
-  endTimeMs: number | null;
-  originalText: string;
-  correctedText?: string | null;
-  translation?: string | null;
-  explanation?: string | null;
-  sentence?: string | null;
-  deletedAt?: string | null;
-}): Promise<number> {
-  const {
-    episodeId,
-    startTimeMs,
-    endTimeMs,
-    originalText,
-    correctedText = null,
-    translation = null,
-    explanation = null,
-    sentence = null,
-    deletedAt = null,
-  } = params;
-
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO dialogues (episode_id, start_time_ms, end_time_ms, original_text, corrected_text, translation, explanation, sentence, deleted_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      episodeId,
-      startTimeMs,
-      endTimeMs,
-      originalText,
-      correctedText,
-      translation,
-      explanation,
-      sentence,
-      deletedAt,
-    ]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
 }
 
 async function insertSentenceCard(params: {

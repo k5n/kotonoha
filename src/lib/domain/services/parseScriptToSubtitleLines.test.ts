@@ -28,7 +28,7 @@ const mockResult = { subtitleLines: [], warnings: [] };
 
 describe('parseScriptToDialogues', () => {
   const scriptContent = 'sample content';
-  const episodeId = 1;
+  const episodeId = 'episode-1';
   const tsvConfig: TsvConfig = {
     startTimeColumnIndex: 0,
     textColumnIndex: 1,

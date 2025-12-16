@@ -8,7 +8,7 @@ import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenc
  * @param episode 削除するエピソードの情報
  */
 export async function deleteEpisode(episode: {
-  readonly id: number;
+  readonly id: string;
   readonly title: string;
   readonly mediaPath: string;
 }): Promise<void> {
