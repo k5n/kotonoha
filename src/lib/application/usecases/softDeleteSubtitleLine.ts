@@ -1,9 +1,9 @@
-import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
+import { subtitleLineRepository } from '$lib/infrastructure/repositories/subtitleLineRepository';
 
 /**
  * 指定されたIDの対話をソフトデリートします。
  * @param subtitleLineId ソフトデリートする対話のID。
  */
 export async function softDeleteSubtitleLine(subtitleLineId: string): Promise<void> {
-  await dialogueRepository.softDeleteDialogue(subtitleLineId);
+  await subtitleLineRepository.softDeleteSubtitleLine(subtitleLineId);
 }

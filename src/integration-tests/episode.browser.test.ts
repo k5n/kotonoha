@@ -128,7 +128,7 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
     mediaPath: 'media/story.mp3',
   });
 
-  const dialogueId = await insertSubtitleLine({
+  const subtitleLineId = await insertSubtitleLine({
     episodeId,
     startTimeMs: 0,
     endTimeMs: 5000,
@@ -147,7 +147,7 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
   });
 
   await insertSentenceCard({
-    dialogueId,
+    subtitleLineId,
     expression: 'Kotonoha Card Expression',
     sentence: 'Hello world from Kotonoha!',
     contextualDefinition: 'Name of the app in the greeting.',

@@ -140,10 +140,10 @@ export async function insertSubtitleLine(params: {
   return id;
 }
 
-export async function getSentenceCards(dialogueId: string): Promise<SentenceCard[]> {
+export async function getSentenceCards(subtitleLineId: string): Promise<SentenceCard[]> {
   type SentenceCardRow = {
     id: number;
-    dialogue_id: string;
+    subtitle_line_id: string;
     part_of_speech: string;
     expression: string;
     sentence: string;
@@ -156,7 +156,7 @@ export async function getSentenceCards(dialogueId: string): Promise<SentenceCard
   function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
     return {
       id: row.id,
-      dialogueId: row.dialogue_id,
+      subtitleLineId: row.subtitle_line_id,
       partOfSpeech: row.part_of_speech,
       expression: row.expression,
       sentence: row.sentence,
@@ -168,14 +168,14 @@ export async function getSentenceCards(dialogueId: string): Promise<SentenceCard
   }
   const db = new Database(DATABASE_URL);
   const rows = await db.select<SentenceCardRow[]>(
-    'SELECT * FROM sentence_cards WHERE dialogue_id = ?',
-    [dialogueId]
+    'SELECT * FROM sentence_cards WHERE subtitle_line_id = ?',
+    [subtitleLineId]
   );
   return rows.map(mapRowToSentenceCard);
 }
 
 export async function insertSentenceCard(params: {
-  dialogueId: string;
+  subtitleLineId: string;
   expression: string;
   sentence: string;
   contextualDefinition: string;
@@ -185,7 +185,7 @@ export async function insertSentenceCard(params: {
   createdAt?: string;
 }): Promise<number> {
   const {
-    dialogueId,
+    subtitleLineId,
     expression,
     sentence,
     contextualDefinition,
@@ -197,10 +197,10 @@ export async function insertSentenceCard(params: {
 
   const db = new Database(DATABASE_URL);
   await db.execute(
-    `INSERT INTO sentence_cards (dialogue_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
+    `INSERT INTO sentence_cards (subtitle_line_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      dialogueId,
+      subtitleLineId,
       partOfSpeech,
       expression,
       sentence,

@@ -83,7 +83,7 @@
           <!-- Use LLM-generated sentence when available -->
           {analysisResult.sentence}
         {:else if subtitleLine}
-          <!-- Fallback to original dialogue text if no LLM sentence -->
+          <!-- Fallback to original subtitleLine text if no LLM sentence -->
           {subtitleLine.correctedText || subtitleLine.originalText}
         {/if}
       </p>

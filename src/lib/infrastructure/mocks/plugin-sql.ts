@@ -137,7 +137,7 @@ CREATE TABLE subtitle_lines (
 );
 CREATE TABLE sentence_cards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    dialogue_id TEXT NOT NULL,
+    subtitle_line_id TEXT NOT NULL,
     part_of_speech TEXT NOT NULL,
     expression TEXT NOT NULL,
     sentence TEXT NOT NULL,

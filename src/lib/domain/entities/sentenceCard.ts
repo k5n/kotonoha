@@ -5,7 +5,7 @@ export type SentenceCardStatus = 'active' | 'suspended' | 'cache';
 
 export type SentenceCard = {
   readonly id: number;
-  readonly dialogueId: string;
+  readonly subtitleLineId: string;
   readonly partOfSpeech: string;
   readonly expression: string;
   readonly sentence: string; // 抽出対象を含むセンテンス全体

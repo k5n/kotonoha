@@ -94,16 +94,16 @@ async function updateSubtitleLineContent(
   ]);
 }
 
-export const dialogueRepository = {
-  async getDialogueById(dialogueId: string): Promise<SubtitleLine | null> {
+export const subtitleLineRepository = {
+  async getSubtitleLineById(subtitleLineId: string): Promise<SubtitleLine | null> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<SubtitleLineRow[]>('SELECT * FROM subtitle_lines WHERE id = ?', [
-      dialogueId,
+      subtitleLineId,
     ]);
     return rows.length > 0 ? mapRowToSubtitleLine(rows[0]) : null;
   },
 
-  async getDialoguesByEpisodeId(episodeId: string): Promise<readonly SubtitleLine[]> {
+  async getSubtitleLinesByEpisodeId(episodeId: string): Promise<readonly SubtitleLine[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<SubtitleLineRow[]>(
       'SELECT * FROM subtitle_lines WHERE episode_id = ? ORDER BY sequence_number ASC',
@@ -112,14 +112,14 @@ export const dialogueRepository = {
     return rows.map(mapRowToSubtitleLine);
   },
 
-  async bulkInsertDialogues(
+  async bulkInsertSubtitleLines(
     episodeId: string,
-    dialogues: readonly NewSubtitleLine[]
+    subtitleLines: readonly NewSubtitleLine[]
   ): Promise<void> {
     const db = new Database(await getDatabasePath());
-    const sortedDialogues = [...dialogues].sort((a, b) => a.startTimeMs - b.startTimeMs);
+    const sortedSubtitleLines = [...subtitleLines].sort((a, b) => a.startTimeMs - b.startTimeMs);
     const now = new Date().toISOString();
-    const values = sortedDialogues
+    const values = sortedSubtitleLines
       .map((d, index) => {
         const content = normalizeSubtitleLineContent({
           startTimeMs: d.startTimeMs,
@@ -143,13 +143,13 @@ export const dialogueRepository = {
     await db.execute(query);
   },
 
-  async updateDialogueAnalysis(
-    dialogueId: string,
+  async updateSubtitleLineAnalysis(
+    subtitleLineId: string,
     translation: string,
     explanation: string,
     sentence: string
   ): Promise<void> {
-    await updateSubtitleLineContent(dialogueId, (content) => ({
+    await updateSubtitleLineContent(subtitleLineId, (content) => ({
       ...content,
       translation,
       explanation,
@@ -162,23 +162,26 @@ export const dialogueRepository = {
     await db.execute('DELETE FROM subtitle_lines WHERE episode_id = ?', [episodeId]);
   },
 
-  async updateDialogueText(dialogueId: string, correctedText: string | null): Promise<void> {
-    await updateSubtitleLineContent(dialogueId, (content) => ({
+  async updateSubtitleLineText(
+    subtitleLineId: string,
+    correctedText: string | null
+  ): Promise<void> {
+    await updateSubtitleLineContent(subtitleLineId, (content) => ({
       ...content,
       correctedText,
     }));
   },
 
-  async softDeleteDialogue(dialogueId: string): Promise<void> {
+  async softDeleteSubtitleLine(subtitleLineId: string): Promise<void> {
     const now = new Date().toISOString();
-    await updateSubtitleLineContent(dialogueId, (content) => ({
+    await updateSubtitleLineContent(subtitleLineId, (content) => ({
       ...content,
       hidden: now,
     }));
   },
 
-  async undoSoftDeleteDialogue(dialogueId: string): Promise<void> {
-    await updateSubtitleLineContent(dialogueId, (content) => ({
+  async undoSoftDeleteSubtitleLine(subtitleLineId: string): Promise<void> {
+    await updateSubtitleLineContent(subtitleLineId, (content) => ({
       ...content,
       hidden: null,
     }));

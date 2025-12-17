@@ -16,7 +16,7 @@ export type NewSubtitleLine = {
  */
 export type SubtitleLine = NewSubtitleLine & {
   readonly id: string;
-  readonly sequenceNumber?: number;
+  readonly sequenceNumber: number;
   readonly correctedText: string | null;
   readonly translation: string | null;
   readonly explanation: string | null;

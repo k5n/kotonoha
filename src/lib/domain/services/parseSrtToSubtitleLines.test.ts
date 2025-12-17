@@ -1,6 +1,6 @@
 import { parseSrtToSubtitleLines } from './parseSrtToSubtitleLines';
 
-describe('parseSrtToDialogues', () => {
+describe('parseSrtToSubtitleLines', () => {
   it('should correctly parse a simple SRT content', () => {
     const srtContent = `1
 00:00:01,000 --> 00:00:03,000
@@ -28,7 +28,7 @@ This is a test.
     expect(warnings.length).toBe(0);
   });
 
-  it('should handle multi-line dialogue', () => {
+  it('should handle multi-line subtitleLine', () => {
     const srtContent = `1
 00:00:01,000 --> 00:00:03,000
 Line 1

@@ -4,9 +4,9 @@ import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
 import { parseScriptToSubtitleLines } from '$lib/domain/services/parseScriptToSubtitleLines';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
-import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
+import { subtitleLineRepository } from '$lib/infrastructure/repositories/subtitleLineRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
 import { assert, assertNotNull, assertNotUndefined } from '$lib/utils/assertion';
 import { bcp47ToLanguageName } from '$lib/utils/language';
@@ -128,7 +128,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
       }
 
       // NOTE: 本当はトランザクションでepisodeと一緒に入れるべきだけど・・・。実装の楽さを優先した。
-      await dialogueRepository.bulkInsertDialogues(episode.id, subtitleLines);
+      await subtitleLineRepository.bulkInsertSubtitleLines(episode.id, subtitleLines);
     } catch (err) {
       await episodeRepository.deleteEpisode(episode.id);
       throw err;
@@ -176,7 +176,7 @@ async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<vo
       ...subtitleLine,
       episodeId: episode.id,
     }));
-    await dialogueRepository.bulkInsertDialogues(episode.id, subtitleLines);
+    await subtitleLineRepository.bulkInsertSubtitleLines(episode.id, subtitleLines);
   } catch (err) {
     episodeRepository.deleteEpisode(episode.id);
     throw err;

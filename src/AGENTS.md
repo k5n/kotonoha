@@ -134,7 +134,7 @@ See: [src-tauri/AGENTS.md](../src-tauri/AGENTS.md) for full details.
   - `episode_groups`: hierarchical groups (self-referential `parent_group_id` nullable). Key fields: `id` (PK), `content`, `display_order`, `parent_group_id`, `group_type` (`album`|`folder`), `updated_at`, `deleted_at`.
   - `episodes`: one row per episode (audio + transcript). Key fields: `id`, `episode_group_id`, `content`, `updated_at`, `deleted_at`.
   - `subtitle_lines`: transcript lines. Key fields: `id`, `episode_id`, `sequence_number`, `content`, `updated_at`, `deleted_at`.
-  - `sentence_cards`: results of sentence-mining. Key fields: `id`, `dialogue_id`, `part_of_speech`, `expression`, `sentence`, `contextual_definition`, `core_meaning`, `status` (`active`|`suspended`|`cache`), `created_at`.
+  - `sentence_cards`: results of sentence-mining. Key fields: `id`, `subtitle_line_id`, `part_of_speech`, `expression`, `sentence`, `contextual_definition`, `core_meaning`, `status` (`active`|`suspended`|`cache`), `created_at`.
 - Note: types above are compact hints; timestamps use ISO 8601 strings. Use DB as single source of truth; front-end stores should be transient UI state only.
 
 See: [src-tauri/migrations/] for full DB schema details.

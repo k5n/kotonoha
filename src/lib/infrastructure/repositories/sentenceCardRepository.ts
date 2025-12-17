@@ -5,7 +5,7 @@ import { getDatabasePath } from '../config';
 
 type SentenceCardRow = {
   id: number;
-  dialogue_id: string;
+  subtitle_line_id: string;
   part_of_speech: string;
   expression: string;
   sentence: string;
@@ -18,7 +18,7 @@ type SentenceCardRow = {
 function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
   return {
     id: row.id,
-    dialogueId: row.dialogue_id,
+    subtitleLineId: row.subtitle_line_id,
     partOfSpeech: row.part_of_speech,
     expression: row.expression,
     sentence: row.sentence,
@@ -34,7 +34,7 @@ export const sentenceCardRepository = {
    * 新しいSentence Cardを追加する
    */
   async addSentenceCard(params: {
-    dialogueId: string;
+    subtitleLineId: string;
     partOfSpeech: string;
     expression: string;
     sentence: string;
@@ -45,10 +45,10 @@ export const sentenceCardRepository = {
     const db = new Database(await getDatabasePath());
     const now = new Date().toISOString();
     const result = await db.execute(
-      `INSERT INTO sentence_cards (dialogue_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
+      `INSERT INTO sentence_cards (subtitle_line_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        params.dialogueId,
+        params.subtitleLineId,
         params.partOfSpeech,
         params.expression,
         params.sentence,
@@ -76,7 +76,7 @@ export const sentenceCardRepository = {
       SELECT
         sc.*
       FROM sentence_cards sc
-      INNER JOIN subtitle_lines sl ON sc.dialogue_id = sl.id
+      INNER JOIN subtitle_lines sl ON sc.subtitle_line_id = sl.id
       WHERE sl.episode_id = ? AND sc.status = 'active'
       ORDER BY sl.sequence_number ASC, sc.created_at ASC
     `,
@@ -88,11 +88,11 @@ export const sentenceCardRepository = {
   /**
    * 指定したダイアログIDに紐づく全てのSentence Cardを取得する
    */
-  async getSentenceCardsByDialogueId(dialogueId: string): Promise<readonly SentenceCard[]> {
+  async getSentenceCardsBySubtitleLineId(subtitleLineId: string): Promise<readonly SentenceCard[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<SentenceCardRow[]>(
-      'SELECT * FROM sentence_cards WHERE dialogue_id = ? ORDER BY created_at ASC',
-      [dialogueId]
+      'SELECT * FROM sentence_cards WHERE subtitle_line_id = ? ORDER BY created_at ASC',
+      [subtitleLineId]
     );
     return rows.map(mapRowToSentenceCard);
   },
@@ -101,7 +101,7 @@ export const sentenceCardRepository = {
    * LLMの解析結果をキャッシュとして保存する
    */
   async cacheAnalysisItems(
-    dialogueId: string,
+    subtitleLineId: string,
     items: readonly SentenceAnalysisItem[]
   ): Promise<void> {
     const db = new Database(await getDatabasePath());
@@ -109,13 +109,13 @@ export const sentenceCardRepository = {
     const values = items
       .map(
         (item) =>
-          `('${dialogueId.replace(/'/g, "''")}', '${item.partOfSpeech.replace(/'/g, "''")}', '${item.expression.replace(/'/g, "''")}', '${item.exampleSentence.replace(/'/g, "''")}', '${item.contextualDefinition.replace(/'/g, "''")}', '${item.coreMeaning.replace(/'/g, "''")}', 'cache', '${now}')`
+          `('${subtitleLineId.replace(/'/g, "''")}', '${item.partOfSpeech.replace(/'/g, "''")}', '${item.expression.replace(/'/g, "''")}', '${item.exampleSentence.replace(/'/g, "''")}', '${item.contextualDefinition.replace(/'/g, "''")}', '${item.coreMeaning.replace(/'/g, "''")}', 'cache', '${now}')`
       )
       .join(',');
 
     if (values.length === 0) return;
 
-    const query = `INSERT INTO sentence_cards (dialogue_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at) VALUES ${values}`;
+    const query = `INSERT INTO sentence_cards (subtitle_line_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at) VALUES ${values}`;
     await db.execute(query);
   },
 
@@ -152,15 +152,15 @@ export const sentenceCardRepository = {
    */
   async deleteByEpisodeId(episodeId: string): Promise<void> {
     const db = new Database(await getDatabasePath());
-    const dialogueIds = await db.select<{ id: string }[]>(
+    const subtitleLineIds = await db.select<{ id: string }[]>(
       'SELECT id FROM subtitle_lines WHERE episode_id = ?',
       [episodeId]
     );
-    if (dialogueIds.length === 0) {
+    if (subtitleLineIds.length === 0) {
       return;
     }
-    const ids = dialogueIds.map((d) => d.id);
+    const ids = subtitleLineIds.map((d) => d.id);
     const placeholders = ids.map(() => '?').join(',');
-    await db.execute(`DELETE FROM sentence_cards WHERE dialogue_id IN (${placeholders})`, ids);
+    await db.execute(`DELETE FROM sentence_cards WHERE subtitle_line_id IN (${placeholders})`, ids);
   },
 };

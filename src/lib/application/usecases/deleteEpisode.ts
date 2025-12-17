@@ -1,7 +1,7 @@
-import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
 import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenceCardRepository';
+import { subtitleLineRepository } from '$lib/infrastructure/repositories/subtitleLineRepository';
 
 /**
  * エピソードを、関連するファイルやデータと共に削除します。
@@ -24,9 +24,9 @@ export async function deleteEpisode(episode: {
     }
 
     // NOTE: sentence_cards テーブル自体は episode_id を持っていないので、
-    // Dialogues を削除する前に、Sentence Cards を先に削除する必要あり。
+    // SubtitleLines を削除する前に、Sentence Cards を先に削除する必要あり。
     await sentenceCardRepository.deleteByEpisodeId(episode.id);
-    await dialogueRepository.deleteByEpisodeId(episode.id);
+    await subtitleLineRepository.deleteByEpisodeId(episode.id);
     await episodeRepository.deleteEpisode(episode.id);
   } catch (e) {
     console.error(`Failed to delete episode ${episode.id}: ${e}`);

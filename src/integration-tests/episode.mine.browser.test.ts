@@ -168,7 +168,7 @@ test('success: mining flow with cache', async () => {
     mediaPath: 'media/story.mp3',
   });
 
-  const dialogueId = await insertSubtitleLine({
+  const subtitleLineId = await insertSubtitleLine({
     episodeId,
     startTimeMs: 0,
     endTimeMs: 5000,
@@ -187,7 +187,7 @@ test('success: mining flow with cache', async () => {
   });
 
   const sentenceCardId01 = await insertSentenceCard({
-    dialogueId,
+    subtitleLineId,
     expression: 'Kotonoha Card Expression',
     sentence: 'Hello world from Kotonoha!',
     contextualDefinition: 'Name of the app in the greeting.',
@@ -197,7 +197,7 @@ test('success: mining flow with cache', async () => {
   });
 
   const sentenceCardId02 = await insertSentenceCard({
-    dialogueId,
+    subtitleLineId,
     expression: 'Cache Me',
     sentence: 'Hello world from Kotonoha!',
     contextualDefinition: 'Cached contextual definition.',
@@ -273,7 +273,7 @@ test('success: mining flow without cache calls LLM and caches results', async ()
     mediaPath: 'media/story.mp3',
   });
 
-  const dialogueId = await insertSubtitleLine({
+  const subtitleLineId = await insertSubtitleLine({
     episodeId,
     startTimeMs: 0,
     endTimeMs: 5000,
@@ -323,7 +323,7 @@ test('success: mining flow without cache calls LLM and caches results', async ()
     })
   );
 
-  const sentenceCards = await getSentenceCards(dialogueId);
+  const sentenceCards = await getSentenceCards(subtitleLineId);
   expect(sentenceCards).toHaveLength(2);
   const cardIds = sentenceCards.map((card) => card.id);
 

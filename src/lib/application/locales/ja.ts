@@ -218,7 +218,7 @@ export const ja = {
       scriptTitle: 'スクリプト',
       sentenceCardsTitle: '作成したカード',
       showDeleted: '削除済みを表示',
-      dialogueDeleted: 'セリフを削除しました。',
+      subtitleLineDeleted: 'セリフを削除しました。',
       deleteConfirm: {
         title: 'セリフの削除',
         message: 'このセリフを削除しますか？この操作は元に戻すことができます。',
@@ -226,9 +226,9 @@ export const ja = {
       errors: {
         analyzeFailed: '対話の分析中にエラーが発生しました。',
         createCardsFailed: 'カードの作成中にエラーが発生しました。',
-        updateDialogueFailed: 'セリフの更新に失敗しました。',
-        deleteDialogueFailed: 'セリフの削除に失敗しました。',
-        undoDeleteDialogueFailed: 'セリフの削除の取り消しに失敗しました。',
+        updateSubtitleLineFailed: 'セリフの更新に失敗しました。',
+        deleteSubtitleLineFailed: 'セリフの削除に失敗しました。',
+        undoDeleteSubtitleLineFailed: 'セリフの削除の取り消しに失敗しました。',
         episodeNotFound: 'エピソードが見つかりません。',
         fetchDetail: 'エピソード詳細の取得に失敗しました。',
         audioLoadFailed: '音声の読み込みに失敗しました。',

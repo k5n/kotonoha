@@ -2,9 +2,9 @@ import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
 import type { SubtitleLine } from '$lib/domain/entities/subtitleLine';
 import { apiKeyRepository } from '$lib/infrastructure/repositories/apiKeyRepository';
-import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { llmRepository } from '$lib/infrastructure/repositories/llmRepository';
 import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenceCardRepository';
+import { subtitleLineRepository } from '$lib/infrastructure/repositories/subtitleLineRepository';
 
 async function ensureApiKey(): Promise<string> {
   const apiKey = apiKeyStore.gemini.value;
@@ -30,14 +30,16 @@ export async function analyzeSubtitleLineForMining(
   context: readonly SubtitleLine[]
 ): Promise<SentenceAnalysisResult> {
   // 1. キャッシュを確認
-  const cachedCards = await sentenceCardRepository.getSentenceCardsByDialogueId(subtitleLine.id);
+  const cachedCards = await sentenceCardRepository.getSentenceCardsBySubtitleLineId(
+    subtitleLine.id
+  );
   if (cachedCards.length > 0) {
     // ダイアログの翻訳と説明をキャッシュから取得
-    const cachedDialogue = await dialogueRepository.getDialogueById(subtitleLine.id);
+    const cachedSubtitleLine = await subtitleLineRepository.getSubtitleLineById(subtitleLine.id);
     return {
-      sentence: cachedDialogue?.sentence || '',
-      translation: cachedDialogue?.translation || '',
-      explanation: cachedDialogue?.explanation || '',
+      sentence: cachedSubtitleLine?.sentence || '',
+      translation: cachedSubtitleLine?.translation || '',
+      explanation: cachedSubtitleLine?.explanation || '',
       items: cachedCards.map((card) => ({
         id: card.id,
         expression: card.expression,
@@ -53,7 +55,7 @@ export async function analyzeSubtitleLineForMining(
   // 2. キャッシュがなければLLMで解析
   const targetSentence = subtitleLine.correctedText || subtitleLine.originalText;
   if (!targetSentence) {
-    throw new Error('Dialogue text is empty');
+    throw new Error('SubtitleLine text is empty');
   }
   const apiKey = await ensureApiKey();
   const contextSentences = context.map((d) => d.correctedText || d.originalText).join('\n');
@@ -66,7 +68,7 @@ export async function analyzeSubtitleLineForMining(
   );
 
   // 3. 解析結果をキャッシュとしてDBに保存
-  await dialogueRepository.updateDialogueAnalysis(
+  await subtitleLineRepository.updateSubtitleLineAnalysis(
     subtitleLine.id,
     result.translation,
     result.explanation,
@@ -75,7 +77,9 @@ export async function analyzeSubtitleLineForMining(
   await sentenceCardRepository.cacheAnalysisItems(subtitleLine.id, result.items);
 
   // 4. 保存したキャッシュを読み込み、IDを付与して返す
-  const newCachedCards = await sentenceCardRepository.getSentenceCardsByDialogueId(subtitleLine.id);
+  const newCachedCards = await sentenceCardRepository.getSentenceCardsBySubtitleLineId(
+    subtitleLine.id
+  );
 
   return {
     sentence: result.sentence,

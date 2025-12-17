@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseTsvToSubtitleLines } from './parseTsvToSubtitleLines';
 
-describe('parseTsvToDialogues', () => {
+describe('parseTsvToSubtitleLines', () => {
   const episodeId = 'episode-1';
 
   it('should parse a valid TSV with start and end times', () => {
@@ -103,7 +103,7 @@ not enough columns\t
 
   it('should handle different column orders', () => {
     const tsvContent = `Text\tStartTime
-My dialogue\t10.5`;
+My subtitleLine\t10.5`;
     const config = { startTimeColumnIndex: 1, textColumnIndex: 0 };
     const { subtitleLines, warnings } = parseTsvToSubtitleLines(tsvContent, episodeId, config);
 
@@ -113,7 +113,7 @@ My dialogue\t10.5`;
       episodeId: episodeId,
       startTimeMs: 10500,
       endTimeMs: null,
-      originalText: 'My dialogue',
+      originalText: 'My subtitleLine',
     });
   });
 

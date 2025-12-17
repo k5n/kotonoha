@@ -48,8 +48,8 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
     switch (event.key) {
       case 'a': {
         if (currentSubtitleLineIndex > 0) {
-          const prevDialogue = subtitleLines[currentSubtitleLineIndex - 1];
-          mediaPlayer.seek(prevDialogue.startTimeMs);
+          const prevSubtitleLine = subtitleLines[currentSubtitleLineIndex - 1];
+          mediaPlayer.seek(prevSubtitleLine.startTimeMs);
         } else {
           mediaPlayer.seek(0);
         }
@@ -57,15 +57,15 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
       }
       case 's': {
         if (currentSubtitleLineIndex !== -1) {
-          const currentDialogue = subtitleLines[currentSubtitleLineIndex];
-          mediaPlayer.seek(currentDialogue.startTimeMs);
+          const currentSubtitleLine = subtitleLines[currentSubtitleLineIndex];
+          mediaPlayer.seek(currentSubtitleLine.startTimeMs);
         }
         break;
       }
       case 'd': {
         if (currentSubtitleLineIndex < subtitleLines.length - 1) {
-          const nextDialogue = subtitleLines[currentSubtitleLineIndex + 1];
-          mediaPlayer.seek(nextDialogue.startTimeMs);
+          const nextSubtitleLine = subtitleLines[currentSubtitleLineIndex + 1];
+          mediaPlayer.seek(nextSubtitleLine.startTimeMs);
         }
         break;
       }
@@ -86,8 +86,8 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
         event.preventDefault();
         mediaPlayer.pause();
         if (currentSubtitleLineIndex > 0) {
-          const prevDialogue = subtitleLines[currentSubtitleLineIndex - 1];
-          mediaPlayer.seek(prevDialogue.startTimeMs);
+          const prevSubtitleLine = subtitleLines[currentSubtitleLineIndex - 1];
+          mediaPlayer.seek(prevSubtitleLine.startTimeMs);
         } else {
           mediaPlayer.seek(0);
         }
@@ -97,8 +97,8 @@ export function keyboardShortcuts(node: HTMLElement, params: KeyboardShortcutsPa
         event.preventDefault();
         mediaPlayer.pause();
         if (currentSubtitleLineIndex < subtitleLines.length - 1) {
-          const nextDialogue = subtitleLines[currentSubtitleLineIndex + 1];
-          mediaPlayer.seek(nextDialogue.startTimeMs);
+          const nextSubtitleLine = subtitleLines[currentSubtitleLineIndex + 1];
+          mediaPlayer.seek(nextSubtitleLine.startTimeMs);
         }
         break;
       }

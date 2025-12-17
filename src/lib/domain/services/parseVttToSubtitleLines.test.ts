@@ -1,6 +1,6 @@
 import { parseVttToSubtitleLines } from './parseVttToSubtitleLines';
 
-describe('parseVttToDialogues', () => {
+describe('parseVttToSubtitleLines', () => {
   it('should correctly parse a simple VTT content', () => {
     const vttContent = `WEBVTT
 
@@ -28,7 +28,7 @@ This is a test.
     expect(warnings.length).toBe(0);
   });
 
-  it('should handle multi-line dialogue', () => {
+  it('should handle multi-line subtitleLine', () => {
     const vttContent = `WEBVTT
 
 00:01.000 --> 00:03.000

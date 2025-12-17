@@ -71,12 +71,12 @@
   }
 
   function handleCardClick(card: SentenceCard) {
-    const subtitleLine = data.subtitleLines?.find((d) => d.id === card.dialogueId);
+    const subtitleLine = data.subtitleLines?.find((d) => d.id === card.subtitleLineId);
     if (subtitleLine) {
       mediaPlayer?.seek(subtitleLine.startTimeMs);
     } else {
       console.error(
-        `Script segment not found for sentence card: ${card.id}, subtitleLineId: ${card.dialogueId}`
+        `Script segment not found for sentence card: ${card.id}, subtitleLineId: ${card.subtitleLineId}`
       );
     }
   }
@@ -133,7 +133,7 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Error updating script segment: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.updateDialogueFailed');
+      errorMessage = t('episodeDetailPage.errors.updateSubtitleLineFailed');
     }
   }
 
@@ -150,7 +150,7 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Error soft deleting script segment: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.deleteDialogueFailed');
+      errorMessage = t('episodeDetailPage.errors.deleteSubtitleLineFailed');
     } finally {
       isConfirmModalOpen = false;
       subtitleLineIdToDelete = null;
@@ -163,7 +163,7 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Error undoing soft delete for script segment: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.undoDeleteDialogueFailed');
+      errorMessage = t('episodeDetailPage.errors.undoDeleteSubtitleLineFailed');
     }
   }
 </script>

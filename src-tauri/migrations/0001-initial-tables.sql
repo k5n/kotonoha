@@ -24,7 +24,7 @@ CREATE TABLE subtitle_lines (
 );
 CREATE TABLE sentence_cards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    dialogue_id TEXT NOT NULL,
+    subtitle_line_id TEXT NOT NULL,
     part_of_speech TEXT NOT NULL,
     expression TEXT NOT NULL,
     sentence TEXT NOT NULL,
@@ -32,5 +32,4 @@ CREATE TABLE sentence_cards (
     core_meaning TEXT NOT NULL,
     status TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    FOREIGN KEY(dialogue_id) REFERENCES subtitle_lines(id)
 );

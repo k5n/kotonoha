@@ -1,6 +1,6 @@
 import { parseSswtToSubtitleLines } from './parseSswtToSubtitleLines';
 
-describe('parseSswtToDialogues', () => {
+describe('parseSswtToSubtitleLines', () => {
   const episodeId = 'episode-1';
   it('should parse a single generic SSWT line correctly', () => {
     const sswtContent = '[00:00:01.000 -> 00:00:02.500] This is a test sentence.';
