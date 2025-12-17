@@ -21,9 +21,9 @@
     canMine: boolean; // マイニング可能かどうか
     onSeek: (_time: number) => void;
     onMine: (_subtitleLine: SubtitleLine, _context: readonly SubtitleLine[]) => void;
-    onSave: (details: { subtitleLineId: number; correctedText: string }) => void;
-    onDelete: (_subtitleLineId: number) => void;
-    onUndoDelete: (_subtitleLineId: number) => void;
+    onSave: (details: { subtitleLineId: string; correctedText: string }) => void;
+    onDelete: (_subtitleLineId: string) => void;
+    onUndoDelete: (_subtitleLineId: string) => void;
     contextBefore?: number; // 前の件数
     contextAfter?: number; // 後ろの件数
   }
@@ -45,7 +45,7 @@
   let previousActiveIndex = $state(-1);
   let isScrolling = $state(false);
   let scrollTimeout: ReturnType<typeof setTimeout> | undefined = $state();
-  let editingSubtitleLineId: number | null = $state(null);
+  let editingSubtitleLineId: string | null = $state(null);
   let editText = $state('');
   let editingOriginalText = $state('');
 

@@ -15,7 +15,7 @@ export type NewSubtitleLine = {
  * スクリプト内の個々のセリフを表すエンティティ。
  */
 export type SubtitleLine = NewSubtitleLine & {
-  readonly id: number;
+  readonly id: string;
   readonly sequenceNumber?: number;
   readonly correctedText: string | null;
   readonly translation: string | null;

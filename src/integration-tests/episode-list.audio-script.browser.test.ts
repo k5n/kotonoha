@@ -811,7 +811,7 @@ test('error: handles content insertion failure', async () => {
     sql: string,
     bindValues?: unknown[]
   ) {
-    if (sql.startsWith('INSERT INTO dialogues')) {
+    if (sql.startsWith('INSERT INTO subtitle_lines')) {
       throw new Error('Database insertion error: UNIQUE constraint failed');
     }
     return originalExecute.apply(this, [sql, bindValues]);

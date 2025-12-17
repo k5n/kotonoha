@@ -127,21 +127,17 @@ CREATE TABLE episodes (
     updated_at TEXT NOT NULL,
     deleted_at TEXT DEFAULT NULL
 );
-CREATE TABLE dialogues (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE subtitle_lines (
+    id TEXT PRIMARY KEY,
     episode_id TEXT NOT NULL,
-    start_time_ms INTEGER NOT NULL,
-    end_time_ms INTEGER,
-    original_text TEXT NOT NULL,
-    corrected_text TEXT,
-    translation TEXT,
-    explanation TEXT,
-    sentence TEXT,
-    deleted_at TEXT
+    sequence_number INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT DEFAULT NULL
 );
 CREATE TABLE sentence_cards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    dialogue_id INTEGER NOT NULL,
+    dialogue_id TEXT NOT NULL,
     part_of_speech TEXT NOT NULL,
     expression TEXT NOT NULL,
     sentence TEXT NOT NULL,

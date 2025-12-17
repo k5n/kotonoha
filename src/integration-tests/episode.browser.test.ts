@@ -14,10 +14,10 @@ import type { PageData } from '../routes/episode/[id]/$types';
 import { load } from '../routes/episode/[id]/+page';
 import {
   clearDatabase,
-  DATABASE_URL,
-  insertDialogue,
   insertEpisode,
   insertEpisodeGroup,
+  insertSentenceCard,
+  insertSubtitleLine,
 } from './lib/database';
 import Component from './lib/EpisodePageWrapper.svelte';
 import { createMockStore } from './lib/mockFactories';
@@ -51,47 +51,6 @@ async function defaultInvokeMock(command: string, _args?: unknown): Promise<unkn
     return null;
   }
   throw new Error(`Unhandled Tauri command: ${command as string}`);
-}
-
-async function insertSentenceCard(params: {
-  dialogueId: number;
-  expression: string;
-  sentence: string;
-  contextualDefinition: string;
-  coreMeaning: string;
-  partOfSpeech?: string;
-  status?: 'active' | 'cache';
-  createdAt?: string;
-}): Promise<number> {
-  const {
-    dialogueId,
-    expression,
-    sentence,
-    contextualDefinition,
-    coreMeaning,
-    partOfSpeech = 'noun',
-    status = 'active',
-    createdAt = new Date().toISOString(),
-  } = params;
-
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO sentence_cards (dialogue_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      dialogueId,
-      partOfSpeech,
-      expression,
-      sentence,
-      contextualDefinition,
-      coreMeaning,
-      status,
-      createdAt,
-    ]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
 }
 
 async function loadPageData(id: string): Promise<PageData> {
@@ -169,7 +128,7 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
     mediaPath: 'media/story.mp3',
   });
 
-  const dialogueId = await insertDialogue({
+  const dialogueId = await insertSubtitleLine({
     episodeId,
     startTimeMs: 0,
     endTimeMs: 5000,
@@ -180,7 +139,7 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
     sentence: 'Hello world from Kotonoha!',
   });
 
-  await insertDialogue({
+  await insertSubtitleLine({
     episodeId,
     startTimeMs: 6000,
     endTimeMs: 11000,
@@ -297,7 +256,7 @@ test('success: renders YouTube player when episode is from YouTube', async () =>
       mediaPath: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     });
 
-    await insertDialogue({
+    await insertSubtitleLine({
       episodeId,
       startTimeMs: 0,
       endTimeMs: 4000,

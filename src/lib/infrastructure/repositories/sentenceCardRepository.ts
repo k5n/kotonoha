@@ -5,7 +5,7 @@ import { getDatabasePath } from '../config';
 
 type SentenceCardRow = {
   id: number;
-  dialogue_id: number;
+  dialogue_id: string;
   part_of_speech: string;
   expression: string;
   sentence: string;
@@ -34,7 +34,7 @@ export const sentenceCardRepository = {
    * 新しいSentence Cardを追加する
    */
   async addSentenceCard(params: {
-    dialogueId: number;
+    dialogueId: string;
     partOfSpeech: string;
     expression: string;
     sentence: string;
@@ -76,9 +76,9 @@ export const sentenceCardRepository = {
       SELECT
         sc.*
       FROM sentence_cards sc
-      INNER JOIN dialogues d ON sc.dialogue_id = d.id
-      WHERE d.episode_id = ? AND sc.status = 'active'
-      ORDER BY d.start_time_ms ASC, sc.created_at ASC
+      INNER JOIN subtitle_lines sl ON sc.dialogue_id = sl.id
+      WHERE sl.episode_id = ? AND sc.status = 'active'
+      ORDER BY sl.sequence_number ASC, sc.created_at ASC
     `,
       [episodeId]
     );
@@ -88,7 +88,7 @@ export const sentenceCardRepository = {
   /**
    * 指定したダイアログIDに紐づく全てのSentence Cardを取得する
    */
-  async getSentenceCardsByDialogueId(dialogueId: number): Promise<readonly SentenceCard[]> {
+  async getSentenceCardsByDialogueId(dialogueId: string): Promise<readonly SentenceCard[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<SentenceCardRow[]>(
       'SELECT * FROM sentence_cards WHERE dialogue_id = ? ORDER BY created_at ASC',
@@ -101,7 +101,7 @@ export const sentenceCardRepository = {
    * LLMの解析結果をキャッシュとして保存する
    */
   async cacheAnalysisItems(
-    dialogueId: number,
+    dialogueId: string,
     items: readonly SentenceAnalysisItem[]
   ): Promise<void> {
     const db = new Database(await getDatabasePath());
@@ -109,7 +109,7 @@ export const sentenceCardRepository = {
     const values = items
       .map(
         (item) =>
-          `(${dialogueId}, '${item.partOfSpeech.replace(/'/g, "''")}', '${item.expression.replace(/'/g, "''")}', '${item.exampleSentence.replace(/'/g, "''")}', '${item.contextualDefinition.replace(/'/g, "''")}', '${item.coreMeaning.replace(/'/g, "''")}', 'cache', '${now}')`
+          `('${dialogueId.replace(/'/g, "''")}', '${item.partOfSpeech.replace(/'/g, "''")}', '${item.expression.replace(/'/g, "''")}', '${item.exampleSentence.replace(/'/g, "''")}', '${item.contextualDefinition.replace(/'/g, "''")}', '${item.coreMeaning.replace(/'/g, "''")}', 'cache', '${now}')`
       )
       .join(',');
 
@@ -152,8 +152,8 @@ export const sentenceCardRepository = {
    */
   async deleteByEpisodeId(episodeId: string): Promise<void> {
     const db = new Database(await getDatabasePath());
-    const dialogueIds = await db.select<{ id: number }[]>(
-      'SELECT id FROM dialogues WHERE episode_id = ?',
+    const dialogueIds = await db.select<{ id: string }[]>(
+      'SELECT id FROM subtitle_lines WHERE episode_id = ?',
       [episodeId]
     );
     if (dialogueIds.length === 0) {

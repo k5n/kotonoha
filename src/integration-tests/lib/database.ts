@@ -6,11 +6,11 @@ export const DATABASE_URL = 'dummy';
 export async function clearDatabase(): Promise<void> {
   const db = new Database(DATABASE_URL);
   await db.execute('DELETE FROM sentence_cards');
-  await db.execute('DELETE FROM dialogues');
+  await db.execute('DELETE FROM subtitle_lines');
   await db.execute('DELETE FROM episodes');
   await db.execute('DELETE FROM episode_groups');
   await db.execute(
-    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','dialogues','sentence_cards')"
+    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','subtitle_lines','sentence_cards')"
   );
 }
 
@@ -82,7 +82,7 @@ export async function getEpisodeTitle(episodeId: string): Promise<string | null>
   return content.title || null;
 }
 
-export async function insertDialogue(params: {
+export async function insertSubtitleLine(params: {
   episodeId: string;
   startTimeMs: number;
   endTimeMs: number | null;
@@ -91,8 +91,9 @@ export async function insertDialogue(params: {
   translation?: string | null;
   explanation?: string | null;
   sentence?: string | null;
+  sequenceNumber?: number;
   deletedAt?: string | null;
-}): Promise<number> {
+}): Promise<string> {
   const {
     episodeId,
     startTimeMs,
@@ -102,34 +103,47 @@ export async function insertDialogue(params: {
     translation = null,
     explanation = null,
     sentence = null,
+    sequenceNumber,
     deletedAt = null,
   } = params;
 
   const db = new Database(DATABASE_URL);
+  const rows = await db.select<{ max_sequence: number | null }[]>(
+    'SELECT MAX(sequence_number) AS max_sequence FROM subtitle_lines WHERE episode_id = ?',
+    [episodeId]
+  );
+  const nextSequence = sequenceNumber ?? (rows[0]?.max_sequence ?? 0) + 1;
+  const id = generateId();
+  const now = new Date().toISOString();
+
   await db.execute(
-    `INSERT INTO dialogues (episode_id, start_time_ms, end_time_ms, original_text, corrected_text, translation, explanation, sentence, deleted_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO subtitle_lines (id, episode_id, sequence_number, content, updated_at, deleted_at)
+     VALUES (?, ?, ?, ?, ?, NULL)`,
     [
+      id,
       episodeId,
-      startTimeMs,
-      endTimeMs,
-      originalText,
-      correctedText,
-      translation,
-      explanation,
-      sentence,
-      deletedAt,
+      nextSequence,
+      JSON.stringify({
+        startTimeMs,
+        endTimeMs,
+        originalText,
+        correctedText,
+        translation,
+        explanation,
+        sentence,
+        hidden: deletedAt,
+      }),
+      now,
     ]
   );
 
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
+  return id;
 }
 
-export async function getSentenceCards(dialogueId: number): Promise<SentenceCard[]> {
+export async function getSentenceCards(dialogueId: string): Promise<SentenceCard[]> {
   type SentenceCardRow = {
     id: number;
-    dialogue_id: number;
+    dialogue_id: string;
     part_of_speech: string;
     expression: string;
     sentence: string;
@@ -158,4 +172,45 @@ export async function getSentenceCards(dialogueId: number): Promise<SentenceCard
     [dialogueId]
   );
   return rows.map(mapRowToSentenceCard);
+}
+
+export async function insertSentenceCard(params: {
+  dialogueId: string;
+  expression: string;
+  sentence: string;
+  contextualDefinition: string;
+  coreMeaning: string;
+  partOfSpeech?: string;
+  status?: 'active' | 'cache';
+  createdAt?: string;
+}): Promise<number> {
+  const {
+    dialogueId,
+    expression,
+    sentence,
+    contextualDefinition,
+    coreMeaning,
+    partOfSpeech = 'noun',
+    status = 'active',
+    createdAt = new Date().toISOString(),
+  } = params;
+
+  const db = new Database(DATABASE_URL);
+  await db.execute(
+    `INSERT INTO sentence_cards (dialogue_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      dialogueId,
+      partOfSpeech,
+      expression,
+      sentence,
+      contextualDefinition,
+      coreMeaning,
+      status,
+      createdAt,
+    ]
+  );
+
+  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
+  return rows[0]?.id ?? 0;
 }

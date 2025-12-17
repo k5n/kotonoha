@@ -42,7 +42,7 @@
 
   // Delete confirmation
   let isConfirmModalOpen = $state(false);
-  let subtitleLineIdToDelete: number | null = $state(null);
+  let subtitleLineIdToDelete: string | null = $state(null);
 
   // --- Derived State ---
   const filteredSubtitleLines = $derived(
@@ -124,7 +124,7 @@
   }
 
   async function handleSaveSubtitleLine(details: {
-    subtitleLineId: number;
+    subtitleLineId: string;
     correctedText: string;
   }) {
     const { subtitleLineId, correctedText } = details;
@@ -137,7 +137,7 @@
     }
   }
 
-  function handleDeleteRequest(subtitleLineId: number) {
+  function handleDeleteRequest(subtitleLineId: string) {
     subtitleLineIdToDelete = subtitleLineId;
     isConfirmModalOpen = true;
   }
@@ -157,7 +157,7 @@
     }
   }
 
-  async function handleUndoDelete(subtitleLineId: number) {
+  async function handleUndoDelete(subtitleLineId: string) {
     try {
       await undoSoftDeleteSubtitleLine(subtitleLineId);
       await invalidateAll();

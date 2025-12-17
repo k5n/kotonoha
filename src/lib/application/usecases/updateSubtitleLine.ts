@@ -6,7 +6,7 @@ import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRep
  * @param correctedText The new corrected text. If the text is the same as the original, or empty, it will be stored as NULL.
  */
 export async function updateSubtitleLine(
-  subtitleLineId: number,
+  subtitleLineId: string,
   correctedText: string
 ): Promise<void> {
   await dialogueRepository.updateDialogueText(subtitleLineId, correctedText);

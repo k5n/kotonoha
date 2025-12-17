@@ -67,8 +67,8 @@ export const episodeRepository = {
         e.deleted_at,
         COUNT(sc.id) AS sentence_card_count
       FROM episodes e
-      LEFT JOIN dialogues d ON e.id = d.episode_id
-      LEFT JOIN sentence_cards sc ON d.id = sc.dialogue_id AND sc.status = 'active'
+      LEFT JOIN subtitle_lines sl ON e.id = sl.episode_id
+      LEFT JOIN sentence_cards sc ON sl.id = sc.dialogue_id AND sc.status = 'active'
       WHERE e.episode_group_id = ? AND e.deleted_at IS NULL
       GROUP BY e.id
       ORDER BY COALESCE(json_extract(e.content, '$.displayOrder'), 0) ASC
