@@ -370,15 +370,15 @@ graph LR
                 end
                 subgraph sg_lib_domain_services ["services"]
                     src_lib_domain_services_generateEpisodeFilenames_ts["generateEpisodeFilenames"]
-                    src_lib_domain_services_parseScriptToScriptSegments_ts["parseScriptToScriptSegments"]
+                    src_lib_domain_services_parseScriptToSubtitleLines_ts["parseScriptToSubtitleLines"]
                     src_lib_domain_services_youtubeUrlValidator_ts["youtubeUrlValidator"]
                 end
             end
             subgraph sg_lib_infrastructure ["infrastructure"]
                 subgraph sg_lib_infrastructure_repositories ["repositories"]
-                    src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository"]
                     src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository"]
                     src_lib_infrastructure_repositories_fileRepository_ts["fileRepository"]
+                    src_lib_infrastructure_repositories_subtitleLineRepository_ts["subtitleLineRepository"]
                     src_lib_infrastructure_repositories_youtubeRepository_ts["youtubeRepository"]
                 end
             end
@@ -404,15 +404,15 @@ graph LR
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_entities_tsvConfig_ts
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_entities_youtubeMetadata_ts
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_generateEpisodeFilenames_ts
-    src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseScriptToScriptSegments_ts
+    src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_parseScriptToSubtitleLines_ts
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_domain_services_youtubeUrlValidator_ts
-    src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_fileRepository_ts
+    src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_subtitleLineRepository_ts
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_infrastructure_repositories_youtubeRepository_ts
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_utils_assertion_ts
     src_lib_application_usecases_addNewEpisode_ts --> src_lib_utils_language_ts
-    src_lib_domain_services_parseScriptToScriptSegments_ts --> src_lib_domain_entities_tsvConfig_ts
+    src_lib_domain_services_parseScriptToSubtitleLines_ts --> src_lib_domain_entities_tsvConfig_ts
     src_lib_infrastructure_repositories_episodeRepository_ts --> src_lib_domain_entities_episode_ts
     src_lib_infrastructure_repositories_youtubeRepository_ts --> src_lib_domain_entities_youtubeMetadata_ts
     src_routes_episode_list__groupId__container_fileBasedEpisodeAddController_svelte_ts --> src_lib_application_usecases_addNewEpisode_ts
@@ -439,11 +439,11 @@ graph LR
     class src_lib_domain_entities_tsvConfig_ts cssTypeScript
     class src_lib_domain_entities_youtubeMetadata_ts cssTypeScript
     class src_lib_domain_services_generateEpisodeFilenames_ts cssTypeScript
-    class src_lib_domain_services_parseScriptToScriptSegments_ts cssTypeScript
+    class src_lib_domain_services_parseScriptToSubtitleLines_ts cssTypeScript
     class src_lib_domain_services_youtubeUrlValidator_ts cssTypeScript
-    class src_lib_infrastructure_repositories_dialogueRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_episodeRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_fileRepository_ts cssTypeScript
+    class src_lib_infrastructure_repositories_subtitleLineRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_youtubeRepository_ts cssTypeScript
     class src_lib_utils_assertion_ts cssTypeScript
     class src_lib_utils_language_ts cssTypeScript
@@ -487,9 +487,9 @@ graph LR
     class src_lib_infrastructure_repositories_sentenceCardRepository_ts cssTypeScript
     class src_routes_episode__id___page_svelte cssSvelteComponent
 ```
-### Use Case: analyzeScriptSegmentForMining.ts
+### Use Case: analyzeSubtitleLineForMining.ts
 
-Shows files that use the `analyzeScriptSegmentForMining.ts` use case, and the files it depends on.
+Shows files that use the `analyzeSubtitleLineForMining.ts` use case, and the files it depends on.
 
 ```mermaid
 graph LR
@@ -502,21 +502,21 @@ graph LR
                     src_lib_application_stores_apiKeyStore_svelte_ts["apiKeyStore"]
                 end
                 subgraph sg_lib_application_usecases ["usecases"]
-                    src_lib_application_usecases_analyzeScriptSegmentForMining_ts["analyzeScriptSegmentForMining"]
+                    src_lib_application_usecases_analyzeSubtitleLineForMining_ts["analyzeSubtitleLineForMining"]
                 end
             end
             subgraph sg_lib_domain ["domain"]
                 subgraph sg_lib_domain_entities ["entities"]
-                    src_lib_domain_entities_scriptSegment_ts["scriptSegment"]
                     src_lib_domain_entities_sentenceAnalysisResult_ts["sentenceAnalysisResult"]
+                    src_lib_domain_entities_subtitleLine_ts["subtitleLine"]
                 end
             end
             subgraph sg_lib_infrastructure ["infrastructure"]
                 subgraph sg_lib_infrastructure_repositories ["repositories"]
                     src_lib_infrastructure_repositories_apiKeyRepository_ts["apiKeyRepository"]
-                    src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository"]
                     src_lib_infrastructure_repositories_llmRepository_ts["llmRepository"]
                     src_lib_infrastructure_repositories_sentenceCardRepository_ts["sentenceCardRepository"]
+                    src_lib_infrastructure_repositories_subtitleLineRepository_ts["subtitleLineRepository"]
                 end
             end
         end
@@ -527,27 +527,27 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_analyzeScriptSegmentForMining_ts --> src_lib_application_stores_apiKeyStore_svelte_ts
-    src_lib_application_usecases_analyzeScriptSegmentForMining_ts --> src_lib_domain_entities_scriptSegment_ts
-    src_lib_application_usecases_analyzeScriptSegmentForMining_ts --> src_lib_domain_entities_sentenceAnalysisResult_ts
-    src_lib_application_usecases_analyzeScriptSegmentForMining_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
-    src_lib_application_usecases_analyzeScriptSegmentForMining_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
-    src_lib_application_usecases_analyzeScriptSegmentForMining_ts --> src_lib_infrastructure_repositories_llmRepository_ts
-    src_lib_application_usecases_analyzeScriptSegmentForMining_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
-    src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_scriptSegment_ts
+    src_lib_application_usecases_analyzeSubtitleLineForMining_ts --> src_lib_application_stores_apiKeyStore_svelte_ts
+    src_lib_application_usecases_analyzeSubtitleLineForMining_ts --> src_lib_domain_entities_sentenceAnalysisResult_ts
+    src_lib_application_usecases_analyzeSubtitleLineForMining_ts --> src_lib_domain_entities_subtitleLine_ts
+    src_lib_application_usecases_analyzeSubtitleLineForMining_ts --> src_lib_infrastructure_repositories_apiKeyRepository_ts
+    src_lib_application_usecases_analyzeSubtitleLineForMining_ts --> src_lib_infrastructure_repositories_llmRepository_ts
+    src_lib_application_usecases_analyzeSubtitleLineForMining_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
+    src_lib_application_usecases_analyzeSubtitleLineForMining_ts --> src_lib_infrastructure_repositories_subtitleLineRepository_ts
     src_lib_infrastructure_repositories_llmRepository_ts --> src_lib_domain_entities_sentenceAnalysisResult_ts
     src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceAnalysisResult_ts
-    src_routes_episode__id___page_svelte --> src_lib_application_usecases_analyzeScriptSegmentForMining_ts
-    src_routes_episode__id___page_svelte --> src_lib_domain_entities_scriptSegment_ts
+    src_lib_infrastructure_repositories_subtitleLineRepository_ts --> src_lib_domain_entities_subtitleLine_ts
+    src_routes_episode__id___page_svelte --> src_lib_application_usecases_analyzeSubtitleLineForMining_ts
     src_routes_episode__id___page_svelte --> src_lib_domain_entities_sentenceAnalysisResult_ts
+    src_routes_episode__id___page_svelte --> src_lib_domain_entities_subtitleLine_ts
     class src_lib_application_stores_apiKeyStore_svelte_ts cssSvelteScript
-    class src_lib_application_usecases_analyzeScriptSegmentForMining_ts cssTypeScript
-    class src_lib_domain_entities_scriptSegment_ts cssTypeScript
+    class src_lib_application_usecases_analyzeSubtitleLineForMining_ts cssTypeScript
     class src_lib_domain_entities_sentenceAnalysisResult_ts cssTypeScript
+    class src_lib_domain_entities_subtitleLine_ts cssTypeScript
     class src_lib_infrastructure_repositories_apiKeyRepository_ts cssTypeScript
-    class src_lib_infrastructure_repositories_dialogueRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_llmRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_sentenceCardRepository_ts cssTypeScript
+    class src_lib_infrastructure_repositories_subtitleLineRepository_ts cssTypeScript
     class src_routes_episode__id___page_svelte cssSvelteComponent
 ```
 ### Use Case: deleteEpisode.ts
@@ -567,10 +567,10 @@ graph LR
             end
             subgraph sg_lib_infrastructure ["infrastructure"]
                 subgraph sg_lib_infrastructure_repositories ["repositories"]
-                    src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository"]
                     src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository"]
                     src_lib_infrastructure_repositories_fileRepository_ts["fileRepository"]
                     src_lib_infrastructure_repositories_sentenceCardRepository_ts["sentenceCardRepository"]
+                    src_lib_infrastructure_repositories_subtitleLineRepository_ts["subtitleLineRepository"]
                 end
             end
         end
@@ -581,16 +581,16 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
     src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
     src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_fileRepository_ts
     src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
+    src_lib_application_usecases_deleteEpisode_ts --> src_lib_infrastructure_repositories_subtitleLineRepository_ts
     src_routes_episode_list__groupId___page_svelte --> src_lib_application_usecases_deleteEpisode_ts
     class src_lib_application_usecases_deleteEpisode_ts cssTypeScript
-    class src_lib_infrastructure_repositories_dialogueRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_episodeRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_fileRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_sentenceCardRepository_ts cssTypeScript
+    class src_lib_infrastructure_repositories_subtitleLineRepository_ts cssTypeScript
     class src_routes_episode_list__groupId___page_svelte cssSvelteComponent
 ```
 ### Use Case: deleteGroupRecursive.ts
@@ -978,15 +978,15 @@ graph LR
             subgraph sg_lib_domain ["domain"]
                 subgraph sg_lib_domain_entities ["entities"]
                     src_lib_domain_entities_episode_ts["episode"]
-                    src_lib_domain_entities_scriptSegment_ts["scriptSegment"]
                     src_lib_domain_entities_sentenceCard_ts["sentenceCard"]
+                    src_lib_domain_entities_subtitleLine_ts["subtitleLine"]
                 end
             end
             subgraph sg_lib_infrastructure ["infrastructure"]
                 subgraph sg_lib_infrastructure_repositories ["repositories"]
-                    src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository"]
                     src_lib_infrastructure_repositories_episodeRepository_ts["episodeRepository"]
                     src_lib_infrastructure_repositories_sentenceCardRepository_ts["sentenceCardRepository"]
+                    src_lib_infrastructure_repositories_subtitleLineRepository_ts["subtitleLineRepository"]
                 end
             end
         end
@@ -998,22 +998,22 @@ graph LR
             end
         end
     src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_episode_ts
-    src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_scriptSegment_ts
     src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_sentenceCard_ts
-    src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
+    src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_domain_entities_subtitleLine_ts
     src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_episodeRepository_ts
     src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_sentenceCardRepository_ts
-    src_lib_infrastructure_repositories_dialogueRepository_ts --> src_lib_domain_entities_scriptSegment_ts
+    src_lib_application_usecases_fetchEpisodeDetail_ts --> src_lib_infrastructure_repositories_subtitleLineRepository_ts
     src_lib_infrastructure_repositories_episodeRepository_ts --> src_lib_domain_entities_episode_ts
     src_lib_infrastructure_repositories_sentenceCardRepository_ts --> src_lib_domain_entities_sentenceCard_ts
+    src_lib_infrastructure_repositories_subtitleLineRepository_ts --> src_lib_domain_entities_subtitleLine_ts
     src_routes_episode__id___page_ts --> src_lib_application_usecases_fetchEpisodeDetail_ts
     class src_lib_application_usecases_fetchEpisodeDetail_ts cssTypeScript
     class src_lib_domain_entities_episode_ts cssTypeScript
-    class src_lib_domain_entities_scriptSegment_ts cssTypeScript
     class src_lib_domain_entities_sentenceCard_ts cssTypeScript
-    class src_lib_infrastructure_repositories_dialogueRepository_ts cssTypeScript
+    class src_lib_domain_entities_subtitleLine_ts cssTypeScript
     class src_lib_infrastructure_repositories_episodeRepository_ts cssTypeScript
     class src_lib_infrastructure_repositories_sentenceCardRepository_ts cssTypeScript
+    class src_lib_infrastructure_repositories_subtitleLineRepository_ts cssTypeScript
     class src_routes_episode__id___page_ts cssTypeScript
 ```
 ### Use Case: fetchEpisodeGroups.ts
@@ -1631,9 +1631,9 @@ graph LR
     class src_lib_infrastructure_repositories_settingsRepository_ts cssTypeScript
     class src_routes_settings__page_svelte cssSvelteComponent
 ```
-### Use Case: softDeleteScriptSegment.ts
+### Use Case: softDeleteSubtitleLine.ts
 
-Shows files that use the `softDeleteScriptSegment.ts` use case, and the files it depends on.
+Shows files that use the `softDeleteSubtitleLine.ts` use case, and the files it depends on.
 
 ```mermaid
 graph LR
@@ -1643,12 +1643,12 @@ graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
                 subgraph sg_lib_application_usecases ["usecases"]
-                    src_lib_application_usecases_softDeleteScriptSegment_ts["softDeleteScriptSegment"]
+                    src_lib_application_usecases_softDeleteSubtitleLine_ts["softDeleteSubtitleLine"]
                 end
             end
             subgraph sg_lib_infrastructure ["infrastructure"]
                 subgraph sg_lib_infrastructure_repositories ["repositories"]
-                    src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository"]
+                    src_lib_infrastructure_repositories_subtitleLineRepository_ts["subtitleLineRepository"]
                 end
             end
         end
@@ -1659,15 +1659,15 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_softDeleteScriptSegment_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
-    src_routes_episode__id___page_svelte --> src_lib_application_usecases_softDeleteScriptSegment_ts
-    class src_lib_application_usecases_softDeleteScriptSegment_ts cssTypeScript
-    class src_lib_infrastructure_repositories_dialogueRepository_ts cssTypeScript
+    src_lib_application_usecases_softDeleteSubtitleLine_ts --> src_lib_infrastructure_repositories_subtitleLineRepository_ts
+    src_routes_episode__id___page_svelte --> src_lib_application_usecases_softDeleteSubtitleLine_ts
+    class src_lib_application_usecases_softDeleteSubtitleLine_ts cssTypeScript
+    class src_lib_infrastructure_repositories_subtitleLineRepository_ts cssTypeScript
     class src_routes_episode__id___page_svelte cssSvelteComponent
 ```
-### Use Case: undoSoftDeleteScriptSegment.ts
+### Use Case: undoSoftDeleteSubtitleLine.ts
 
-Shows files that use the `undoSoftDeleteScriptSegment.ts` use case, and the files it depends on.
+Shows files that use the `undoSoftDeleteSubtitleLine.ts` use case, and the files it depends on.
 
 ```mermaid
 graph LR
@@ -1677,12 +1677,12 @@ graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
                 subgraph sg_lib_application_usecases ["usecases"]
-                    src_lib_application_usecases_undoSoftDeleteScriptSegment_ts["undoSoftDeleteScriptSegment"]
+                    src_lib_application_usecases_undoSoftDeleteSubtitleLine_ts["undoSoftDeleteSubtitleLine"]
                 end
             end
             subgraph sg_lib_infrastructure ["infrastructure"]
                 subgraph sg_lib_infrastructure_repositories ["repositories"]
-                    src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository"]
+                    src_lib_infrastructure_repositories_subtitleLineRepository_ts["subtitleLineRepository"]
                 end
             end
         end
@@ -1693,10 +1693,10 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_undoSoftDeleteScriptSegment_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
-    src_routes_episode__id___page_svelte --> src_lib_application_usecases_undoSoftDeleteScriptSegment_ts
-    class src_lib_application_usecases_undoSoftDeleteScriptSegment_ts cssTypeScript
-    class src_lib_infrastructure_repositories_dialogueRepository_ts cssTypeScript
+    src_lib_application_usecases_undoSoftDeleteSubtitleLine_ts --> src_lib_infrastructure_repositories_subtitleLineRepository_ts
+    src_routes_episode__id___page_svelte --> src_lib_application_usecases_undoSoftDeleteSubtitleLine_ts
+    class src_lib_application_usecases_undoSoftDeleteSubtitleLine_ts cssTypeScript
+    class src_lib_infrastructure_repositories_subtitleLineRepository_ts cssTypeScript
     class src_routes_episode__id___page_svelte cssSvelteComponent
 ```
 ### Use Case: updateEpisodeGroupName.ts
@@ -1867,9 +1867,9 @@ graph LR
     class src_lib_infrastructure_repositories_episodeRepository_ts cssTypeScript
     class src_routes_episode_list__groupId___page_svelte cssSvelteComponent
 ```
-### Use Case: updateScriptSegment.ts
+### Use Case: updateSubtitleLine.ts
 
-Shows files that use the `updateScriptSegment.ts` use case, and the files it depends on.
+Shows files that use the `updateSubtitleLine.ts` use case, and the files it depends on.
 
 ```mermaid
 graph LR
@@ -1879,12 +1879,12 @@ graph LR
         subgraph sg_lib ["lib"]
             subgraph sg_lib_application ["application"]
                 subgraph sg_lib_application_usecases ["usecases"]
-                    src_lib_application_usecases_updateScriptSegment_ts["updateScriptSegment"]
+                    src_lib_application_usecases_updateSubtitleLine_ts["updateSubtitleLine"]
                 end
             end
             subgraph sg_lib_infrastructure ["infrastructure"]
                 subgraph sg_lib_infrastructure_repositories ["repositories"]
-                    src_lib_infrastructure_repositories_dialogueRepository_ts["dialogueRepository"]
+                    src_lib_infrastructure_repositories_subtitleLineRepository_ts["subtitleLineRepository"]
                 end
             end
         end
@@ -1895,10 +1895,10 @@ graph LR
                 end
             end
         end
-    src_lib_application_usecases_updateScriptSegment_ts --> src_lib_infrastructure_repositories_dialogueRepository_ts
-    src_routes_episode__id___page_svelte --> src_lib_application_usecases_updateScriptSegment_ts
-    class src_lib_application_usecases_updateScriptSegment_ts cssTypeScript
-    class src_lib_infrastructure_repositories_dialogueRepository_ts cssTypeScript
+    src_lib_application_usecases_updateSubtitleLine_ts --> src_lib_infrastructure_repositories_subtitleLineRepository_ts
+    src_routes_episode__id___page_svelte --> src_lib_application_usecases_updateSubtitleLine_ts
+    class src_lib_application_usecases_updateSubtitleLine_ts cssTypeScript
+    class src_lib_infrastructure_repositories_subtitleLineRepository_ts cssTypeScript
     class src_routes_episode__id___page_svelte cssSvelteComponent
 ```
 
