@@ -203,117 +203,105 @@ Infrastructure が Domain に依存する方向になっているが、Clean Arc
 
 ローカルのSQLiteデータベースに以下のテーブルを定義する。
 
+### 共通仕様
+
+- `id` は UUID 文字列（TEXT）。
+- `updated_at` と `deleted_at` は ISO 8601 文字列。INSERT 時に `updated_at` を現在時刻で設定し、削除時に `deleted_at` を現在時刻で設定する。`deleted_at` が NULL なら未削除扱い。
+- `content` カラムに JSON 文字列で可変フィールドを格納し、テーブルスキーマ変更を最小化する。
+- 外部キー制約は付与しない（論理的なリレーションは維持）。
+
 ### ER図 (Mermaid)
 
 ```mermaid
 erDiagram
     EPISODE_GROUPS {
-        INTEGER id PK
-        TEXT name
+        TEXT id PK
+        TEXT parent_group_id
         INTEGER display_order
-        INTEGER parent_group_id FK
         TEXT group_type
+        TEXT content
+        TEXT updated_at
+        TEXT deleted_at
     }
     EPISODES {
-        INTEGER id PK
-        INTEGER episode_group_id FK
-        INTEGER display_order
-        TEXT title
-        TEXT media_path
-        TEXT learning_language
-        TEXT explanation_language
-        TEXT created_at
+        TEXT id PK
+        TEXT episode_group_id
+        TEXT content
         TEXT updated_at
+        TEXT deleted_at
     }
-    DIALOGUES {
-        INTEGER id PK
-        INTEGER episode_id FK
-        INTEGER start_time_ms
-        INTEGER end_time_ms
-        TEXT original_text
-        TEXT corrected_text
-        TEXT translation
-        TEXT explanation
-        TEXT sentence
+    SUBTITLE_LINES {
+        TEXT id PK
+        TEXT episode_id
+        INTEGER sequence_number
+        TEXT content
+        TEXT updated_at
         TEXT deleted_at
     }
     SENTENCE_CARDS {
-        INTEGER id PK
-        INTEGER dialogue_id FK
-        TEXT part_of_speech
-        TEXT expression
-        TEXT sentence
-        TEXT contextual_definition
-        TEXT core_meaning
+        TEXT id PK
+        TEXT subtitle_line_id
+        TEXT content
         TEXT status
-        TEXT created_at
+        TEXT updated_at
+        TEXT deleted_at
     }
 
-    EPISODE_GROUPS ||--o{ EPISODE_GROUPS : "parent"
-    EPISODE_GROUPS ||--o{ EPISODES : "has"
-    EPISODES ||--o{ DIALOGUES : "has"
-    DIALOGUES ||--o{ SENTENCE_CARDS : "has"
+    EPISODE_GROUPS ||--o{ EPISODE_GROUPS : "parent_group_id"
+    EPISODE_GROUPS ||--o{ EPISODES : "episode_group_id"
+    EPISODES ||--o{ SUBTITLE_LINES : "episode_id"
+    SUBTITLE_LINES ||--o{ SENTENCE_CARDS : "subtitle_line_id"
 ```
 
 ### 2.1. `episode_groups` テーブル
 エピソードを任意のグループ（入れ子構造可）に分類する。
 
-| カラム名         | 型      | NULL許容 | 説明                         |
-|------------------|---------|----------|------------------------------|
-| `id`             | INTEGER |          | PRIMARY KEY, AUTOINCREMENT   |
-| `name`           | TEXT    |          | グループ名                   |
-| `display_order`  | INTEGER |          | グループの表示順序           |
-| `parent_group_id`| INTEGER | ●        | 親グループID（NULLでルート） |
-| `group_type`     | TEXT    |          | グループ種別: "album"（エピソード格納可）または "folder"（サブグループのみ格納可） |
-
-- `parent_group_id`は自己参照外部キー。NULLの場合はルートグループ。
-- `group_type` でグループの種別を区別する。`album` はエピソードを格納でき、`folder` はサブグループのみ格納できる。
+| カラム名          | 型      | NULL許容 | 説明                                                |
+|-------------------|---------|----------|-----------------------------------------------------|
+| `id`              | TEXT    |          | UUID (PK)                                           |
+| `parent_group_id` | TEXT    | ●        | 親グループID（NULL でルート扱い）                  |
+| `content`         | TEXT    |          | JSON 文字列。`{ name }` を保持                      |
+| `display_order`   | INTEGER |          | 表示順序                                            |
+| `group_type`      | TEXT    |          | `album` (エピソード格納可) / `folder` (サブグループ専用) |
+| `updated_at`      | TEXT    |          | 最終更新時刻 (ISO 8601)                             |
+| `deleted_at`      | TEXT    | ●        | 削除時刻 (ISO 8601)。NULL なら未削除                |
 
 ### 2.2. `episodes` テーブル
 エピソード（音声コンテンツとスクリプトのセット）を管理する。
 
-| カラム名        | 型          | NULL許容 | 説明                               |
-|-----------------|-------------|----------|------------------------------------|
-| `id`            | INTEGER     |          | PRIMARY KEY, AUTOINCREMENT         |
-| `episode_group_id` | INTEGER  |          | `episode_groups.id`への外部キー    |
-| `display_order` | INTEGER     |          | グループ内でのエピソードの表示順序 |
-| `title`         | TEXT        |          | エピソードのタイトル               |
-| `media_path`    | TEXT        |          | メディアファイルのパス             |
-| `learning_language` | TEXT    |          | 学習ターゲット言語 (例: 'English') |
-| `explanation_language` | TEXT  |          | 説明言語 (例: 'Japanese')        |
-| `created_at`    | TEXT        |          | 作成日時 (ISO 8601)                |
-| `updated_at`    | TEXT        |          | 更新日時 (ISO 8601)                |
+| カラム名             | 型   | NULL許容 | 説明                                                                   |
+|----------------------|------|----------|------------------------------------------------------------------------|
+| `id`                 | TEXT |          | UUID (PK)                                                             |
+| `episode_group_id`   | TEXT |          | 論理的に `episode_groups.id` を参照                                   |
+| `content`            | TEXT |          | JSON 文字列。`{ title, mediaPath, learningLanguage, explanationLanguage }` |
+| `updated_at`         | TEXT |          | 最終更新時刻 (ISO 8601)                                               |
+| `deleted_at`         | TEXT | ●        | 削除時刻 (ISO 8601)。NULL なら未削除                                  |
 
-### 2.3. `dialogues` テーブル
-スクリプト内の各セリフを管理する。
+### 2.3. `subtitle_lines` テーブル（旧 `dialogues`）
+スクリプト内の各セリフを管理する。`sequence_number` は startTimeMs 順の 1 始まり連番。
 
-| カラム名          | 型          | NULL許容 | 説明                               |
-|-------------------|-------------|----------|------------------------------------|
-| `id`              | INTEGER     |          | PRIMARY KEY, AUTOINCREMENT         |
-| `episode_id`      | INTEGER     |          | `episodes.id`への外部キー          |
-| `start_time_ms`   | INTEGER     |          | セリフの開始時間（ミリ秒）         |
-| `end_time_ms`     | INTEGER     | ●        | セリフの終了時間（ミリ秒）         |
-| `original_text`   | TEXT        |          | スクリプトから取り込んだ元のテキスト |
-| `corrected_text`  | TEXT        | ●        | ユーザーが修正した後のテキスト     |
-| `translation`     | TEXT        | ●        | LLMが生成した翻訳                  |
-| `explanation`     | TEXT        | ●        | LLMが生成した翻訳の解説            |
-| `sentence`        | TEXT        | ●        | LLMが抽出した文                    |
-| `deleted_at`      | TEXT        | ●        | 削除日時 (ISO 8601), NULLの場合は未削除 |
+| カラム名            | 型      | NULL許容 | 説明                                                                                  |
+|---------------------|---------|----------|---------------------------------------------------------------------------------------|
+| `id`                | TEXT    |          | UUID (PK)                                                                            |
+| `episode_id`        | TEXT    |          | 論理的に `episodes.id` を参照                                                       |
+| `sequence_number`   | INTEGER |          | セリフ順。startTimeMs 昇順で 1 始まり                                               |
+| `content`           | TEXT    |          | JSON 文字列。`{ startTimeMs, endTimeMs, originalText, correctedText, translation, explanation, sentence, hidden }` |
+| `updated_at`        | TEXT    |          | 最終更新時刻 (ISO 8601)                                                              |
+| `deleted_at`        | TEXT    | ●        | 削除時刻 (ISO 8601)。NULL なら未削除                                                 |
+
+`hidden` は論理的な非表示フラグで、`deleted_at` とは別に管理する（`deleted_at` が設定された行は復元不可の削除扱い）。
 
 ### 2.4. `sentence_cards` テーブル
-Sentence Miningによって作成されたカードを管理する。
+Sentence Mining で生成されたカードを管理する。
 
-| カラム名        | 型          | NULL許容 | 説明                               |
-|-----------------|-------------|----------|------------------------------------|
-| `id`            | INTEGER     |          | PRIMARY KEY, AUTOINCREMENT         |
-| `dialogue_id`   | INTEGER     |          | `dialogues.id`への外部キー         |
-| `part_of_speech`| TEXT        |          | 品詞                         |
-| `expression`    | TEXT        |          | 抽出対象の単語/イディオム          |
-| `sentence`      | TEXT        |          | 抽出対象を含むセンテンス全体（該当箇所を強調）       |
-| `contextual_definition`    | TEXT        |          | LLMによって生成された文脈上の意味    |
-| `core_meaning`    | TEXT        |          | LLMによって生成された核となる意味    |
-| `status`        | TEXT        |          | `active` (学習中), `suspended` (保留), `cache` (LLM解析結果のキャッシュ) などの状態 |
-| `created_at`    | TEXT        |          | 作成日時 (ISO 8601)                |
+| カラム名            | 型   | NULL許容 | 説明                                                                                  |
+|---------------------|------|----------|---------------------------------------------------------------------------------------|
+| `id`                | TEXT |          | UUID (PK)                                                                            |
+| `subtitle_line_id`  | TEXT |          | 論理的に `subtitle_lines.id` を参照                                                 |
+| `content`           | TEXT |          | JSON 文字列。`{ partOfSpeech, expression, sentence, contextualDefinition, coreMeaning, createdAt }` |
+| `status`            | TEXT |          | `active` / `suspended` / `cache` などの状態                                          |
+| `updated_at`        | TEXT |          | 最終更新時刻 (ISO 8601)                                                              |
+| `deleted_at`        | TEXT | ●        | 削除時刻 (ISO 8601)。NULL なら未削除                                                 |
 
 ---
 
