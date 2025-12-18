@@ -36,9 +36,9 @@
 
   // --- State ---
   let isLoading = $derived(analysisResult === null);
-  let selectedItemIds: number[] = $state([]);
+  let selectedItemIds: string[] = $state([]);
 
-  function handleCheckboxChange(itemId: number) {
+  function handleCheckboxChange(itemId: string) {
     // チェックボックスの選択状態を更新
     if (selectedItemIds.includes(itemId)) {
       selectedItemIds = selectedItemIds.filter((id) => id !== itemId);

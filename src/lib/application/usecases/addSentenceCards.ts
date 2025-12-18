@@ -4,7 +4,7 @@ import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenc
  * 選択されたキャッシュ済みのカードをアクティブにするユースケース
  * @param selectedCardIds アクティブにするカードのID配列
  */
-export async function addSentenceCards(selectedCardIds: readonly number[]): Promise<void> {
+export async function addSentenceCards(selectedCardIds: readonly string[]): Promise<void> {
   console.info(`Activating mining cards: ${selectedCardIds.join(', ')}`);
   try {
     await sentenceCardRepository.activateCachedCards(selectedCardIds);

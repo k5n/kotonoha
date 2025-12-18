@@ -4,7 +4,7 @@
 export type SentenceCardStatus = 'active' | 'suspended' | 'cache';
 
 export type SentenceCard = {
-  readonly id: number;
+  readonly id: string;
   readonly subtitleLineId: string;
   readonly partOfSpeech: string;
   readonly expression: string;

@@ -136,15 +136,12 @@ CREATE TABLE subtitle_lines (
     deleted_at TEXT DEFAULT NULL
 );
 CREATE TABLE sentence_cards (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,
     subtitle_line_id TEXT NOT NULL,
-    part_of_speech TEXT NOT NULL,
-    expression TEXT NOT NULL,
-    sentence TEXT NOT NULL,
-    contextual_definition TEXT NOT NULL,
-    core_meaning TEXT NOT NULL,
+    content TEXT NOT NULL,
     status TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT DEFAULT NULL
 );
 `;
 

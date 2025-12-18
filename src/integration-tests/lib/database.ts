@@ -1,5 +1,6 @@
 import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
 import Database from '@tauri-apps/plugin-sql';
+import { v4 as uuidV4 } from 'uuid';
 
 export const DATABASE_URL = 'dummy';
 
@@ -9,16 +10,10 @@ export async function clearDatabase(): Promise<void> {
   await db.execute('DELETE FROM subtitle_lines');
   await db.execute('DELETE FROM episodes');
   await db.execute('DELETE FROM episode_groups');
-  await db.execute(
-    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','subtitle_lines','sentence_cards')"
-  );
 }
 
 function generateId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-  return `id-${Math.random().toString(16).slice(2)}`;
+  return uuidV4();
 }
 
 export async function insertEpisodeGroup(params: {
@@ -142,28 +137,34 @@ export async function insertSubtitleLine(params: {
 
 export async function getSentenceCards(subtitleLineId: string): Promise<SentenceCard[]> {
   type SentenceCardRow = {
-    id: number;
+    id: string;
     subtitle_line_id: string;
-    part_of_speech: string;
-    expression: string;
-    sentence: string;
-    contextual_definition: string;
-    core_meaning: string;
+    content: string;
     status: 'active' | 'suspended' | 'cache';
-    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
   };
 
   function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
+    const content = JSON.parse(row.content) as {
+      partOfSpeech?: string;
+      expression?: string;
+      sentence?: string;
+      contextualDefinition?: string;
+      coreMeaning?: string;
+      createdAt?: string;
+    };
+    const createdAt = content.createdAt ?? row.updated_at;
     return {
       id: row.id,
       subtitleLineId: row.subtitle_line_id,
-      partOfSpeech: row.part_of_speech,
-      expression: row.expression,
-      sentence: row.sentence,
-      contextualDefinition: row.contextual_definition,
-      coreMeaning: row.core_meaning,
+      partOfSpeech: content.partOfSpeech ?? '',
+      expression: content.expression ?? '',
+      sentence: content.sentence ?? '',
+      contextualDefinition: content.contextualDefinition ?? '',
+      coreMeaning: content.coreMeaning ?? '',
       status: row.status,
-      createdAt: new Date(row.created_at),
+      createdAt: new Date(createdAt),
     };
   }
   const db = new Database(DATABASE_URL);
@@ -183,7 +184,7 @@ export async function insertSentenceCard(params: {
   partOfSpeech?: string;
   status?: 'active' | 'cache';
   createdAt?: string;
-}): Promise<number> {
+}): Promise<string> {
   const {
     subtitleLineId,
     expression,
@@ -196,21 +197,19 @@ export async function insertSentenceCard(params: {
   } = params;
 
   const db = new Database(DATABASE_URL);
+  const id = generateId();
+  const content = JSON.stringify({
+    partOfSpeech,
+    expression,
+    sentence,
+    contextualDefinition,
+    coreMeaning,
+    createdAt,
+  });
   await db.execute(
-    `INSERT INTO sentence_cards (subtitle_line_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      subtitleLineId,
-      partOfSpeech,
-      expression,
-      sentence,
-      contextualDefinition,
-      coreMeaning,
-      status,
-      createdAt,
-    ]
+    `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at, deleted_at)
+     VALUES (?, ?, ?, ?, ?, NULL)`,
+    [id, subtitleLineId, content, status, createdAt]
   );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
+  return id;
 }

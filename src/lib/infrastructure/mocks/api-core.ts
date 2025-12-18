@@ -1,18 +1,17 @@
 // Mock implementation of @tauri-apps/api/core for browser mode
 
-import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
 import type { AtomicSubtitleLine } from '$lib/domain/entities/subtitleLine';
 import { type DownloadProgress, type TtsProgress } from '$lib/domain/entities/ttsEvent';
+import type { LlmAnalysisResult } from '../contracts/llmAnalysisResult';
 import { BaseDirectory, writeFile } from './plugin-fs';
 
-const mockSentenceMiningResult: SentenceAnalysisResult = {
+const mockLlmAnalysisResult: LlmAnalysisResult = {
   sentence: "I had to pull an all-nighter to get it done, but it's almost there.",
   translation: 'それを終わらせるために徹夜しなければなりませんでしたが、もうほとんど出来ています。',
   explanation:
     "この文は、2つの節が接続詞 'but' で繋がれた構造をしています。前半の 'I had to pull an all-nighter to get it done' は、「～するために徹夜しなければならなかった」という意味です。'had to' は義務を表し、'to get it done' は目的を表す不定詞句です。'pull an all-nighter' が「徹夜する」という重要なイディオムです。後半の 'it's almost there' は「もうすぐだ」「ゴールは近い」という意味の口語表現で、ここではレポートの完成が間近であることを示しています。これらを組み合わせることで、全体の意味が形成されます。",
   items: [
     {
-      id: 1,
       expression: 'pull an all-nighter',
       partOfSpeech: '慣用句',
       contextualDefinition: '徹夜する',
@@ -22,7 +21,6 @@ const mockSentenceMiningResult: SentenceAnalysisResult = {
       status: 'active',
     },
     {
-      id: 2,
       expression: 'get something done',
       partOfSpeech: '表現',
       contextualDefinition: '～を終わらせる、完成させる',
@@ -32,7 +30,6 @@ const mockSentenceMiningResult: SentenceAnalysisResult = {
       status: 'active',
     },
     {
-      id: 3,
       expression: 'almost there',
       partOfSpeech: '表現',
       contextualDefinition: 'もうほとんど出来ている、完成間近である',
@@ -329,7 +326,7 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
     case 'analyze_sentence_with_llm':
       return new Promise<T>((resolve) => {
         setTimeout(() => {
-          resolve(mockSentenceMiningResult as T);
+          resolve(mockLlmAnalysisResult as T);
         }, 2000);
       });
     case 'fetch_youtube_subtitle':

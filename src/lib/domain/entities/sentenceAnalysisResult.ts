@@ -1,7 +1,7 @@
 import type { SentenceCardStatus } from '$lib/domain/entities/sentenceCard';
 
 export type SentenceAnalysisItem = {
-  id: number; // sentence_cards.id
+  id: string;
   expression: string;
   partOfSpeech: string;
   contextualDefinition: string;

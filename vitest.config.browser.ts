@@ -37,6 +37,7 @@ export default defineProject({
     },
   },
   server: {
+    host: '127.0.0.1',
     watch: {
       ignored: ['**/src-tauri/**'],
     },

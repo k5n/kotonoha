@@ -3,7 +3,7 @@ import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import { audioInfoCacheStore } from '$lib/application/stores/audioInfoCacheStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelte';
-import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
+import type { LlmAnalysisResult } from '$lib/infrastructure/contracts/llmAnalysisResult';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event, type UnlistenFn } from '@tauri-apps/api/event';
@@ -36,13 +36,12 @@ vi.mock('$app/navigation', () => ({
   invalidateAll: vi.fn(),
 }));
 
-const DEFAULT_ANALYZE_SENTENCE_RESPONSE: SentenceAnalysisResult = {
+const DEFAULT_ANALYZE_SENTENCE_RESPONSE: LlmAnalysisResult = {
   sentence: 'Analyzed sentence from LLM.',
   translation: 'LLM translation result',
   explanation: 'LLM explanation result',
   items: [
     {
-      id: 0,
       expression: 'LLM Expression A',
       partOfSpeech: 'noun',
       contextualDefinition: 'Context from LLM result A',
@@ -51,7 +50,6 @@ const DEFAULT_ANALYZE_SENTENCE_RESPONSE: SentenceAnalysisResult = {
       status: 'cache',
     },
     {
-      id: 0,
       expression: 'LLM Expression B',
       partOfSpeech: 'verb',
       contextualDefinition: 'Context from LLM result B',
