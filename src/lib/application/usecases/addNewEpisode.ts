@@ -4,12 +4,13 @@ import type { YoutubeMetadata } from '$lib/domain/entities/youtubeMetadata';
 import { generateEpisodeFilenames } from '$lib/domain/services/generateEpisodeFilenames';
 import { parseScriptToSubtitleLines } from '$lib/domain/services/parseScriptToSubtitleLines';
 import { extractYoutubeVideoId } from '$lib/domain/services/youtubeUrlValidator';
-import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { fileRepository } from '$lib/infrastructure/repositories/fileRepository';
+import { subtitleLineRepository } from '$lib/infrastructure/repositories/subtitleLineRepository';
 import { youtubeRepository } from '$lib/infrastructure/repositories/youtubeRepository';
 import { assert, assertNotNull, assertNotUndefined } from '$lib/utils/assertion';
 import { bcp47ToLanguageName } from '$lib/utils/language';
+import { v4 as uuidV4 } from 'uuid';
 
 export type YoutubeEpisodeAddPayload = {
   readonly source: 'youtube';
@@ -32,7 +33,7 @@ export type EpisodeAddPayload = FileBasedEpisodeAddPayload | YoutubeEpisodeAddPa
  * ファイルから新しいエピソードを追加するためのパラメータ
  */
 interface AddNewEpisodeFromFilesParams {
-  episodeGroupId: number;
+  episodeGroupId: string;
   displayOrder: number;
   title: string;
   mediaFilePath: string;
@@ -98,6 +99,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
     const mediaPath = await fileRepository.saveAudioFile(audioFilePath, uuid, audioFilename);
     const scriptContent = await fileRepository.readTextFileByAbsolutePath(scriptFilePath);
     const episode = await episodeRepository.addEpisode({
+      id: uuid,
       episodeGroupId,
       displayOrder,
       title,
@@ -126,7 +128,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
       }
 
       // NOTE: 本当はトランザクションでepisodeと一緒に入れるべきだけど・・・。実装の楽さを優先した。
-      await dialogueRepository.bulkInsertDialogues(episode.id, subtitleLines);
+      await subtitleLineRepository.bulkInsertSubtitleLines(episode.id, subtitleLines);
     } catch (err) {
       await episodeRepository.deleteEpisode(episode.id);
       throw err;
@@ -139,7 +141,7 @@ async function addNewEpisodeFromFiles(params: AddNewEpisodeFromFilesParams): Pro
 }
 
 interface AddNewYoutubeEpisodeParams {
-  episodeGroupId: number;
+  episodeGroupId: string;
   displayOrder: number;
   youtubeMetadata: YoutubeMetadata;
 }
@@ -160,6 +162,7 @@ async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<vo
     language,
   });
   const episode = await episodeRepository.addEpisode({
+    id: uuidV4(),
     episodeGroupId,
     displayOrder,
     title,
@@ -173,7 +176,7 @@ async function addYoutubeEpisode(params: AddNewYoutubeEpisodeParams): Promise<vo
       ...subtitleLine,
       episodeId: episode.id,
     }));
-    await dialogueRepository.bulkInsertDialogues(episode.id, subtitleLines);
+    await subtitleLineRepository.bulkInsertSubtitleLines(episode.id, subtitleLines);
   } catch (err) {
     episodeRepository.deleteEpisode(episode.id);
     throw err;
@@ -199,7 +202,7 @@ function calculateMaxDisplayOrder(episodes: readonly Episode[]): number {
  */
 export async function addNewEpisode(
   payload: EpisodeAddPayload,
-  episodeGroupId: number,
+  episodeGroupId: string,
   existingEpisodes: readonly Episode[]
 ): Promise<void> {
   console.info(`Adding episode for group ${episodeGroupId}`);

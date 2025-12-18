@@ -38,19 +38,17 @@
   let isProcessingMining = $state(false);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let canMine = $derived(data.isApiKeySet || false);
-  let showDeleted = $state(false);
+  let showHidden = $state(false);
 
   // Delete confirmation
   let isConfirmModalOpen = $state(false);
-  let subtitleLineIdToDelete: number | null = $state(null);
+  let subtitleLineIdToDelete: string | null = $state(null);
 
   // --- Derived State ---
   const filteredSubtitleLines = $derived(
-    (data.subtitleLines ?? []).filter((d) => showDeleted || !d.deletedAt)
+    (data.subtitleLines ?? []).filter((d) => showHidden || !d.hidden)
   );
-  const hasDeletedSubtitleLines = $derived(
-    data.subtitleLines?.some((d) => d.deletedAt !== null) ?? false
-  );
+  const hasDeletedSubtitleLines = $derived(data.subtitleLines?.some((d) => d.hidden) ?? false);
   const mediaPlayer = $derived(data.mediaPlayer);
 
   onMount(() => {
@@ -71,12 +69,12 @@
   }
 
   function handleCardClick(card: SentenceCard) {
-    const subtitleLine = data.subtitleLines?.find((d) => d.id === card.dialogueId);
+    const subtitleLine = data.subtitleLines?.find((d) => d.id === card.subtitleLineId);
     if (subtitleLine) {
       mediaPlayer?.seek(subtitleLine.startTimeMs);
     } else {
       console.error(
-        `Script segment not found for sentence card: ${card.id}, subtitleLineId: ${card.dialogueId}`
+        `Script segment not found for sentence card: ${card.id}, subtitleLineId: ${card.subtitleLineId}`
       );
     }
   }
@@ -124,7 +122,7 @@
   }
 
   async function handleSaveSubtitleLine(details: {
-    subtitleLineId: number;
+    subtitleLineId: string;
     correctedText: string;
   }) {
     const { subtitleLineId, correctedText } = details;
@@ -133,11 +131,11 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Error updating script segment: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.updateDialogueFailed');
+      errorMessage = t('episodeDetailPage.errors.updateSubtitleLineFailed');
     }
   }
 
-  function handleDeleteRequest(subtitleLineId: number) {
+  function handleDeleteRequest(subtitleLineId: string) {
     subtitleLineIdToDelete = subtitleLineId;
     isConfirmModalOpen = true;
   }
@@ -150,20 +148,20 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Error soft deleting script segment: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.deleteDialogueFailed');
+      errorMessage = t('episodeDetailPage.errors.deleteSubtitleLineFailed');
     } finally {
       isConfirmModalOpen = false;
       subtitleLineIdToDelete = null;
     }
   }
 
-  async function handleUndoDelete(subtitleLineId: number) {
+  async function handleUndoDelete(subtitleLineId: string) {
     try {
       await undoSoftDeleteSubtitleLine(subtitleLineId);
       await invalidateAll();
     } catch (err) {
       console.error(`Error undoing soft delete for script segment: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.undoDeleteDialogueFailed');
+      errorMessage = t('episodeDetailPage.errors.undoDeleteSubtitleLineFailed');
     }
   }
 </script>
@@ -229,7 +227,7 @@
               {t('episodeDetailPage.scriptTitle')}
             </Heading>
             {#if hasDeletedSubtitleLines}
-              <Checkbox bind:checked={showDeleted}>{t('episodeDetailPage.showDeleted')}</Checkbox>
+              <Checkbox bind:checked={showHidden}>{t('episodeDetailPage.showDeleted')}</Checkbox>
             {/if}
           </div>
           <TranscriptViewer

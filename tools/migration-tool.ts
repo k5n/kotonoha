@@ -51,12 +51,6 @@ type SentenceCardRow = {
   created_at: string;
 };
 
-type IdMaps = {
-  episodeGroup: Map<number, string>;
-  episode: Map<number, string>;
-  dialogue: Map<number, string>;
-};
-
 function parseArgs() {
   const [oldDbPath, newDbPath] = process.argv.slice(2);
   if (!oldDbPath || !newDbPath) {
@@ -135,17 +129,19 @@ function createNewSchema(db: DatabaseType) {
 
 function loadEpisodeGroups(db: DatabaseType): EpisodeGroupRow[] {
   return db
-    .prepare<[], EpisodeGroupRow>(
-      `SELECT id, name, display_order, parent_group_id, group_type FROM episode_groups ORDER BY id`
-    )
+    .prepare<
+      [],
+      EpisodeGroupRow
+    >(`SELECT id, name, display_order, parent_group_id, group_type FROM episode_groups ORDER BY id`)
     .all();
 }
 
 function loadEpisodes(db: DatabaseType): EpisodeRow[] {
   return db
-    .prepare<[], EpisodeRow>(
-      `SELECT id, episode_group_id, display_order, title, media_path, learning_language, explanation_language, updated_at FROM episodes ORDER BY id`
-    )
+    .prepare<
+      [],
+      EpisodeRow
+    >(`SELECT id, episode_group_id, display_order, title, media_path, learning_language, explanation_language, updated_at FROM episodes ORDER BY id`)
     .all();
 }
 
@@ -174,7 +170,9 @@ function deriveEpisodeIdFromMediaPath(mediaPath: string): string {
   const segments = mediaPath.split(/[\\/]+/).filter((s) => s.length > 0);
   const candidate = segments[1];
   if (!candidate) {
-    throw new Error(`Cannot derive episode id from media_path (needs 2nd segment UUID): ${mediaPath}`);
+    throw new Error(
+      `Cannot derive episode id from media_path (needs 2nd segment UUID): ${mediaPath}`
+    );
   }
   return candidate;
 }
@@ -195,7 +193,8 @@ function mapEpisodeGroups(rows: EpisodeGroupRow[], now: string) {
   // 2nd pass: create records with mapped parent ids
   const records = rows.map((row) => {
     const id = map.get(row.id)!;
-    const parent_group_id = row.parent_group_id !== null ? map.get(row.parent_group_id) ?? null : null;
+    const parent_group_id =
+      row.parent_group_id !== null ? (map.get(row.parent_group_id) ?? null) : null;
     const content = JSON.stringify({ name: row.name });
     return {
       id,
@@ -331,7 +330,10 @@ function mapSentenceCards(rows: SentenceCardRow[], dialogueMap: Map<number, stri
   return { records, skipped };
 }
 
-function insertEpisodeGroups(db: DatabaseType, records: ReturnType<typeof mapEpisodeGroups>['records']) {
+function insertEpisodeGroups(
+  db: DatabaseType,
+  records: ReturnType<typeof mapEpisodeGroups>['records']
+) {
   const stmt = db.prepare(
     `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at, deleted_at)
      VALUES (@id, @parent_group_id, @content, @display_order, @group_type, @updated_at, @deleted_at)`
@@ -411,8 +413,16 @@ async function main() {
     const sentenceCards = loadSentenceCards(oldDb);
 
     const { records: groupRecords, map: episodeGroupMap } = mapEpisodeGroups(episodeGroups, now);
-    const { records: episodeRecords, map: episodeMap } = mapEpisodes(episodes, episodeGroupMap, now);
-    const { records: subtitleRecords, map: dialogueMap } = mapSubtitleLines(dialogues, episodeMap, now);
+    const { records: episodeRecords, map: episodeMap } = mapEpisodes(
+      episodes,
+      episodeGroupMap,
+      now
+    );
+    const { records: subtitleRecords, map: dialogueMap } = mapSubtitleLines(
+      dialogues,
+      episodeMap,
+      now
+    );
     const { records: cardRecords, skipped } = mapSentenceCards(sentenceCards, dialogueMap, now);
 
     insertEpisodeGroups(newDb, groupRecords);

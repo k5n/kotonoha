@@ -3,12 +3,12 @@ import { groupPathStore } from '$lib/application/stores/groupPathStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
-import Database from '@tauri-apps/plugin-sql';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
+import { clearDatabase, insertEpisodeGroup } from './lib/database';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitForFadeTransition } from './lib/utils';
 
@@ -25,35 +25,6 @@ vi.mock('$app/navigation', () => ({
   goto: vi.fn(),
   invalidateAll: vi.fn().mockResolvedValue(undefined),
 }));
-
-const DATABASE_URL = 'dummy';
-
-async function clearDatabase(): Promise<void> {
-  const db = new Database(DATABASE_URL);
-  await db.execute('DELETE FROM sentence_cards');
-  await db.execute('DELETE FROM dialogues');
-  await db.execute('DELETE FROM episodes');
-  await db.execute('DELETE FROM episode_groups');
-  await db.execute(
-    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','dialogues','sentence_cards')"
-  );
-}
-
-async function insertEpisodeGroup(params: {
-  name: string;
-  groupType?: 'album' | 'folder';
-  displayOrder?: number;
-  parentId?: number | null;
-}): Promise<number> {
-  const { name, groupType = 'album', displayOrder = 1, parentId = null } = params;
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    'INSERT INTO episode_groups (name, parent_group_id, group_type, display_order) VALUES (?, ?, ?, ?)',
-    [name, parentId, groupType, displayOrder]
-  );
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
 
 async function loadPageData(groupId: string): Promise<PageData> {
   return (await load({ params: { groupId } } as never)) as PageData;

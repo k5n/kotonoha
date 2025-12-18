@@ -9,7 +9,7 @@
     currentGroup: EpisodeGroup | null; // The group being moved
     availableParentGroups: readonly EpisodeGroup[]; // Hierarchical list of available parents
     onClose: () => void;
-    onSubmit: (_newParentId: number | null) => void;
+    onSubmit: (_newParentId: string | null) => void;
   };
   let {
     show,
@@ -20,7 +20,7 @@
     onSubmit,
   }: Props = $props();
 
-  let selectedParentId = $state<number | null>(null);
+  let selectedParentId = $state<string | null>(null);
   let errorMessage = $state('');
 
   function handleSubmit() {
@@ -44,7 +44,7 @@
 
   // Helper to render hierarchical options with indentation
   function renderGroupOptions(groups: readonly EpisodeGroup[], level: number = 0) {
-    let options: { value: number | null; name: string }[] = [];
+    let options: { value: string | null; name: string }[] = [];
     const indent = '　'.repeat(level); // Japanese full-width space for indentation
 
     for (const group of groups) {

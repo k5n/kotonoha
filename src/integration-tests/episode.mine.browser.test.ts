@@ -3,16 +3,23 @@ import { apiKeyStore } from '$lib/application/stores/apiKeyStore.svelte';
 import { audioInfoCacheStore } from '$lib/application/stores/audioInfoCacheStore.svelte';
 import { i18nStore } from '$lib/application/stores/i18n.svelte';
 import { mediaPlayerStore } from '$lib/application/stores/mediaPlayerStore.svelte';
-import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
+import type { LlmAnalysisResult } from '$lib/infrastructure/contracts/llmAnalysisResult';
 import mockDatabase from '$lib/infrastructure/mocks/plugin-sql';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event, type UnlistenFn } from '@tauri-apps/api/event';
-import Database from '@tauri-apps/plugin-sql';
 import { load as storeLoad } from '@tauri-apps/plugin-store';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode/[id]/$types';
 import { load } from '../routes/episode/[id]/+page';
+import {
+  clearDatabase,
+  getSentenceCards,
+  insertEpisode,
+  insertEpisodeGroup,
+  insertSentenceCard,
+  insertSubtitleLine,
+} from './lib/database';
 import Component from './lib/EpisodePageWrapper.svelte';
 import { createMockStore } from './lib/mockFactories';
 import { outputCoverage } from './lib/outputCoverage';
@@ -29,15 +36,12 @@ vi.mock('$app/navigation', () => ({
   invalidateAll: vi.fn(),
 }));
 
-const DATABASE_URL = 'dummy';
-
-const DEFAULT_ANALYZE_SENTENCE_RESPONSE: SentenceAnalysisResult = {
+const DEFAULT_ANALYZE_SENTENCE_RESPONSE: LlmAnalysisResult = {
   sentence: 'Analyzed sentence from LLM.',
   translation: 'LLM translation result',
   explanation: 'LLM explanation result',
   items: [
     {
-      id: 0,
       expression: 'LLM Expression A',
       partOfSpeech: 'noun',
       contextualDefinition: 'Context from LLM result A',
@@ -46,7 +50,6 @@ const DEFAULT_ANALYZE_SENTENCE_RESPONSE: SentenceAnalysisResult = {
       status: 'cache',
     },
     {
-      id: 0,
       expression: 'LLM Expression B',
       partOfSpeech: 'verb',
       contextualDefinition: 'Context from LLM result B',
@@ -86,137 +89,6 @@ async function defaultInvokeMock(command: string, args?: unknown): Promise<unkno
     return payload?.positionMs ?? null;
   }
   throw new Error(`Unhandled Tauri command: ${command as string}`);
-}
-
-async function clearDatabase(): Promise<void> {
-  const db = new Database(DATABASE_URL);
-  await db.execute('DELETE FROM sentence_cards');
-  await db.execute('DELETE FROM dialogues');
-  await db.execute('DELETE FROM episodes');
-  await db.execute('DELETE FROM episode_groups');
-  await db.execute(
-    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','dialogues','sentence_cards')"
-  );
-}
-
-async function insertEpisodeGroup(params: {
-  name: string;
-  groupType?: 'album' | 'folder';
-  displayOrder?: number;
-  parentId?: number | null;
-}): Promise<number> {
-  const { name, groupType = 'album', displayOrder = 1, parentId = null } = params;
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    'INSERT INTO episode_groups (name, parent_group_id, group_type, display_order) VALUES (?, ?, ?, ?)',
-    [name, parentId, groupType, displayOrder]
-  );
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-async function insertEpisode(params: {
-  episodeGroupId: number;
-  title: string;
-  mediaPath: string;
-  displayOrder?: number;
-}): Promise<number> {
-  const { episodeGroupId, title, mediaPath, displayOrder = 1 } = params;
-  const now = new Date().toISOString();
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO episodes (episode_group_id, display_order, title, media_path, learning_language, explanation_language, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [episodeGroupId, displayOrder, title, mediaPath, 'ja', 'en', now, now]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-async function insertDialogue(params: {
-  episodeId: number;
-  startTimeMs: number;
-  endTimeMs: number | null;
-  originalText: string;
-  correctedText?: string | null;
-  translation?: string | null;
-  explanation?: string | null;
-  sentence?: string | null;
-  deletedAt?: string | null;
-}): Promise<number> {
-  const {
-    episodeId,
-    startTimeMs,
-    endTimeMs,
-    originalText,
-    correctedText = null,
-    translation = null,
-    explanation = null,
-    sentence = null,
-    deletedAt = null,
-  } = params;
-
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO dialogues (episode_id, start_time_ms, end_time_ms, original_text, corrected_text, translation, explanation, sentence, deleted_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      episodeId,
-      startTimeMs,
-      endTimeMs,
-      originalText,
-      correctedText,
-      translation,
-      explanation,
-      sentence,
-      deletedAt,
-    ]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-async function insertSentenceCard(params: {
-  dialogueId: number;
-  expression: string;
-  sentence: string;
-  contextualDefinition: string;
-  coreMeaning: string;
-  partOfSpeech?: string;
-  status?: 'active' | 'cache';
-  createdAt?: string;
-}): Promise<number> {
-  const {
-    dialogueId,
-    expression,
-    sentence,
-    contextualDefinition,
-    coreMeaning,
-    partOfSpeech = 'noun',
-    status = 'active',
-    createdAt = new Date().toISOString(),
-  } = params;
-
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO sentence_cards (dialogue_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      dialogueId,
-      partOfSpeech,
-      expression,
-      sentence,
-      contextualDefinition,
-      coreMeaning,
-      status,
-      createdAt,
-    ]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
 }
 
 async function loadPageData(id: string): Promise<PageData> {
@@ -294,7 +166,7 @@ test('success: mining flow with cache', async () => {
     mediaPath: 'media/story.mp3',
   });
 
-  const dialogueId = await insertDialogue({
+  const subtitleLineId = await insertSubtitleLine({
     episodeId,
     startTimeMs: 0,
     endTimeMs: 5000,
@@ -305,7 +177,7 @@ test('success: mining flow with cache', async () => {
     sentence: 'Hello world from Kotonoha!',
   });
 
-  await insertDialogue({
+  await insertSubtitleLine({
     episodeId,
     startTimeMs: 6000,
     endTimeMs: 11000,
@@ -313,7 +185,7 @@ test('success: mining flow with cache', async () => {
   });
 
   const sentenceCardId01 = await insertSentenceCard({
-    dialogueId,
+    subtitleLineId,
     expression: 'Kotonoha Card Expression',
     sentence: 'Hello world from Kotonoha!',
     contextualDefinition: 'Name of the app in the greeting.',
@@ -323,7 +195,7 @@ test('success: mining flow with cache', async () => {
   });
 
   const sentenceCardId02 = await insertSentenceCard({
-    dialogueId,
+    subtitleLineId,
     expression: 'Cache Me',
     sentence: 'Hello world from Kotonoha!',
     contextualDefinition: 'Cached contextual definition.',
@@ -399,7 +271,7 @@ test('success: mining flow without cache calls LLM and caches results', async ()
     mediaPath: 'media/story.mp3',
   });
 
-  await insertDialogue({
+  const subtitleLineId = await insertSubtitleLine({
     episodeId,
     startTimeMs: 0,
     endTimeMs: 5000,
@@ -410,7 +282,7 @@ test('success: mining flow without cache calls LLM and caches results', async ()
     sentence: null,
   });
 
-  await insertDialogue({
+  await insertSubtitleLine({
     episodeId,
     startTimeMs: 6000,
     endTimeMs: 11000,
@@ -449,8 +321,12 @@ test('success: mining flow without cache calls LLM and caches results', async ()
     })
   );
 
-  const firstItem = page.getByTestId('analysis-result-item-1');
-  const secondItem = page.getByTestId('analysis-result-item-2');
+  const sentenceCards = await getSentenceCards(subtitleLineId);
+  expect(sentenceCards).toHaveLength(2);
+  const cardIds = sentenceCards.map((card) => card.id);
+
+  const firstItem = page.getByTestId(`analysis-result-item-${cardIds[0]}`);
+  const secondItem = page.getByTestId(`analysis-result-item-${cardIds[1]}`);
   await expect.element(firstItem.getByText('LLM Expression A')).toBeInTheDocument();
   await expect.element(firstItem.getByText('Context from LLM result A')).toBeInTheDocument();
   await expect.element(firstItem.getByText('Core meaning A')).toBeInTheDocument();

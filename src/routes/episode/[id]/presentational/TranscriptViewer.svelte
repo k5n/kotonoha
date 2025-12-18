@@ -21,9 +21,9 @@
     canMine: boolean; // マイニング可能かどうか
     onSeek: (_time: number) => void;
     onMine: (_subtitleLine: SubtitleLine, _context: readonly SubtitleLine[]) => void;
-    onSave: (details: { subtitleLineId: number; correctedText: string }) => void;
-    onDelete: (_subtitleLineId: number) => void;
-    onUndoDelete: (_subtitleLineId: number) => void;
+    onSave: (details: { subtitleLineId: string; correctedText: string }) => void;
+    onDelete: (_subtitleLineId: string) => void;
+    onUndoDelete: (_subtitleLineId: string) => void;
     contextBefore?: number; // 前の件数
     contextAfter?: number; // 後ろの件数
   }
@@ -45,7 +45,7 @@
   let previousActiveIndex = $state(-1);
   let isScrolling = $state(false);
   let scrollTimeout: ReturnType<typeof setTimeout> | undefined = $state();
-  let editingSubtitleLineId: number | null = $state(null);
+  let editingSubtitleLineId: string | null = $state(null);
   let editText = $state('');
   let editingOriginalText = $state('');
 
@@ -109,7 +109,7 @@
   }
 
   function handleDblClick(subtitleLine: SubtitleLine) {
-    if (subtitleLine.deletedAt) return;
+    if (subtitleLine.hidden) return;
     editingSubtitleLineId = subtitleLine.id;
     editText = subtitleLine.correctedText || subtitleLine.originalText;
     editingOriginalText = subtitleLine.originalText;
@@ -165,23 +165,23 @@
         class="flex items-center justify-between rounded-lg p-3 transition-all"
         class:bg-primary-100={index === activeIndex &&
           editingSubtitleLineId === null &&
-          !subtitleLine.deletedAt}
+          !subtitleLine.hidden}
         class:dark:bg-primary-900={index === activeIndex &&
           editingSubtitleLineId === null &&
-          !subtitleLine.deletedAt}
+          !subtitleLine.hidden}
         class:bg-gray-200={index === previousActiveIndex &&
           index !== activeIndex &&
           editingSubtitleLineId === null &&
-          !subtitleLine.deletedAt}
+          !subtitleLine.hidden}
         class:dark:bg-gray-700={index === previousActiveIndex &&
           index !== activeIndex &&
           editingSubtitleLineId === null &&
-          !subtitleLine.deletedAt}
+          !subtitleLine.hidden}
         class:ring-2={editingSubtitleLineId === subtitleLine.id}
         class:ring-primary-500={editingSubtitleLineId === subtitleLine.id}
-        class:bg-red-100={!!subtitleLine.deletedAt}
-        class:dark:bg-red-900={!!subtitleLine.deletedAt}
-        class:dark:bg-opacity-50={!!subtitleLine.deletedAt}
+        class:bg-red-100={!!subtitleLine.hidden}
+        class:dark:bg-red-900={!!subtitleLine.hidden}
+        class:dark:bg-opacity-50={!!subtitleLine.hidden}
       >
         {#if editingSubtitleLineId === subtitleLine.id}
           <div class="flex w-full flex-col space-y-2">
@@ -218,21 +218,21 @@
             role="button"
             tabindex="0"
             class="flex-1"
-            class:cursor-pointer={!subtitleLine.deletedAt}
-            class:text-primary-800={index === activeIndex && !subtitleLine.deletedAt}
-            class:dark:text-primary-200={index === activeIndex && !subtitleLine.deletedAt}
-            class:line-through={!!subtitleLine.deletedAt}
-            class:text-gray-500={!!subtitleLine.deletedAt}
-            onclick={() => !subtitleLine.deletedAt && onSeek(subtitleLine.startTimeMs)}
+            class:cursor-pointer={!subtitleLine.hidden}
+            class:text-primary-800={index === activeIndex && !subtitleLine.hidden}
+            class:dark:text-primary-200={index === activeIndex && !subtitleLine.hidden}
+            class:line-through={!!subtitleLine.hidden}
+            class:text-gray-500={!!subtitleLine.hidden}
+            onclick={() => !subtitleLine.hidden && onSeek(subtitleLine.startTimeMs)}
             ondblclick={() => handleDblClick(subtitleLine)}
             onkeydown={(e) =>
-              e.key === 'Enter' && !subtitleLine.deletedAt && onSeek(subtitleLine.startTimeMs)}
+              e.key === 'Enter' && !subtitleLine.hidden && onSeek(subtitleLine.startTimeMs)}
           >
             {subtitleLine.correctedText || subtitleLine.originalText}
           </div>
 
           <div class="w-24 text-right">
-            {#if subtitleLine.deletedAt}
+            {#if subtitleLine.hidden}
               <Button size="xs" color="alternative" onclick={() => onUndoDelete(subtitleLine.id)}>
                 <RedoOutline class="me-1 h-4 w-4" />
                 {t('common.undo')}

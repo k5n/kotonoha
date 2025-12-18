@@ -1,5 +1,10 @@
-import type { SentenceAnalysisResult } from '$lib/domain/entities/sentenceAnalysisResult';
+import type {
+  SentenceAnalysisItem,
+  SentenceAnalysisResult,
+} from '$lib/domain/entities/sentenceAnalysisResult';
 import { invoke } from '@tauri-apps/api/core';
+import { v4 as uuidV4 } from 'uuid';
+import type { LlmAnalysisResult } from '../contracts/llmAnalysisResult';
 
 export const llmRepository = {
   async analyzeSentence(
@@ -13,7 +18,7 @@ export const llmRepository = {
       `Analyzing sentence: ${targetSentence}, ${learningLanguage} => ${explanationLanguage}, context: ${context}`
     );
 
-    const response = await invoke<SentenceAnalysisResult>('analyze_sentence_with_llm', {
+    const response = await invoke<LlmAnalysisResult>('analyze_sentence_with_llm', {
       apiKey,
       learningLanguage,
       explanationLanguage,
@@ -22,6 +27,15 @@ export const llmRepository = {
     });
     console.debug(`LLM analysis result: ${JSON.stringify(response)}`);
 
-    return response;
+    // Generate IDs for items
+    const itemsWithIds: SentenceAnalysisItem[] = response.items.map((item) => ({
+      ...item,
+      id: uuidV4(),
+    }));
+
+    return {
+      ...response,
+      items: itemsWithIds,
+    };
   },
 };

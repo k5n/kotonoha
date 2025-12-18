@@ -1,6 +1,6 @@
 import { parseVttToSubtitleLines } from './parseVttToSubtitleLines';
 
-describe('parseVttToDialogues', () => {
+describe('parseVttToSubtitleLines', () => {
   it('should correctly parse a simple VTT content', () => {
     const vttContent = `WEBVTT
 
@@ -10,17 +10,17 @@ Hello, world.
 00:04.000 --> 00:06.000
 This is a test.
 `;
-    const episodeId = 1;
+    const episodeId = 'episode-1';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(2);
     expect(subtitleLines[0]).toEqual({
-      episodeId: 1,
+      episodeId: episodeId,
       startTimeMs: 1000,
       endTimeMs: 3000,
       originalText: 'Hello, world.',
     });
     expect(subtitleLines[1]).toEqual({
-      episodeId: 1,
+      episodeId: episodeId,
       startTimeMs: 4000,
       endTimeMs: 6000,
       originalText: 'This is a test.',
@@ -28,7 +28,7 @@ This is a test.
     expect(warnings.length).toBe(0);
   });
 
-  it('should handle multi-line dialogue', () => {
+  it('should handle multi-line subtitleLine', () => {
     const vttContent = `WEBVTT
 
 00:01.000 --> 00:03.000
@@ -40,7 +40,7 @@ Line A
 Line B
 Line C
 `;
-    const episodeId = 2;
+    const episodeId = 'episode-2';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(2);
     expect(subtitleLines[0].originalText).toBe('Line 1\nLine 2');
@@ -50,7 +50,7 @@ Line C
 
   it('should handle empty VTT content', () => {
     const vttContent = '';
-    const episodeId = 3;
+    const episodeId = 'episode-3';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(0);
     expect(warnings.length).toBe(1);
@@ -59,7 +59,7 @@ Line C
 
   it('should handle VTT content with only header', () => {
     const vttContent = 'WEBVTT';
-    const episodeId = 4;
+    const episodeId = 'episode-4';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(0);
     expect(warnings.length).toBe(0);
@@ -76,7 +76,7 @@ Malformed block
 00:07.000 --> 00:09.000
 Another valid block
 `;
-    const episodeId = 5;
+    const episodeId = 'episode-5';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(2);
     expect(subtitleLines[0].originalText).toBe('Valid block');
@@ -91,7 +91,7 @@ Another valid block
 01:02:03.456 --> 01:02:04.789
 Hello.
 `;
-    const episodeId = 6;
+    const episodeId = 'episode-6';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(1);
     expect(subtitleLines[0].startTimeMs).toBe(3723456);
@@ -110,7 +110,7 @@ CUE-2
 00:04.000 --> 00:06.000
 This is a test.
 `;
-    const episodeId = 7;
+    const episodeId = 'episode-7';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(2);
     expect(subtitleLines[0].originalText).toBe('Hello, world.');
@@ -133,7 +133,7 @@ block
 00:04.000 --> 00:06.000
 This is a test.
 `;
-    const episodeId = 8;
+    const episodeId = 'episode-8';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(2);
     expect(warnings.length).toBe(0);
@@ -145,7 +145,7 @@ This is a test.
 00:01.000 --> 00:03.000 align:start position:10%
 Hello, world.
 `;
-    const episodeId = 9;
+    const episodeId = 'episode-9';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(1);
     expect(subtitleLines[0].startTimeMs).toBe(1000);
@@ -155,7 +155,7 @@ Hello, world.
 
   it('should handle VTT content with \r\n newlines', () => {
     const vttContent = `WEBVTT\r\n\r\n00:01.000 --> 00:03.000\r\nHello, world.\r\n\r\n00:04.000 --> 00:06.000\r\nThis is a test.\r\n`;
-    const episodeId = 10;
+    const episodeId = 'episode-10';
     const { subtitleLines, warnings } = parseVttToSubtitleLines(vttContent, episodeId);
     expect(subtitleLines.length).toBe(2);
     expect(warnings.length).toBe(0);

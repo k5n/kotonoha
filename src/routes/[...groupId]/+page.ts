@@ -2,11 +2,11 @@ import { fetchEpisodeGroups } from '$lib/application/usecases/fetchEpisodeGroups
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
-  const groupId = params.groupId; // パス文字列（例: "2/3"）
+  const groupId = params.groupId; // group path （ex: "<uuid>/<uuid>"）
   const groupIdParam = groupId ? groupId.split('/') : [];
   const parentId =
     Array.isArray(groupIdParam) && groupIdParam.length > 0
-      ? Number(groupIdParam[groupIdParam.length - 1])
+      ? groupIdParam[groupIdParam.length - 1]
       : null;
   try {
     const groups = await fetchEpisodeGroups(parentId);

@@ -1,7 +1,4 @@
-import type {
-  NewSubtitleLine,
-  SubtitleLineParseResult,
-} from '$lib/domain/entities/subtitleLine';
+import type { NewSubtitleLine, SubtitleLineParseResult } from '$lib/domain/entities/subtitleLine';
 import type { TsvConfig } from '$lib/domain/entities/tsvConfig';
 
 /**
@@ -53,7 +50,7 @@ function parseTimeToMilliseconds(timeStr: string): number | null {
  */
 export function parseTsvToSubtitleLines(
   tsvContent: string,
-  episodeId: number,
+  episodeId: string,
   config: TsvConfig
 ): SubtitleLineParseResult {
   const subtitleLines: NewSubtitleLine[] = [];

@@ -10,6 +10,7 @@ import { page, userEvent } from 'vitest/browser';
 import type { PageData } from '../routes/[...groupId]/$types';
 import { load } from '../routes/[...groupId]/+page';
 import Component from '../routes/[...groupId]/+page.svelte';
+import { clearDatabase, DATABASE_URL, insertEpisode, insertEpisodeGroup } from './lib/database';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitForFadeTransition } from './lib/utils';
 
@@ -23,79 +24,32 @@ vi.mock('$app/navigation', () => ({
 }));
 vi.mock('@tauri-apps/plugin-fs', () => pluginFs);
 
-const DATABASE_URL = 'dummy';
 const ROOT_GROUP_PARAM = '';
 
 type GroupRow = {
-  id: number;
-  name: string;
+  id: string;
+  content: string;
   display_order: number;
-  parent_group_id: number | null;
+  parent_group_id: string | null;
   group_type: 'album' | 'folder';
+  updated_at: string;
+  deleted_at: string | null;
 };
-
-async function clearDatabase(): Promise<void> {
-  const db = new Database(DATABASE_URL);
-  await db.execute('DELETE FROM sentence_cards');
-  await db.execute('DELETE FROM dialogues');
-  await db.execute('DELETE FROM episodes');
-  await db.execute('DELETE FROM episode_groups');
-  await db.execute(
-    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','dialogues','sentence_cards')"
-  );
-}
-
-async function insertEpisodeGroup(params: {
-  name: string;
-  groupType?: 'album' | 'folder';
-  displayOrder?: number;
-  parentId?: number | null;
-}): Promise<number> {
-  const { name, groupType = 'folder', displayOrder = 1, parentId = null } = params;
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    'INSERT INTO episode_groups (name, parent_group_id, group_type, display_order) VALUES (?, ?, ?, ?)',
-    [name, parentId, groupType, displayOrder]
-  );
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-async function insertEpisode(params: {
-  episodeGroupId: number;
-  title: string;
-  displayOrder?: number;
-}): Promise<number> {
-  const { episodeGroupId, title, displayOrder = 1 } = params;
-  const now = new Date().toISOString();
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO episodes (episode_group_id, display_order, title, media_path, learning_language, explanation_language, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      episodeGroupId,
-      displayOrder,
-      title,
-      `media/${title.toLowerCase().replace(/\s+/g, '-')}/full.mp3`,
-      'ja',
-      'en',
-      now,
-      now,
-    ]
-  );
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
 
 async function selectAllGroups(): Promise<readonly GroupRow[]> {
   const db = new Database(DATABASE_URL);
   return await db.select<GroupRow[]>(
-    'SELECT id, name, display_order, parent_group_id, group_type FROM episode_groups ORDER BY id'
+    `SELECT id, parent_group_id, display_order, group_type, content, updated_at, deleted_at
+     FROM episode_groups
+     ORDER BY display_order, id`
   );
 }
 
 async function countEpisodes(): Promise<number> {
   const db = new Database(DATABASE_URL);
+  // const rows = await db.select<{ count: number }[]>(
+  //   'SELECT COUNT(*) AS count FROM episodes WHERE deleted_at IS NULL'
+  // );
   const rows = await db.select<{ count: number }[]>('SELECT COUNT(*) AS count FROM episodes');
   return rows[0]?.count ?? 0;
 }
@@ -236,11 +190,11 @@ test('interaction: user can add a new album group via the modal', async () => {
 
   const groups = await selectAllGroups();
   expect(groups).toHaveLength(1);
-  expect(groups[0]).toMatchObject({
-    name: 'New Audio Album',
-    group_type: 'album',
-    parent_group_id: null,
-  });
+  const [group] = groups;
+  expect(group.group_type).toBe('album');
+  expect(group.parent_group_id).toBeNull();
+  expect(group.deleted_at).toBeNull();
+  expect(JSON.parse(group.content)).toMatchObject({ name: 'New Audio Album' });
 
   await page.screenshot();
 });
@@ -272,7 +226,7 @@ test('interaction: user can rename an existing group', async () => {
   await expect.element(page.getByText('Updated Reading Club')).toBeInTheDocument();
 
   const groups = await selectAllGroups();
-  expect(groups[0]?.name).toBe('Updated Reading Club');
+  expect(JSON.parse(groups[0]?.content ?? '{}').name).toBe('Updated Reading Club');
 
   await page.screenshot();
 });
@@ -301,7 +255,9 @@ test('interaction: user can delete a group and its episodes', async () => {
   await expect.element(page.getByText('No Groups')).toBeInTheDocument();
 
   const groups = await selectAllGroups();
-  expect(groups).toHaveLength(0);
+  expect(groups).toHaveLength(1);
+  expect(groups[0].deleted_at).not.toBeNull();
+  expect(JSON.parse(groups[0].content).name).toBe(groupName);
   expect(await countEpisodes()).toBe(0);
 
   await page.screenshot();
@@ -387,7 +343,7 @@ test('interaction error: shows error when renaming group fails', async () => {
 
   const executeSpy = vi.spyOn(Database.prototype, 'execute');
   executeSpy.mockImplementation(async (sql: string) => {
-    if (sql.includes('UPDATE episode_groups SET name')) {
+    if (sql.includes('UPDATE episode_groups SET content')) {
       throw new Error('Database update failed');
     }
     return { lastInsertId: 0, rowsAffected: 0 };
@@ -416,7 +372,7 @@ test('interaction error: shows error when renaming group fails', async () => {
       .not.toBeInTheDocument();
 
     const groups = await selectAllGroups();
-    expect(groups[0]?.name).toBe(initialName);
+    expect(JSON.parse(groups[0]?.content ?? '{}').name).toBe(initialName);
 
     await page.screenshot();
   } finally {
@@ -431,7 +387,7 @@ test('interaction error: shows error when deleting group fails', async () => {
 
   const executeSpy = vi.spyOn(Database.prototype, 'execute');
   executeSpy.mockImplementation(async (sql: string) => {
-    if (sql.includes('DELETE FROM episode_groups')) {
+    if (sql.includes('UPDATE episode_groups SET deleted_at')) {
       throw new Error('Database delete failed');
     }
     return { lastInsertId: 0, rowsAffected: 0 };
@@ -457,6 +413,7 @@ test('interaction error: shows error when deleting group fails', async () => {
 
     const groups = await selectAllGroups();
     expect(groups).toHaveLength(1);
+    expect(groups[0]?.deleted_at).toBeNull();
     expect(await countEpisodes()).toBe(1);
 
     await page.screenshot();
@@ -570,7 +527,7 @@ test('breadcrumb: clicking intermediate group navigates to that group', async ()
     name: 'Child Folder',
     groupType: 'folder',
     displayOrder: 1,
-    parentId: parentId,
+    parentId,
     children: [],
   });
 

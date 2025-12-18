@@ -13,7 +13,7 @@ export async function moveEpisodeGroup({
   newParentId,
 }: {
   group: EpisodeGroup;
-  newParentId: number | null;
+  newParentId: string | null;
 }): Promise<void> {
   // 移動先が自分自身の場合、エラー
   if (group.id === newParentId) {

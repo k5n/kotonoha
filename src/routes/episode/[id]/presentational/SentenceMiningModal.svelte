@@ -36,9 +36,9 @@
 
   // --- State ---
   let isLoading = $derived(analysisResult === null);
-  let selectedItemIds: number[] = $state([]);
+  let selectedItemIds: string[] = $state([]);
 
-  function handleCheckboxChange(itemId: number) {
+  function handleCheckboxChange(itemId: string) {
     // チェックボックスの選択状態を更新
     if (selectedItemIds.includes(itemId)) {
       selectedItemIds = selectedItemIds.filter((id) => id !== itemId);
@@ -83,7 +83,7 @@
           <!-- Use LLM-generated sentence when available -->
           {analysisResult.sentence}
         {:else if subtitleLine}
-          <!-- Fallback to original dialogue text if no LLM sentence -->
+          <!-- Fallback to original subtitleLine text if no LLM sentence -->
           {subtitleLine.correctedText || subtitleLine.originalText}
         {/if}
       </p>

@@ -8,19 +8,20 @@ export type AtomicSubtitleLine = {
  * 新規作成時に必要なプロパティをまとめた型。
  */
 export type NewSubtitleLine = {
-  readonly episodeId: number;
+  readonly episodeId: string;
 } & AtomicSubtitleLine;
 
 /**
  * スクリプト内の個々のセリフを表すエンティティ。
  */
 export type SubtitleLine = NewSubtitleLine & {
-  readonly id: number;
+  readonly id: string;
+  readonly sequenceNumber: number;
   readonly correctedText: string | null;
   readonly translation: string | null;
   readonly explanation: string | null;
   readonly sentence: string | null;
-  readonly deletedAt: string | null;
+  readonly hidden: boolean;
 };
 
 export type SubtitleLineParseResult = {

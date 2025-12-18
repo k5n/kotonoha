@@ -3,7 +3,7 @@ import type { EpisodeGroup } from '$lib/domain/entities/episodeGroup';
 import { episodeGroupRepository } from '$lib/infrastructure/repositories/episodeGroupRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 
-export async function fetchEpisodes(groupId: number): Promise<[EpisodeGroup, readonly Episode[]]> {
+export async function fetchEpisodes(groupId: string): Promise<[EpisodeGroup, readonly Episode[]]> {
   console.info(`Fetching episodes for group ${groupId}...`);
   const episodeGroup = await episodeGroupRepository.getGroupById(groupId);
   if (!episodeGroup) {

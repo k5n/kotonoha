@@ -1,13 +1,14 @@
 import { parseSswtToSubtitleLines } from './parseSswtToSubtitleLines';
 
-describe('parseSswtToDialogues', () => {
+describe('parseSswtToSubtitleLines', () => {
+  const episodeId = 'episode-1';
   it('should parse a single generic SSWT line correctly', () => {
     const sswtContent = '[00:00:01.000 -> 00:00:02.500] This is a test sentence.';
-    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, 1);
+    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, episodeId);
 
     expect(subtitleLines).toHaveLength(1);
     expect(subtitleLines[0]).toEqual({
-      episodeId: 1,
+      episodeId: episodeId,
       startTimeMs: 1000,
       endTimeMs: 2500,
       originalText: 'This is a test sentence.',
@@ -19,7 +20,7 @@ describe('parseSswtToDialogues', () => {
     const sswtContent = `[00:00:03.000 -> 00:00:05.000] Line one of the test.
 [00:00:05.500 -> 00:00:07.000] And here is line two.
 [00:00:07.100 -> 00:00:09.900] Finally, the third line.`;
-    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, 1);
+    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, episodeId);
 
     expect(subtitleLines).toHaveLength(3);
     expect(subtitleLines[0].originalText).toBe('Line one of the test.');
@@ -36,7 +37,7 @@ describe('parseSswtToDialogues', () => {
 
 This is an invalid line.
 [00:00:03.000 -> 00:00:04.000] Valid line B.`;
-    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, 1);
+    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, episodeId);
 
     expect(subtitleLines).toHaveLength(2);
     expect(subtitleLines[0].originalText).toBe('Valid line A.');
@@ -47,14 +48,14 @@ This is an invalid line.
 
   it('should return an empty array for empty content', () => {
     const sswtContent = '';
-    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, 1);
+    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, episodeId);
     expect(subtitleLines).toHaveLength(0);
     expect(warnings).toHaveLength(0);
   });
 
   it('should handle leading/trailing spaces in text correctly', () => {
     const sswtContent = '[00:00:01.000 -> 00:00:02.000]   Some text with spaces   ';
-    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, 1);
+    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, episodeId);
     expect(subtitleLines[0].originalText).toBe('Some text with spaces');
     expect(warnings).toHaveLength(0);
   });
@@ -63,7 +64,7 @@ This is an invalid line.
     const sswtContent = `This is not a valid SSWT line.
 Another invalid line.
 [00:00:01.000 -> 00:00:02.000] Valid line.`;
-    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, 1);
+    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, episodeId);
 
     expect(subtitleLines).toHaveLength(1);
     expect(subtitleLines[0].originalText).toBe('Valid line.');
@@ -74,7 +75,7 @@ Another invalid line.
 
   it('should return warnings for lines with invalid time format', () => {
     const sswtContent = '[00:00:60.002 -> 00:00:02.000] Invalid time line.';
-    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, 1);
+    const { subtitleLines, warnings } = parseSswtToSubtitleLines(sswtContent, episodeId);
 
     expect(subtitleLines).toHaveLength(0);
     expect(warnings).toHaveLength(1);

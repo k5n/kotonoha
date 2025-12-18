@@ -12,9 +12,17 @@ import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode/[id]/$types';
 import { load } from '../routes/episode/[id]/+page';
+import {
+  clearDatabase,
+  insertEpisode,
+  insertEpisodeGroup,
+  insertSentenceCard,
+  insertSubtitleLine,
+} from './lib/database';
 import Component from './lib/EpisodePageWrapper.svelte';
 import { createMockStore } from './lib/mockFactories';
 import { outputCoverage } from './lib/outputCoverage';
+import { waitForFadeTransition } from './lib/utils';
 
 import '$src/app.css';
 
@@ -26,8 +34,6 @@ vi.mock('$app/navigation', () => ({
   goto: vi.fn(),
   invalidateAll: vi.fn(),
 }));
-
-const DATABASE_URL = 'dummy';
 
 async function defaultInvokeMock(command: string, _args?: unknown): Promise<unknown> {
   if (command === 'get_env_prefix_command') {
@@ -45,138 +51,10 @@ async function defaultInvokeMock(command: string, _args?: unknown): Promise<unkn
   if (command === 'stop_audio') {
     return null;
   }
+  if (command === 'seek_audio') {
+    return null;
+  }
   throw new Error(`Unhandled Tauri command: ${command as string}`);
-}
-
-async function clearDatabase(): Promise<void> {
-  const db = new Database(DATABASE_URL);
-  await db.execute('DELETE FROM sentence_cards');
-  await db.execute('DELETE FROM dialogues');
-  await db.execute('DELETE FROM episodes');
-  await db.execute('DELETE FROM episode_groups');
-  await db.execute(
-    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','dialogues','sentence_cards')"
-  );
-}
-
-async function insertEpisodeGroup(params: {
-  name: string;
-  groupType?: 'album' | 'folder';
-  displayOrder?: number;
-  parentId?: number | null;
-}): Promise<number> {
-  const { name, groupType = 'album', displayOrder = 1, parentId = null } = params;
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    'INSERT INTO episode_groups (name, parent_group_id, group_type, display_order) VALUES (?, ?, ?, ?)',
-    [name, parentId, groupType, displayOrder]
-  );
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-async function insertEpisode(params: {
-  episodeGroupId: number;
-  title: string;
-  mediaPath: string;
-  displayOrder?: number;
-}): Promise<number> {
-  const { episodeGroupId, title, mediaPath, displayOrder = 1 } = params;
-  const now = new Date().toISOString();
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO episodes (episode_group_id, display_order, title, media_path, learning_language, explanation_language, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [episodeGroupId, displayOrder, title, mediaPath, 'ja', 'en', now, now]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-async function insertDialogue(params: {
-  episodeId: number;
-  startTimeMs: number;
-  endTimeMs: number | null;
-  originalText: string;
-  correctedText?: string | null;
-  translation?: string | null;
-  explanation?: string | null;
-  sentence?: string | null;
-  deletedAt?: string | null;
-}): Promise<number> {
-  const {
-    episodeId,
-    startTimeMs,
-    endTimeMs,
-    originalText,
-    correctedText = null,
-    translation = null,
-    explanation = null,
-    sentence = null,
-    deletedAt = null,
-  } = params;
-
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO dialogues (episode_id, start_time_ms, end_time_ms, original_text, corrected_text, translation, explanation, sentence, deleted_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      episodeId,
-      startTimeMs,
-      endTimeMs,
-      originalText,
-      correctedText,
-      translation,
-      explanation,
-      sentence,
-      deletedAt,
-    ]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-async function insertSentenceCard(params: {
-  dialogueId: number;
-  expression: string;
-  sentence: string;
-  contextualDefinition: string;
-  coreMeaning: string;
-  partOfSpeech?: string;
-  status?: 'active' | 'cache';
-  createdAt?: string;
-}): Promise<number> {
-  const {
-    dialogueId,
-    expression,
-    sentence,
-    contextualDefinition,
-    coreMeaning,
-    partOfSpeech = 'noun',
-    status = 'active',
-    createdAt = new Date().toISOString(),
-  } = params;
-
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO sentence_cards (dialogue_id, part_of_speech, expression, sentence, contextual_definition, core_meaning, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      dialogueId,
-      partOfSpeech,
-      expression,
-      sentence,
-      contextualDefinition,
-      coreMeaning,
-      status,
-      createdAt,
-    ]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
 }
 
 async function loadPageData(id: string): Promise<PageData> {
@@ -254,7 +132,7 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
     mediaPath: 'media/story.mp3',
   });
 
-  const dialogueId = await insertDialogue({
+  const subtitleLineId = await insertSubtitleLine({
     episodeId,
     startTimeMs: 0,
     endTimeMs: 5000,
@@ -265,7 +143,7 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
     sentence: 'Hello world from Kotonoha!',
   });
 
-  await insertDialogue({
+  await insertSubtitleLine({
     episodeId,
     startTimeMs: 6000,
     endTimeMs: 11000,
@@ -273,7 +151,7 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
   });
 
   await insertSentenceCard({
-    dialogueId,
+    subtitleLineId,
     expression: 'Kotonoha Card Expression',
     sentence: 'Hello world from Kotonoha!',
     contextualDefinition: 'Name of the app in the greeting.',
@@ -314,6 +192,105 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
 
   await expect.element(page.getByRole('button', { name: 'Mine' })).toBeEnabled();
 
+  await page.screenshot();
+});
+
+test('success: user can soft delete a subtitle line', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Story Album' });
+  const episodeId = await insertEpisode({
+    episodeGroupId: groupId,
+    title: 'Episode Story',
+    mediaPath: 'media/story.mp3',
+  });
+
+  await insertSubtitleLine({
+    episodeId,
+    startTimeMs: 0,
+    endTimeMs: 5000,
+    originalText: 'Hello world from Kotonoha.',
+    correctedText: 'Hello world from Kotonoha!',
+  });
+
+  await insertSubtitleLine({
+    episodeId,
+    startTimeMs: 6000,
+    endTimeMs: 11000,
+    originalText: 'Second line follows shortly after.',
+  });
+
+  const { data } = await setupPage(String(episodeId));
+
+  expect(data.errorKey).toBeNull();
+
+  await page.screenshot();
+  await expect.element(page.getByText('Hello world from Kotonoha!')).toBeInTheDocument();
+  await expect.element(page.getByText('Second line follows shortly after.')).toBeInTheDocument();
+
+  await page.getByText('Hello world from Kotonoha!').dblClick();
+  await expect.element(page.getByRole('button', { name: 'Delete' })).toBeVisible();
+  await page.screenshot();
+  await page.getByRole('button', { name: 'Delete' }).click();
+
+  await expect.element(page.getByTestId('confirm-delete-button')).toBeVisible();
+  await waitForFadeTransition();
+  await page.screenshot();
+  await page.getByTestId('confirm-delete-button').click();
+
+  await waitForFadeTransition();
+  await expect.element(page.getByText('Hello world from Kotonoha!')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Second line follows shortly after.')).toBeInTheDocument();
+
+  await expect.element(page.getByLabelText('Show Deleted')).toBeVisible();
+  await page.screenshot();
+});
+
+test('success: user can view deleted subtitles and undo deletion', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Story Album' });
+  const episodeId = await insertEpisode({
+    episodeGroupId: groupId,
+    title: 'Episode Story',
+    mediaPath: 'media/story.mp3',
+  });
+
+  await insertSubtitleLine({
+    episodeId,
+    startTimeMs: 0,
+    endTimeMs: 5000,
+    originalText: 'Hello world from Kotonoha.',
+    correctedText: 'Hello world from Kotonoha!',
+  });
+
+  await insertSubtitleLine({
+    episodeId,
+    startTimeMs: 6000,
+    endTimeMs: 11000,
+    originalText: 'Second line follows shortly after.',
+  });
+
+  const { data } = await setupPage(String(episodeId));
+
+  expect(data.errorKey).toBeNull();
+
+  // delete first line
+  await page.getByText('Hello world from Kotonoha!').dblClick();
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await waitForFadeTransition();
+  await page.getByTestId('confirm-delete-button').click();
+  await waitForFadeTransition();
+
+  // show deleted and undo
+  const showDeletedCheckbox = page.getByLabelText('Show Deleted');
+  await expect.element(showDeletedCheckbox).toBeVisible();
+  await page.screenshot();
+  await showDeletedCheckbox.click();
+
+  await expect.element(page.getByRole('button', { name: 'Undo' })).toBeVisible();
+  await page.screenshot();
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await waitForFadeTransition();
+
+  await expect.element(page.getByText('Hello world from Kotonoha!')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
   await page.screenshot();
 });
 
@@ -382,7 +359,7 @@ test('success: renders YouTube player when episode is from YouTube', async () =>
       mediaPath: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     });
 
-    await insertDialogue({
+    await insertSubtitleLine({
       episodeId,
       startTimeMs: 0,
       endTimeMs: 4000,

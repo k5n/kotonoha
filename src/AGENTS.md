@@ -130,14 +130,15 @@ See: [src-tauri/AGENTS.md](../src-tauri/AGENTS.md) for full details.
 
 ## Database overview
 
-- Tables:
-  - `episode_groups`: hierarchical groups (self-referential `parent_group_id` nullable). Key fields: `id` (PK), `name`, `display_order`, `parent_group_id`, `group_type` (`album`|`folder`). Root default group: name="Default", `group_type`=`album`.
-  - `episodes`: one row per episode (audio + transcript). Key fields: `id`, `episode_group_id` (FK), `display_order`, `title`, `media_path` (relative path under app data), `learning_language`, `explanation_language`, `created_at`, `updated_at`.
-  - `dialogues`: transcript lines. Key fields: `id`, `episode_id` (FK), `start_time_ms`, `end_time_ms` (nullable), `original_text`, `corrected_text` (nullable), `translation` (nullable), `explanation` (nullable), `sentence` (nullable), `deleted_at` (nullable).
-  - `sentence_cards`: results of sentence-mining. Key fields: `id`, `dialogue_id` (FK), `part_of_speech`, `expression`, `sentence`, `contextual_definition`, `core_meaning`, `status` (`active`|`suspended`|`cache`), `created_at`.
-- Note: types above are compact hints; timestamps use ISO 8601 strings. Use DB as single source of truth; front-end stores should be transient UI state only.
+- Tables
+  - `episode_groups`: hierarchical groups. Fields: `id` (UUID, PK), `parent_group_id` (nullable), `content` (JSON: `{ name }`), `display_order`, `group_type` (`album`|`folder`), `updated_at`, `deleted_at`.
+  - `episodes`: episodes (audio + transcript). Fields: `id` (UUID, PK), `episode_group_id`, `content` (JSON: `{ title, mediaPath, learningLanguage, explanationLanguage }`), `updated_at`, `deleted_at`.
+  - `subtitle_lines` (old `dialogues`): transcript lines. Fields: `id` (UUID, PK), `episode_id`, `sequence_number` (1-based order by startTimeMs), `content` (JSON: `{ startTimeMs, endTimeMs, originalText, correctedText, translation, explanation, sentence, hidden }`), `updated_at`, `deleted_at`.
+  - `sentence_cards`: sentence-mining results. Fields: `id` (UUID, PK), `subtitle_line_id`, `content` (JSON: `{ partOfSpeech, expression, sentence, contextualDefinition, coreMeaning, createdAt }`), `status` (`active`|`suspended`|`cache` etc.), `updated_at`, `deleted_at`.
+- Common rules: `id` is UUID string; timestamps are ISO 8601; `content` holds flexible JSON; no foreign key constraints; `deleted_at` NULL means active.
+- Use the DB as the single source of truth; front-end stores remain transient UI state only.
 
-See: [src-tauri/migrations/] for full DB schema details.
+See: `src-tauri/migrations/` for authoritative schema details.
 
 ## File & media storage policy
 

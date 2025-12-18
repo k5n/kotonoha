@@ -1,7 +1,4 @@
-import type {
-  NewSubtitleLine,
-  SubtitleLineParseResult,
-} from '$lib/domain/entities/subtitleLine';
+import type { NewSubtitleLine, SubtitleLineParseResult } from '$lib/domain/entities/subtitleLine';
 
 /**
  * Parses SRT content and converts it into an array of SubtitleLine objects.
@@ -12,7 +9,7 @@ import type {
  */
 export function parseSrtToSubtitleLines(
   srtContent: string,
-  episodeId: number
+  episodeId: string
 ): SubtitleLineParseResult {
   const subtitleLines: NewSubtitleLine[] = [];
   const warnings: string[] = [];

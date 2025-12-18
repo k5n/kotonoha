@@ -1,12 +1,12 @@
 import type { Episode } from '$lib/domain/entities/episode';
 import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
 import type { SubtitleLine } from '$lib/domain/entities/subtitleLine';
-import { dialogueRepository } from '$lib/infrastructure/repositories/dialogueRepository';
 import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepository';
 import { sentenceCardRepository } from '$lib/infrastructure/repositories/sentenceCardRepository';
+import { subtitleLineRepository } from '$lib/infrastructure/repositories/subtitleLineRepository';
 
 // エピソード詳細取得ユースケース
-export async function fetchEpisodeDetail(episodeId: number): Promise<{
+export async function fetchEpisodeDetail(episodeId: string): Promise<{
   episode: Episode;
   subtitleLines: readonly SubtitleLine[];
   sentenceCards: readonly SentenceCard[];
@@ -17,7 +17,7 @@ export async function fetchEpisodeDetail(episodeId: number): Promise<{
     console.error(`Episode with ID ${episodeId} not found`);
     return null;
   }
-  const subtitleLines = await dialogueRepository.getDialoguesByEpisodeId(episodeId);
+  const subtitleLines = await subtitleLineRepository.getSubtitleLinesByEpisodeId(episodeId);
   const sentenceCards = await sentenceCardRepository.getSentenceCardsByEpisodeId(episodeId);
 
   return {

@@ -7,7 +7,7 @@ import type { AudioInfo } from '$lib/domain/entities/audioInfo';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
-  const episodeId = Number(params.id);
+  const episodeId = params.id;
   try {
     const result = await fetchEpisodeDetail(episodeId);
     if (!result) {

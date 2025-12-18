@@ -7,7 +7,7 @@ import { episodeGroupRepository } from '$lib/infrastructure/repositories/episode
  * @returns A promise that resolves to an array of available target groups.
  */
 export async function fetchAvailableTargetGroupsForEpisodeMove(
-  currentEpisodeGroupId: number
+  currentEpisodeGroupId: string
 ): Promise<readonly EpisodeGroup[]> {
   const albumGroups = await episodeGroupRepository.findAlbumGroups();
   return albumGroups.filter((group) => group.id !== currentEpisodeGroupId);

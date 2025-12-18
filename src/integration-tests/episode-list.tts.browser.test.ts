@@ -6,13 +6,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type Event, type UnlistenFn } from '@tauri-apps/api/event';
 import { open } from '@tauri-apps/plugin-dialog';
 import { fetch as httpFetch } from '@tauri-apps/plugin-http';
-import Database from '@tauri-apps/plugin-sql';
 import { tick } from 'svelte';
 import { render } from 'vitest-browser-svelte';
 import { page, userEvent } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
+import { clearDatabase, insertEpisodeGroup } from './lib/database';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitFor, waitForFadeTransition } from './lib/utils';
 
@@ -171,37 +171,8 @@ vi.mock('$app/navigation', () => ({
 }));
 
 // Constants
-const DATABASE_URL = 'dummy';
 const DOWNLOAD_WAIT_TIME_MS = 200;
 const TTS_WAIT_TIME_MS = 400;
-
-// Database utilities
-async function clearDatabase(): Promise<void> {
-  const db = new Database(DATABASE_URL);
-  await db.execute('DELETE FROM sentence_cards');
-  await db.execute('DELETE FROM dialogues');
-  await db.execute('DELETE FROM episodes');
-  await db.execute('DELETE FROM episode_groups');
-  await db.execute(
-    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','dialogues','sentence_cards')"
-  );
-}
-
-async function insertEpisodeGroup(params: {
-  name: string;
-  groupType?: 'album' | 'folder';
-  displayOrder?: number;
-  parentId?: number | null;
-}): Promise<number> {
-  const { name, groupType = 'album', displayOrder = 1, parentId = null } = params;
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    'INSERT INTO episode_groups (name, parent_group_id, group_type, display_order) VALUES (?, ?, ?, ?)',
-    [name, parentId, groupType, displayOrder]
-  );
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
 
 // Page setup utilities
 async function loadPageData(groupId: string): Promise<PageData> {

@@ -9,6 +9,7 @@ import { page } from 'vitest/browser';
 import type { PageData } from '../routes/episode-list/[groupId]/$types';
 import { load } from '../routes/episode-list/[groupId]/+page';
 import Component from '../routes/episode-list/[groupId]/+page.svelte';
+import { clearDatabase, getEpisodeTitle, insertEpisode, insertEpisodeGroup } from './lib/database';
 import { outputCoverage } from './lib/outputCoverage';
 import { waitForFadeTransition } from './lib/utils';
 
@@ -26,36 +27,7 @@ vi.mock('$app/navigation', () => ({
   invalidateAll: vi.fn().mockResolvedValue(undefined),
 }));
 
-const DATABASE_URL = 'dummy';
-
-async function clearDatabase(): Promise<void> {
-  const db = new Database(DATABASE_URL);
-  await db.execute('DELETE FROM sentence_cards');
-  await db.execute('DELETE FROM dialogues');
-  await db.execute('DELETE FROM episodes');
-  await db.execute('DELETE FROM episode_groups');
-  await db.execute(
-    "DELETE FROM sqlite_sequence WHERE name IN ('episode_groups','episodes','dialogues','sentence_cards')"
-  );
-}
-
-async function insertEpisodeGroup(params: {
-  name: string;
-  groupType?: 'album' | 'folder';
-  displayOrder?: number;
-  parentId?: number | null;
-}): Promise<number> {
-  const { name, groupType = 'album', displayOrder = 1, parentId = null } = params;
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    'INSERT INTO episode_groups (name, parent_group_id, group_type, display_order) VALUES (?, ?, ?, ?)',
-    [name, parentId, groupType, displayOrder]
-  );
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-function pushGroupToPath(groupId: number, name: string): void {
+function pushGroupToPath(groupId: string, name: string): void {
   groupPathStore.pushGroup({
     id: groupId,
     name,
@@ -64,32 +36,6 @@ function pushGroupToPath(groupId: number, name: string): void {
     displayOrder: 1,
     children: [],
   });
-}
-
-async function insertEpisode(params: {
-  episodeGroupId: number;
-  title: string;
-  displayOrder: number;
-}): Promise<number> {
-  const { episodeGroupId, title, displayOrder } = params;
-  const now = new Date().toISOString();
-  const db = new Database(DATABASE_URL);
-  await db.execute(
-    `INSERT INTO episodes (episode_group_id, display_order, title, media_path, learning_language, explanation_language, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [episodeGroupId, displayOrder, title, `media/${title}.mp3`, 'ja', 'en', now, now]
-  );
-
-  const rows = await db.select<{ id: number }[]>('SELECT last_insert_rowid() AS id');
-  return rows[0]?.id ?? 0;
-}
-
-async function getEpisodeTitle(episodeId: number): Promise<string | null> {
-  const db = new Database(DATABASE_URL);
-  const rows = await db.select<{ title: string }[]>('SELECT title FROM episodes WHERE id = ?', [
-    episodeId,
-  ]);
-  return rows[0]?.title ?? null;
 }
 
 async function openEpisodeActionsMenu(episodeId: string): Promise<void> {

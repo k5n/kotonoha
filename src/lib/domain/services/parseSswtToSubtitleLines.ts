@@ -1,7 +1,4 @@
-import type {
-  NewSubtitleLine,
-  SubtitleLineParseResult,
-} from '$lib/domain/entities/subtitleLine';
+import type { NewSubtitleLine, SubtitleLineParseResult } from '$lib/domain/entities/subtitleLine';
 
 const sswtLineRegex = /^\[(\d{2}:\d{2}:\d{2}\.\d{3}) -> (\d{2}:\d{2}:\d{2}\.\d{3})\]\s*(.*)$/;
 
@@ -38,7 +35,7 @@ function parseTimeToMs(timeString: string): number | null {
  */
 export function parseSswtToSubtitleLines(
   sswtContent: string,
-  episodeId: number
+  episodeId: string
 ): SubtitleLineParseResult {
   const subtitleLines: NewSubtitleLine[] = [];
   const warnings: string[] = [];

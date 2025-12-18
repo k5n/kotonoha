@@ -7,12 +7,12 @@ import type { EpisodeGroup } from '../entities/episodeGroup';
  * @returns 子孫グループのIDの配列（読み取り専用）
  */
 function findDescendantIds(
-  startGroupId: number,
+  startGroupId: string,
   allGroups: readonly EpisodeGroup[]
-): readonly number[] {
+): readonly string[] {
   // NOTE: 利用用途的に深くても１０〜２０階層程度なので、YAGNI/KISSの原則に従い、再帰的な実装でシンプルに実装。
   const children = allGroups.filter((group) => group.parentId === startGroupId);
-  let descendantIds: number[] = children.map((child) => child.id);
+  let descendantIds: string[] = children.map((child) => child.id);
 
   for (const child of children) {
     descendantIds = descendantIds.concat(findDescendantIds(child.id, allGroups));
