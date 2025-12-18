@@ -22,6 +22,7 @@ import {
 import Component from './lib/EpisodePageWrapper.svelte';
 import { createMockStore } from './lib/mockFactories';
 import { outputCoverage } from './lib/outputCoverage';
+import { waitForFadeTransition } from './lib/utils';
 
 import '$src/app.css';
 
@@ -48,6 +49,9 @@ async function defaultInvokeMock(command: string, _args?: unknown): Promise<unkn
     };
   }
   if (command === 'stop_audio') {
+    return null;
+  }
+  if (command === 'seek_audio') {
     return null;
   }
   throw new Error(`Unhandled Tauri command: ${command as string}`);
@@ -188,6 +192,105 @@ test('success: episode detail renders audio, transcript, cards, and mine button'
 
   await expect.element(page.getByRole('button', { name: 'Mine' })).toBeEnabled();
 
+  await page.screenshot();
+});
+
+test('success: user can soft delete a subtitle line', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Story Album' });
+  const episodeId = await insertEpisode({
+    episodeGroupId: groupId,
+    title: 'Episode Story',
+    mediaPath: 'media/story.mp3',
+  });
+
+  await insertSubtitleLine({
+    episodeId,
+    startTimeMs: 0,
+    endTimeMs: 5000,
+    originalText: 'Hello world from Kotonoha.',
+    correctedText: 'Hello world from Kotonoha!',
+  });
+
+  await insertSubtitleLine({
+    episodeId,
+    startTimeMs: 6000,
+    endTimeMs: 11000,
+    originalText: 'Second line follows shortly after.',
+  });
+
+  const { data } = await setupPage(String(episodeId));
+
+  expect(data.errorKey).toBeNull();
+
+  await page.screenshot();
+  await expect.element(page.getByText('Hello world from Kotonoha!')).toBeInTheDocument();
+  await expect.element(page.getByText('Second line follows shortly after.')).toBeInTheDocument();
+
+  await page.getByText('Hello world from Kotonoha!').dblClick();
+  await expect.element(page.getByRole('button', { name: 'Delete' })).toBeVisible();
+  await page.screenshot();
+  await page.getByRole('button', { name: 'Delete' }).click();
+
+  await expect.element(page.getByTestId('confirm-delete-button')).toBeVisible();
+  await waitForFadeTransition();
+  await page.screenshot();
+  await page.getByTestId('confirm-delete-button').click();
+
+  await waitForFadeTransition();
+  await expect.element(page.getByText('Hello world from Kotonoha!')).not.toBeInTheDocument();
+  await expect.element(page.getByText('Second line follows shortly after.')).toBeInTheDocument();
+
+  await expect.element(page.getByLabelText('Show Deleted')).toBeVisible();
+  await page.screenshot();
+});
+
+test('success: user can view deleted subtitles and undo deletion', async () => {
+  const groupId = await insertEpisodeGroup({ name: 'Story Album' });
+  const episodeId = await insertEpisode({
+    episodeGroupId: groupId,
+    title: 'Episode Story',
+    mediaPath: 'media/story.mp3',
+  });
+
+  await insertSubtitleLine({
+    episodeId,
+    startTimeMs: 0,
+    endTimeMs: 5000,
+    originalText: 'Hello world from Kotonoha.',
+    correctedText: 'Hello world from Kotonoha!',
+  });
+
+  await insertSubtitleLine({
+    episodeId,
+    startTimeMs: 6000,
+    endTimeMs: 11000,
+    originalText: 'Second line follows shortly after.',
+  });
+
+  const { data } = await setupPage(String(episodeId));
+
+  expect(data.errorKey).toBeNull();
+
+  // delete first line
+  await page.getByText('Hello world from Kotonoha!').dblClick();
+  await page.getByRole('button', { name: 'Delete' }).click();
+  await waitForFadeTransition();
+  await page.getByTestId('confirm-delete-button').click();
+  await waitForFadeTransition();
+
+  // show deleted and undo
+  const showDeletedCheckbox = page.getByLabelText('Show Deleted');
+  await expect.element(showDeletedCheckbox).toBeVisible();
+  await page.screenshot();
+  await showDeletedCheckbox.click();
+
+  await expect.element(page.getByRole('button', { name: 'Undo' })).toBeVisible();
+  await page.screenshot();
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await waitForFadeTransition();
+
+  await expect.element(page.getByText('Hello world from Kotonoha!')).toBeInTheDocument();
+  await expect.element(page.getByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
   await page.screenshot();
 });
 
