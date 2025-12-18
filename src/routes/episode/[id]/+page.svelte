@@ -38,7 +38,7 @@
   let isProcessingMining = $state(false);
   let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
   let canMine = $derived(data.isApiKeySet || false);
-  let showDeleted = $state(false);
+  let showHidden = $state(false);
 
   // Delete confirmation
   let isConfirmModalOpen = $state(false);
@@ -46,11 +46,9 @@
 
   // --- Derived State ---
   const filteredSubtitleLines = $derived(
-    (data.subtitleLines ?? []).filter((d) => showDeleted || !d.deletedAt)
+    (data.subtitleLines ?? []).filter((d) => showHidden || !d.hidden)
   );
-  const hasDeletedSubtitleLines = $derived(
-    data.subtitleLines?.some((d) => d.deletedAt !== null) ?? false
-  );
+  const hasDeletedSubtitleLines = $derived(data.subtitleLines?.some((d) => d.hidden) ?? false);
   const mediaPlayer = $derived(data.mediaPlayer);
 
   onMount(() => {
@@ -229,7 +227,7 @@
               {t('episodeDetailPage.scriptTitle')}
             </Heading>
             {#if hasDeletedSubtitleLines}
-              <Checkbox bind:checked={showDeleted}>{t('episodeDetailPage.showDeleted')}</Checkbox>
+              <Checkbox bind:checked={showHidden}>{t('episodeDetailPage.showDeleted')}</Checkbox>
             {/if}
           </div>
           <TranscriptViewer

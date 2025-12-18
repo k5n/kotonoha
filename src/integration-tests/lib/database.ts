@@ -87,7 +87,7 @@ export async function insertSubtitleLine(params: {
   explanation?: string | null;
   sentence?: string | null;
   sequenceNumber?: number;
-  deletedAt?: string | null;
+  hidden?: boolean;
 }): Promise<string> {
   const {
     episodeId,
@@ -99,7 +99,7 @@ export async function insertSubtitleLine(params: {
     explanation = null,
     sentence = null,
     sequenceNumber,
-    deletedAt = null,
+    hidden = false,
   } = params;
 
   const db = new Database(DATABASE_URL);
@@ -126,7 +126,7 @@ export async function insertSubtitleLine(params: {
         translation,
         explanation,
         sentence,
-        hidden: deletedAt,
+        hidden: hidden,
       }),
       now,
     ]

@@ -21,7 +21,7 @@ export type SubtitleLine = NewSubtitleLine & {
   readonly translation: string | null;
   readonly explanation: string | null;
   readonly sentence: string | null;
-  readonly deletedAt: string | null;
+  readonly hidden: boolean;
 };
 
 export type SubtitleLineParseResult = {

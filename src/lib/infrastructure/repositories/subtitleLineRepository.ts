@@ -20,7 +20,7 @@ type SubtitleLineContent = {
   translation?: string | null;
   explanation?: string | null;
   sentence?: string | null;
-  hidden?: string | null;
+  hidden?: boolean;
 };
 
 function parseSubtitleLineContent(raw: string): SubtitleLineContent | null {
@@ -44,7 +44,7 @@ function normalizeSubtitleLineContent(content: SubtitleLineContent): Required<Su
     translation: typeof content.translation === 'string' ? content.translation : null,
     explanation: typeof content.explanation === 'string' ? content.explanation : null,
     sentence: typeof content.sentence === 'string' ? content.sentence : null,
-    hidden: typeof content.hidden === 'string' ? content.hidden : null,
+    hidden: typeof content.hidden === 'boolean' ? content.hidden : false,
   };
 }
 
@@ -61,7 +61,7 @@ function mapRowToSubtitleLine(row: SubtitleLineRow): SubtitleLine {
     translation: content.translation,
     explanation: content.explanation,
     sentence: content.sentence,
-    deletedAt: content.hidden ?? row.deleted_at,
+    hidden: content.hidden,
   };
 }
 
@@ -97,16 +97,17 @@ async function updateSubtitleLineContent(
 export const subtitleLineRepository = {
   async getSubtitleLineById(subtitleLineId: string): Promise<SubtitleLine | null> {
     const db = new Database(await getDatabasePath());
-    const rows = await db.select<SubtitleLineRow[]>('SELECT * FROM subtitle_lines WHERE id = ?', [
-      subtitleLineId,
-    ]);
+    const rows = await db.select<SubtitleLineRow[]>(
+      'SELECT * FROM subtitle_lines WHERE id = ? AND deleted_at IS NULL',
+      [subtitleLineId]
+    );
     return rows.length > 0 ? mapRowToSubtitleLine(rows[0]) : null;
   },
 
   async getSubtitleLinesByEpisodeId(episodeId: string): Promise<readonly SubtitleLine[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<SubtitleLineRow[]>(
-      'SELECT * FROM subtitle_lines WHERE episode_id = ? ORDER BY sequence_number ASC',
+      'SELECT * FROM subtitle_lines WHERE episode_id = ? AND deleted_at IS NULL ORDER BY sequence_number ASC',
       [episodeId]
     );
     return rows.map(mapRowToSubtitleLine);
@@ -129,7 +130,7 @@ export const subtitleLineRepository = {
           translation: null,
           explanation: null,
           sentence: null,
-          hidden: null,
+          hidden: false,
         });
         return `('${uuidV4()}', '${escapeSqlString(episodeId)}', ${index + 1}, '${escapeSqlString(
           JSON.stringify(content)
@@ -159,7 +160,10 @@ export const subtitleLineRepository = {
 
   async deleteByEpisodeId(episodeId: string): Promise<void> {
     const db = new Database(await getDatabasePath());
-    await db.execute('DELETE FROM subtitle_lines WHERE episode_id = ?', [episodeId]);
+    await db.execute(
+      'UPDATE subtitle_lines SET deleted_at = ? WHERE episode_id = ? AND deleted_at IS NULL',
+      [new Date().toISOString(), episodeId]
+    );
   },
 
   async updateSubtitleLineText(
@@ -173,17 +177,16 @@ export const subtitleLineRepository = {
   },
 
   async softDeleteSubtitleLine(subtitleLineId: string): Promise<void> {
-    const now = new Date().toISOString();
     await updateSubtitleLineContent(subtitleLineId, (content) => ({
       ...content,
-      hidden: now,
+      hidden: true,
     }));
   },
 
   async undoSoftDeleteSubtitleLine(subtitleLineId: string): Promise<void> {
     await updateSubtitleLineContent(subtitleLineId, (content) => ({
       ...content,
-      hidden: null,
+      hidden: false,
     }));
   },
 };
