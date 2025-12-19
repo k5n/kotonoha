@@ -83,8 +83,28 @@ function openNewDatabase(dbPath: string): DatabaseType {
   return new Database(dbPath);
 }
 
+function formatTimestampForSql(date: Date): string {
+  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 function createNewSchema(db: DatabaseType) {
   const statements = [
+    // cSpell:words sqlx
+    `CREATE TABLE _sqlx_migrations (
+      version BIGINT PRIMARY KEY,
+      description TEXT NOT NULL,
+      installed_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      success BOOLEAN NOT NULL,
+      checksum BLOB NOT NULL,
+      execution_time BIGINT NOT NULL
+  );`,
     `CREATE TABLE episode_groups (
       id TEXT PRIMARY KEY,
       parent_group_id TEXT,
@@ -125,6 +145,36 @@ function createNewSchema(db: DatabaseType) {
     }
   });
   create();
+
+  // Insert the initial migration record into _sqlx_migrations.
+  // The user-provided checksum is stored as a blob and execution_time is set to 0.
+  const initialChecksumHex =
+    '98EBC1F080C1AEA6C5E31CE0B771F0B3861749B60D87009DEF7692C47EFECB3248BD52B5DDA0309E0C50E3BC206BD094';
+  const installedOn = formatTimestampForSql(new Date());
+  const insertStmt = db.prepare(
+    `INSERT INTO _sqlx_migrations (version, description, installed_on, success, checksum, execution_time)
+     VALUES (@version, @description, @installed_on, @success, @checksum, @execution_time)`
+  );
+  try {
+    insertStmt.run({
+      version: 1,
+      description: 'Create initial tables and insert default data',
+      installed_on: installedOn,
+      success: 1,
+      checksum: Buffer.from(initialChecksumHex, 'hex'),
+      execution_time: 0,
+    });
+  } catch (err) {
+    // If the insert fails due to primary key constraint (already present), ignore it.
+    // Re-throw other unexpected errors.
+    const sqliteErr = err as { code?: string };
+    if (
+      sqliteErr.code !== 'SQLITE_CONSTRAINT_PRIMARYKEY' &&
+      sqliteErr.code !== 'SQLITE_CONSTRAINT'
+    ) {
+      throw err;
+    }
+  }
 }
 
 function loadEpisodeGroups(db: DatabaseType): EpisodeGroupRow[] {
