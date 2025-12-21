@@ -1,5 +1,7 @@
 # Google Drive を利用したデバイス間同期の設計
 
+<!-- cSpell:words Lamport -->
+
 ## 概要
 
 今後 Google Drive を経由したデバイス間の同期を実装する予定であり、「同期のための最新状態管理テーブル」を別途用意します。
@@ -26,7 +28,7 @@ SQLite3 のトリガーを利用して自動的に各テーブル（後述する
     - どのレコードの変更か（id=UUID）
     - レコードの変更差分内容（JSON）
     - その変更が物理削除かどうか
-    - いつ変更したか（HLC タイムスタンプ）
+    - いつ変更したか（Lamport タイムスタンプ）
 
 ## 目的
 
@@ -49,14 +51,19 @@ SQLite3 のトリガーを利用して自動的に各テーブル（後述する
 
 - 各テーブルの主キーは各デバイスで共通のものを利用（UUID など）
 - 各テーブルに保存するオブジェクトの内容は content カラムに JSON で保存する
-- content カラムには updated_at, deleted_at フィールドを含める
-    - updated_at はオブジェクトが最後に変更された時刻で、上述する HLC タイムスタンプを保存する
+    - content カラムには updated_at, deleted_at フィールドを含める
+    - updated_at はオブジェクトが最後に変更された時刻を保存する
     - deleted_at はオブジェクトが削除された時刻で、削除されていない場合は NULL を保存する（Soft Delete のため）
 
 つまり同期対象は Command 用テーブルであり、Query 用テーブルではありません。
 
 SQLite3 は 3.45.0 から JSONB 型をサポートしているので、それを利用します。
 （OS が用意している SQLite3 を利用するのではなく、アプリに SQLite3 をリンクして組み込む想定）
+
+また以下も前提とします。
+
+- DB への接続は１つだけ
+- 同期中は UI 操作をブロック（処理中のプログレス表示など）し、Command テーブルへの変更が発生しないようにする
 
 ### 現時点のテーブル設計
 
@@ -125,6 +132,47 @@ content カラムには以下のような JSON を保存します。
 
 ## sync_pending_changes,  sync_states テーブルのスキーマ案
 
+### sync_control テーブル
+
+トリガーによって自動的に sync_pending_changes テーブルに変更内容を書き込む仕組みのため、同期の際に sync_states テーブルの内容を元に各 Command テーブルを更新する際にもトリガーが発動してしまいます。
+そのためトリガーを一時的に無効化する仕組みを導入します。
+
+まずこれを制御するためのテーブルを用意します。
+
+```sql
+CREATE TABLE sync_control (
+    id INTEGER PRIMARY KEY CHECK (id = 1), -- 常に1行だけ
+    is_syncing INTEGER NOT NULL DEFAULT 0
+);
+INSERT OR IGNORE INTO sync_control (id, is_syncing) VALUES (1, 0);
+```
+
+フラグが ON のままアプリが終了した場合に備え、アプリ起動時に初期化されるようにします。
+
+```sql
+UPDATE sync_control SET is_syncing = 0;
+```
+
+sync_states テーブルの内容を元に各テーブルを更新する前に、sync_control テーブルの is_syncing カラムを 1 に設定します。
+
+```sql
+UPDATE sync_control SET is_syncing = 1;
+```
+
+トリガー条件に以下のようなチェックを追加します。
+念の為、sync_control テーブルが存在しない場合（アプリ起動直後など）も考慮します。
+
+```sql
+CREATE TRIGGER trg_episode_groups_insert
+AFTER INSERT ON episode_groups
+WHEN (SELECT is_syncing FROM sync_control LIMIT 1) = 0
+BEGIN
+    -- sync_pending_changes への書込み処理
+END;
+```
+
+同期が終わったら is_syncing カラムを false に戻します。
+
 ### sync_pending_changes テーブル
 
 ```sql
@@ -158,6 +206,7 @@ episode_groups テーブルの INSERT, UPDATE, DELETE 時のトリガー例：
 ```sql
 CREATE TRIGGER trg_episode_groups_insert
 AFTER INSERT ON episode_groups
+WHEN (SELECT is_syncing FROM sync_control LIMIT 1) = 0
 BEGIN
     INSERT INTO sync_pending_changes (table_name, record_id, new_content, created_at)
     VALUES (
@@ -175,6 +224,7 @@ END;
 
 CREATE TRIGGER trg_episode_groups_update
 AFTER UPDATE ON episode_groups
+WHEN (SELECT is_syncing FROM sync_control LIMIT 1) = 0
 BEGIN
     INSERT INTO sync_pending_changes (table_name, record_id, new_content, created_at)
     VALUES (
@@ -191,6 +241,7 @@ END;
 
 CREATE TRIGGER trg_episode_groups_delete
 AFTER DELETE ON episode_groups
+WHEN (SELECT is_syncing FROM sync_control LIMIT 1) = 0
 BEGIN
     INSERT INTO sync_pending_changes (table_name, record_id, new_content, is_deleted, created_at)
     VALUES (
@@ -215,13 +266,13 @@ CREATE TABLE sync_states (
     table_name TEXT NOT NULL,
     record_id TEXT NOT NULL,
     record_data JSONB NOT NULL,
-    updated_at TEXT NOT NULL,
+    sync_version TEXT NOT NULL,
     is_deleted BOOLEAN NOT NULL DEFAULT 0,
     device_id TEXT NOT NULL,
     synced_at TIMESTAMP,
     PRIMARY KEY (table_name, record_id)
 );
-CREATE INDEX IF NOT EXISTS idx_sync_states_updated_at ON sync_states(updated_at);
+CREATE INDEX IF NOT EXISTS idx_sync_states_sync_version ON sync_states(sync_version);
 CREATE INDEX IF NOT EXISTS idx_sync_states_table_name ON sync_states(table_name);
 ```
 
@@ -230,7 +281,7 @@ CREATE INDEX IF NOT EXISTS idx_sync_states_table_name ON sync_states(table_name)
 このテーブルには常に最新の情報のみを保持すればよく、UPSERT を使用します。
 record_data カラムには、レコード内容全体を JSON で保存します（SQLite3 は 3.45.0 から JSONB をサポート）。
 
-updated_at の HLC タイムスタンプの仕様については後述します。
+sync_version の Lamport タイムスタンプの仕様については後述します。
 is_deleted カラムは、レコードが物理削除されたかどうかを示します。つまり同期データとしては Command テーブルから物理削除されても記録が残ります。
 （Soft Delete の場合は record_data 内の deleted_at フィールドが設定されますが、is_deleted は false となります。）
 
@@ -243,7 +294,7 @@ synced_at カラムには、そのレコードが最後に外部と同期され�
 -- 他デバイスからの変更(new_patch)を、既存のデータ(record_data)にマージ
 UPDATE sync_states 
 SET record_data = jsonb_patch(record_data, :new_patch),
-    updated_at = :new_updated_at,
+    sync_version = :new_sync_version,
     is_deleted = :new_is_deleted,
     device_id = :device_id,
     synced_at = CURRENT_TIMESTAMP
@@ -257,7 +308,9 @@ WHERE table_name = :table_name AND record_id = :record_id;
 各デバイスはアプリ開始時、アプリ終了時、あるいはユーザーの手動操作で、利用者個人の Google Drive に前回同期からの変更内容をアップロード・ダウンロードします。
 Google Drive API のアクセス上限に注意し、過度に頻繁に同期を行わないようにします。
 
-### 同期の流れ
+### 同期の流れの概略
+
+まず概略を説明します。
 
 ダウンロードは
 
@@ -282,6 +335,8 @@ Google Drive API のアクセス上限に注意し、過度に頻繁に同期を
 先にダウンロードを行って外部の変更内容を取り込み、その後にアップロードを行います。
 これがなぜなのかは後述します。
 
+実際にはもっと考慮すべきことがありますので、詳細な手順は後ほど説明します。
+
 ### アップロードファイルの形式
 
 アップロードするファイルには sync_pending_changes テーブルに記録された変更内容を前回同期からの差分パッチに変換して１つのJSONファイルにまとめ、アップロードした時刻のタイムスタンプとデバイスIDをファイル名として含めます。
@@ -294,7 +349,7 @@ Google Drive API のアクセス上限に注意し、過度に頻繁に同期を
 
 タイムスタンプは Google Drive 側の時刻を使用します。
 時刻を取得してからファイルが作成されるまでの時間差は許容します。それを考慮して取得する側は少し余裕を持たせて取得します。
-最終的に各変更項目を適用するかどうかは、ファイル内に含まれる updated_at タイムスタンプで判断されます。ファイル名のタイムスタンプはあくまでそのファイルを取得するかどうかの判断に使われます。
+最終的に各変更項目を適用するかどうかは、ファイル内に含まれる sync_version で判断されます。ファイル名のタイムスタンプはあくまでそのファイルを取得するかどうかの判断に使われます。
 
 ファイルの内容は以下のような形式です。
 
@@ -304,32 +359,32 @@ Google Drive API のアクセス上限に注意し、過度に頻繁に同期を
         "table_name": "episode_groups",
         "record_id": "uuid-xxxx-xxxx",
         "patch": {...},
-        "updated_at": "2024-06-01T12:00:00Z"
+        "sync_version": 123
     },
     // ...
 ]
 ```
 
-patch に格納する差分は jsonb_patch で適用される形式を想定しています。（配列は置換されることに注意。基本的に別テーブルにしてリレーションさせる設計にし、別テーブルを用意したくない単純な項目の場合は UUID をキーにした辞書として管理。）
-
-また sync_pending_changes テーブル内に同じオブジェクト（同じ table_name と record_id）に対する複数の変更がある場合は、それらをマージして１つの差分パッチにまとめます。パッチファイルの肥大化を防ぐためです。
+patch に格納する差分は jsonb_patch で適用される形式を想定しています。
+（配列は置換されることに注意。基本的に別テーブルにしてリレーションさせる設計にし、別テーブルを用意したくない単純な項目の場合は UUID をキーにした辞書として管理。）
 
 Google Drive 側のフォルダ内ファイル数が増えすぎないように、また対象ファイル数を絞れるようにするために、年月日単位でサブフォルダを作成し、その中にファイルをアップロードします。
 アップロード処理中にアプリが強制終了した場合に備え、アップロード完了後に sync_pending_changes テーブルの内容を削除します。
 
-削除の取り扱いについては後述します。
-
 ### テーブル更新のトランザクション
 
-sync_states テーブルへの更新と、対象テーブルの更新は同一トランザクション内で行います。
+sync_states テーブルへの更新と、対象テーブルへ反映する更新は同一トランザクション内で行います。
 これを怠ると「同期テーブルは更新されているが実データが変わっていない」といった不整合が発生し、同期の信頼性が崩れます。
 
-また sync_pending_changes テーブルの内容を削除する処理も、sync_states テーブルへの反映を行う際に同一トランザクション内で行います。
-この際、Google Drive へのアップロードが成功したことを確認してから sync_pending_changes テーブルの内容を削除します。
+sync_pending_changes テーブルの内容を削除する処理も、sync_states テーブルへの反映を行うのと同一トランザクション内で行う必要があります。
+これを怠ると「まだ sync_states テーブルに反映されていない変更が sync_pending_changes テーブルから削除されてしまう」という不整合が発生します。
+
+Google Drive へのアップロードが成功したことを確認してから sync_pending_changes テーブルの内容を削除する必要があります。
+再度アップロードを試みることができるようにするためです。
 
 ファイルアップロードはトランザクションに含まれませんが、その後にトランザクションが失敗した場合にはアップロードしたファイルを削除することで整合性を保ちます。
 もしその間に他のデバイスが同期にそのファイルを取り込んでしまったとしても、内容が間違っているわけではありませんし、その後に再度同様の内容をアップロードして重複したとしても、最終的なデータの整合性には影響しません。
-sync_states テーブルの更新は HLC を利用した LLW（Last Writer Wins）方式で処理するためです。
+sync_states テーブルの更新は Lamport タイムスタンプを利用した LLW（Last Writer Wins）方式で処理するためです。
 
 sync_pending_changes テーブルへの書込みは各 Command テーブルのトリガー内で行うため、特に意識する必要はありません。
 各 Command テーブルへの書込みのトランザクション管理はこの同期仕様のスコープ範囲外です。
@@ -350,11 +405,11 @@ is_deleted が true に設定される以外は、patch ルールは物理削除
     "record_id": "uuid-xxxx-xxxx",
     "patch": {...},  // 最後の同記事の内容と物理削除前の最後の内容の差分
     "is_deleted": true,
-    "updated_at": "2024-06-01T12:00:00Z"
+    "sync_version": 124
 }
 ```
 
-### updated_at に使うタイムスタンプ
+### sync_version に使うタイムスタンプ
 
 複数デバイスでの同期では各デバイスで時刻がずれる可能性があります。
 同期はリアルタイムに行われるわけではなく、どうやっても同期と同期の間に他のデバイスで行われた変更との競合が発生する可能性があります。
@@ -365,19 +420,16 @@ is_deleted が true に設定される以外は、patch ルールは物理削除
 - 「自デバイスが前回同期してから今回同期するまでの間」に他デバイスで行われた変更については古いデータで上書きされることを完全には防げない
 - それ以外の期間に他デバイスで行われた変更については古いデータで上書きすることを防止する
 
-そのために HLC（Hybrid Logical Clock）の考え方を取り入れます。
-ここで timestamp はミリ秒単位まで含めた ISO 8601 形式の文字列を、ミリ秒単位の整数値に変換したものとします。
-実際にフィールドに格納する際には UTC でミリ秒単位まで含めた ISO 8601 形式の文字列に変換して保存します。
+そのために Lamport タイムスタンプの考え方を取り入れます。
 
 ```
-timestamp = max(system_timestamp, max_seen_timestamp + i + 1)
+timestamp = max_seen_timestamp + 1 + i
 ```
 
-system_timestamp は各デバイスのローカル時刻を使用します。つまり sync_pending_changes テーブルの created_at から算出します。
-max_seen_timestamp は sync_states テーブル内の updated_at で最大の時刻の timestamp 値です。
+max_seen_timestamp は sync_states テーブル内の sync_version で最大の値です。
 i は sync_pending_changes テーブルを created_at の昇順で処理する際のインデックス（0から始まる連番）です。
 
-sync_pending_changes テーブルの内容から差分情報を作成する際に、上記の方法で timestamp を決定し、created_at (system_timestamp) を updated_at (HLC timestamp) に変換して設定します。
+sync_pending_changes テーブルの内容から差分情報を作成する際に、上記の方法で sync_version を決定し、created_at (system_timestamp) を sync_version (Lamport タイムスタンプ) に変換して設定します。
 
 例: sync_pending_changes テーブルのレコード
 ```json
@@ -397,50 +449,34 @@ sync_pending_changes テーブルの内容から差分情報を作成する際�
 ]
 ```
 
-例: 変換後の差分情報（max_seen_timestamp の元になったのが "2024-06-01T12:10:00.000Z" の場合）
+例: 変換後の差分情報（max_seen_timestamp が 100 の場合）
 ```json
 [
     {
         "table_name": "episode_groups",
         "record_id": "uuid-xxxx-xxxx",
         "patch": { ... },
-        "updated_at": "2024-06-01T12:10:00.001Z" // HLC timestamp => UTC ISO 8601
+        "sync_version": 101, // Lamport timestamp
     },
     {
         "table_name": "episodes",
         "record_id": "uuid-xxxx-xxxx",
         "new_content": { ... },
-        "created_at": "2024-06-01T12:10:00.002Z" // HLC timestamp => UTC ISO 8601
+        "sync_version": 102 // Lamport timestamp
     }
 ]
 ```
 
 これにより、もしそのデバイスのローカル時刻がずれていても、少なくとも過去に見た max_seen_timestamp よりは大きい値がタイムスタンプとして設定されます。
-そのデバイスが最後に同期した後の変更であることだけは保証できます。
-
-### タイムスタンプの未来へのズレの可能性
-
-この方法では system_timestamp が未来に大きくズレている場合に、timestamp が不自然に大きくなることを防げません。
-（例えば Linux と Windows のデュアルブートのマシンで、互いの OS の RTC 仕様が異なっているために、OS が時刻を同期するまで日本では９時間時間がズレることがあります）
-このことが他のデバイスでの max_seen_timestamp にも影響を与え、連鎖的に timestamp が実際の時刻より大きくなってしまう可能性があります。
-
-しかし HLC の単調増加のルールを守り、時刻が未来になる可能性は許容する方針とします。
-回避策として以下が考えられますが、実装の複雑さの追加に対して得られるメリットが小さいと判断しました。
-
-#### Google Drive 側の時刻を参照して未来へのズレを制限する方法（案として記載しておくが**採用しない**）
-
-同期のアップロード直前に１度 Google Drive 側にアクセスして時刻を参照し、 その時刻より未来にならないように制限を加えます。
-
-```
-timestamp = min(timestamp, google_drive_timestamp)
-```
-
-これにより以下が保証されます。
-
-- デバイスのローカル時刻が過去にズレている場合、少なくとも max_seen_timestamp（自デバイス/他デバイスの最終 timestamp） よりは大きい timestamp が設定される
-- デバイスのローカル時刻が未来にズレている場合、少なくとも次に同期した際の Google Drive 側の時刻よりは大きくならない
+そのデバイスが最後に同期した後の変更であることだけは保証できます。またそのデバイス内での変更順序も保持されます。
 
 ### ダウンロードを先に行う理由
+
+当初は Lamport タイムスタンプではなく HLC (Hybrid Logical Clock) を利用することを検討しました。sync_version ではなく updated_at フィールドを用意し、HLC タイムスタンプとして利用する形です。
+
+```
+timestamp = max(local_timestamp, max_seen_timestamp) + 1 + i
+```
 
 先にアップロードしてからダウンロードする場合、以下のようなケースが考えられます。
 
@@ -469,20 +505,88 @@ timestamp = min(timestamp, google_drive_timestamp)
 ```
 
 デバイスBが Google Drive と先に同期したとします。
-デバイスBの変更内容がアップロードされて sync_states テーブルにも反映され、updated_at は "2024-06-01T12:10:00Z" になります。
+デバイスBの変更内容がアップロードされて sync_states テーブルにも反映され、この時点で sync_states での該当レコードの updated_at は "2024-06-01T12:10:00Z" になります。
 
 その後デバイスAが同期を行った場合、デバイスAの変更内容は updated_at が "2024-06-01T12:00:00Z" であるため、それをデバイスBが次の同期で取り込んだとしても sync_states テーブルの内容は更新されません。
+同じオブジェクトに対する変更がどちらも適用されるようにと差分で表現しているのに、そもそも適用されないのでは意味がありません。
 
 ここでは `git pull --rebase` と同様の、「自分の変更（未同期）は、他人の変更（同期済み）よりも常に『後』に行われたものとして再定義する」という考え方を採用します。
 
-先にダウンロードを行うことで、他のデバイスで行われた変更が常に先に取り込まれます。この時点で max_seen_timestamp は他のデバイスで行われた変更内容に更新されます。
-その後に自分の変更をアップロードすることで、HLC タイムスタンプは必ず max_seen_timestamp より大きくなり、自分の変更が常に同期時の他人の変更よりも後に行われたものとして扱われます。
+先にダウンロードを行うことで、他のデバイスで行われた変更が常に先に取り込まれます。この時点で (HLC でも Lamport でも) max_seen_timestamp は他のデバイスで行われた変更内容に更新されます。
+その後に自分の変更をアップロードすることで、タイムスタンプは必ず max_seen_timestamp より大きくなり、自分の変更がその時点で同期されている他人の変更よりも常に後に行われたものとして扱われます。
 
 上記の例であればデバイスBが同期した内容が先に取り込まれ、デバイスAが後から同期する際には自身の変更はそれより後に行われたものとして扱われ、sync_states テーブルの内容に反映されます。
-デバイスBから見ても、次に同期した際にデバイスAの変更は自身が最後に同期した際よりも後に行われたものとして記録されているので、sync_states テーブルの内容に反映されます。
+デバイスBから見ても、次に同期した際にデバイスAの変更は自身が最後に同期した際よりも後に行われたものとして記録されるので、sync_states テーブルの内容に反映されます。
+こうして両方の変更が反映されることになります。
 
 同じフィールドに対して変更内容に衝突が発生する可能性はありますが、その際は後に同期した方の変更内容が優先されます。
 実際の操作時間での順番保証ができない以上、最後に同期した内容が優先されるのは直感的にも理解しやすい挙動であると考えます。
+
+常にダウンロードを先に行って、その後に max_seen_timestamp 以降にして変更内容をアップロードするのであれば、 Lamport タイムスタンプで十分です。
+HLC を利用すると、あるデバイスの時刻が大きく未来にズレている場合（例えば極端に2099年など）、他のデバイスでの更新も全てそれ以降のタイムスタンプになってしまうことが気になります。
+順番保証としての論理的な実害はありませんが、時間の概念を持つ意味もなくなります。
+それを防ぐための対策を考えるよりも、Lamport タイムスタンプで十分であると判断しました。
+
+### 同期の詳細手順
+
+詳細な手順は以下のようになります。
+
+1. 同期処理開始、プログレス表示（UI 操作やバックグラウンド処理などによる Command テーブルへの変更をブロック）
+1. Google Drive から同期対象ファイルをダウンロード
+1. 念の為 sync_states の中で最大の sync_version を取得しておく
+1. ダウンロードしたファイルの内容のうち、最大の sync_version を max_seen_timestamp として取得（念の為、上記の最大値と比較して大きい方を採用）
+1. sync_pending_changes から全データを取得し、該当レコードを sync_states からも取得してアップロード内容を作成（前回同期時の値との差分、sync_version 算出）
+1. ファイルをアップロード（完了は待たずに以下を実行）
+1. トランザクション開始
+1. ダウンロード内容を sync_states に反映（sync_version を比較しつつ jsonb_patch 適用で UPSERT）
+1. アップロード内容を sync_states に反映（sync_version を比較しつつ jsonb_patch 適用で UPSERT）
+1. sync_pending_changes の内容を削除（アップロード完了前だがコミットしていないのでOK）
+1. sync_control で is_syncing を 1 に
+1. sync_states の内容を各 Command テーブルに反映
+1. sync_control で is_syncing を 0 に
+1. ファイルアップロード完了を確認して DB に COMMIT（アップロードに失敗していたら ROLLBACK）
+
+sync_pending_changes の内容を削除する際には、KEY (table_name, record_id) 指定削除がより確実です。
+一応 Command テーブルへの変更はブロックされている前提ですが、アップロード内容を作成してから sync_pending_changes の内容を削除するまでの間に Command テーブルへの変更が発生した場合でも、その変更内容は sync_pending_changes に残り、次回同期時に再度アップロードされます。
+ただし前提が守られている想定の方が全削除できて効率的です。
+
+上記手順はトランザクション範囲をできるだけ狭くするように工夫していますが、「これでなければいけない」というほど絶対ではありません。しかし確実に抑えておくべきポイントがいくつかあります。
+
+#### ダウンロード内容を適用する前に sync_states の内容を取得しておく
+
+ここでダウンロード内容を適用する前に sync_states テーブルの内容を取得していることに注意してください。
+アップロード内容の差分は前回同期時点の sync_states テーブルの内容との差分として作成するためです。
+
+概略手順ではダウンロードを先に適用してからアップロード内容を作成すると説明しましたが、ダウンロード内容を適用した後の sync_states との比較を行うと部分更新の先祖返りが発生する可能性があります。
+例えば以下のようなケースを考えます。
+
+1. 初期状態: { "title": "A", "desc": "A" } （sync_states もこれ）
+1. Device 1 : title を "B" に変更。
+    - sync_pending_changes: { "title": "B", "desc": "A" } （全量保存のため）
+1. Device 2 : desc を "B" に変更して同期済み。
+1. Device 1 : 同期開始（ダウンロード先行）。
+    - sync_states を更新: { "title": "A", "desc": "B" } (Device 2 の変更を取り込み)
+    -   アップロード用パッチを作成するために比較:
+        - 比較元: sync_states ({ "title": "A", "desc": "B" })
+        - 比較先: sync_pending_changes ({ "title": "B", "desc": "A" })
+    - 生成される差分: { "title": "B", "desc": "A" }
+
+問題点: 生成された差分に desc: "A" が含まれてしまいます。これをアップロードすると、Device 2 が行った desc: "B" への変更を打ち消してしまいます。
+
+#### ダウンロード内容も含めて max_seen_timestamp を算出する
+
+上記手順では sync_states の中で最大の sync_version を取得しておいてから、ダウンロード内容をループしてその中の最大の sync_version を調べて、両者の最大値を max_seen_timestamp とする方法をとっています。
+
+他にも、先にダウンロード内容を sync_states に適用してから sync_states の中で最大の sync_version を SQL で取得する方法も考えられます。（トランザクション範囲が広くなるので避けました）
+
+実際には前回同期時の sync_states テーブル内の最大 sync_version よりも、ダウンロード内容の中の最大 sync_version の方が大きいはずですが、念の為両者を含めて全体の最大値を取得します。
+
+#### sync_states への変更と各テーブルへの反映は同一トランザクション内で行う
+
+sync_states への変更を行ってしまうと、同期処理に失敗した際に、sync_states の内容が前回同期時の状態と異なってしまいます。
+リトライする際に同期内容が変わってしまい、正しい同期が行えなくなる可能性があります。
+
+そのため sync_states への変更を行う処理とそれ以降の DB への変更処理は全て同一トランザクション内で行います。
 
 ## Google Drive 側のスナップショット作成と同期内容ログの肥大化対策
 
@@ -499,7 +603,9 @@ Google Drive 側にアップロードされる更新内容ログも肥大化す�
 ほとんどの場合は事前に「既にその月のスナップショットがあるか」を確認することで防げるものの、同時に複数のデバイスがスナップショットを作成する可能性はあります。
 しかし複数のスナップショットが存在しても問題ありません。ダウンロードする際に最新のスナップショットを取得すればよいためです。
 
-スナップショットを作成したら、そのスナップショットのファイル名に利用したタイムスタンプより前の月のログファイルを全て削除します。
+スナップショットを作成したら、そのスナップショットのファイル名に利用したタイムスタンプより２ヶ月以上前のログファイルを全て削除します。
+（ログを１ヶ月分だけ残すのは、Google Drive には反映遅延があるため、スナップショット作成より前のログを全て削除すると「スナップショットはまだ作成が反映されていないのに、過去のログが先に削除されてしまう」可能性があるためです）
+
 この処理も複数デバイスが同時に行う可能性がありますが、
 
 - あるファイルの削除に失敗しても続けて処理を行う
@@ -594,3 +700,31 @@ sync_states テーブルには物理削除されたレコードも残るため�
 
 このトリガーを利用した方法では変化差分だけを保存することができません。
 しかし sync_states テーブルが最終同期状態を保持ししているので、sync_pending_changes テーブルの new_content と最終同期状態からの差分をアプリ側が同期処理時に算出できます。
+
+### HLC タイムスタンプをやめて時刻の概念を持たない Lamport タイムスタンプに
+
+競合解決のためのタイムスタンプとして HLC（Hybrid Logical Clock）の考え方を取り入る方向で考えていました。
+
+system_timestamp は sync_pending_changes テーブルの created_at の ms 単位のタイムスタンプ（ローカルデバイスの時刻）、max_seen_timestamp は sync_states テーブル内の updated_at で最大の時刻の ms 単位のタイムスタンプです。
+アップロードする同期差分データファイルを作成する際に、以下のルールで timestamp を決定し、created_at (system_timestamp) を updated_at (HLC timestamp) に変換して設定します。
+
+```
+timestamp = max(system_timestamp, max_seen_timestamp + i + 1)
+```
+
+i は sync_pending_changes テーブルを created_at の昇順で処理する際のインデックス（0から始まる連番）です。
+
+しかし HLC タイムスタンプを利用する場合、どれかのデバイスが大きく未来にズレた時刻を持っていると、他のデバイスのタイムスタンプも連鎖的に未来にずれてしまう可能性があります。そうなった場合、この値が時刻の概念を持っていることには意味がなくなります。
+Google Drive 側の時刻を参照して未来へのズレを制限する方法も検討しましたが、実装の複雑さの追加に対して得られるメリットが小さいと判断しました。
+あまりに時刻がかけ離れている場合は同期を拒否する方法も考えられますが、実装コストがかかる上に、ユーザー体験が悪化します。
+
+この仕様では先にダウンロードしてからその中の最大値より大きい値を設定するというルールがあるため、アップロードする際には常に他のデバイスの同期済みのタイムスタンプより大きい値に変化します。
+このことはつまり、HLC タイムスタンプが時刻の概念を持っていたとしても、他のデバイスとの間で発生した変更との間での「どちらが先に行われたか？」の判定には役に立たないことを意味します。
+あくまで「どちらが先に同期したか？」「この情報は後で同期された情報=更新すべき情報か？」としての意味しかありません。
+
+先程のデバイスAとデバイスBの例であれば、実時間としては先にデバイスAの変更が行われているのですが、同期処理としては「先にどちらが同期したか？」で updated_at タイムスタンプが決定されます。
+先にデバイスBが同期した場合、デバイスAの変更は updated_at がデバイスBの変更の updated_at より大きな値を設定して同期されるため、sync_states テーブルに反映される仕組みです。
+同期に関係する目的としては、単に「どちらが先に同期したか？」の役割しか果たしておらず、もはや時間の概念を持つ意味がありません。
+もしデバッグ目的で実際にいつ頃に更新されたかを知りたい場合は、content 内の updated_at フィールドを参照すればよいです。最後に更新を行ったデバイスのローカルデバイス時刻が保存されています。
+
+そのため HLC タイムスタンプをやめて、時刻の概念を持たない Lamport タイムスタンプに変更しました。
