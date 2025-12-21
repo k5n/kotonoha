@@ -137,7 +137,7 @@ content カラムには以下のような JSON を保存します。
 トリガーによって自動的に sync_pending_changes テーブルに変更内容を書き込む仕組みのため、同期の際に sync_states テーブルの内容を元に各 Command テーブルを更新する際にもトリガーが発動してしまいます。
 そのためトリガーを一時的に無効化する仕組みを導入します。
 
-まずこれを制御するためのテーブルを用意します。
+まずこれを制御するためのテーブルを用意します。このテーブルはマイグレーションで必ず作成して１行追加しておきます。
 
 ```sql
 CREATE TABLE sync_control (
@@ -150,6 +150,7 @@ INSERT OR IGNORE INTO sync_control (id, is_syncing) VALUES (1, 0);
 フラグが ON のままアプリが終了した場合に備え、アプリ起動時に初期化されるようにします。
 
 ```sql
+INSERT OR IGNORE INTO sync_control (id, is_syncing) VALUES (1, 0);  -- 念のため
 UPDATE sync_control SET is_syncing = 0;
 ```
 
@@ -160,7 +161,6 @@ UPDATE sync_control SET is_syncing = 1;
 ```
 
 トリガー条件に以下のようなチェックを追加します。
-念の為、sync_control テーブルが存在しない場合（アプリ起動直後など）も考慮します。
 
 ```sql
 CREATE TRIGGER trg_episode_groups_insert
@@ -173,6 +173,10 @@ END;
 
 同期が終わったら is_syncing カラムを false に戻します。
 
+```sql
+UPDATE sync_control SET is_syncing = 0;
+```
+
 ### sync_pending_changes テーブル
 
 ```sql
@@ -182,8 +186,7 @@ CREATE TABLE sync_pending_changes (
     record_id TEXT NOT NULL,
     new_content JSONB,
     is_deleted BOOLEAN NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL
-
+    created_at TEXT NOT NULL,
     UNIQUE(table_name, record_id) -- UPSERT にするため
 );
 CREATE INDEX IF NOT EXISTS idx_sync_pending_changes_created_at ON sync_pending_changes(created_at);
@@ -206,19 +209,23 @@ episode_groups テーブルの INSERT, UPDATE, DELETE 時のトリガー例：
 ```sql
 CREATE TRIGGER trg_episode_groups_insert
 AFTER INSERT ON episode_groups
+-- sync_control テーブルは必ず存在し、必ず１行存在する前提
 WHEN (SELECT is_syncing FROM sync_control LIMIT 1) = 0
 BEGIN
-    INSERT INTO sync_pending_changes (table_name, record_id, new_content, created_at)
+    INSERT INTO sync_pending_changes (table_name, record_id, new_content, is_deleted, created_at)
     VALUES (
         'episode_groups', 
         NEW.id, 
         NEW.content, 
+        -- DELETE 後に同じ ID で INSERT されることはない想定だが、万が一同じ UUID が使われた場合に備え is_deleted も更新しておく
+        0,
         STRFTIME('%Y-%m-%dT%H:%M:%fZ', 'NOW')
     )
     -- INSERT 時に既に存在することは通常ないが念のため UPSERT にしておく
     ON CONFLICT(table_name, record_id)
     DO UPDATE SET
         new_content = excluded.new_content,
+        is_deleted = excluded.is_deleted,
         created_at = excluded.created_at;
 END;
 
@@ -236,6 +243,7 @@ BEGIN
     ON CONFLICT(table_name, record_id) 
     DO UPDATE SET
         new_content = excluded.new_content,
+        -- DELETE 後に同じ ID で UPDATE されることはないので、is_deleted は更新しない
         created_at = excluded.created_at;
 END;
 
@@ -266,7 +274,7 @@ CREATE TABLE sync_states (
     table_name TEXT NOT NULL,
     record_id TEXT NOT NULL,
     record_data JSONB NOT NULL,
-    sync_version TEXT NOT NULL,
+    sync_version INTEGER NOT NULL,
     is_deleted BOOLEAN NOT NULL DEFAULT 0,
     device_id TEXT NOT NULL,
     synced_at TIMESTAMP,
@@ -292,13 +300,29 @@ synced_at カラムには、そのレコードが最後に外部と同期され�
 
 ```sql
 -- 他デバイスからの変更(new_patch)を、既存のデータ(record_data)にマージ
-UPDATE sync_states 
-SET record_data = jsonb_patch(record_data, :new_patch),
-    sync_version = :new_sync_version,
-    is_deleted = :new_is_deleted,
-    device_id = :device_id,
-    synced_at = CURRENT_TIMESTAMP
-WHERE table_name = :table_name AND record_id = :record_id;
+INSERT INTO sync_states (
+    table_name,
+    record_id,
+    record_data,
+    sync_version,
+    is_deleted,
+    device_id,
+    synced_at
+) VALUES (
+    :table_name,
+    :record_id,
+    :new_patch,
+    :new_sync_version,
+    :new_is_deleted,
+    :device_id,
+    CURRENT_TIMESTAMP
+)
+ON CONFLICT(table_name, record_id) DO UPDATE SET
+    record_data = jsonb_patch(sync_states.record_data, excluded.record_data),
+    sync_version = excluded.sync_version,
+    is_deleted = excluded.is_deleted,
+    device_id = excluded.device_id,
+    synced_at = excluded.synced_at;
 ```
 
 ## 同期処理
@@ -344,17 +368,18 @@ Google Drive API のアクセス上限に注意し、過度に頻繁に同期を
 
 ### アップロードファイルの形式
 
-アップロードするファイルには sync_pending_changes テーブルに記録された変更内容を前回同期からの差分パッチに変換して１つのJSONファイルにまとめ、アップロードした時刻のタイムスタンプとデバイスIDをファイル名として含めます。
+アップロードするファイルには sync_pending_changes テーブルに記録された変更内容を前回同期からの差分パッチに変換して１つのJSONファイルにまとめ、アップロードした時刻とデバイスIDをファイル名として含めます。
 
 ファイルは gzip 圧縮してアップロードします。
 
-- 例: patch_{timestamp}_{device_id}.json.gz
+- 例: patch_{upload_time}_{device_id}.json.gz
 
-タイムスタンプの方がデバイスIDより前に来るのは、ファイル名でソートした際に時刻順に並ぶようにするためです。
+時刻の方がデバイスIDより前に来るのは、ファイル名でソートした際に時刻順に並ぶようにするためです。
+時刻のフォーマットは YYYYMMDD-HHMMSS-mmm とし、ミリ秒単位まで含めた UTC 時刻とします。
 
-タイムスタンプは Google Drive 側の時刻を使用します。
+upload_time は Google Drive 側の時刻を使用します。
 時刻を取得してからファイルが作成されるまでの時間差は許容します。それを考慮して取得する側は少し余裕を持たせて取得します。
-最終的に各変更項目を適用するかどうかは、ファイル内に含まれる sync_version で判断されます。ファイル名のタイムスタンプはあくまでそのファイルを取得するかどうかの判断に使われます。
+最終的に各変更項目を適用するかどうかは、ファイル内に含まれる sync_version で判断されます。ファイル名の時刻はあくまでそのファイルを取得するかどうかの判断に使われます。
 
 ファイルの内容は以下のような形式です。
 
@@ -388,7 +413,7 @@ Google Drive へのアップロードが成功したことを確認してから 
 
 ファイルアップロードはトランザクションに含まれませんが、その後にトランザクションが失敗した場合にはアップロードしたファイルを削除することで整合性を保ちます。
 もしその間に他のデバイスが同期にそのファイルを取り込んでしまったとしても、内容が間違っているわけではありませんし、その後に再度同様の内容をアップロードして重複したとしても、最終的なデータの整合性には影響しません。
-sync_states テーブルの更新は Lamport タイムスタンプを利用した LLW（Last Writer Wins）方式で処理するためです。
+sync_states テーブルの更新は Lamport タイムスタンプを利用した LWW（Last Writer Wins）方式で処理するためです。
 
 sync_pending_changes テーブルへの書込みは各 Command テーブルのトリガー内で行うため、特に意識する必要はありません。
 各 Command テーブルへの書込みのトランザクション管理はこの同期仕様のスコープ範囲外です。
@@ -407,7 +432,7 @@ is_deleted が true に設定される以外は、patch ルールは物理削除
 {
     "table_name": "episode_groups",
     "record_id": "uuid-xxxx-xxxx",
-    "patch": {...},  // 最後の同記事の内容と物理削除前の最後の内容の差分
+    "patch": {...},  // 最後の同期時点の内容と物理削除前の最後の内容の差分
     "is_deleted": true,
     "sync_version": 124
 }
@@ -590,9 +615,9 @@ sync_pending_changes の内容を削除する際には、KEY (table_name, record
 Google Drive 側にアップロードされる更新内容ログも肥大化するため、一定期間経過したものはマージする処理が必要です。
 その月の最初に Google Drive に同期したデバイスは、現在の sync_states テーブルの内容を現時点のスナップショットとしてアップロードし、過去のログをまとめて削除します。
 
-ファイル名にはスナップショットを作成したタイムスタンプとデバイスIDを含めます。
+ファイル名にはスナップショットを作成した時刻とデバイスIDを含めます。時刻のフォーマットは patch ファイルと同様とします。
 
-- 例: snapshot_{device_id}_{timestamp}.json
+- 例: snapshot_{created_time}_{device_id}.json.gz
 
 このファイルも年月日でわけられたサブフォルダに保存します。
 
@@ -621,7 +646,13 @@ Google Drive では通常の削除をしてもゴミ箱に残るため、容量�
 
 ## 初期同期
 
-始めて利用するデバイスでは、最新のスナップショットとそれ以降の更新ログを全て取り込む形で初期同期を行います。
+初めて利用するデバイスでは Google Drive との同期設定を促しますが、設定するかどうかはユーザーの任意とします。
+
+そのため同期設定を行ったタイミングで既にデバイス内にデータが存在している可能性があります。
+その場合は、同期設定を行ったタイミングで最新のスナップショットとそれ以降の更新ログを全て取り込む形で初期同期を行います。
+
+この処理は完全にこれまで説明してきた同期処理と同じです。デバイス内のそれまでの変更内容もアップロードされます。
+結果として、既に Google Drive に同期していた（複数）デバイスの内容と、同期せずに利用していたデバイスの内容がマージされます。
 
 ## 免責事項
 
@@ -642,9 +673,8 @@ Google Drive では通常の削除をしてもゴミ箱に残るため、容量�
 
 ## その他の懸念事項
 
-sync_states テーブルには物理削除されたレコードも残るため、将来的に Soft Delete でなく物理削除を取り入れたとしても、肥大化する可能性があります。
-
-途中で OS の時刻同期が行われてローカルデバイスの時刻が変更されると、ローカルでの変更順序が入れ替わる可能性があります。
+- sync_states テーブルには物理削除されたレコードも残るため、将来的に Soft Delete でなく物理削除を取り入れたとしても、肥大化する可能性があります。
+- 途中で OS の時刻同期が行われてローカルデバイスの時刻が変更されると、ローカルでの変更順序が入れ替わる可能性があります。
 
 ## 設計案の変遷
 
