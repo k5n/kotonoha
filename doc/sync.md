@@ -52,9 +52,8 @@ SQLite3 のトリガーを利用して自動的に各テーブル（後述する
 
 - 各テーブルの主キーは各デバイスで共通のものを利用（UUID など）
 - 各テーブルに保存するオブジェクトの内容は content カラムに JSON で保存する
-    - content カラムには updated_at, deleted_at フィールドを含める
+    - content カラムには updated_at フィールドを含める
     - updated_at はオブジェクトが最後に変更された時刻を保存する
-    - deleted_at はオブジェクトが削除された時刻で、削除されていない場合は NULL を保存する（Soft Delete のため）
 
 つまり同期対象は Command 用テーブルであり、Query 用テーブルではありません。
 
@@ -90,8 +89,7 @@ CREATE TABLE episode_groups (
     content JSONB NOT NULL,
     display_order INTEGER NOT NULL,
     group_type TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    deleted_at TEXT DEFAULT NULL
+    updated_at TEXT NOT NULL
 );
 ```
 
@@ -103,8 +101,7 @@ content カラムには以下のような JSON を保存します。
     "name": "value",
     "display_order": 1,
     "group_type": "folder",
-    "updated_at": "2024-06-01T12:00:00Z",
-    "deleted_at": null
+    "updated_at": "2024-06-01T12:00:00Z"
 }
 ```
 
@@ -208,7 +205,6 @@ sync_pending_changes テーブルは、ローカルデバイスでの同期後�
 
 new_content カラムには、変更後の内容を JSON で保存します。
 ただし DELETE の場合は new_content は DELETE 前の内容を保存します。削除されたかどうかは is_deleted カラムで判定します。
-（現時点では Soft Delete しか行っていませんが、sync_pending_changes テーブルの仕様としては物理 DELETE された場合にも履歴を残すようにしておきます。）
 
 created_at カラムは、変更が行われた時刻を保存します。
 ここはローカルデバイスの時刻を使用します。ローカルでの変更順序が分かればよいためです。UTC でミリ秒単位まで含めた ISO 8601 形式の文字列で保存します。
@@ -301,7 +297,6 @@ record_data カラムには、レコード内容全体を JSON で保存しま�
 
 sync_version の Lamport タイムスタンプの仕様については後述します。
 is_deleted カラムは、レコードが物理削除されたかどうかを示します。つまり同期データとしては Command テーブルから物理削除されても記録が残ります。
-（Soft Delete の場合は record_data 内の deleted_at フィールドが設定されますが、is_deleted は false となります。）
 
 device_id カラムには、最後に変更を行ったデバイスのIDを保存します。問題追跡用であり、同期ロジックには使用しません。
 synced_at カラムには、そのレコードが最後に外部と同期された時刻を保存します。問題追跡用であり、同期ロジックには使用しません。
@@ -430,10 +425,11 @@ sync_pending_changes テーブルへの書込みは各 Command テーブルの�
 
 ### 物理削除の取り扱い
 
-アプリは現時点では Soft Delete のみを行っています。
-しかしこの同期仕様では将来的に物理削除が行われる可能性も考慮した仕様としています。
+アプリは物理削除を行う前提とします。
+いわゆるソフトデリートは扱いません。ソフトデリートとは、ユーザーにとっては削除されている扱いであるものの、データとしては残っている状態です。
+もしユーザーが UI 上で復元できるようにしたい場合、それは削除ではありません。（例えば hidden フラグなどで「非表示」として扱うなどが考えられます）。
 
-物理削除が行われた場合、sync_pending_changes テーブルでは new_content が削除前の内容、is_deleted が true となります。
+削除が行われた場合、sync_pending_changes テーブルでは new_content が削除前の内容、is_deleted が true となります。
 is_deleted が true に設定される以外は、patch ルールは物理削除の場合も変わりません。sync_states テーブルに適用する patch と is_deleted=true の組み合わせで物理削除を表現します。
 結果として、ローカルで行われた物理削除前の変更も削除前の最終内容として sync_states テーブルに反映されます。
 ただしローカルでの変更が物理削除のみだった場合、new_content と最後の同期状態との差分は存在しないため、patch は空オブジェクト {} となります。
@@ -527,8 +523,7 @@ timestamp = max(local_timestamp, max_seen_timestamp) + 1 + i
     "name": "valueA1",   // 変更されたフィールド
     "display_order": 1,
     "group_type": "folder",
-    "updated_at": "2024-06-01T12:00:00Z",  // こちらの方が古い
-    "deleted_at": null
+    "updated_at": "2024-06-01T12:00:00Z"  // こちらの方が古い
 }
 ```
 
@@ -539,8 +534,7 @@ timestamp = max(local_timestamp, max_seen_timestamp) + 1 + i
     "name": "value",
     "display_order": 2,  // 変更されたフィールド
     "group_type": "folder",
-    "updated_at": "2024-06-01T12:10:00Z",  // こちらの方が新しい
-    "deleted_at": null
+    "updated_at": "2024-06-01T12:10:00Z"  // こちらの方が新しい
 }
 ```
 
@@ -712,7 +706,7 @@ PRAGMA incremental_vacuum(1000);
 
 ## その他の懸念事項
 
-- sync_states テーブルには物理削除されたレコードも残るため、将来的に Soft Delete でなく物理削除を取り入れたとしても、肥大化する可能性があります。
+- sync_states テーブルには物理削除されたレコードも残るため、肥大化する可能性があります。
 - 途中で OS の時刻同期が行われてローカルデバイスの時刻が変更されると、ローカルでの変更順序が入れ替わる可能性があります。
 
 ## 設計案の変遷
@@ -735,8 +729,7 @@ PRAGMA incremental_vacuum(1000);
     "name": "valueA1",   // 変更されたフィールド
     "display_order": 1,
     "group_type": "folder",
-    "updated_at": "2024-06-01T12:00:00Z",
-    "deleted_at": null
+    "updated_at": "2024-06-01T12:00:00Z"
 }
 ```
 
@@ -747,8 +740,7 @@ PRAGMA incremental_vacuum(1000);
     "name": "value",
     "display_order": 2,  // 変更されたフィールド
     "group_type": "folder",
-    "updated_at": "2024-06-01T12:10:00Z",
-    "deleted_at": null
+    "updated_at": "2024-06-01T12:10:00Z"
 }
 ```
 
