@@ -8,7 +8,6 @@ type EpisodeRow = {
   episode_group_id: string;
   content: string;
   updated_at: string;
-  deleted_at: string | null;
   sentence_card_count?: number;
 };
 
@@ -50,7 +49,6 @@ function mapRowToEpisode(row: EpisodeRow): Episode {
     updatedAt: new Date(row.updated_at),
     createdAt: new Date(createdAt),
     sentenceCardCount: row.sentence_card_count ?? 0,
-    deletedAt: row.deleted_at,
   };
 }
 
@@ -64,12 +62,11 @@ export const episodeRepository = {
         e.episode_group_id,
         e.content,
         e.updated_at,
-        e.deleted_at,
         COUNT(sc.id) AS sentence_card_count
       FROM episodes e
       LEFT JOIN subtitle_lines sl ON e.id = sl.episode_id
       LEFT JOIN sentence_cards sc ON sl.id = sc.subtitle_line_id AND sc.status = 'active'
-      WHERE e.episode_group_id = ? AND e.deleted_at IS NULL
+      WHERE e.episode_group_id = ?
       GROUP BY e.id
       ORDER BY COALESCE(json_extract(e.content, '$.displayOrder'), 0) ASC
       `,
@@ -88,7 +85,7 @@ export const episodeRepository = {
     const db = new Database(await getDatabasePath());
     const placeholders = groupIds.map(() => '?').join(',');
     const rows = await db.select<{ id: string; content: string }[]>(
-      `SELECT id, content FROM episodes WHERE episode_group_id IN (${placeholders}) AND deleted_at IS NULL`,
+      `SELECT id, content FROM episodes WHERE episode_group_id IN (${placeholders})`,
       [...groupIds]
     );
     return rows.map((row) => {
@@ -104,7 +101,7 @@ export const episodeRepository = {
   async getEpisodeById(id: string): Promise<Episode | null> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<EpisodeRow[]>(
-      'SELECT id, episode_group_id, content, updated_at, deleted_at FROM episodes WHERE id = ?',
+      'SELECT id, episode_group_id, content, updated_at FROM episodes WHERE id = ?',
       [id]
     );
     if (rows.length === 0) return null;
@@ -133,8 +130,8 @@ export const episodeRepository = {
     });
 
     await db.execute(
-      `INSERT INTO episodes (id, episode_group_id, content, updated_at, deleted_at)
-       VALUES (?, ?, ?, ?, NULL)`,
+      `INSERT INTO episodes (id, episode_group_id, content, updated_at)
+       VALUES (?, ?, ?, ?)`,
       [id, params.episodeGroupId, content, now]
     );
 

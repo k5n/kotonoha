@@ -36,7 +36,6 @@ type DialogueRow = {
   translation: string | null;
   explanation: string | null;
   sentence: string | null;
-  deleted_at: string | null;
 };
 
 type SentenceCardRow = {
@@ -111,31 +110,27 @@ function createNewSchema(db: DatabaseType) {
       content TEXT NOT NULL,
       display_order INTEGER NOT NULL,
       group_type TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      deleted_at TEXT
+      updated_at TEXT NOT NULL
     );`,
     `CREATE TABLE episodes (
       id TEXT PRIMARY KEY,
       episode_group_id TEXT NOT NULL,
       content TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      deleted_at TEXT
+      updated_at TEXT NOT NULL
     );`,
     `CREATE TABLE subtitle_lines (
       id TEXT PRIMARY KEY,
       episode_id TEXT NOT NULL,
       sequence_number INTEGER NOT NULL,
       content TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      deleted_at TEXT
+      updated_at TEXT NOT NULL
     );`,
     `CREATE TABLE sentence_cards (
       id TEXT PRIMARY KEY,
       subtitle_line_id TEXT NOT NULL,
       content TEXT NOT NULL,
       status TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      deleted_at TEXT
+      updated_at TEXT NOT NULL
     );`,
   ];
 
@@ -198,7 +193,7 @@ function loadEpisodes(db: DatabaseType): EpisodeRow[] {
 function loadDialogues(db: DatabaseType): DialogueRow[] {
   return db
     .prepare<[], DialogueRow>(
-      `SELECT id, episode_id, start_time_ms, end_time_ms, original_text, corrected_text, translation, explanation, sentence, deleted_at
+      `SELECT id, episode_id, start_time_ms, end_time_ms, original_text, corrected_text, translation, explanation, sentence
        FROM dialogues
        ORDER BY episode_id, start_time_ms, id`
     )
@@ -253,7 +248,6 @@ function mapEpisodeGroups(rows: EpisodeGroupRow[], now: string) {
       group_type: row.group_type,
       content,
       updated_at: now,
-      deleted_at: null,
     };
   });
 
@@ -281,7 +275,6 @@ function mapEpisodes(rows: EpisodeRow[], episodeGroupMap: Map<number, string>, n
       episode_group_id,
       content,
       updated_at: toIsoOrNow(row.updated_at, now),
-      deleted_at: null,
     };
   });
   return { records, map };
@@ -301,7 +294,6 @@ function mapSubtitleLines(rows: DialogueRow[], episodeMap: Map<number, string>, 
     sequence_number: number;
     content: string;
     updated_at: string;
-    deleted_at: string | null;
   }> = [];
 
   for (const [episodeIdStr, dialogueRows] of Object.entries(grouped)) {
@@ -325,7 +317,7 @@ function mapSubtitleLines(rows: DialogueRow[], episodeMap: Map<number, string>, 
         translation: row.translation ?? null,
         explanation: row.explanation ?? null,
         sentence: row.sentence ?? null,
-        hidden: row.deleted_at !== null,
+        hidden: false,
       });
       records.push({
         id,
@@ -333,7 +325,6 @@ function mapSubtitleLines(rows: DialogueRow[], episodeMap: Map<number, string>, 
         sequence_number: idx + 1,
         content,
         updated_at: now,
-        deleted_at: row.deleted_at ?? null,
       });
     });
   }
@@ -348,7 +339,6 @@ function mapSentenceCards(rows: SentenceCardRow[], dialogueMap: Map<number, stri
     content: string;
     status: string;
     updated_at: string;
-    deleted_at: null;
   }> = [];
   let skipped = 0;
 
@@ -373,7 +363,6 @@ function mapSentenceCards(rows: SentenceCardRow[], dialogueMap: Map<number, stri
       content,
       status: row.status,
       updated_at: now,
-      deleted_at: null,
     });
   }
 
@@ -385,8 +374,8 @@ function insertEpisodeGroups(
   records: ReturnType<typeof mapEpisodeGroups>['records']
 ) {
   const stmt = db.prepare(
-    `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at, deleted_at)
-     VALUES (@id, @parent_group_id, @content, @display_order, @group_type, @updated_at, @deleted_at)`
+    `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at)
+     VALUES (@id, @parent_group_id, @content, @display_order, @group_type, @updated_at)`
   );
   const insert = db.transaction((rows) => {
     for (const row of rows) {
@@ -398,8 +387,8 @@ function insertEpisodeGroups(
 
 function insertEpisodes(db: DatabaseType, records: ReturnType<typeof mapEpisodes>['records']) {
   const stmt = db.prepare(
-    `INSERT INTO episodes (id, episode_group_id, content, updated_at, deleted_at)
-     VALUES (@id, @episode_group_id, @content, @updated_at, @deleted_at)`
+    `INSERT INTO episodes (id, episode_group_id, content, updated_at)
+     VALUES (@id, @episode_group_id, @content, @updated_at)`
   );
   const insert = db.transaction((rows) => {
     for (const row of rows) {
@@ -414,8 +403,8 @@ function insertSubtitleLines(
   records: ReturnType<typeof mapSubtitleLines>['records']
 ) {
   const stmt = db.prepare(
-    `INSERT INTO subtitle_lines (id, episode_id, sequence_number, content, updated_at, deleted_at)
-     VALUES (@id, @episode_id, @sequence_number, @content, @updated_at, @deleted_at)`
+    `INSERT INTO subtitle_lines (id, episode_id, sequence_number, content, updated_at)
+     VALUES (@id, @episode_id, @sequence_number, @content, @updated_at)`
   );
   const insert = db.transaction((rows) => {
     for (const row of rows) {
@@ -430,8 +419,8 @@ function insertSentenceCards(
   records: ReturnType<typeof mapSentenceCards>['records']
 ) {
   const stmt = db.prepare(
-    `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at, deleted_at)
-     VALUES (@id, @subtitle_line_id, @content, @status, @updated_at, @deleted_at)`
+    `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at)
+     VALUES (@id, @subtitle_line_id, @content, @status, @updated_at)`
   );
   const insert = db.transaction((rows) => {
     for (const row of rows) {

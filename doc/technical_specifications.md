@@ -206,7 +206,7 @@ Infrastructure が Domain に依存する方向になっているが、Clean Arc
 ### 共通仕様
 
 - `id` は UUID 文字列（TEXT）。
-- `updated_at` と `deleted_at` は ISO 8601 文字列。INSERT 時に `updated_at` を現在時刻で設定し、削除時に `deleted_at` を現在時刻で設定する。`deleted_at` が NULL なら未削除扱い。
+- `updated_at` は ISO 8601 文字列。INSERT 時に `updated_at` を現在時刻で設定する。
 - `content` カラムに JSON 文字列で可変フィールドを格納し、テーブルスキーマ変更を最小化する。
 - 外部キー制約は付与しない（論理的なリレーションは維持）。
 
@@ -221,14 +221,12 @@ erDiagram
         TEXT group_type
         TEXT content
         TEXT updated_at
-        TEXT deleted_at
     }
     EPISODES {
         TEXT id PK
         TEXT episode_group_id
         TEXT content
         TEXT updated_at
-        TEXT deleted_at
     }
     SUBTITLE_LINES {
         TEXT id PK
@@ -236,7 +234,6 @@ erDiagram
         INTEGER sequence_number
         TEXT content
         TEXT updated_at
-        TEXT deleted_at
     }
     SENTENCE_CARDS {
         TEXT id PK
@@ -244,7 +241,6 @@ erDiagram
         TEXT content
         TEXT status
         TEXT updated_at
-        TEXT deleted_at
     }
 
     EPISODE_GROUPS ||--o{ EPISODE_GROUPS : "parent_group_id"
@@ -264,7 +260,6 @@ erDiagram
 | `display_order`   | INTEGER |          | 表示順序                                            |
 | `group_type`      | TEXT    |          | `album` (エピソード格納可) / `folder` (サブグループ専用) |
 | `updated_at`      | TEXT    |          | 最終更新時刻 (ISO 8601)                             |
-| `deleted_at`      | TEXT    | ●        | 削除時刻 (ISO 8601)。NULL なら未削除                |
 
 ### 2.2. `episodes` テーブル
 エピソード（音声コンテンツとスクリプトのセット）を管理する。
@@ -275,7 +270,6 @@ erDiagram
 | `episode_group_id`   | TEXT |          | 論理的に `episode_groups.id` を参照                                   |
 | `content`            | TEXT |          | JSON 文字列。`{ title, mediaPath, learningLanguage, explanationLanguage }` |
 | `updated_at`         | TEXT |          | 最終更新時刻 (ISO 8601)                                               |
-| `deleted_at`         | TEXT | ●        | 削除時刻 (ISO 8601)。NULL なら未削除                                  |
 
 ### 2.3. `subtitle_lines` テーブル（旧 `dialogues`）
 スクリプト内の各セリフを管理する。`sequence_number` は startTimeMs 順の 1 始まり連番。
@@ -287,9 +281,8 @@ erDiagram
 | `sequence_number`   | INTEGER |          | セリフ順。startTimeMs 昇順で 1 始まり                                               |
 | `content`           | TEXT    |          | JSON 文字列。`{ startTimeMs, endTimeMs, originalText, correctedText, translation, explanation, sentence, hidden }` |
 | `updated_at`        | TEXT    |          | 最終更新時刻 (ISO 8601)                                                              |
-| `deleted_at`        | TEXT    | ●        | 削除時刻 (ISO 8601)。NULL なら未削除                                                 |
 
-`hidden` は論理的な非表示フラグで、`deleted_at` とは別に管理する（`deleted_at` が設定された行は復元不可の削除扱い）。
+`hidden` は論理的な非表示フラグで、削除とは別に管理する。
 
 ### 2.4. `sentence_cards` テーブル
 Sentence Mining で生成されたカードを管理する。
@@ -301,7 +294,6 @@ Sentence Mining で生成されたカードを管理する。
 | `content`           | TEXT |          | JSON 文字列。`{ partOfSpeech, expression, sentence, contextualDefinition, coreMeaning, createdAt }` |
 | `status`            | TEXT |          | `active` / `suspended` / `cache` などの状態                                          |
 | `updated_at`        | TEXT |          | 最終更新時刻 (ISO 8601)                                                              |
-| `deleted_at`        | TEXT | ●        | 削除時刻 (ISO 8601)。NULL なら未削除                                                 |
 
 ---
 

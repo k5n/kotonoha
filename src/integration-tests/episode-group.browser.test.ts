@@ -33,13 +33,12 @@ type GroupRow = {
   parent_group_id: string | null;
   group_type: 'album' | 'folder';
   updated_at: string;
-  deleted_at: string | null;
 };
 
 async function selectAllGroups(): Promise<readonly GroupRow[]> {
   const db = new Database(DATABASE_URL);
   return await db.select<GroupRow[]>(
-    `SELECT id, parent_group_id, display_order, group_type, content, updated_at, deleted_at
+    `SELECT id, parent_group_id, display_order, group_type, content, updated_at
      FROM episode_groups
      ORDER BY display_order, id`
   );
@@ -47,9 +46,6 @@ async function selectAllGroups(): Promise<readonly GroupRow[]> {
 
 async function countEpisodes(): Promise<number> {
   const db = new Database(DATABASE_URL);
-  // const rows = await db.select<{ count: number }[]>(
-  //   'SELECT COUNT(*) AS count FROM episodes WHERE deleted_at IS NULL'
-  // );
   const rows = await db.select<{ count: number }[]>('SELECT COUNT(*) AS count FROM episodes');
   return rows[0]?.count ?? 0;
 }
@@ -193,7 +189,6 @@ test('interaction: user can add a new album group via the modal', async () => {
   const [group] = groups;
   expect(group.group_type).toBe('album');
   expect(group.parent_group_id).toBeNull();
-  expect(group.deleted_at).toBeNull();
   expect(JSON.parse(group.content)).toMatchObject({ name: 'New Audio Album' });
 
   await page.screenshot();
@@ -255,9 +250,7 @@ test('interaction: user can delete a group and its episodes', async () => {
   await expect.element(page.getByText('No Groups')).toBeInTheDocument();
 
   const groups = await selectAllGroups();
-  expect(groups).toHaveLength(1);
-  expect(groups[0].deleted_at).not.toBeNull();
-  expect(JSON.parse(groups[0].content).name).toBe(groupName);
+  expect(groups).toHaveLength(0);
   expect(await countEpisodes()).toBe(0);
 
   await page.screenshot();
@@ -387,7 +380,7 @@ test('interaction error: shows error when deleting group fails', async () => {
 
   const executeSpy = vi.spyOn(Database.prototype, 'execute');
   executeSpy.mockImplementation(async (sql: string) => {
-    if (sql.includes('UPDATE episode_groups SET deleted_at')) {
+    if (sql.includes('DELETE FROM episode_groups')) {
       throw new Error('Database delete failed');
     }
     return { lastInsertId: 0, rowsAffected: 0 };
@@ -411,10 +404,9 @@ test('interaction error: shows error when deleting group fails', async () => {
     await expect.element(page.getByText('Failed to delete group.')).toBeInTheDocument();
     await expect.element(page.getByRole('button', { name: 'Yes, delete' })).not.toBeInTheDocument();
 
-    const groups = await selectAllGroups();
-    expect(groups).toHaveLength(1);
-    expect(groups[0]?.deleted_at).toBeNull();
-    expect(await countEpisodes()).toBe(1);
+  const groups = await selectAllGroups();
+  expect(groups).toHaveLength(1);
+  expect(await countEpisodes()).toBe(1);
 
     await page.screenshot();
   } finally {

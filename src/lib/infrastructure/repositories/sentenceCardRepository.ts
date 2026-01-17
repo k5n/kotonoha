@@ -9,7 +9,6 @@ type SentenceCardRow = {
   content: string;
   status: SentenceCardStatus;
   updated_at: string;
-  deleted_at: string | null;
 };
 
 type SentenceCardContent = {
@@ -74,8 +73,8 @@ export const sentenceCardRepository = {
   //     createdAt: now,
   //   });
   //   await db.execute(
-  //     `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at, deleted_at)
-  //     VALUES (?, ?, ?, ?, ?, NULL)`,
+  //     `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at)
+  //     VALUES (?, ?, ?, ?, ?)`,
   //     [id, params.subtitleLineId, content, params.status, now]
   //   );
 
@@ -135,13 +134,13 @@ export const sentenceCardRepository = {
           coreMeaning: item.coreMeaning,
           createdAt: now,
         }).replace(/'/g, "''");
-        return `('${item.id}', '${subtitleLineId.replace(/'/g, "''")}', '${content}', 'cache', '${now}', NULL)`;
+        return `('${item.id}', '${subtitleLineId.replace(/'/g, "''")}', '${content}', 'cache', '${now}')`;
       })
       .join(',');
 
     if (values.length === 0) return;
 
-    const query = `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at, deleted_at) VALUES ${values}`;
+    const query = `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at) VALUES ${values}`;
     await db.execute(query);
   },
 

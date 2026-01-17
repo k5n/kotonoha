@@ -9,7 +9,6 @@ type SubtitleLineRow = {
   sequence_number: number;
   content: string;
   updated_at: string;
-  deleted_at: string | null;
 };
 
 type SubtitleLineContent = {
@@ -98,7 +97,7 @@ export const subtitleLineRepository = {
   async getSubtitleLineById(subtitleLineId: string): Promise<SubtitleLine | null> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<SubtitleLineRow[]>(
-      'SELECT * FROM subtitle_lines WHERE id = ? AND deleted_at IS NULL',
+      'SELECT * FROM subtitle_lines WHERE id = ?',
       [subtitleLineId]
     );
     return rows.length > 0 ? mapRowToSubtitleLine(rows[0]) : null;
@@ -107,7 +106,7 @@ export const subtitleLineRepository = {
   async getSubtitleLinesByEpisodeId(episodeId: string): Promise<readonly SubtitleLine[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<SubtitleLineRow[]>(
-      'SELECT * FROM subtitle_lines WHERE episode_id = ? AND deleted_at IS NULL ORDER BY sequence_number ASC',
+      'SELECT * FROM subtitle_lines WHERE episode_id = ? ORDER BY sequence_number ASC',
       [episodeId]
     );
     return rows.map(mapRowToSubtitleLine);
@@ -134,13 +133,13 @@ export const subtitleLineRepository = {
         });
         return `('${uuidV4()}', '${escapeSqlString(episodeId)}', ${index + 1}, '${escapeSqlString(
           JSON.stringify(content)
-        )}', '${now}', NULL)`;
+        )}', '${now}')`;
       })
       .join(',');
 
     if (values.length === 0) return;
 
-    const query = `INSERT INTO subtitle_lines (id, episode_id, sequence_number, content, updated_at, deleted_at) VALUES ${values}`;
+    const query = `INSERT INTO subtitle_lines (id, episode_id, sequence_number, content, updated_at) VALUES ${values}`;
     await db.execute(query);
   },
 
@@ -160,10 +159,7 @@ export const subtitleLineRepository = {
 
   async deleteByEpisodeId(episodeId: string): Promise<void> {
     const db = new Database(await getDatabasePath());
-    await db.execute(
-      'UPDATE subtitle_lines SET deleted_at = ? WHERE episode_id = ? AND deleted_at IS NULL',
-      [new Date().toISOString(), episodeId]
-    );
+    await db.execute('DELETE FROM subtitle_lines WHERE episode_id = ?', [episodeId]);
   },
 
   async updateSubtitleLineText(
