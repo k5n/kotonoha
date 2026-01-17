@@ -1,6 +1,8 @@
+use google_ai_rs::error::{Error as GoogleAiError, NetError, ServiceError, TonicStatus};
 use google_ai_rs::{AsSchema, Client, TypedModel};
-use log;
+use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
+use tonic::Code;
 
 #[derive(AsSchema, Deserialize, Serialize)]
 #[schema(
@@ -198,17 +200,69 @@ pub async fn analyze_sentence_with_llm(
         &context,
         &target_sentence,
     );
-    log::debug!("Generated prompt: {}", prompt);
+    debug!("Generated prompt: {}", prompt);
 
     let client = Client::new(api_key.into()).await.map_err(|e| {
-        log::error!("Failed to create Google AI client: {}", e);
+        error!("Failed to create Google AI client: {}", e);
         "Failed to create Google AI client".to_string()
     })?;
-    let model = TypedModel::<SentenceMiningResult>::new(&client, "gemini-2.5-flash-lite");
-    let result = model.generate_content(prompt).await.map_err(|e| {
-        log::error!("Failed to generate content: {}", e);
-        "Failed to generate content".to_string()
-    })?;
+    let models = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemma-3-27b"];
+    let result = generate_with_fallback(&client, &prompt, &models)
+        .await
+        .map_err(|err| {
+            error!("Failed to generate content: {}", err);
+            "Failed to generate content".to_string()
+        })?;
 
     Ok(result)
+}
+
+async fn generate_with_model(
+    client: &Client,
+    model_name: &str,
+    prompt: &str,
+) -> Result<SentenceMiningResult, GoogleAiError> {
+    let model = TypedModel::<SentenceMiningResult>::new(client, model_name);
+    model.generate_content(prompt).await
+}
+
+async fn generate_with_fallback(
+    client: &Client,
+    prompt: &str,
+    models: &[&str],
+) -> Result<SentenceMiningResult, GoogleAiError> {
+    let mut last_error = None;
+    for (index, model_name) in models.iter().enumerate() {
+        match generate_with_model(client, model_name, prompt).await {
+            Ok(result) => return Ok(result),
+            Err(err) if is_rate_limit_error(&err) => {
+                last_error = Some(err);
+                if let Some(next_model) = models.get(index + 1) {
+                    warn!(
+                        "Rate limit reached on model {}, falling back to {}: {}",
+                        model_name, next_model, last_error.as_ref().unwrap()
+                    );
+                } else {
+                    break;
+                }
+            }
+            Err(err) => return Err(err),
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| {
+        GoogleAiError::Service(ServiceError::ApiError(TonicStatus(
+            Box::new(tonic::Status::new(Code::Unknown, "No models available")),
+        )))
+    }))
+}
+
+fn is_rate_limit_error(err: &GoogleAiError) -> bool {
+    match err {
+        GoogleAiError::Service(ServiceError::ApiError(TonicStatus(status)))
+        | GoogleAiError::Net(NetError::ServiceUnavailable(TonicStatus(status))) => {
+            status.code() == Code::ResourceExhausted
+        }
+        _ => false,
+    }
 }
