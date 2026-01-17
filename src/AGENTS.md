@@ -131,11 +131,11 @@ See: [src-tauri/AGENTS.md](../src-tauri/AGENTS.md) for full details.
 ## Database overview
 
 - Tables
-  - `episode_groups`: hierarchical groups. Fields: `id` (UUID, PK), `parent_group_id` (nullable), `content` (JSON: `{ name }`), `display_order`, `group_type` (`album`|`folder`), `updated_at`, `deleted_at`.
-  - `episodes`: episodes (audio + transcript). Fields: `id` (UUID, PK), `episode_group_id`, `content` (JSON: `{ title, mediaPath, learningLanguage, explanationLanguage }`), `updated_at`, `deleted_at`.
-  - `subtitle_lines` (old `dialogues`): transcript lines. Fields: `id` (UUID, PK), `episode_id`, `sequence_number` (1-based order by startTimeMs), `content` (JSON: `{ startTimeMs, endTimeMs, originalText, correctedText, translation, explanation, sentence, hidden }`), `updated_at`, `deleted_at`.
-  - `sentence_cards`: sentence-mining results. Fields: `id` (UUID, PK), `subtitle_line_id`, `content` (JSON: `{ partOfSpeech, expression, sentence, contextualDefinition, coreMeaning, createdAt }`), `status` (`active`|`suspended`|`cache` etc.), `updated_at`, `deleted_at`.
-- Common rules: `id` is UUID string; timestamps are ISO 8601; `content` holds flexible JSON; no foreign key constraints; `deleted_at` NULL means active.
+  - `episode_groups`: hierarchical groups. Fields: `id` (UUID, PK), `parent_group_id` (nullable), `content` (JSON: `{ name }`), `display_order`, `group_type` (`album`|`folder`), `updated_at`.
+  - `episodes`: episodes (audio + transcript). Fields: `id` (UUID, PK), `episode_group_id`, `content` (JSON: `{ title, mediaPath, learningLanguage, explanationLanguage }`), `updated_at`.
+  - `subtitle_lines` (old `dialogues`): transcript lines. Fields: `id` (UUID, PK), `episode_id`, `sequence_number` (1-based order by startTimeMs), `content` (JSON: `{ startTimeMs, endTimeMs, originalText, correctedText, translation, explanation, sentence, hidden }`), `updated_at`.
+  - `sentence_cards`: sentence-mining results. Fields: `id` (UUID, PK), `subtitle_line_id`, `content` (JSON: `{ partOfSpeech, expression, sentence, contextualDefinition, coreMeaning, createdAt }`), `status` (`active`|`suspended`|`cache` etc.), `updated_at`.
+- Common rules: `id` is UUID string; timestamps are ISO 8601; `content` holds flexible JSON; no foreign key constraints.
 - Use the DB as the single source of truth; front-end stores remain transient UI state only.
 
 See: `src-tauri/migrations/` for authoritative schema details.

@@ -27,8 +27,8 @@ export async function insertEpisodeGroup(params: {
   const now = new Date().toISOString();
   const db = new Database(DATABASE_URL);
   await db.execute(
-    `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at, deleted_at)
-     VALUES (?, ?, ?, ?, ?, ?, NULL)`,
+    `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [id, parentId, JSON.stringify({ name }), displayOrder, groupType, now]
   );
   return id;
@@ -46,8 +46,8 @@ export async function insertEpisode(params: {
 
   const id = generateId();
   await db.execute(
-    `INSERT INTO episodes (id, episode_group_id, content, updated_at, deleted_at)
-     VALUES (?, ?, ?, ?, NULL)`,
+    `INSERT INTO episodes (id, episode_group_id, content, updated_at)
+     VALUES (?, ?, ?, ?)`,
     [
       id,
       episodeGroupId,
@@ -112,8 +112,8 @@ export async function insertSubtitleLine(params: {
   const now = new Date().toISOString();
 
   await db.execute(
-    `INSERT INTO subtitle_lines (id, episode_id, sequence_number, content, updated_at, deleted_at)
-     VALUES (?, ?, ?, ?, ?, NULL)`,
+    `INSERT INTO subtitle_lines (id, episode_id, sequence_number, content, updated_at)
+     VALUES (?, ?, ?, ?, ?)`,
     [
       id,
       episodeId,
@@ -142,7 +142,6 @@ export async function getSentenceCards(subtitleLineId: string): Promise<Sentence
     content: string;
     status: 'active' | 'suspended' | 'cache';
     updated_at: string;
-    deleted_at: string | null;
   };
 
   function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
@@ -207,8 +206,8 @@ export async function insertSentenceCard(params: {
     createdAt,
   });
   await db.execute(
-    `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at, deleted_at)
-     VALUES (?, ?, ?, ?, ?, NULL)`,
+    `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at)
+     VALUES (?, ?, ?, ?, ?)`,
     [id, subtitleLineId, content, status, createdAt]
   );
   return id;

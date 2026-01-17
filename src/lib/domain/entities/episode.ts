@@ -13,5 +13,4 @@ export type Episode = {
   readonly updatedAt: Date;
   readonly createdAt: Date;
   readonly sentenceCardCount: number;
-  readonly deletedAt?: string | null;
 };

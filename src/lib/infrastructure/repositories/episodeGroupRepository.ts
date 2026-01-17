@@ -10,7 +10,6 @@ type EpisodeGroupRow = {
   display_order: number;
   group_type: EpisodeGroupType;
   updated_at: string;
-  deleted_at: string | null;
 };
 
 type EpisodeGroupContent = {
@@ -54,7 +53,7 @@ export const episodeGroupRepository = {
   async getAllGroups(): Promise<readonly EpisodeGroup[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<EpisodeGroupRow[]>(
-      'SELECT * FROM episode_groups WHERE deleted_at IS NULL ORDER BY display_order ASC'
+      'SELECT * FROM episode_groups ORDER BY display_order ASC'
     );
     if (!Array.isArray(rows)) throw new Error('DB returned non-array result');
     return rows.map(mapRowToEpisodeGroup);
@@ -75,16 +74,9 @@ export const episodeGroupRepository = {
     const now = new Date().toISOString();
     const db = new Database(await getDatabasePath());
     await db.execute(
-      `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at, deleted_at)
-      VALUES (?, ?, ?, ?, ?, ?, NULL)`,
-      [
-        id,
-        params.parentId,
-        JSON.stringify({ name: params.name }),
-        params.displayOrder,
-        params.groupType,
-        now,
-      ]
+      `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, params.parentId, JSON.stringify({ name: params.name }), params.displayOrder, params.groupType, now]
     );
     return {
       id,
@@ -104,7 +96,7 @@ export const episodeGroupRepository = {
   async updateGroupName(groupId: string, newName: string): Promise<void> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<{ content: string }[]>(
-      'SELECT content FROM episode_groups WHERE id = ? AND deleted_at IS NULL',
+      'SELECT content FROM episode_groups WHERE id = ?',
       [groupId]
     );
     if (!Array.isArray(rows) || rows.length === 0) {
@@ -129,7 +121,7 @@ export const episodeGroupRepository = {
     const db = new Database(await getDatabasePath());
     const now = new Date().toISOString();
     await db.execute(
-      'UPDATE episode_groups SET parent_group_id = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL',
+      'UPDATE episode_groups SET parent_group_id = ?, updated_at = ? WHERE id = ?',
       [newParentId, now, groupId]
     );
   },
@@ -142,7 +134,7 @@ export const episodeGroupRepository = {
   async getGroupById(groupId: string): Promise<EpisodeGroup | null> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<EpisodeGroupRow[]>(
-      'SELECT * FROM episode_groups WHERE id = ? AND deleted_at IS NULL',
+      'SELECT * FROM episode_groups WHERE id = ?',
       [groupId]
     );
     if (!Array.isArray(rows) || rows.length === 0) return null;
@@ -159,11 +151,11 @@ export const episodeGroupRepository = {
     let rows;
     if (parentId === null) {
       rows = await db.select(
-        'SELECT * FROM episode_groups WHERE parent_group_id IS NULL AND deleted_at IS NULL ORDER BY display_order ASC'
+        'SELECT * FROM episode_groups WHERE parent_group_id IS NULL ORDER BY display_order ASC'
       );
     } else {
       rows = await db.select(
-        'SELECT * FROM episode_groups WHERE parent_group_id = ? AND deleted_at IS NULL ORDER BY display_order ASC',
+        'SELECT * FROM episode_groups WHERE parent_group_id = ? ORDER BY display_order ASC',
         [parentId]
       );
     }
@@ -178,7 +170,7 @@ export const episodeGroupRepository = {
   async findAlbumGroups(): Promise<readonly EpisodeGroup[]> {
     const db = new Database(await getDatabasePath());
     const rows = await db.select<EpisodeGroupRow[]>(
-      "SELECT * FROM episode_groups WHERE group_type = 'album' AND deleted_at IS NULL"
+      "SELECT * FROM episode_groups WHERE group_type = 'album'"
     );
     return rows.map(mapRowToEpisodeGroup);
   },
@@ -194,7 +186,7 @@ export const episodeGroupRepository = {
       const now = new Date().toISOString();
       for (const group of groups) {
         await db.execute(
-          'UPDATE episode_groups SET display_order = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL',
+          'UPDATE episode_groups SET display_order = ?, updated_at = ? WHERE id = ?',
           [group.display_order, now, group.id]
         );
       }
@@ -215,10 +207,6 @@ export const episodeGroupRepository = {
     }
     const db = new Database(await getDatabasePath());
     const placeholders = groupIds.map(() => '?').join(',');
-    const now = new Date().toISOString();
-    await db.execute(
-      `UPDATE episode_groups SET deleted_at = ?, updated_at = ? WHERE id IN (${placeholders})`,
-      [now, now, ...groupIds]
-    );
+    await db.execute(`DELETE FROM episode_groups WHERE id IN (${placeholders})`, [...groupIds]);
   },
 };
