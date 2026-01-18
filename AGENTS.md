@@ -10,7 +10,8 @@ Kotonoha is a desktop application that helps language learners transform audio/v
 - Frontend guidelines: Testing, browser-mode, dependencies, and coding style. See [src/AGENTS.md](src/AGENTS.md) for details.
 - Layered architecture: Four-layer structure (Presentation → Application → Infrastructure, with shared Domain). See [src/AGENTS.md](src/AGENTS.md) for details.
 - Key Tauri commands: LLM, Stronghold, Audio, Download, TTS, YouTube, Language Detection. See [src-tauri/AGENTS.md](src-tauri/AGENTS.md) for details.
-- Database overview: Tables for episode_groups, episodes, dialogues, sentence_cards. See [src-tauri/migrations/001-initial-tables.sql](src-tauri/migrations/001-initial-tables.sql) for details.
+- Database overview: Tables for episode_groups, episodes, subtitle_lines, sentence_cards. See [src-tauri/migrations/0001-initial-tables.sql](src-tauri/migrations/0001-initial-tables.sql) for details.
+- JSONB content policy: Store entity data in JSONB using camelCase keys that match TypeScript entity definitions.
 - File & media storage policy: Media stored under Tauri AppLocalData in media/{UUID}/. See [src/AGENTS.md](src/AGENTS.md) for details.
 - Data & state strategy: Avoid long-lived caches; fetch from DB via repositories. See [src/AGENTS.md](src/AGENTS.md) for details.
 - Security notes: API keys via Tauri Stronghold. See [src-tauri/AGENTS.md](src-tauri/AGENTS.md) for details.

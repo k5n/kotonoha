@@ -11,40 +11,32 @@ type SentenceCardRow = {
   updated_at: string;
 };
 
-type SentenceCardContent = {
-  partOfSpeech?: string;
-  expression?: string;
-  sentence?: string;
-  contextualDefinition?: string;
-  coreMeaning?: string;
-  createdAt?: string;
+type SentenceCardContent = Omit<SentenceCard, 'createdAt'> & {
+  createdAt: string;
+  updatedAt: string;
 };
 
 function parseSentenceCardContent(raw: string): SentenceCardContent {
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') {
-      return parsed as SentenceCardContent;
-    }
-  } catch {
-    // ignore parse errors
+  const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid sentence card content: root');
   }
-  return {};
+  return parsed as SentenceCardContent;
 }
 
 function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
   const content = parseSentenceCardContent(row.content);
-  const createdAt = content.createdAt ?? row.updated_at;
+  const createdAt = content.createdAt;
   return {
-    id: row.id,
-    subtitleLineId: row.subtitle_line_id,
-    partOfSpeech: content.partOfSpeech ?? '',
-    expression: content.expression ?? '',
-    sentence: content.sentence ?? '',
-    contextualDefinition: content.contextualDefinition ?? '',
-    coreMeaning: content.coreMeaning ?? '',
-    status: row.status,
-    createdAt: new Date(createdAt),
+    id: content.id,
+    subtitleLineId: content.subtitleLineId,
+    partOfSpeech: content.partOfSpeech,
+    expression: content.expression,
+    sentence: content.sentence,
+    contextualDefinition: content.contextualDefinition,
+    coreMeaning: content.coreMeaning,
+    status: content.status,
+    createdAt: new Date(createdAt || new Date().toISOString()),
   };
 }
 
@@ -65,12 +57,16 @@ export const sentenceCardRepository = {
   //   const now = new Date().toISOString();
   //   const id = uuidV4();
   //   const content = JSON.stringify({
-  //     partOfSpeech: params.partOfSpeech,
+  //     id,
+  //     subtitle_line_id: params.subtitleLineId,
+  //     part_of_speech: params.partOfSpeech,
   //     expression: params.expression,
   //     sentence: params.sentence,
-  //     contextualDefinition: params.contextualDefinition,
-  //     coreMeaning: params.coreMeaning,
-  //     createdAt: now,
+  //     contextual_definition: params.contextualDefinition,
+  //     core_meaning: params.coreMeaning,
+  //     status: params.status,
+  //     created_at: now,
+  //     updated_at: now,
   //   });
   //   await db.execute(
   //     `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at)
@@ -127,12 +123,16 @@ export const sentenceCardRepository = {
     const values = items
       .map((item) => {
         const content = JSON.stringify({
+          id: item.id,
+          subtitleLineId,
           partOfSpeech: item.partOfSpeech,
           expression: item.expression,
           sentence: item.exampleSentence,
           contextualDefinition: item.contextualDefinition,
           coreMeaning: item.coreMeaning,
+          status: 'cache',
           createdAt: now,
+          updatedAt: now,
         }).replace(/'/g, "''");
         return `('${item.id}', '${subtitleLineId.replace(/'/g, "''")}', '${content}', 'cache', '${now}')`;
       })
@@ -151,9 +151,15 @@ export const sentenceCardRepository = {
     if (cardIds.length === 0) return;
     const db = new Database(await getDatabasePath());
     const placeholders = cardIds.map(() => '?').join(',');
-    await db.execute(`UPDATE sentence_cards SET status = 'active' WHERE id IN (${placeholders})`, [
-      ...cardIds,
-    ]);
+    const now = new Date().toISOString();
+    await db.execute(
+      `UPDATE sentence_cards
+       SET status = 'active',
+           updated_at = ?,
+           content = json_set(content, '$.status', 'active', '$.updatedAt', ?)
+       WHERE id IN (${placeholders})`,
+      [now, now, ...cardIds]
+    );
   },
 
   /**
@@ -161,7 +167,11 @@ export const sentenceCardRepository = {
    */
   async updateSentenceCardStatus(cardId: string, status: SentenceCardStatus): Promise<void> {
     const db = new Database(await getDatabasePath());
-    await db.execute('UPDATE sentence_cards SET status = ? WHERE id = ?', [status, cardId]);
+    const now = new Date().toISOString();
+    await db.execute(
+      "UPDATE sentence_cards SET status = ?, updated_at = ?, content = json_set(content, '$.status', ?, '$.updatedAt', ?) WHERE id = ?",
+      [status, now, status, now, cardId]
+    );
   },
 
   /**

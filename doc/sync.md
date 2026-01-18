@@ -52,8 +52,9 @@ SQLite3 のトリガーを利用して自動的に各テーブル（後述する
 
 - 各テーブルの主キーは各デバイスで共通のものを利用（UUID など）
 - 各テーブルに保存するオブジェクトの内容は content カラムに JSON で保存する
-    - content カラムには updated_at フィールドを含める
-    - updated_at はオブジェクトが最後に変更された時刻を保存する
+    - content カラムのプロパティ名は TypeScript 側のエンティティ定義に合わせて camelCase で統一する
+    - content カラムには updatedAt フィールドを含める
+    - updatedAt はオブジェクトが最後に変更された時刻を保存する
 
 つまり同期対象は Command 用テーブルであり、Query 用テーブルではありません。
 
@@ -97,11 +98,12 @@ content カラムには以下のような JSON を保存します。
 
 ```json
 {
-    "parent_group_id": null,
+    "id": "uuid-xxxx",
+    "parentId": null,
     "name": "value",
-    "display_order": 1,
-    "group_type": "folder",
-    "updated_at": "2024-06-01T12:00:00Z"
+    "displayOrder": 1,
+    "groupType": "folder",
+    "updatedAt": "2024-06-01T12:00:00Z"
 }
 ```
 
@@ -519,29 +521,29 @@ timestamp = max(local_timestamp, max_seen_timestamp) + 1 + i
 デバイスAの変更:
 ```json
 {
-    "parent_group_id": null,
+    "parentId": null,
     "name": "valueA1",   // 変更されたフィールド
-    "display_order": 1,
-    "group_type": "folder",
-    "updated_at": "2024-06-01T12:00:00Z"  // こちらの方が古い
+    "displayOrder": 1,
+    "groupType": "folder",
+    "updatedAt": "2024-06-01T12:00:00Z"  // こちらの方が古い
 }
 ```
 
 デバイスBの変更:
 ```json
 {
-    "parent_group_id": null,
+    "parentId": null,
     "name": "value",
-    "display_order": 2,  // 変更されたフィールド
-    "group_type": "folder",
-    "updated_at": "2024-06-01T12:10:00Z"  // こちらの方が新しい
+    "displayOrder": 2,  // 変更されたフィールド
+    "groupType": "folder",
+    "updatedAt": "2024-06-01T12:10:00Z"  // こちらの方が新しい
 }
 ```
 
 デバイスBが Google Drive と先に同期したとします。
-デバイスBの変更内容がアップロードされて sync_states テーブルにも反映され、この時点で sync_states での該当レコードの updated_at は "2024-06-01T12:10:00Z" になります。
+デバイスBの変更内容がアップロードされて sync_states テーブルにも反映され、この時点で content の updatedAt は "2024-06-01T12:10:00Z" になります。
 
-その後デバイスAが同期を行った場合、デバイスAの変更内容は updated_at が "2024-06-01T12:00:00Z" であるため、それをデバイスBが次の同期で取り込んだとしても sync_states テーブルの内容は更新されません。
+その後デバイスAが同期を行った場合、デバイスAの変更内容は updatedAt が "2024-06-01T12:00:00Z" であるため、それをデバイスBが次の同期で取り込んだとしても sync_states テーブルの内容は更新されません。
 同じオブジェクトに対する変更がどちらも適用されるようにと差分で表現しているのに、そもそも適用されないのでは意味がありません。
 
 ここでは `git pull --rebase` と同様の、「自分の変更（未同期）は、他人の変更（同期済み）よりも常に『後』に行われたものとして再定義する」という考え方を採用します。
@@ -725,22 +727,22 @@ PRAGMA incremental_vacuum(1000);
 デバイスAの変更:
 ```json
 {
-    "parent_group_id": null,
+    "parentId": null,
     "name": "valueA1",   // 変更されたフィールド
-    "display_order": 1,
-    "group_type": "folder",
-    "updated_at": "2024-06-01T12:00:00Z"
+    "displayOrder": 1,
+    "groupType": "folder",
+    "updatedAt": "2024-06-01T12:00:00Z"
 }
 ```
 
 デバイスBの変更:
 ```json
 {
-    "parent_group_id": null,
+    "parentId": null,
     "name": "value",
-    "display_order": 2,  // 変更されたフィールド
-    "group_type": "folder",
-    "updated_at": "2024-06-01T12:10:00Z"
+    "displayOrder": 2,  // 変更されたフィールド
+    "groupType": "folder",
+    "updatedAt": "2024-06-01T12:10:00Z"
 }
 ```
 
@@ -763,7 +765,7 @@ PRAGMA incremental_vacuum(1000);
 
 競合解決のためのタイムスタンプとして HLC（Hybrid Logical Clock）の考え方を取り入れる方向で考えていました。
 
-system_timestamp は sync_pending_changes テーブルの created_at の ms 単位のタイムスタンプ（ローカルデバイスの時刻）、max_seen_timestamp は sync_states テーブル内の updated_at で最大の時刻の ms 単位のタイムスタンプです。
+system_timestamp は sync_pending_changes テーブルの created_at の ms 単位のタイムスタンプ（ローカルデバイスの時刻）、max_seen_timestamp は sync_states テーブル内の content.updatedAt で最大の時刻の ms 単位のタイムスタンプです。
 アップロードする同期差分データファイルを作成する際に、以下のルールで timestamp を決定し、created_at (system_timestamp) を updated_at (HLC timestamp) に変換して設定します。
 
 ```
@@ -783,6 +785,6 @@ Google Drive 側の時刻を参照して未来へのズレを制限する方法�
 先程のデバイスAとデバイスBの例であれば、実時間としては先にデバイスAの変更が行われているのですが、同期処理としては「先にどちらが同期したか？」で updated_at タイムスタンプが決定されます。
 先にデバイスBが同期した場合、デバイスAの変更は updated_at がデバイスBの変更の updated_at より大きな値に変更されて同期されるため、後から同期しても sync_states テーブルに反映される仕組みです。
 同期に関係する目的としては、単に「どちらが先に同期したか？」の役割しか果たしておらず、もはや時間の概念を持つ意味がありません。
-もしデバッグ目的で実際にいつ頃に更新されたかを知りたい場合は、content 内の updated_at フィールドを参照すればよいです。最後に更新を行ったデバイスのローカルデバイス時刻が保存されています。
+もしデバッグ目的で実際にいつ頃に更新されたかを知りたい場合は、content 内の updatedAt フィールドを参照すればよいです。最後に更新を行ったデバイスのローカルデバイス時刻が保存されています。
 
 上記を考慮したうえで、HLC タイムスタンプをやめて、時刻の概念を持たない Lamport タイムスタンプに変更しました。

@@ -11,57 +11,21 @@ type SubtitleLineRow = {
   updated_at: string;
 };
 
-type SubtitleLineContent = {
-  startTimeMs?: number;
-  endTimeMs?: number | null;
-  originalText?: string;
-  correctedText?: string | null;
-  translation?: string | null;
-  explanation?: string | null;
-  sentence?: string | null;
-  hidden?: boolean;
+type SubtitleLineContent = SubtitleLine & {
+  updatedAt: string;
 };
 
-function parseSubtitleLineContent(raw: string): SubtitleLineContent | null {
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') {
-      return parsed as SubtitleLineContent;
-    }
-  } catch {
-    // ignore parse errors
+function parseSubtitleLineContent(raw: string): SubtitleLineContent {
+  const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid subtitle line content: root');
   }
-  return null;
-}
-
-function normalizeSubtitleLineContent(content: SubtitleLineContent): Required<SubtitleLineContent> {
-  return {
-    startTimeMs: typeof content.startTimeMs === 'number' ? content.startTimeMs : 0,
-    endTimeMs: typeof content.endTimeMs === 'number' ? content.endTimeMs : null,
-    originalText: typeof content.originalText === 'string' ? content.originalText : '',
-    correctedText: typeof content.correctedText === 'string' ? content.correctedText : null,
-    translation: typeof content.translation === 'string' ? content.translation : null,
-    explanation: typeof content.explanation === 'string' ? content.explanation : null,
-    sentence: typeof content.sentence === 'string' ? content.sentence : null,
-    hidden: typeof content.hidden === 'boolean' ? content.hidden : false,
-  };
+  return parsed as SubtitleLineContent;
 }
 
 function mapRowToSubtitleLine(row: SubtitleLineRow): SubtitleLine {
-  const content = normalizeSubtitleLineContent(parseSubtitleLineContent(row.content) ?? {});
-  return {
-    id: row.id,
-    episodeId: row.episode_id,
-    sequenceNumber: row.sequence_number,
-    startTimeMs: content.startTimeMs,
-    endTimeMs: content.endTimeMs,
-    originalText: content.originalText,
-    correctedText: content.correctedText,
-    translation: content.translation,
-    explanation: content.explanation,
-    sentence: content.sentence,
-    hidden: content.hidden,
-  };
+  const content = parseSubtitleLineContent(row.content);
+  return content;
 }
 
 function escapeSqlString(value: string): string {
@@ -70,7 +34,7 @@ function escapeSqlString(value: string): string {
 
 async function updateSubtitleLineContent(
   subtitleLineId: string,
-  updater: (content: Required<SubtitleLineContent>) => Required<SubtitleLineContent>
+  updater: (content: SubtitleLineContent) => SubtitleLineContent
 ): Promise<void> {
   const db = new Database(await getDatabasePath());
   const rows = await db.select<{ content: string }[]>(
@@ -79,15 +43,11 @@ async function updateSubtitleLineContent(
   );
   if (rows.length === 0) return;
 
-  const parsed = parseSubtitleLineContent(rows[0].content);
-  if (!parsed) {
-    throw new Error(`Failed to parse subtitle line content for id: ${subtitleLineId}`);
-  }
-  const currentContent = normalizeSubtitleLineContent(parsed);
+  const currentContent = parseSubtitleLineContent(rows[0].content);
   const updatedContent = updater(currentContent);
   const now = new Date().toISOString();
   await db.execute('UPDATE subtitle_lines SET content = ?, updated_at = ? WHERE id = ?', [
-    JSON.stringify(updatedContent),
+    JSON.stringify({ ...updatedContent, updatedAt: now }),
     now,
     subtitleLineId,
   ]);
@@ -96,10 +56,9 @@ async function updateSubtitleLineContent(
 export const subtitleLineRepository = {
   async getSubtitleLineById(subtitleLineId: string): Promise<SubtitleLine | null> {
     const db = new Database(await getDatabasePath());
-    const rows = await db.select<SubtitleLineRow[]>(
-      'SELECT * FROM subtitle_lines WHERE id = ?',
-      [subtitleLineId]
-    );
+    const rows = await db.select<SubtitleLineRow[]>('SELECT * FROM subtitle_lines WHERE id = ?', [
+      subtitleLineId,
+    ]);
     return rows.length > 0 ? mapRowToSubtitleLine(rows[0]) : null;
   },
 
@@ -121,7 +80,11 @@ export const subtitleLineRepository = {
     const now = new Date().toISOString();
     const values = sortedSubtitleLines
       .map((d, index) => {
-        const content = normalizeSubtitleLineContent({
+        const id = uuidV4();
+        const content: SubtitleLineContent = {
+          id,
+          episodeId,
+          sequenceNumber: index + 1,
           startTimeMs: d.startTimeMs,
           endTimeMs: d.endTimeMs,
           originalText: d.originalText,
@@ -130,8 +93,9 @@ export const subtitleLineRepository = {
           explanation: null,
           sentence: null,
           hidden: false,
-        });
-        return `('${uuidV4()}', '${escapeSqlString(episodeId)}', ${index + 1}, '${escapeSqlString(
+          updatedAt: now,
+        };
+        return `('${id}', '${escapeSqlString(episodeId)}', ${index + 1}, '${escapeSqlString(
           JSON.stringify(content)
         )}', '${now}')`;
       })

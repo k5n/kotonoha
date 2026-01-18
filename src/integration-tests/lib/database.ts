@@ -29,7 +29,21 @@ export async function insertEpisodeGroup(params: {
   await db.execute(
     `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at)
      VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, parentId, JSON.stringify({ name }), displayOrder, groupType, now]
+    [
+      id,
+      parentId,
+      JSON.stringify({
+        id,
+        parentId,
+        name,
+        displayOrder,
+        groupType,
+        updatedAt: now,
+      }),
+      displayOrder,
+      groupType,
+      now,
+    ]
   );
   return id;
 }
@@ -52,11 +66,15 @@ export async function insertEpisode(params: {
       id,
       episodeGroupId,
       JSON.stringify({
+        id,
+        episodeGroupId,
         title,
         mediaPath: mediaPath || `media/${id}/full.mp3`,
         learningLanguage: 'ja',
         explanationLanguage: 'en',
         displayOrder,
+        createdAt: now,
+        updatedAt: now,
       }),
       now,
     ]
@@ -119,6 +137,9 @@ export async function insertSubtitleLine(params: {
       episodeId,
       nextSequence,
       JSON.stringify({
+        id,
+        episodeId,
+        sequenceNumber: nextSequence,
         startTimeMs,
         endTimeMs,
         originalText,
@@ -126,7 +147,8 @@ export async function insertSubtitleLine(params: {
         translation,
         explanation,
         sentence,
-        hidden: hidden,
+        hidden,
+        updatedAt: now,
       }),
       now,
     ]
@@ -146,23 +168,26 @@ export async function getSentenceCards(subtitleLineId: string): Promise<Sentence
 
   function mapRowToSentenceCard(row: SentenceCardRow): SentenceCard {
     const content = JSON.parse(row.content) as {
+      id?: string;
+      subtitleLineId?: string;
       partOfSpeech?: string;
       expression?: string;
       sentence?: string;
       contextualDefinition?: string;
       coreMeaning?: string;
+      status?: SentenceCardRow['status'];
       createdAt?: string;
     };
     const createdAt = content.createdAt ?? row.updated_at;
     return {
-      id: row.id,
-      subtitleLineId: row.subtitle_line_id,
+      id: content.id ?? '',
+      subtitleLineId: content.subtitleLineId ?? '',
       partOfSpeech: content.partOfSpeech ?? '',
       expression: content.expression ?? '',
       sentence: content.sentence ?? '',
       contextualDefinition: content.contextualDefinition ?? '',
       coreMeaning: content.coreMeaning ?? '',
-      status: row.status,
+      status: content.status ?? 'active',
       createdAt: new Date(createdAt),
     };
   }
@@ -198,12 +223,16 @@ export async function insertSentenceCard(params: {
   const db = new Database(DATABASE_URL);
   const id = generateId();
   const content = JSON.stringify({
+    id,
+    subtitleLineId,
     partOfSpeech,
     expression,
     sentence,
     contextualDefinition,
     coreMeaning,
+    status,
     createdAt,
+    updatedAt: createdAt,
   });
   await db.execute(
     `INSERT INTO sentence_cards (id, subtitle_line_id, content, status, updated_at)

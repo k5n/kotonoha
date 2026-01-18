@@ -8,7 +8,7 @@ import { episodeRepository } from '$lib/infrastructure/repositories/episodeRepos
 export async function updateEpisodesOrder(episodes: readonly Episode[]): Promise<void> {
   const episodesWithOrder = episodes.map((episode, index) => ({
     id: episode.id,
-    display_order: index,
+    displayOrder: index,
   }));
   await episodeRepository.updateOrders(episodesWithOrder);
 }

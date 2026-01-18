@@ -12,33 +12,26 @@ type EpisodeGroupRow = {
   updated_at: string;
 };
 
-type EpisodeGroupContent = {
-  name?: string;
-  // 将来的な拡張用に他のプロパティも受け取れるようにしておく
-  [key: string]: unknown;
+type EpisodeGroupContent = Omit<EpisodeGroup, 'children'> & {
+  updatedAt: string;
 };
 
 function parseEpisodeGroupContent(content: string): EpisodeGroupContent {
-  try {
-    const parsed = JSON.parse(content);
-    if (parsed && typeof parsed === 'object') {
-      return parsed as EpisodeGroupContent;
-    }
-  } catch {
-    // JSONの破損などは呼び出し元でデフォルト値にフォールバックさせる
+  const parsed = JSON.parse(content);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid episode group content: root');
   }
-  return {};
+  return parsed as EpisodeGroupContent;
 }
 
-// DBのsnake_caseカラム名をcamelCaseに変換し、EpisodeGroup型にマッピング
 function mapRowToEpisodeGroup(row: EpisodeGroupRow): EpisodeGroup {
   const content = parseEpisodeGroupContent(row.content);
   return {
-    id: row.id,
-    name: typeof content.name === 'string' ? content.name : '',
-    displayOrder: row.display_order,
-    parentId: row.parent_group_id,
-    groupType: row.group_type,
+    id: content.id,
+    name: content.name,
+    displayOrder: content.displayOrder,
+    parentId: content.parentId,
+    groupType: content.groupType,
     children: [], // フラットで返す
   };
 }
@@ -73,10 +66,18 @@ export const episodeGroupRepository = {
     const id = uuidV4();
     const now = new Date().toISOString();
     const db = new Database(await getDatabasePath());
+    const content = JSON.stringify({
+      id,
+      parentId: params.parentId,
+      name: params.name,
+      displayOrder: params.displayOrder,
+      groupType: params.groupType,
+      updatedAt: now,
+    });
     await db.execute(
       `INSERT INTO episode_groups (id, parent_group_id, content, display_order, group_type, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, params.parentId, JSON.stringify({ name: params.name }), params.displayOrder, params.groupType, now]
+      [id, params.parentId, content, params.displayOrder, params.groupType, now]
     );
     return {
       id,
@@ -102,9 +103,9 @@ export const episodeGroupRepository = {
     if (!Array.isArray(rows) || rows.length === 0) {
       throw new Error(`Episode group not found: ${groupId}`);
     }
-    const currentContent = parseEpisodeGroupContent(rows[0]?.content ?? '{}');
-    const newContent = JSON.stringify({ ...currentContent, name: newName });
+    const currentContent = parseEpisodeGroupContent(rows[0].content);
     const now = new Date().toISOString();
+    const newContent = JSON.stringify({ ...currentContent, name: newName, updatedAt: now });
     await db.execute('UPDATE episode_groups SET content = ?, updated_at = ? WHERE id = ?', [
       newContent,
       now,
@@ -119,11 +120,26 @@ export const episodeGroupRepository = {
    */
   async updateGroupParent(groupId: string, newParentId: string | null): Promise<void> {
     const db = new Database(await getDatabasePath());
-    const now = new Date().toISOString();
-    await db.execute(
-      'UPDATE episode_groups SET parent_group_id = ?, updated_at = ? WHERE id = ?',
-      [newParentId, now, groupId]
+    const rows = await db.select<{ content: string }[]>(
+      'SELECT content FROM episode_groups WHERE id = ?',
+      [groupId]
     );
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error(`Episode group not found: ${groupId}`);
+    }
+    const currentContent = parseEpisodeGroupContent(rows[0].content);
+    const now = new Date().toISOString();
+    const newContent = JSON.stringify({
+      ...currentContent,
+      parentId: newParentId,
+      updatedAt: now,
+    });
+    await db.execute('UPDATE episode_groups SET parent_group_id = ?, updated_at = ? WHERE id = ?', [
+      newParentId,
+      now,
+      groupId,
+    ]);
+    await db.execute('UPDATE episode_groups SET content = ? WHERE id = ?', [newContent, groupId]);
   },
 
   /**
@@ -133,10 +149,9 @@ export const episodeGroupRepository = {
    */
   async getGroupById(groupId: string): Promise<EpisodeGroup | null> {
     const db = new Database(await getDatabasePath());
-    const rows = await db.select<EpisodeGroupRow[]>(
-      'SELECT * FROM episode_groups WHERE id = ?',
-      [groupId]
-    );
+    const rows = await db.select<EpisodeGroupRow[]>('SELECT * FROM episode_groups WHERE id = ?', [
+      groupId,
+    ]);
     if (!Array.isArray(rows) || rows.length === 0) return null;
     return mapRowToEpisodeGroup(rows[0]);
   },
@@ -179,16 +194,31 @@ export const episodeGroupRepository = {
    * 複数のグループの表示順序を一括で更新する
    * @param groups グループIDと新しい表示順序のペアの配列
    */
-  async updateOrders(groups: readonly { id: string; display_order: number }[]): Promise<void> {
+  async updateOrders(groups: readonly { id: string; displayOrder: number }[]): Promise<void> {
     const db = new Database(await getDatabasePath());
     await db.execute('BEGIN TRANSACTION');
     try {
       const now = new Date().toISOString();
       for (const group of groups) {
+        const rows = await db.select<{ content: string }[]>(
+          'SELECT content FROM episode_groups WHERE id = ?',
+          [group.id]
+        );
+        if (!Array.isArray(rows) || rows.length === 0) continue;
+        const currentContent = parseEpisodeGroupContent(rows[0].content);
+        const newContent = JSON.stringify({
+          ...currentContent,
+          displayOrder: group.displayOrder,
+          updatedAt: now,
+        });
         await db.execute(
           'UPDATE episode_groups SET display_order = ?, updated_at = ? WHERE id = ?',
-          [group.display_order, now, group.id]
+          [group.displayOrder, now, group.id]
         );
+        await db.execute('UPDATE episode_groups SET content = ? WHERE id = ?', [
+          newContent,
+          group.id,
+        ]);
       }
       await db.execute('COMMIT');
     } catch (e) {

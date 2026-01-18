@@ -207,7 +207,8 @@ Infrastructure が Domain に依存する方向になっているが、Clean Arc
 
 - `id` は UUID 文字列（TEXT）。
 - `updated_at` は ISO 8601 文字列。INSERT 時に `updated_at` を現在時刻で設定する。
-- `content` カラムに JSON 文字列で可変フィールドを格納し、テーブルスキーマ変更を最小化する。
+- `content` カラムに JSONB で可変フィールドを格納し、テーブルスキーマ変更を最小化する。
+  - `content` 内のプロパティ名は TypeScript 側のエンティティ定義に合わせて camelCase で統一する。
 - 外部キー制約は付与しない（論理的なリレーションは維持）。
 
 ### ER図 (Mermaid)
@@ -219,26 +220,26 @@ erDiagram
         TEXT parent_group_id
         INTEGER display_order
         TEXT group_type
-        TEXT content
+        JSONB content
         TEXT updated_at
     }
     EPISODES {
         TEXT id PK
         TEXT episode_group_id
-        TEXT content
+        JSONB content
         TEXT updated_at
     }
     SUBTITLE_LINES {
         TEXT id PK
         TEXT episode_id
         INTEGER sequence_number
-        TEXT content
+        JSONB content
         TEXT updated_at
     }
     SENTENCE_CARDS {
         TEXT id PK
         TEXT subtitle_line_id
-        TEXT content
+        JSONB content
         TEXT status
         TEXT updated_at
     }
@@ -256,7 +257,7 @@ erDiagram
 |-------------------|---------|----------|-----------------------------------------------------|
 | `id`              | TEXT    |          | UUID (PK)                                           |
 | `parent_group_id` | TEXT    | ●        | 親グループID（NULL でルート扱い）                  |
-| `content`         | TEXT    |          | JSON 文字列。`{ name }` を保持                      |
+| `content`         | JSONB   |          | JSONB。エンティティの内容を保持 |
 | `display_order`   | INTEGER |          | 表示順序                                            |
 | `group_type`      | TEXT    |          | `album` (エピソード格納可) / `folder` (サブグループ専用) |
 | `updated_at`      | TEXT    |          | 最終更新時刻 (ISO 8601)                             |
@@ -268,7 +269,7 @@ erDiagram
 |----------------------|------|----------|------------------------------------------------------------------------|
 | `id`                 | TEXT |          | UUID (PK)                                                             |
 | `episode_group_id`   | TEXT |          | 論理的に `episode_groups.id` を参照                                   |
-| `content`            | TEXT |          | JSON 文字列。`{ title, mediaPath, learningLanguage, explanationLanguage }` |
+| `content`            | JSONB |          | JSONB。エンティティの内容を保持 |
 | `updated_at`         | TEXT |          | 最終更新時刻 (ISO 8601)                                               |
 
 ### 2.3. `subtitle_lines` テーブル（旧 `dialogues`）
@@ -279,7 +280,7 @@ erDiagram
 | `id`                | TEXT    |          | UUID (PK)                                                                            |
 | `episode_id`        | TEXT    |          | 論理的に `episodes.id` を参照                                                       |
 | `sequence_number`   | INTEGER |          | セリフ順。startTimeMs 昇順で 1 始まり                                               |
-| `content`           | TEXT    |          | JSON 文字列。`{ startTimeMs, endTimeMs, originalText, correctedText, translation, explanation, sentence, hidden }` |
+| `content`           | JSONB   |          | JSONB。エンティティの内容を保持 |
 | `updated_at`        | TEXT    |          | 最終更新時刻 (ISO 8601)                                                              |
 
 `hidden` は論理的な非表示フラグで、削除とは別に管理する。
@@ -291,7 +292,7 @@ Sentence Mining で生成されたカードを管理する。
 |---------------------|------|----------|---------------------------------------------------------------------------------------|
 | `id`                | TEXT |          | UUID (PK)                                                                            |
 | `subtitle_line_id`  | TEXT |          | 論理的に `subtitle_lines.id` を参照                                                 |
-| `content`           | TEXT |          | JSON 文字列。`{ partOfSpeech, expression, sentence, contextualDefinition, coreMeaning, createdAt }` |
+| `content`           | JSONB |          | JSONB。エンティティの内容を保持 |
 | `status`            | TEXT |          | `active` / `suspended` / `cache` などの状態                                          |
 | `updated_at`        | TEXT |          | 最終更新時刻 (ISO 8601)                                                              |
 

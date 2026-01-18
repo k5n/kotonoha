@@ -8,7 +8,7 @@ import { episodeGroupRepository } from '$lib/infrastructure/repositories/episode
 export async function updateEpisodeGroupsOrder(groups: readonly EpisodeGroup[]): Promise<void> {
   const groupsWithOrder = groups.map((group, index) => ({
     id: group.id,
-    display_order: index,
+    displayOrder: index,
   }));
   await episodeGroupRepository.updateOrders(groupsWithOrder);
 }
