@@ -12,12 +12,16 @@ type EpisodeRow = {
 };
 
 type EpisodeContent = {
+  id?: string;
+  episode_group_id?: string;
+  display_order?: number;
   title?: string;
-  mediaPath?: string;
-  learningLanguage?: string;
-  explanationLanguage?: string;
-  displayOrder?: number;
-  createdAt?: string;
+  media_path?: string;
+  learning_language?: string;
+  explanation_language?: string;
+  created_at?: string;
+  updated_at?: string;
+  sentence_card_count?: number;
   [key: string]: unknown;
 };
 
@@ -35,20 +39,22 @@ function parseEpisodeContent(content: string): EpisodeContent {
 
 function mapRowToEpisode(row: EpisodeRow): Episode {
   const content = parseEpisodeContent(row.content);
-  const createdAt = content.createdAt ?? row.updated_at;
+  const createdAt = content.created_at ?? '';
+  const updatedAt = content.updated_at ?? '';
   return {
-    id: row.id,
-    episodeGroupId: row.episode_group_id,
-    displayOrder: typeof content.displayOrder === 'number' ? content.displayOrder : 0,
+    id: typeof content.id === 'string' ? content.id : '',
+    episodeGroupId: typeof content.episode_group_id === 'string' ? content.episode_group_id : '',
+    displayOrder: typeof content.display_order === 'number' ? content.display_order : 0,
     title: typeof content.title === 'string' ? content.title : '',
-    mediaPath: typeof content.mediaPath === 'string' ? content.mediaPath : '',
+    mediaPath: typeof content.media_path === 'string' ? content.media_path : '',
     learningLanguage:
-      typeof content.learningLanguage === 'string' ? content.learningLanguage : 'English',
+      typeof content.learning_language === 'string' ? content.learning_language : 'English',
     explanationLanguage:
-      typeof content.explanationLanguage === 'string' ? content.explanationLanguage : 'Japanese',
-    updatedAt: new Date(row.updated_at),
-    createdAt: new Date(createdAt),
-    sentenceCardCount: row.sentence_card_count ?? 0,
+      typeof content.explanation_language === 'string' ? content.explanation_language : 'Japanese',
+    updatedAt: new Date(updatedAt || new Date().toISOString()),
+    createdAt: new Date(createdAt || new Date().toISOString()),
+    sentenceCardCount:
+      typeof content.sentence_card_count === 'number' ? content.sentence_card_count : 0,
   };
 }
 
@@ -60,7 +66,7 @@ export const episodeRepository = {
       SELECT
         e.id,
         e.episode_group_id,
-        e.content,
+        json_set(e.content, '$.sentence_card_count', COUNT(sc.id)) AS content,
         e.updated_at,
         COUNT(sc.id) AS sentence_card_count
       FROM episodes e
@@ -68,7 +74,7 @@ export const episodeRepository = {
       LEFT JOIN sentence_cards sc ON sl.id = sc.subtitle_line_id AND sc.status = 'active'
       WHERE e.episode_group_id = ?
       GROUP BY e.id
-      ORDER BY COALESCE(json_extract(e.content, '$.displayOrder'), 0) ASC
+      ORDER BY COALESCE(json_extract(e.content, '$.display_order'), 0) ASC
       `,
       [groupId]
     );
@@ -91,9 +97,9 @@ export const episodeRepository = {
     return rows.map((row) => {
       const content = parseEpisodeContent(row.content);
       return {
-        id: row.id,
+        id: typeof content.id === 'string' ? content.id : '',
         title: typeof content.title === 'string' ? content.title : '',
-        mediaPath: typeof content.mediaPath === 'string' ? content.mediaPath : '',
+        mediaPath: typeof content.media_path === 'string' ? content.media_path : '',
       };
     });
   },
@@ -121,12 +127,15 @@ export const episodeRepository = {
     const db = new Database(await getDatabasePath());
     const now = new Date().toISOString();
     const content = JSON.stringify({
+      id,
+      episode_group_id: params.episodeGroupId,
       title: params.title,
-      mediaPath: params.mediaPath,
-      learningLanguage: params.learningLanguage,
-      explanationLanguage: params.explanationLanguage,
-      displayOrder: params.displayOrder,
-      createdAt: now,
+      media_path: params.mediaPath,
+      learning_language: params.learningLanguage,
+      explanation_language: params.explanationLanguage,
+      display_order: params.displayOrder,
+      created_at: now,
+      updated_at: now,
     });
 
     await db.execute(
@@ -158,11 +167,11 @@ export const episodeRepository = {
     const updatedContent = {
       ...currentContent,
       ...(params.title !== undefined ? { title: params.title } : {}),
-      ...(params.displayOrder !== undefined ? { displayOrder: params.displayOrder } : {}),
+      ...(params.displayOrder !== undefined ? { display_order: params.displayOrder } : {}),
     };
     const now = new Date().toISOString();
     await db.execute('UPDATE episodes SET content = ?, updated_at = ? WHERE id = ?', [
-      JSON.stringify(updatedContent),
+      JSON.stringify({ ...updatedContent, updated_at: now }),
       now,
       episodeId,
     ]);
@@ -175,12 +184,26 @@ export const episodeRepository = {
 
   async updateGroupId(episodeId: string, targetGroupId: string): Promise<void> {
     const db = new Database(await getDatabasePath());
+    const rows = await db.select<{ content: string }[]>(
+      'SELECT content FROM episodes WHERE id = ?',
+      [episodeId]
+    );
+    if (rows.length === 0) {
+      throw new Error(`Episode not found: ${episodeId}`);
+    }
+    const currentContent = parseEpisodeContent(rows[0].content);
     const now = new Date().toISOString();
     await db.execute('UPDATE episodes SET episode_group_id = ?, updated_at = ? WHERE id = ?', [
       targetGroupId,
       now,
       episodeId,
     ]);
+    const updatedContent = JSON.stringify({
+      ...currentContent,
+      episode_group_id: targetGroupId,
+      updated_at: now,
+    });
+    await db.execute('UPDATE episodes SET content = ? WHERE id = ?', [updatedContent, episodeId]);
   },
 
   async updateOrders(episodes: readonly { id: string; display_order: number }[]): Promise<void> {
@@ -196,9 +219,9 @@ export const episodeRepository = {
         if (rows.length === 0) continue;
 
         const content = parseEpisodeContent(rows[0].content);
-        const newContent = { ...content, displayOrder: episode.display_order };
+        const newContent = { ...content, display_order: episode.display_order };
         await db.execute('UPDATE episodes SET content = ?, updated_at = ? WHERE id = ?', [
-          JSON.stringify(newContent),
+          JSON.stringify({ ...newContent, updated_at: now }),
           now,
           episode.id,
         ]);

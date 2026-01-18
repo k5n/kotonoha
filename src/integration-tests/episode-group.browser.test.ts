@@ -404,9 +404,9 @@ test('interaction error: shows error when deleting group fails', async () => {
     await expect.element(page.getByText('Failed to delete group.')).toBeInTheDocument();
     await expect.element(page.getByRole('button', { name: 'Yes, delete' })).not.toBeInTheDocument();
 
-  const groups = await selectAllGroups();
-  expect(groups).toHaveLength(1);
-  expect(await countEpisodes()).toBe(1);
+    const groups = await selectAllGroups();
+    expect(groups).toHaveLength(1);
+    expect(await countEpisodes()).toBe(1);
 
     await page.screenshot();
   } finally {

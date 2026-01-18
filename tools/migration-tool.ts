@@ -107,7 +107,7 @@ function createNewSchema(db: DatabaseType) {
     `CREATE TABLE episode_groups (
       id TEXT PRIMARY KEY,
       parent_group_id TEXT,
-      content TEXT NOT NULL,
+      content JSONB NOT NULL,
       display_order INTEGER NOT NULL,
       group_type TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -115,20 +115,20 @@ function createNewSchema(db: DatabaseType) {
     `CREATE TABLE episodes (
       id TEXT PRIMARY KEY,
       episode_group_id TEXT NOT NULL,
-      content TEXT NOT NULL,
+      content JSONB NOT NULL,
       updated_at TEXT NOT NULL
     );`,
     `CREATE TABLE subtitle_lines (
       id TEXT PRIMARY KEY,
       episode_id TEXT NOT NULL,
       sequence_number INTEGER NOT NULL,
-      content TEXT NOT NULL,
+      content JSONB NOT NULL,
       updated_at TEXT NOT NULL
     );`,
     `CREATE TABLE sentence_cards (
       id TEXT PRIMARY KEY,
       subtitle_line_id TEXT NOT NULL,
-      content TEXT NOT NULL,
+      content JSONB NOT NULL,
       status TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );`,
@@ -143,8 +143,7 @@ function createNewSchema(db: DatabaseType) {
 
   // Insert the initial migration record into _sqlx_migrations.
   // The user-provided checksum is stored as a blob and execution_time is set to 0.
-  const initialChecksumHex =
-    '98EBC1F080C1AEA6C5E31CE0B771F0B3861749B60D87009DEF7692C47EFECB3248BD52B5DDA0309E0C50E3BC206BD094';
+  const initialChecksumHex = 'BCF940B315C39B24D6B5F53D4858C98F53E48B199928193F52E7F43C7C257800';
   const installedOn = formatTimestampForSql(new Date());
   const insertStmt = db.prepare(
     `INSERT INTO _sqlx_migrations (version, description, installed_on, success, checksum, execution_time)
@@ -240,7 +239,14 @@ function mapEpisodeGroups(rows: EpisodeGroupRow[], now: string) {
     const id = map.get(row.id)!;
     const parent_group_id =
       row.parent_group_id !== null ? (map.get(row.parent_group_id) ?? null) : null;
-    const content = JSON.stringify({ name: row.name });
+    const content = JSON.stringify({
+      id,
+      parent_group_id,
+      name: row.name,
+      display_order: row.display_order,
+      group_type: row.group_type,
+      updated_at: now,
+    });
     return {
       id,
       parent_group_id,
@@ -259,14 +265,18 @@ function mapEpisodes(rows: EpisodeRow[], episodeGroupMap: Map<number, string>, n
   const records = rows.map((row) => {
     const id = deriveEpisodeIdFromMediaPath(row.media_path);
     map.set(row.id, id);
-    const content = JSON.stringify({
-      title: row.title,
-      mediaPath: row.media_path,
-      learningLanguage: row.learning_language,
-      explanationLanguage: row.explanation_language,
-      displayOrder: row.display_order,
-    });
     const episode_group_id = episodeGroupMap.get(row.episode_group_id) ?? null;
+    const content = JSON.stringify({
+      id,
+      episode_group_id: episode_group_id ?? '',
+      title: row.title,
+      media_path: row.media_path,
+      learning_language: row.learning_language,
+      explanation_language: row.explanation_language,
+      display_order: row.display_order,
+      created_at: toIsoOrNow(row.updated_at, now),
+      updated_at: toIsoOrNow(row.updated_at, now),
+    });
     if (!episode_group_id) {
       console.warn(`episode_group_id ${row.episode_group_id} not found. Inserting as NULL.`);
     }
@@ -310,14 +320,18 @@ function mapSubtitleLines(rows: DialogueRow[], episodeMap: Map<number, string>, 
       const id = randomUUID();
       map.set(row.id, id);
       const content = JSON.stringify({
-        startTimeMs: row.start_time_ms,
-        endTimeMs: row.end_time_ms,
-        originalText: row.original_text,
-        correctedText: row.corrected_text ?? null,
+        id,
+        episode_id: episodeUuid,
+        sequence_number: idx + 1,
+        start_time_ms: row.start_time_ms,
+        end_time_ms: row.end_time_ms,
+        original_text: row.original_text,
+        corrected_text: row.corrected_text ?? null,
         translation: row.translation ?? null,
         explanation: row.explanation ?? null,
         sentence: row.sentence ?? null,
         hidden: false,
+        updated_at: now,
       });
       records.push({
         id,
@@ -350,12 +364,16 @@ function mapSentenceCards(rows: SentenceCardRow[], dialogueMap: Map<number, stri
     }
     const id = randomUUID();
     const content = JSON.stringify({
-      partOfSpeech: row.part_of_speech,
+      id,
+      subtitle_line_id: subtitleLineId,
+      part_of_speech: row.part_of_speech,
       expression: row.expression,
       sentence: row.sentence,
-      contextualDefinition: row.contextual_definition,
-      coreMeaning: row.core_meaning,
-      createdAt: row.created_at,
+      contextual_definition: row.contextual_definition,
+      core_meaning: row.core_meaning,
+      status: row.status,
+      created_at: row.created_at,
+      updated_at: now,
     });
     records.push({
       id,
