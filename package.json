@@ -1,6 +1,6 @@
 {
   "name": "kotonoha",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "An app for language learning, centered around AI-powered sentence mining.",
   "author": "Keigo Nakatani <k5n@users.noreply.github.com> (https://github.com/k5n)",
   "license": "GPL-3.0-only",
