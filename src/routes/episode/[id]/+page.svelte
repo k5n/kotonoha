@@ -16,6 +16,7 @@
   import type { SentenceCard } from '$lib/domain/entities/sentenceCard';
   import { keyboardShortcuts } from '$lib/presentation/actions/keyboardShortcuts';
   import ConfirmModal from '$lib/presentation/components/presentational/ConfirmModal.svelte';
+  import ErrorWarningToast from '$lib/presentation/components/presentational/ErrorWarningToast.svelte';
   import LoadErrorAlert from '$lib/presentation/components/presentational/LoadErrorAlert.svelte';
   import { Alert, Button, Checkbox, Heading, Spinner } from 'flowbite-svelte';
   import { ArrowLeftOutline, ExclamationCircleOutline } from 'flowbite-svelte-icons';
@@ -36,7 +37,9 @@
   let miningTarget: Dialogue | null = $state(null);
   let analysisResult: SentenceAnalysisResult | null = $state(null);
   let isProcessingMining = $state(false);
-  let errorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
+  let loadErrorMessage = $derived(data.errorKey ? t(data.errorKey) : '');
+  let actionErrorMessage = $state('');
+  let actionErrorKey = $state(0);
   let canMine = $derived(data.isApiKeySet || false);
   let showDeleted = $state(false);
 
@@ -59,6 +62,11 @@
       });
     };
   });
+
+  function showActionError(message: string) {
+    actionErrorMessage = message;
+    actionErrorKey += 1; // Trigger re-render of the error toast
+  }
 
   function goBack() {
     if (history.length > 1) {
@@ -87,7 +95,7 @@
       analysisResult = await analyzeDialogueForMining(dialogue, context);
     } catch (err) {
       console.error(`Error analyzing dialogue for mining: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.analyzeFailed');
+      showActionError(t('episodeDetailPage.errors.analyzeFailed'));
       resetMiningModalState();
     }
   }
@@ -105,7 +113,7 @@
       await addSentenceCards(selectedCardIds);
     } catch (err) {
       console.error(`Error in createMiningCards: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.createCardsFailed');
+      showActionError(t('episodeDetailPage.errors.createCardsFailed'));
     } finally {
       resetMiningModalState();
       invalidateAll();
@@ -126,7 +134,7 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Error updating dialogue: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.updateDialogueFailed');
+      showActionError(t('episodeDetailPage.errors.updateDialogueFailed'));
     }
   }
 
@@ -143,7 +151,7 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Error soft deleting dialogue: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.deleteDialogueFailed');
+      showActionError(t('episodeDetailPage.errors.deleteDialogueFailed'));
     } finally {
       isConfirmModalOpen = false;
       dialogueToDeleteId = null;
@@ -156,7 +164,7 @@
       await invalidateAll();
     } catch (err) {
       console.error(`Error undoing soft delete for dialogue: ${err}`);
-      errorMessage = t('episodeDetailPage.errors.undoDeleteDialogueFailed');
+      showActionError(t('episodeDetailPage.errors.undoDeleteDialogueFailed'));
     }
   }
 </script>
@@ -168,6 +176,14 @@
   }}
   class="p-4 md:p-6 lg:flex lg:h-full lg:flex-col"
 >
+  {#if actionErrorMessage}
+    {#key actionErrorKey}
+      <div class="mb-4">
+        <ErrorWarningToast type="error" errorMessage={actionErrorMessage} />
+      </div>
+    {/key}
+  {/if}
+
   <div>
     <Button color="light" class="mb-4" onclick={goBack}>
       <ArrowLeftOutline class="me-2 h-5 w-5" />
@@ -175,8 +191,8 @@
     </Button>
   </div>
 
-  {#if errorMessage}
-    <LoadErrorAlert {errorMessage} />
+  {#if loadErrorMessage}
+    <LoadErrorAlert errorMessage={loadErrorMessage} />
   {:else if data.episode}
     <div class="grid grid-cols-1 gap-8 lg:min-h-0 lg:flex-1 lg:grid-cols-3">
       <div class="flex flex-col lg:col-span-2 lg:min-h-0">
