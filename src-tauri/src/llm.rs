@@ -1,64 +1,64 @@
-use google_ai_rs::error::{Error as GoogleAiError, NetError, ServiceError, TonicStatus};
-use google_ai_rs::{AsSchema, Client, TypedModel};
+use gemini_rust::client::Error as GeminiError;
+use gemini_rust::{Gemini, Model, ThinkingConfig, ThinkingLevel};
 use log::{debug, error, warn};
+use schemars::generate::SchemaSettings;
+use schemars::{JsonSchema, SchemaGenerator};
 use serde::{Deserialize, Serialize};
-use tonic::Code;
 
-#[derive(AsSchema, Deserialize, Serialize)]
-#[schema(
-    rename_all = "camelCase",
+#[derive(Deserialize, Serialize, JsonSchema)]
+#[schemars(
     description = "Represents an item of vocabulary or expression identified in the target line."
 )]
 pub struct SentenceMiningItem {
-    #[schema(
+    #[schemars(
         description = "A complete, grammatically correct sentence. If the target line was a fragment, this sentence is reconstructed by combining it with adjacent lines, strictly preserving their original sequence. If the target line was already complete, this will be the target line itself."
     )]
     pub expression: String,
 
-    #[schema(
+    #[schemars(
         description = "The part of speech or type of the expression, written in the learner's native language. The value should be a common linguistic term that best describes the extracted expression."
     )]
     #[serde(rename = "partOfSpeech")]
     pub part_of_speech: String,
 
-    #[schema(
+    #[schemars(
         description = "A concise, direct definition of the expression in the learner's native language, explaining its meaning *specifically as used in the target line*. Avoid overtly explanatory or redundant phrasing."
     )]
     #[serde(rename = "contextualDefinition")]
     pub contextual_definition: String,
 
-    #[schema(
+    #[schemars(
         description = "A detailed, core meaning explanation of the expression in the learner's native language, independent of the specific context."
     )]
     #[serde(rename = "coreMeaning")]
     pub core_meaning: String,
 
-    #[schema(
+    #[schemars(
         description = "The full sentence from the top-level result, with this item's specific 'expression' highlighted using <b> tags."
     )]
     #[serde(rename = "exampleSentence")]
     pub example_sentence: String,
 }
 
-#[derive(AsSchema, Deserialize, Serialize)]
-#[schema(description = "The result of a sentence mining analysis.")]
+#[derive(Deserialize, Serialize, JsonSchema)]
+#[schemars(description = "The result of a sentence mining analysis.")]
 pub struct SentenceMiningResult {
-    #[schema(
+    #[schemars(
         description = "A complete, grammatically correct sentence constructed from the target line and its context."
     )]
     pub sentence: String,
 
-    #[schema(
+    #[schemars(
         description = "A translation of the top-level 'sentence' field into the learner's native language."
     )]
     pub translation: String,
 
-    #[schema(
+    #[schemars(
         description = "An explanation in the learner's native language detailing the grammatical structure and vocabulary of the top-level 'sentence' field, clarifying the reasoning behind its translation."
     )]
     pub explanation: String,
 
-    #[schema(
+    #[schemars(
         description = "A list of identified vocabulary and expressions from the target line."
     )]
     pub items: Vec<SentenceMiningItem>,
@@ -186,6 +186,16 @@ I had to pull an all-nighter to get it done, but it's almost there.
     )
 }
 
+fn build_response_schema() -> serde_json::Value {
+    let schema_generator = SchemaGenerator::new(SchemaSettings::openapi3().with(|settings| {
+        settings.inline_subschemas = true;
+        settings.meta_schema = None;
+    }));
+    let mut schema = schema_generator.into_root_schema_for::<SentenceMiningResult>();
+    schema.remove("title");
+    schema.to_value()
+}
+
 #[tauri::command]
 pub async fn analyze_sentence_with_llm(
     api_key: String,
@@ -202,45 +212,62 @@ pub async fn analyze_sentence_with_llm(
     );
     debug!("Generated prompt: {}", prompt);
 
-    let client = Client::new(api_key.into()).await.map_err(|e| {
-        error!("Failed to create Google AI client: {}", e);
-        "Failed to create Google AI client".to_string()
-    })?;
-    let models = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemma-3-27b"];
-    let result = generate_with_fallback(&client, &prompt, &models)
+    let schema = build_response_schema();
+    let response_text = generate_with_fallback(&api_key, &prompt, &schema)
         .await
         .map_err(|err| {
             error!("Failed to generate content: {}", err);
             "Failed to generate content".to_string()
         })?;
-
+    let result = serde_json::from_str(&response_text).map_err(|err| {
+        error!("Failed to parse response: {}", err);
+        "Failed to parse response".to_string()
+    })?;
     Ok(result)
 }
 
 async fn generate_with_model(
-    client: &Client,
-    model_name: &str,
+    api_key: &str,
+    model: Model,
     prompt: &str,
-) -> Result<SentenceMiningResult, GoogleAiError> {
-    let model = TypedModel::<SentenceMiningResult>::new(client, model_name);
-    model.generate_content(prompt).await
+    schema: &serde_json::Value,
+) -> Result<String, GeminiError> {
+    let client = Gemini::with_model(api_key, model)?;
+    let thinking_config = ThinkingConfig::new().with_thinking_level(ThinkingLevel::Low);
+    let response = client
+        .generate_content()
+        .with_system_prompt("Return only JSON that matches the response schema.")
+        .with_user_message(prompt)
+        .with_thinking_config(thinking_config)
+        .with_response_mime_type("application/json")
+        .with_response_schema(schema.clone())
+        .execute()
+        .await?;
+    Ok(response.text())
 }
 
 async fn generate_with_fallback(
-    client: &Client,
+    api_key: &str,
     prompt: &str,
-    models: &[&str],
-) -> Result<SentenceMiningResult, GoogleAiError> {
+    schema: &serde_json::Value,
+) -> Result<String, GeminiError> {
     let mut last_error = None;
-    for (index, model_name) in models.iter().enumerate() {
-        match generate_with_model(client, model_name, prompt).await {
+    let models = vec![
+        Model::Gemini3Flash,
+        Model::Gemini25Flash,
+        Model::Gemini25Pro,
+    ];
+    for (index, model) in models.iter().enumerate() {
+        match generate_with_model(api_key, model.clone(), prompt, schema).await {
             Ok(result) => return Ok(result),
             Err(err) if is_rate_limit_error(&err) => {
                 last_error = Some(err);
                 if let Some(next_model) = models.get(index + 1) {
                     warn!(
                         "Rate limit reached on model {}, falling back to {}: {}",
-                        model_name, next_model, last_error.as_ref().unwrap()
+                        model,
+                        next_model,
+                        last_error.as_ref().unwrap()
                     );
                 } else {
                     break;
@@ -250,19 +277,13 @@ async fn generate_with_fallback(
         }
     }
 
-    Err(last_error.unwrap_or_else(|| {
-        GoogleAiError::Service(ServiceError::ApiError(TonicStatus(
-            Box::new(tonic::Status::new(Code::Unknown, "No models available")),
-        )))
+    Err(last_error.unwrap_or_else(|| GeminiError::OperationFailed {
+        name: "generate_with_fallback".to_string(),
+        code: 0,
+        message: "No models available".to_string(),
     }))
 }
 
-fn is_rate_limit_error(err: &GoogleAiError) -> bool {
-    match err {
-        GoogleAiError::Service(ServiceError::ApiError(TonicStatus(status)))
-        | GoogleAiError::Net(NetError::ServiceUnavailable(TonicStatus(status))) => {
-            status.code() == Code::ResourceExhausted
-        }
-        _ => false,
-    }
+fn is_rate_limit_error(err: &GeminiError) -> bool {
+    matches!(err, GeminiError::BadResponse { code, .. } if *code == 429)
 }
